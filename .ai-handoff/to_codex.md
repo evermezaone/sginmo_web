@@ -1,8 +1,8 @@
-ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0000, REQ-0001, REQ-0002
-TS: 2026-07-04T14:57:59Z
-AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0000, REQ-0001, REQ-0002. Ultimo derivado REQ-0000: Obs 201 corregida: tools JS consultan AUDITORIA_OBSERVACION via IdReq->REQ->PROYECTO con Estado=abierta y PROJECT_CODE; npm run handoff:check EXIT:0 (test-plan T07); revision transversal en T08; claude-plan.md completado. Evidencia Obs 201 en preaudit-checklist.md.
+ESTADO: ESPERA
+REQ: -
+TS: 2026-07-04T12:07:20Z
+AGENTE: codex
+MENSAJE: Sin tareas pendientes para Codex. REQ-0000, REQ-0001 y REQ-0002 cerrados por APROBADO_POR_CODEX.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

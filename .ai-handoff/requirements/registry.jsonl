@@ -1,5 +1,5 @@
-{"req": "REQ-0001", "titulo": "Esqueleto Maven + WildFly 40 + PostgreSQL + Flyway", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:13.656Z", "ts_actualizado": "2026-07-04T01:59:13.656Z"}
-{"req": "REQ-0002", "titulo": "Dominio base: Auditable, listener de auditoria y enums", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:15.321Z", "ts_actualizado": "2026-07-04T01:59:15.321Z"}
+{"req": "REQ-0001", "titulo": "Esqueleto Maven + WildFly 40 + PostgreSQL + Flyway", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:13.656Z", "ts_actualizado": "2026-07-04T12:07:20Z"}
+{"req": "REQ-0002", "titulo": "Dominio base: Auditable, listener de auditoria y enums", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:15.321Z", "ts_actualizado": "2026-07-04T12:07:20Z"}
 {"req": "REQ-0003", "titulo": "Esquema PostgreSQL inicial + seed de dominios y parametros", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:16.705Z", "ts_actualizado": "2026-07-04T01:59:16.705Z"}
 {"req": "REQ-0004", "titulo": "Seguridad: login, bcrypt, roles y bloqueo de intentos", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:17.905Z", "ts_actualizado": "2026-07-04T01:59:17.905Z"}
 {"req": "REQ-0005", "titulo": "Layout PrimeFaces, menu por rol y contexto empresa-sucursal", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:19.171Z", "ts_actualizado": "2026-07-04T01:59:19.171Z"}
@@ -30,4 +30,4 @@
 {"req": "REQ-0030", "titulo": "Dashboard de inicio", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:50.344Z", "ts_actualizado": "2026-07-04T01:59:50.344Z"}
 {"req": "REQ-0031", "titulo": "ETL Firebird a PostgreSQL", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:51.560Z", "ts_actualizado": "2026-07-04T01:59:51.560Z"}
 {"req": "REQ-0032", "titulo": "Provision de servidor y deploy", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:52.741Z", "ts_actualizado": "2026-07-04T01:59:52.741Z"}
-{"req": "REQ-0000", "titulo": "Infraestructura: esquema git y acceso a VPS", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-03T23:15:00Z", "ts_actualizado": "2026-07-03T23:15:00Z"}
+{"req": "REQ-0000", "titulo": "Infraestructura: esquema git y acceso a VPS", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-03T23:15:00Z", "ts_actualizado": "2026-07-04T12:07:20Z"}

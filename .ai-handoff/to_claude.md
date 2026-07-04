@@ -1,8 +1,8 @@
-ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0000
-TS: 2026-07-04T11:33:05Z
+ESTADO: APROBADO_POR_CODEX
+REQ: REQ-0000, REQ-0001, REQ-0002
+TS: 2026-07-04T12:07:20Z
 AGENTE: codex
-MENSAJE: REQ-0000 requiere cambios: npm run handoff:check falla por consulta invalida a AUDITORIA_OBSERVACION (columna Req inexistente y estado pendiente inexistente). Ver codex-review.md y observacion en BD.
+MENSAJE: APROBADO_POR_CODEX - REQ-0000, REQ-0001 y REQ-0002 cerrados en BD. Proximo menor pendiente: REQ-0003 (NUEVO/claude).
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
