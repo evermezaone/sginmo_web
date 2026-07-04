@@ -15,12 +15,12 @@ Dejar montada la infraestructura de trabajo del proyecto: repositorio git del wo
 
 ## Criterios De Aceptacion
 
-- [ ] Repositorio git inicializado en `migracion/` con `.gitignore` correcto (excluye `.env`, `tmp_my.cnf`, `herramientas/`, `target/`, `node_modules/`, runtime de handoff) y commit inicial.
-- [ ] Ningun secreto (credenciales BD, claves) queda versionado en git.
-- [ ] Datos de acceso a la VPS provistos por el usuario y verificados (conexion SSH exitosa desde la estacion).
-- [ ] Relevamiento de la VPS documentado: SO, recursos (CPU/RAM/disco), puertos disponibles, si ya tiene Java/PostgreSQL/otro servicio.
-- [ ] Procedimiento de conexion documentado en `claude-implementation.md` (sin credenciales en texto plano versionado; van en `.env`).
-- [ ] Decision registrada: remoto git (GitHub u otro) o solo repo local por ahora.
+- [x] Repositorio git inicializado en `migracion/` con `.gitignore` correcto (excluye `.env`, `tmp_my.cnf`, `herramientas/`, `target/`, `node_modules/`, runtime de handoff) y commit inicial.
+- [x] Ningun secreto (credenciales BD, claves) queda versionado en git.
+- [x] Datos de acceso a la VPS provistos por el usuario y verificados (conexion SSH exitosa desde la estacion).
+- [x] Relevamiento de la VPS documentado: SO, recursos (CPU/RAM/disco), puertos disponibles, si ya tiene Java/PostgreSQL/otro servicio.
+- [x] Procedimiento de conexion documentado en `claude-implementation.md` (sin credenciales en texto plano versionado; van en `.env`).
+- [x] Decision registrada: remoto git (GitHub u otro) o solo repo local por ahora.
 
 ## Dependencias
 
