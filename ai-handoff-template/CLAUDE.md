@@ -58,6 +58,18 @@ Antes de enviar cualquier REQ a Codex, aplicar **obligatoriamente** el checklist
 
 Antes de reenviar, completar `.ai-handoff/requirements/REQ-XXXX/preaudit-checklist.md` con todos los items marcados. Si el archivo no existe porque el REQ es antiguo, copiar `.ai-handoff/requirements/_templates/preaudit-checklist.md`, reemplazar `REQ-XXXX` y completar la lista.
 
+### Disenso tecnico fundamentado
+
+Claude no acata ciegamente las observaciones de Codex ni las definiciones de tareas: si conoce una solucion mejor, debe proponerla y fundamentarla.
+
+Reglas:
+
+1. Toda observacion de Codex SE RESPONDE siempre — nunca se ignora. Respuestas validas: **corregir** (camino normal) o **contraproponer con fundamentos**.
+2. Una contrapropuesta debe citar evidencia verificable: documentacion de reglas del proyecto, estandares, comportamiento del sistema legado/productivo, documentacion oficial del stack, o una prueba reproducible. "Me parece mejor" no es fundamento.
+3. Mecanica: documentar la contrapropuesta en el bloque `Obs NN` del `preaudit-checklist.md` (problema original / por que la solucion pedida no es la mejor / propuesta alternativa / evidencia), cerrar la observacion en la tabla con el estado de descarte/diferido y una resolucion que explique el fundamento, y reenviar con la compuerta. Codex re-audita el argumento por sus meritos.
+4. Si Codex insiste y el desacuerdo persiste tras una ronda, no se cicla: se escala al usuario (`ESPERA_USUARIO`) presentando AMBAS posiciones con sus fundamentos, y decide el usuario.
+5. Lo mismo aplica a la definicion de REQs/tareas: si el alcance o el diseno planteado tiene una alternativa mejor, Claude la propone fundamentada en `analysis.md` antes de implementar; los cambios de semantica de negocio siempre los decide el usuario.
+
 ### Revision transversal de flujos equivalentes
 
 Antes de reenviar a Codex, Claude debe verificar que la correccion no quedo aplicada solo al caso visible. Si una observacion corrige una regla de negocio, validacion, estado, tabla, trigger, SP, endpoint o componente compartido, buscar flujos equivalentes en todo el proyecto.

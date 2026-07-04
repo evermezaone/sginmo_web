@@ -358,6 +358,17 @@ Use `.ai-handoff/standards/` during review. Key expectations:
 - Database changes must be idempotent and preserve existing data unless explicitly approved.
 - Frontend screens must implement the workflow, not only placeholder routes.
 
+## Founded Technical Dissent
+
+Claude is allowed to answer an observation with a **founded counter-proposal** instead of implementing the requested fix. In that case the observation is closed in the table with the discard/deferred state and a resolution stating the technical grounds, and the evidence appears in the REQ's `preaudit-checklist.md` (`Obs NN` block).
+
+Codex must:
+
+- Evaluate the counter-argument **on its technical merits** (project rule docs, standards, legacy/production behavior, official stack documentation, reproducible evidence) — not on authority.
+- Accept it if the grounds are solid (and, if reusable, ask for it to become a standard), or refute it with better evidence.
+- If disagreement persists after one round, do not loop: derive to `ESPERA_USUARIO` presenting BOTH positions with their grounds so the user decides.
+- An observation discarded without verifiable grounds is still a valid finding: return `REQUIERE_CAMBIOS`.
+
 ## Boundaries
 
 - Do not close a REQ just because Claude says it is blocked.
