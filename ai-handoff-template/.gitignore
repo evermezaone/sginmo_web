@@ -1,0 +1,27 @@
+# AI Handoff — archivos de runtime (no versionar)
+.ai-handoff/.watcher-state.json
+.ai-handoff/.codex-audit-state.json
+
+# Agregar según el proyecto:
+# .ai-handoff/.wa-qr.txt        # QR de WhatsApp (si aplica)
+# .ai-handoff/.wa-status.json   # Estado de conexión WhatsApp (si aplica)
+
+# Logs generados en runtime
+logs/
+*.log
+
+# Uploads de usuarios
+uploads/
+!uploads/**/.gitkeep
+
+# Secretos y configuración local
+.env
+.env.local
+.env.*.local
+
+# Dependencias
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

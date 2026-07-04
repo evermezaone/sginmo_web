@@ -1,0 +1,37 @@
+# AI Handoff — archivos de runtime (no versionar)
+.ai-handoff/.watcher-state.json
+.ai-handoff/.codex-audit-state.json
+
+# Logs generados en runtime
+logs/
+*.log
+
+# Secretos y configuración local
+.env
+.env.local
+.env.*.local
+tmp_my.cnf
+
+# Historial de runners SQL (trazabilidad local, no versionar)
+mysql20*.sql
+mysql_runner.sql
+
+# Herramientas portables (Maven, WildFly, PostgreSQL, Firebird) — se descargan, no se versionan
+herramientas/
+
+# Build Java
+Desarrollo/**/target/
+*.class
+*.war
+
+# Dependencias Node (tooling handoff)
+node_modules/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,17 @@
+{
+  "scripts": {
+    "buzon": "node tools/buzon-watch.js",
+    "buzon:once": "node tools/buzon-watch.js --once",
+    "codex:audit-mark": "node tools/codex-audit-state.js mark-current",
+    "handoff:check": "node tools/handoff-check.js",
+    "handoff:ready": "node tools/handoff-ready.js",
+    "db:apply": "node db/apply-schema.mjs",
+    "db:migrate-handoff": "node db/migrate-handoff-to-db.mjs",
+    "db:migrate-observations": "node db/migrate-review-observations-to-db.mjs",
+    "db:verify": "node db/verify-project-data.mjs"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mysql2": "^3.22.3"
+  }
+}

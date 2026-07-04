@@ -1,0 +1,33 @@
+{"req":"REQ-0001","titulo":"Esqueleto Maven + WildFly 40 + PostgreSQL + Flyway","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:13.656Z","ts_actualizado":"2026-07-04T01:59:13.656Z"}
+{"req":"REQ-0002","titulo":"Dominio base: Auditable, listener de auditoria y enums","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:15.321Z","ts_actualizado":"2026-07-04T01:59:15.321Z"}
+{"req":"REQ-0003","titulo":"Esquema PostgreSQL inicial + seed de dominios y parametros","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:16.705Z","ts_actualizado":"2026-07-04T01:59:16.705Z"}
+{"req":"REQ-0004","titulo":"Seguridad: login, bcrypt, roles y bloqueo de intentos","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:17.905Z","ts_actualizado":"2026-07-04T01:59:17.905Z"}
+{"req":"REQ-0005","titulo":"Layout PrimeFaces, menu por rol y contexto empresa-sucursal","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:19.171Z","ts_actualizado":"2026-07-04T01:59:19.171Z"}
+{"req":"REQ-0006","titulo":"Componentes genericos ABM y buscador modal","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:20.370Z","ts_actualizado":"2026-07-04T01:59:20.370Z"}
+{"req":"REQ-0007","titulo":"Catalogo geografia: paises, departamentos, ciudades y barrios","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:21.603Z","ts_actualizado":"2026-07-04T01:59:21.603Z"}
+{"req":"REQ-0008","titulo":"Catalogos: monedas, formas de pago e impuestos","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:22.780Z","ts_actualizado":"2026-07-04T01:59:22.780Z"}
+{"req":"REQ-0009","titulo":"Empresas y sucursales","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:23.936Z","ts_actualizado":"2026-07-04T01:59:23.936Z"}
+{"req":"REQ-0010","titulo":"Usuarios: ABM, perfiles y contrasenas","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:25.119Z","ts_actualizado":"2026-07-04T01:59:25.119Z"}
+{"req":"REQ-0011","titulo":"Parametros del sistema","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:26.302Z","ts_actualizado":"2026-07-04T01:59:26.302Z"}
+{"req":"REQ-0012","titulo":"Socios de negocios","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:27.667Z","ts_actualizado":"2026-07-04T01:59:27.667Z"}
+{"req":"REQ-0013","titulo":"Entidades inmobiliarias y propietarios","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:28.851Z","ts_actualizado":"2026-07-04T01:59:28.851Z"}
+{"req":"REQ-0014","titulo":"Propiedades","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:30.034Z","ts_actualizado":"2026-07-04T01:59:30.034Z"}
+{"req":"REQ-0015","titulo":"Lotes y generacion masiva de lotes","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:31.317Z","ts_actualizado":"2026-07-04T01:59:31.317Z"}
+{"req":"REQ-0016","titulo":"Operaciones alquiler-venta","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:32.517Z","ts_actualizado":"2026-07-04T01:59:32.517Z"}
+{"req":"REQ-0017","titulo":"Cronograma de cuotas: generacion y edicion","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:33.731Z","ts_actualizado":"2026-07-04T01:59:33.731Z"}
+{"req":"REQ-0018","titulo":"Movimientos automaticos: comision y deposito de garantia","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:34.998Z","ts_actualizado":"2026-07-04T01:59:34.998Z"}
+{"req":"REQ-0019","titulo":"Regeneracion de cuotas","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:36.248Z","ts_actualizado":"2026-07-04T01:59:36.248Z"}
+{"req":"REQ-0020","titulo":"Renovacion de contratos","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:37.603Z","ts_actualizado":"2026-07-04T01:59:37.603Z"}
+{"req":"REQ-0021","titulo":"Rescisiones","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:39.051Z","ts_actualizado":"2026-07-04T01:59:39.051Z"}
+{"req":"REQ-0022","titulo":"Cobros con calculo de mora","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:40.324Z","ts_actualizado":"2026-07-04T01:59:40.324Z"}
+{"req":"REQ-0023","titulo":"Descuentos y anulacion de cobros","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:41.536Z","ts_actualizado":"2026-07-04T01:59:41.536Z"}
+{"req":"REQ-0024","titulo":"Ingresos-egresos e items","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:42.762Z","ts_actualizado":"2026-07-04T01:59:42.762Z"}
+{"req":"REQ-0025","titulo":"Liquidaciones y plantilla de gastos","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:44.019Z","ts_actualizado":"2026-07-04T01:59:44.019Z"}
+{"req":"REQ-0026","titulo":"Infraestructura JasperReports, contrato y pagare","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:45.329Z","ts_actualizado":"2026-07-04T01:59:45.329Z"}
+{"req":"REQ-0027","titulo":"Reportes de propiedades","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:46.745Z","ts_actualizado":"2026-07-04T01:59:46.745Z"}
+{"req":"REQ-0028","titulo":"Reportes de cobros y cronogramas","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:48.061Z","ts_actualizado":"2026-07-04T01:59:48.061Z"}
+{"req":"REQ-0029","titulo":"Reportes de egresos y recaudacion","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:49.161Z","ts_actualizado":"2026-07-04T01:59:49.161Z"}
+{"req":"REQ-0030","titulo":"Dashboard de inicio","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:50.344Z","ts_actualizado":"2026-07-04T01:59:50.344Z"}
+{"req":"REQ-0031","titulo":"ETL Firebird a PostgreSQL","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:51.560Z","ts_actualizado":"2026-07-04T01:59:51.560Z"}
+{"req":"REQ-0032","titulo":"Provision de servidor y deploy","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-04T01:59:52.741Z","ts_actualizado":"2026-07-04T01:59:52.741Z"}
+{"req":"REQ-0000","titulo":"Infraestructura: esquema git y acceso a VPS","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-03T23:15:00Z","ts_actualizado":"2026-07-03T23:15:00Z"}

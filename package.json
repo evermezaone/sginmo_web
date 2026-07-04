@@ -1,0 +1,12 @@
+{
+  "name": "sginmo-migracion-handoff",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Tooling de handoff multiagente para la migración SGInmo Web (SGI)",
+  "scripts": {
+    "handoff:check": "node tools/handoff-check.js",
+    "handoff:ready": "node tools/handoff-ready.js",
+    "new-req": "node tools/new-req.js"
+  }
+}
