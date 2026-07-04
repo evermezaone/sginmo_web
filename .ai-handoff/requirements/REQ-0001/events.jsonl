@@ -1,1 +1,2 @@
 {"ts":"2026-07-04T01:59:13.656Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"Esqueleto Maven + WildFly 40 + PostgreSQL + Flyway"}
+{"ts":"2026-07-04T10:30:00Z","actor":"claude","event":"IMPLEMENTACION_COMPLETA","status":"EN_DESARROLLO","nota":"Esqueleto Maven+WildFly40+PrimeFaces15: build EXIT:0, deploy OK, HTTP 200. Alcance PostgreSQL/Flyway ajustado a REQ-0003."}

@@ -8,5 +8,9 @@
     "handoff:check": "node tools/handoff-check.js",
     "handoff:ready": "node tools/handoff-ready.js",
     "new-req": "node tools/new-req.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "mysql2": "^3.22.5"
   }
 }
