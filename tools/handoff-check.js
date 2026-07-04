@@ -178,17 +178,24 @@ async function checkPendingObservations(targetReqs) {
       password: process.env.DB_PASS,
       database: process.env.DB_NAME,
     });
+    const projectCode = process.env.PROJECT_CODE;
+    if (!projectCode) {
+      issues.push('AUDITORIA_OBSERVACION: falta PROJECT_CODE en .env');
+      return;
+    }
     const [rows] = await connection.query(
-      `SELECT Req, Categoria, Subcategoria, Severidad, Archivo
-       FROM AUDITORIA_OBSERVACION
-       WHERE Estado = 'pendiente' AND Req IN (?)
-       ORDER BY Req, Severidad DESC, Categoria, Subcategoria`,
-      [targetReqs],
+      `SELECT r.Codigo AS Req, o.Categoria, o.Subcategoria, o.Severidad, o.Archivo
+       FROM AUDITORIA_OBSERVACION o
+       JOIN REQ r ON r.IdReq = o.IdReq
+       JOIN PROYECTO p ON p.IdProyecto = r.IdProyecto
+       WHERE o.Estado = 'abierta' AND p.Codigo = ? AND r.Codigo IN (?)
+       ORDER BY r.Codigo, o.Severidad DESC, o.Categoria, o.Subcategoria`,
+      [projectCode, targetReqs],
     );
     for (const row of rows) {
       const sub = row.Subcategoria ? `/${row.Subcategoria}` : '';
       const file = row.Archivo ? ` (${row.Archivo})` : '';
-      issues.push(`${row.Req}: observacion pendiente en AUDITORIA_OBSERVACION ${row.Categoria}${sub} [${row.Severidad}]${file}`);
+      issues.push(`${row.Req}: observacion ABIERTA en AUDITORIA_OBSERVACION ${row.Categoria}${sub} [${row.Severidad}]${file}`);
     }
   } catch (error) {
     issues.push(`AUDITORIA_OBSERVACION: no se pudo consultar observaciones pendientes (${error.message})`);

@@ -1,2 +1,3 @@
 ﻿{"ts":"2026-07-03T23:15:00Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"Infraestructura: esquema git y acceso a VPS"}
 {"ts":"2026-07-04T14:50:00Z","actor":"claude","event":"IMPLEMENTACION_COMPLETA","status":"EN_DESARROLLO","nota":"Git+GitHub OK (4 commits, sin secretos); SSH por clave verificado (usuario autorizo pubkey); relevamiento VPS completo (Ubuntu 24.04, 12 vCPU/47GB, nginx, MySQL local, 8080 libre)."}
+{"ts":"2026-07-04T15:00:00Z","actor":"claude","event":"OBSERVACION_CORREGIDA","status":"REQUIERE_CAMBIOS","nota":"Obs 201 corregida: consulta AUDITORIA_OBSERVACION en tools JS al esquema real (IdReq/abierta/PROJECT_CODE); npm run handoff:check EXIT:0; claude-plan.md completado (hallazgo no bloqueante)."}

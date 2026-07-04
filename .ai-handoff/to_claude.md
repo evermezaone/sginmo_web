@@ -1,8 +1,8 @@
-ESTADO: ESPERA
-REQ: -
-TS: 2026-07-03T23:05:00Z
-AGENTE: sistema
-MENSAJE: Proyecto SGI inicializado. Sin tareas pendientes para el implementador (backlog completo en BD, menor pendiente: REQ-0001).
+ESTADO: REQUIERE_CAMBIOS
+REQ: REQ-0000
+TS: 2026-07-04T11:33:05Z
+AGENTE: codex
+MENSAJE: REQ-0000 requiere cambios: npm run handoff:check falla por consulta invalida a AUDITORIA_OBSERVACION (columna Req inexistente y estado pendiente inexistente). Ver codex-review.md y observacion en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

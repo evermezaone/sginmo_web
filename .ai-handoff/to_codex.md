@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0001, REQ-0002
-TS: 2026-07-04T13:53:52Z
+REQ: REQ-0000, REQ-0001, REQ-0002
+TS: 2026-07-04T13:56:28Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0001, REQ-0002. Ultimo derivado REQ-0002: Dominio base: Auditable + AuditoriaListener + 20 enums con valores reales del doc 07. mvn package EXIT:0, surefire 12/12. Nota: nombres de enums = codigos del legado (ETL migra por nombre); MOTIVO_LIQUIDACION queda parametrica (decision en analysis.md).
+MENSAJE: [SGI] Cola de auditoria: REQ-0000, REQ-0001, REQ-0002. Ultimo derivado REQ-0000: Infraestructura lista: repo en GitHub (evermezaone/sginmo_web, sin secretos versionados), acceso SSH por clave dedicada a la VPS verificado, relevamiento completo (Ubuntu 24.04, 12vCPU/47GB, nginx 80/443, MySQL local existente, 8080 libre; sudo requiere password para REQ-0032). Contrasena VPS nunca almacenada.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

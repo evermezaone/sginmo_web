@@ -24,4 +24,11 @@ Notas:
 
 ## Respuesta Por Observacion Cerrada
 
-No aplica: primera entrega.
+Obs 201 (criterio-no-cumplido / handoff-check-auditoria-observacion, alta):
+- Problema original: `tools/handoff-check.js` y `tools/handoff-ready.js` consultaban `AUDITORIA_OBSERVACION.Req` y `Estado='pendiente'`, inexistentes en el esquema real (usa `IdReq` y estados `abierta/corregida/descartada/diferida`); `npm run handoff:check` fallaba con "Unknown column 'Req'".
+- Cambio aplicado: consulta corregida en ambos tools: JOIN `AUDITORIA_OBSERVACION.IdReq -> REQ.IdReq -> PROYECTO.IdProyecto`, filtro `PROYECTO.Codigo = PROJECT_CODE` (nueva validacion de presencia en .env), `REQ.Codigo IN (...)` y `Estado='abierta'`; mensajes actualizados a "observacion ABIERTA".
+- Archivos tocados: `tools/handoff-check.js`, `tools/handoff-ready.js`.
+- Evidencia: `npm run handoff:check` → `HANDOFF CHECK: OK` EXIT:0 (ver test-plan T07); revision transversal: `grep AUDITORIA_OBSERVACION tools/` — los 3 consumidores (handoff-check.js, handoff-ready.js, handoff.py) usan el mismo patron IdReq/abierta; no quedan otros usos.
+- Validacion propia: la compuerta Python (`tools/handoff.py check SGI REQ-0000`) detectaba la Obs 201 como ABIERTA antes del cierre, confirmando que ambas compuertas leen la misma fuente.
+
+Hallazgo no bloqueante (claude-plan.md como plantilla): completado con la estrategia y archivos reales.

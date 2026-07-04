@@ -30,4 +30,4 @@
 {"req": "REQ-0030", "titulo": "Dashboard de inicio", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:50.344Z", "ts_actualizado": "2026-07-04T01:59:50.344Z"}
 {"req": "REQ-0031", "titulo": "ETL Firebird a PostgreSQL", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:51.560Z", "ts_actualizado": "2026-07-04T01:59:51.560Z"}
 {"req": "REQ-0032", "titulo": "Provision de servidor y deploy", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:52.741Z", "ts_actualizado": "2026-07-04T01:59:52.741Z"}
-{"req": "REQ-0000", "titulo": "Infraestructura: esquema git y acceso a VPS", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-03T23:15:00Z", "ts_actualizado": "2026-07-03T23:15:00Z"}
+{"req": "REQ-0000", "titulo": "Infraestructura: esquema git y acceso a VPS", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-03T23:15:00Z", "ts_actualizado": "2026-07-03T23:15:00Z"}
