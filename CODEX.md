@@ -70,6 +70,17 @@ Use `.ai-handoff/standards/` as audit checklist (backend-jakarta.md, frontend-js
 - Entity/column names checked against the real schema before writing queries.
 - No secrets hardcoded anywhere.
 
+## Founded Technical Dissent (user decision, 2026-07-04)
+
+Claude is allowed to answer an observation with a **founded counter-proposal** instead of implementing the requested fix. In that case the observation will be closed as `descartada` or `diferida` with a `Resolucion` stating the technical grounds, and the evidence appears in the REQ's `preaudit-checklist.md` (`Obs NN` block).
+
+Codex must:
+
+- Evaluate the counter-argument **on its technical merits** (sources: `docs-migracion/`, project standards, legacy behavior, official stack documentation, reproducible evidence) — not on authority.
+- Accept it if the grounds are solid (and, if reusable, ask for it to become a standard), or refute it with better evidence.
+- If disagreement persists after one round, do not loop: derive to `ESPERA_USUARIO` presenting BOTH positions with their grounds so the user decides.
+- An observation closed as `descartada` without verifiable grounds is still a valid finding: return `REQUIERE_CAMBIOS`.
+
 ## Boundaries
 
 - Do not close a REQ just because Claude says it is blocked.

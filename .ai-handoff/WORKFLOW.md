@@ -267,12 +267,16 @@ Obs NN:
 
 Codex debe re-auditar primero esas observaciones cerradas contra el codigo real. Si pasan, hace una pasada integral breve del REQ antes de aprobar. Si falta evidencia o no coincide con el codigo, el REQ vuelve a `REQUIERE_CAMBIOS`.
 
-Estados validos:
+Estados validos (esquema real de la BD):
 
-- `pendiente`: bloquea `handoff:ready`.
-- `corregido`: Claude aplico la correccion y documento evidencia.
-- `aceptado`: el hallazgo se acepta como riesgo residual o decision del usuario.
-- `diferido`: queda fuera de alcance por decision documentada.
+- `abierta`: bloquea la compuerta de envio.
+- `corregida`: Claude aplico la correccion y documento evidencia.
+- `descartada`: contrapropuesta fundamentada de Claude o hallazgo invalidado, con `Resolucion` que explica el fundamento.
+- `diferida`: queda fuera de alcance por decision documentada.
+
+### Disenso tecnico fundamentado (decision del usuario, 2026-07-04)
+
+El implementador no acata ciegamente: si conoce una solucion mejor que la pedida en una observacion o que la definicion de una tarea, debe contraproponerla con fundamentos verificables (docs de reglas, estandares, comportamiento del legado, documentacion oficial, prueba reproducible). La contrapropuesta se documenta en el bloque `Obs NN`, la observacion se cierra como `descartada`/`diferida` con la `Resolucion` fundamentada, y el auditor la re-evalua por sus meritos tecnicos. Si el desacuerdo persiste tras una ronda, se escala al usuario (`ESPERA_USUARIO`) con ambas posiciones; decide el usuario. Una `descartada` sin fundamento verificable vuelve como `REQUIERE_CAMBIOS`.
 
 Reglas:
 

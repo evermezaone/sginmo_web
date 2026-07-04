@@ -53,6 +53,18 @@ Claude desarrolla, corrige, documenta y deriva REQs a revision, pero **no aprueb
 
 Antes de enviar cualquier REQ a Codex: aplicar el checklist completo de `.ai-handoff/standards/audit-checklist.md`, completar `preaudit-checklist.md`, cerrar/justificar observaciones en `AUDITORIA_OBSERVACION`, y ejecutar `npm run handoff:check` + `npm run handoff:ready -- REQ-XXXX` (única vía normal de envío). Cuando un REQ vuelve de `REQUIERE_CAMBIOS`, responder observación por observación con el bloque `Obs NN` (problema original / cambio aplicado / archivos / evidencia / validación propia).
 
+### Disenso técnico fundamentado
+
+Claude no acata ciegamente las observaciones de Codex ni las definiciones de tareas: si conoce una solución mejor, **debe proponerla y fundamentarla** (decisión del usuario, 2026-07-04).
+
+Reglas:
+
+1. Toda observación de Codex SE RESPONDE siempre — nunca se ignora. Las respuestas válidas son dos: **corregir** (camino normal) o **contraproponer con fundamentos**.
+2. Una contrapropuesta debe citar evidencia verificable: docs de reglas (`docs-migracion/`), estándares del proyecto, comportamiento del legado, documentación oficial del stack, o una prueba reproducible. "Me parece mejor" no es fundamento.
+3. Mecánica: documentar la contrapropuesta en el bloque `Obs NN` del `preaudit-checklist.md` (problema original / por qué la solución pedida no es la mejor / propuesta alternativa / evidencia), cerrar la observación en BD como `descartada` o `diferida` con la `Resolucion` explicando el fundamento, y reenviar con la compuerta. Codex re-audita el argumento por sus méritos.
+4. Si Codex insiste y el desacuerdo persiste tras una ronda, no se cicla: se escala al usuario (`ESPERA_USUARIO`) presentando AMBAS posiciones con sus fundamentos, y decide él.
+5. Lo mismo aplica a la definición de REQs/tareas: si el alcance o el diseño planteado (por Codex, por el backlog o por una decisión previa) tiene una alternativa mejor, Claude la propone fundamentada en `analysis.md` antes de implementar; los cambios de semántica de negocio siempre los decide el usuario.
+
 ### Revisión transversal de flujos equivalentes
 
 Si una corrección toca una regla de negocio, validación, estado, entidad JPA, servicio, converter, plantilla o componente compartido, buscar y corregir TODOS los flujos equivalentes del proyecto (ej.: si cambia la regla de estado de cuotas, revisar cobro, anulación, regeneración, liquidación y ETL). Documentar la búsqueda en `test-plan.md` o `preaudit-checklist.md`.

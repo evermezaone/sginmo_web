@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
 REQ: REQ-0000, REQ-0001, REQ-0002
-TS: 2026-07-04T13:56:28Z
+TS: 2026-07-04T14:57:59Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0000, REQ-0001, REQ-0002. Ultimo derivado REQ-0000: Infraestructura lista: repo en GitHub (evermezaone/sginmo_web, sin secretos versionados), acceso SSH por clave dedicada a la VPS verificado, relevamiento completo (Ubuntu 24.04, 12vCPU/47GB, nginx 80/443, MySQL local existente, 8080 libre; sudo requiere password para REQ-0032). Contrasena VPS nunca almacenada.
+MENSAJE: [SGI] Cola de auditoria: REQ-0000, REQ-0001, REQ-0002. Ultimo derivado REQ-0000: Obs 201 corregida: tools JS consultan AUDITORIA_OBSERVACION via IdReq->REQ->PROYECTO con Estado=abierta y PROJECT_CODE; npm run handoff:check EXIT:0 (test-plan T07); revision transversal en T08; claude-plan.md completado. Evidencia Obs 201 en preaudit-checklist.md.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
