@@ -52,6 +52,9 @@ public class ArticuloBean implements Serializable {
     /** Pestana activa del dialogo; se resetea a Principal en cada apertura (obs del usuario). */
     private int tabActivo;
 
+    /** true si la ultima consulta tenia filtro global o de columna (para diferenciar el mensaje de grilla vacia). */
+    private boolean consultaFiltrada;
+
     @PostConstruct
     public void iniciar() {
         categorias = catalogoService.opciones("TIPOS_ARTICULO");
@@ -68,6 +71,8 @@ public class ArticuloBean implements Serializable {
             @Override
             public List<Articulo> load(int first, int pageSize,
                                        Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+                Map<String, Object> filtros = filtrosColumna(filterBy);
+                consultaFiltrada = (filtroGlobal != null && !filtroGlobal.isBlank()) || !filtros.isEmpty();
                 String ordenarPor = null;
                 boolean ascendente = true;
                 if (sortBy != null && !sortBy.isEmpty()) {
@@ -76,7 +81,7 @@ public class ArticuloBean implements Serializable {
                     ascendente = sm.getOrder() != org.primefaces.model.SortOrder.DESCENDING;
                 }
                 return articuloService.listar(first, pageSize, filtroGlobal,
-                        filtrosColumna(filterBy), ordenarPor, ascendente);
+                        filtros, ordenarPor, ascendente);
             }
         };
     }
@@ -109,6 +114,29 @@ public class ArticuloBean implements Serializable {
         propiedades = articuloService.listarPropiedades(articulo.getId());
         limpiarNuevaPropiedad();
         tabActivo = 0;
+    }
+
+    /** Limpia el buscador global; los filtros de columna los limpia PF('tabla').clearFilters() en el oncomplete. */
+    public void limpiarBusqueda() {
+        filtroGlobal = "";
+    }
+
+    /** Aviso temprano de duplicado al salir del campo codigo (el guardado igual re-valida). */
+    public void verificarCodigo() {
+        if (seleccionado != null
+                && articuloService.existeCodigo(seleccionado.getCodigo(), seleccionado.getId())) {
+            aviso(FacesMessage.SEVERITY_WARN, "Código ya utilizado",
+                    "Ya existe un artículo con el código '" + seleccionado.getCodigo() + "'");
+        }
+    }
+
+    /** Aviso temprano de duplicado al salir del campo aplicacion. */
+    public void verificarAplicacion() {
+        if (seleccionado != null
+                && articuloService.existeAplicacion(seleccionado.getAplicacion(), seleccionado.getId())) {
+            aviso(FacesMessage.SEVERITY_WARN, "Aplicación ya asignada",
+                    "La aplicación '" + seleccionado.getAplicacion() + "' ya está asignada a otro artículo");
+        }
     }
 
     public void agregarPropiedad() {
@@ -186,4 +214,6 @@ public class ArticuloBean implements Serializable {
 
     public int getTabActivo() { return tabActivo; }
     public void setTabActivo(int tabActivo) { this.tabActivo = tabActivo; }
+
+    public boolean isConsultaFiltrada() { return consultaFiltrada; }
 }

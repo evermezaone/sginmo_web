@@ -35,7 +35,7 @@
                      lazy="true" paginator="true" rows="10"
                      paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
                      currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
-                     emptyMessage="Sin artículos para mostrar">
+                     emptyMessage="#{articuloBean.consultaFiltrada ? 'No hay resultados para estos filtros' : 'No hay artículos cargados'}">
 
             <f:facet name="header">
                 <div class="barra-tabla">
@@ -46,14 +46,16 @@
                     <p:commandButton id="btnColumnas" icon="pi pi-sliders-h" title="Elegir columnas (afecta la exportación)"
                                      styleClass="ui-button-outlined" type="button"/>
                     <p:columnToggler datasource="tabla" trigger="btnColumnas"/>
-                    <p:commandButton icon="pi pi-file" title="Exportar CSV" styleClass="ui-button-outlined" ajax="false">
-                        <p:dataExporter type="csv" target="tabla" fileName="articulos"/>
+                    <!-- pageOnly: se exporta la pagina visible (la exportacion masiva sera un REQ aparte,
+                         con limite y proceso asincrono, para no tumbar el servidor por error) -->
+                    <p:commandButton icon="pi pi-file" title="Exportar CSV (página visible)" styleClass="ui-button-outlined" ajax="false">
+                        <p:dataExporter type="csv" target="tabla" fileName="articulos" pageOnly="true"/>
                     </p:commandButton>
-                    <p:commandButton icon="pi pi-code" title="Exportar XML" styleClass="ui-button-outlined" ajax="false">
-                        <p:dataExporter type="xml" target="tabla" fileName="articulos"/>
+                    <p:commandButton icon="pi pi-code" title="Exportar XML (página visible)" styleClass="ui-button-outlined" ajax="false">
+                        <p:dataExporter type="xml" target="tabla" fileName="articulos" pageOnly="true"/>
                     </p:commandButton>
-                    <p:commandButton icon="pi pi-file-pdf" title="Exportar PDF" styleClass="ui-button-outlined" ajax="false">
-                        <p:dataExporter type="pdf" target="tabla" fileName="articulos"/>
+                    <p:commandButton icon="pi pi-file-pdf" title="Exportar PDF (página visible)" styleClass="ui-button-outlined" ajax="false">
+                        <p:dataExporter type="pdf" target="tabla" fileName="articulos" pageOnly="true"/>
                     </p:commandButton>
                     <span style="flex:1"></span>
                     <p:inputText value="#{articuloBean.filtroGlobal}" placeholder="Buscar código, descripción, tipo o impuesto"
@@ -64,6 +66,10 @@
                     <p:commandButton type="button" icon="pi pi-filter" title="Búsqueda avanzada (filtros por columna)"
                                      styleClass="ui-button-outlined"
                                      onclick="var c=document.getElementById('frmLista:contFiltros');c.classList.toggle('filtros-ocultos');if(c.classList.contains('filtros-ocultos'))PF('tabla').clearFilters();"/>
+                    <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda y filtros"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{articuloBean.limpiarBusqueda()}"
+                                     update="tabla" oncomplete="PF('tabla').clearFilters()"/>
                 </div>
             </f:facet>
 
@@ -140,7 +146,7 @@
     </h:form>
 
     <p:dialog header="Artículo" widgetVar="dlgArticulo" modal="true" resizable="false"
-              responsive="true" width="680" dynamic="true">
+              responsive="true" width="680" dynamic="true" closeOnEscape="true">
         <h:form id="frmEdicion">
             <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <ui:fragment rendered="#{not empty articuloBean.seleccionado}">
@@ -154,7 +160,11 @@
                             <div class="campo">
                                 <label>Código *</label>
                                 <p:inputText value="#{articuloBean.seleccionado.codigo}" required="true" label="Código"
-                                             requiredMessage="El código es obligatorio" maxlength="25"/>
+                                             requiredMessage="El código es obligatorio" maxlength="25">
+                                    <!-- aviso temprano de duplicado al salir del campo (el guardado re-valida igual) -->
+                                    <p:ajax event="change" listener="#{articuloBean.verificarCodigo()}"
+                                            process="@this" update=":frmEdicion:msjEdicion"/>
+                                </p:inputText>
                             </div>
                             <div class="campo">
                                 <label>Tipo *</label>
@@ -221,7 +231,10 @@
                             </div>
                             <div class="campo">
                                 <label>Aplicación (clave del negocio)</label>
-                                <p:inputText value="#{articuloBean.seleccionado.aplicacion}" label="Aplicación" maxlength="30"/>
+                                <p:inputText value="#{articuloBean.seleccionado.aplicacion}" label="Aplicación" maxlength="30">
+                                    <p:ajax event="change" listener="#{articuloBean.verificarAplicacion()}"
+                                            process="@this" update=":frmEdicion:msjEdicion"/>
+                                </p:inputText>
                             </div>
                         </div>
                         <div class="campo">

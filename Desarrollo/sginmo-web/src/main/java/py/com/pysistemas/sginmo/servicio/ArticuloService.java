@@ -98,11 +98,20 @@ public class ArticuloService {
     @Transactional
     public Articulo guardar(Articulo articulo) {
         validar(articulo);
-        if (articulo.getId() == null) {
-            em.persist(articulo);
-            return articulo;
+        try {
+            Articulo resultado;
+            if (articulo.getId() == null) {
+                em.persist(articulo);
+                resultado = articulo;
+            } else {
+                resultado = em.merge(articulo);
+            }
+            em.flush(); // fuerza el chequeo de @Version aca, para poder dar un mensaje claro
+            return resultado;
+        } catch (jakarta.persistence.OptimisticLockException e) {
+            throw new NegocioException(
+                "El registro fue modificado por otro usuario. Cierre el diálogo, vuelva a abrirlo y cargue de nuevo sus cambios.");
         }
-        return em.merge(articulo);
     }
 
     /** Baja/alta logica: los maestros nunca se borran fisicamente (conservan historial). */
@@ -157,28 +166,40 @@ public class ArticuloService {
         }
     }
 
-    private void validar(Articulo a) {
-        // Unicidad de codigo (ademas del UNIQUE de la BD, para dar mensaje claro)
-        Long repetidos = em.createQuery(
+    /** Chequeo remoto (al salir del campo en la UI) y tambien parte de validar() al guardar. */
+    public boolean existeCodigo(String codigo, Long exceptoId) {
+        if (codigo == null || codigo.isBlank()) {
+            return false;
+        }
+        return em.createQuery(
                 "SELECT COUNT(x) FROM Articulo x WHERE lower(x.codigo) = :codigo AND (:id IS NULL OR x.id <> :id)",
                 Long.class)
-            .setParameter("codigo", a.getCodigo().trim().toLowerCase())
-            .setParameter("id", a.getId())
-            .getSingleResult();
-        if (repetidos > 0) {
+            .setParameter("codigo", codigo.trim().toLowerCase())
+            .setParameter("id", exceptoId)
+            .getSingleResult() > 0;
+    }
+
+    /** Chequeo remoto de la clave funcional aplicacion. */
+    public boolean existeAplicacion(String aplicacion, Long exceptoId) {
+        if (aplicacion == null || aplicacion.isBlank()) {
+            return false;
+        }
+        return em.createQuery(
+                "SELECT COUNT(x) FROM Articulo x WHERE x.aplicacion = :apl AND (:id IS NULL OR x.id <> :id)",
+                Long.class)
+            .setParameter("apl", aplicacion.trim())
+            .setParameter("id", exceptoId)
+            .getSingleResult() > 0;
+    }
+
+    private void validar(Articulo a) {
+        // Unicidad de codigo (ademas del UNIQUE de la BD, para dar mensaje claro)
+        if (existeCodigo(a.getCodigo(), a.getId())) {
             throw new NegocioException("Ya existe un artículo con el código '" + a.getCodigo() + "'");
         }
         // Unicidad de aplicacion (clave funcional del negocio)
-        if (a.getAplicacion() != null && !a.getAplicacion().isBlank()) {
-            Long apl = em.createQuery(
-                    "SELECT COUNT(x) FROM Articulo x WHERE x.aplicacion = :apl AND (:id IS NULL OR x.id <> :id)",
-                    Long.class)
-                .setParameter("apl", a.getAplicacion().trim())
-                .setParameter("id", a.getId())
-                .getSingleResult();
-            if (apl > 0) {
-                throw new NegocioException("La aplicación '" + a.getAplicacion() + "' ya está asignada a otro artículo");
-            }
+        if (existeAplicacion(a.getAplicacion(), a.getId())) {
+            throw new NegocioException("La aplicación '" + a.getAplicacion() + "' ya está asignada a otro artículo");
         }
         if (a.getStockMinimo() != null && a.getStockMaximo() != null
                 && a.getStockMinimo().compareTo(a.getStockMaximo()) > 0) {

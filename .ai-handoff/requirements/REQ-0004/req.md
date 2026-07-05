@@ -32,3 +32,10 @@ UNIQUE por los tres primeros) y un `PreferenciaService` generico. Primer uso: pe
 las columnas visibles del selector de columnas (p:columnToggler) de cada ABM, para que
 cada usuario recupere su configuracion al volver a entrar. El usuario decidio NO activar
 un mecanismo provisorio sin login; hasta este REQ el selector funciona pero no recuerda.
+
+**Ampliacion por estudio del estandar ABM (2026-07-05, doc 11):**
+- **"Mi vista"**: el usuario puede guardar combinaciones nombradas de columnas visibles +
+  orden + filtros + tamano de pagina por pantalla (extension natural de preferencia_usuario,
+  valor JSON). Incluye la persistencia temporal de pagina/filtros/orden entre pantallas.
+- **Permisos por ACCION, no solo por pantalla**: ver / crear / editar / inactivar /
+  reactivar / exportar / ver auditoria como permisos separados. Exportar datos ES un permiso.

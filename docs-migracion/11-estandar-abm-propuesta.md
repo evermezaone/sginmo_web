@@ -14,7 +14,7 @@ todos los ABM del sistema (REQ-0007 geografía, REQ-0008 monedas/formas de pago/
 | 3 | Búsqueda global | Un solo campo que busca a la vez en código, descripción, tipo e impuesto. Dispara a los 400 ms de dejar de tipear (sin botón). |
 | 4 | Búsqueda avanzada bajo demanda | Botón embudo junto al buscador: muestra filtros por columna — texto (contiene) en campos libres, combos de igualdad en dominios cerrados (Tipo, Impuesto, Estado). Al ocultarlos se limpian solos. |
 | 5 | Selector de columnas | Botón que permite elegir qué columnas ver. Lo elegido afecta también la exportación. Pendiente REQ-0004: recordar la elección por usuario (`preferencia_usuario`). |
-| 6 | Exportación CSV / XML / PDF | Exporta lo visible (respeta el selector de columnas). La columna Acciones queda excluida siempre. |
+| 6 | Exportación CSV / XML / PDF | Exporta la **página visible** (pageOnly) respetando el selector de columnas; Acciones excluida. La exportación masiva del filtro completo será un REQ aparte con límite y proceso asíncrono. |
 | 7 | Anchos según dominio | Código/Estado angostos y sin corte, Descripción flexible, Precio alineado a la derecha con separador de miles. |
 | 8 | Estado visual | Etiqueta de color (verde ACTIVO / rojo INACTIVO). |
 | 9 | Navegación | Botón Inicio (ícono casa) en la esquina superior. |
@@ -43,9 +43,57 @@ todos los ABM del sistema (REQ-0007 geografía, REQ-0008 monedas/formas de pago/
 | 22 | Responsive | Diálogo y grilla usables desde el celular (validado en producción de prueba). |
 | 23 | Deploy verificable | Script de deploy atómico a la VPS que falla ruidosamente si el redeploy no entra. |
 
-## 4. Pendientes conocidos del estándar (no bloquean la aprobación)
+## 4. Estudio final del usuario (2026-07-05): decisiones sobre las mejoras propuestas
 
-- **Preferencias por usuario** (columnas visibles, y a futuro filas por página, último filtro): requiere login → registrado como alcance del REQ-0004 (`preferencia_usuario`).
-- **Permisos por rol sobre botones** (quién ve Nuevo/Editar/Inactivar/Exportar): REQ-0004.
-- **PDF con estilo corporativo** (logo, título, pie): hoy exporta tabla simple; los reportes formales serán JasperReports (REQ propio).
-- **Filtro numérico por rango** (ej. precio entre X e Y): excluido a propósito por simplicidad; se agrega si un ABM lo necesita.
+### 4.1 Incorporadas YA al ABM de referencia
+
+| Mejora | Cómo quedó |
+|--------|-----------|
+| Control de concurrencia optimista | Columna `version` en las 36 tablas (V4) + `@Version` en `Auditable`. Mensaje: "El registro fue modificado por otro usuario...". Toda tabla nueva nace con `version`; los SP de los motores que toquen tablas administradas por ABM deben hacer `SET version = version + 1`. |
+| Duplicados detectados antes del submit | Chequeo remoto al salir de `codigo` y `aplicacion` (aviso WARN temprano). El Service y el UNIQUE de la BD siguen validando al guardar (triple capa). |
+| Exportación con límite explícito | `pageOnly`: se exporta solo la página visible. Exportación masiva = REQ futuro (límite + job asíncrono + confirmación). |
+| Debounce estandarizado | 400 ms en búsqueda global (rango estándar 400–600). PrimeFaces serializa la cola AJAX: las respuestas llegan en orden, una respuesta vieja no pisa una nueva. |
+| Limpiar filtros | Botón siempre visible junto a la búsqueda avanzada: limpia global + columnas en un clic. |
+| Filtros activos ocultos | Resuelto por diseño: al ocultar el panel avanzado los filtros SE LIMPIAN, no pueden quedar filtros invisibles aplicados. |
+| Mensajes de vacío diferenciados | "No hay resultados para estos filtros" vs "No hay artículos cargados". |
+| Teclado | Esc cierra el diálogo (`closeOnEscape`); la búsqueda dispara sola (Enter implícito); Tab sigue el orden natural del formulario. |
+| Numéricos con máscara local | Ya cubierto: `p:inputNumber` muestra formato local y guarda decimal limpio. |
+| Columnas mínimas no ocultables | Ya cubierto: columnas clave con `toggleable="false"` (Código, Acciones). |
+
+### 4.2 Aceptadas — mapeadas a REQs (dependen de login o de los motores)
+
+| Mejora | Dónde queda |
+|--------|-------------|
+| Vistas guardadas por usuario ("Mi vista") | REQ-0004: `preferencia_usuario` guarda columnas + orden + filtros + tamaño de página como vistas nombradas. |
+| Persistencia temporal de página/filtros/orden | Dentro del diálogo ya se conserva (misma vista). Entre pantallas se implementa junto con "Mi vista" (REQ-0004) para que conviva con la regla "ocultar limpia". |
+| Permisos por acción | REQ-0004: ver / crear / editar / inactivar / reactivar / exportar / ver auditoría como permisos separados (exportar ES un permiso). |
+| Historial de cambios visible | REQ nuevo (auditoría por triggers en BD, coherente con la arquitectura BD-céntrica): tabla `auditoria_cambio` + pestaña "Historial" en maestros sensibles (quién, qué campo, valor anterior/nuevo, cuándo). |
+| Motivo obligatorio al inactivar maestros sensibles | Mismo REQ de auditoría: el motivo se guarda en el historial. Aplica a articulo, forma_pago, parametro_sistema, usuario, listas que afecten cobros/documentos. |
+| Validación de uso antes de inactivar | Se implementa cuando existan los motores que referencian (documento/cobro): advertir impacto siempre, bloquear solo si rompe operación activa. |
+| Autocompletar lazy en combos grandes | Regla aceptada: combos con > ~50 opciones usan `p:autoComplete` lazy (primer caso real: ubicación geográfica, REQ-0007). |
+| PDF con fecha/usuario/filtros; CSV estable para ETL | Con la exportación masiva / reportes JasperReports. CSV: UTF-8, separador y formato decimal documentados. |
+
+### 4.3 Matizadas (disenso fundamentado)
+
+- **DTOs Create/Update para todo ABM**: para maestros simples se mantiene la entidad
+  subset-mapeada como modelo del formulario (menos código, menos mapeos que mantener, y la
+  entidad ya respeta los DEFAULT de la BD). Los DTOs se reservan para flujos complejos
+  (documentos, cobros, liquidaciones) donde el formulario NO es 1:1 con la tabla.
+- **Suite de pruebas por ABM**: se acepta el espíritu, adaptado: prueba unitaria de la
+  whitelist y validaciones del Service; la paginación/filtro/orden se prueba contra la BD
+  real de la VPS (checklist del REQ). Testcontainers/integración completa se evalúa cuando
+  haya CI (hoy no hay pipeline; el gate es handoff + revisión de Codex).
+
+### 4.4 Contrato mínimo repetible de todo ABM (regla arquitectónica aceptada, adaptada a las convenciones del proyecto)
+
+1. `Service.contar/listar(filtroGlobal, filtrosColumna, orden)` con **whitelist** de rutas JPQL.
+2. `Service.guardar()` con `validar()` (unicidades con mensaje de negocio + coherencias) y chequeo `@Version` con mensaje claro.
+3. `Service.existeXxx(valor, exceptoId)` por cada clave única (reutilizado por el chequeo remoto y por validar()).
+4. `Service.cambiarEstado()` = baja/alta lógica (nunca DELETE).
+5. Bean `@ViewScoped` solo orquesta; entidad con `equals/hashCode` por id.
+6. Checklist de prueba del REQ: paginación, orden, filtros, unicidad, baja lógica, concurrencia.
+
+## 5. Pendientes que no bloquean la aprobación
+
+- Skeleton de carga por grilla (hoy: overlay estándar de PrimeFaces). Pulido menor.
+- Filtro numérico por rango (ej. precio entre X e Y): se agrega si un ABM lo necesita.

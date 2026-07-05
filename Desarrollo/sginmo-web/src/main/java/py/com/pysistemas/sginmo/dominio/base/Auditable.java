@@ -15,6 +15,11 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditoriaListener.class)
 public abstract class Auditable {
 
+    /** Concurrencia optimista (V4): dos ediciones simultaneas no se pisan en silencio. */
+    @jakarta.persistence.Version
+    @Column(name = "version", nullable = false)
+    private Long version;
+
     @Column(name = "usuario_creacion", length = 20, nullable = false, updatable = false)
     private String usuarioCreacion;
 
@@ -26,6 +31,8 @@ public abstract class Auditable {
 
     @Column(name = "fecha_modificacion")
     private LocalDateTime fechaModificacion;
+
+    public Long getVersion() { return version; }
 
     public String getUsuarioCreacion() { return usuarioCreacion; }
     void setUsuarioCreacion(String usuarioCreacion) { this.usuarioCreacion = usuarioCreacion; }
