@@ -62,15 +62,37 @@ public class ArticuloBean implements Serializable {
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> filterBy) {
-                return (int) articuloService.contar(filtroGlobal);
+                return (int) articuloService.contar(filtroGlobal, filtrosColumna(filterBy));
             }
 
             @Override
             public List<Articulo> load(int first, int pageSize,
                                        Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
-                return articuloService.listar(first, pageSize, filtroGlobal);
+                String ordenarPor = null;
+                boolean ascendente = true;
+                if (sortBy != null && !sortBy.isEmpty()) {
+                    SortMeta sm = sortBy.values().iterator().next();
+                    ordenarPor = sm.getField();
+                    ascendente = sm.getOrder() != org.primefaces.model.SortOrder.DESCENDING;
+                }
+                return articuloService.listar(first, pageSize, filtroGlobal,
+                        filtrosColumna(filterBy), ordenarPor, ascendente);
             }
         };
+    }
+
+    /** Convierte los FilterMeta de PrimeFaces en un mapa simple campo→valor para el servicio. */
+    private Map<String, Object> filtrosColumna(Map<String, FilterMeta> filterBy) {
+        var filtros = new java.util.HashMap<String, Object>();
+        if (filterBy != null) {
+            filterBy.forEach((clave, fm) -> {
+                Object valor = fm.getFilterValue();
+                if (valor != null && !valor.toString().isBlank()) {
+                    filtros.put(fm.getField(), valor);
+                }
+            });
+        }
+        return filtros;
     }
 
     // ── Acciones ──

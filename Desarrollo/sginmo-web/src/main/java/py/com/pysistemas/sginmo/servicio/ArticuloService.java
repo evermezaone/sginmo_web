@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import py.com.pysistemas.sginmo.dominio.catalogo.Articulo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * ABM del maestro de articulos (patron propuesto para todos los ABM del sistema).
@@ -21,26 +22,65 @@ public class ArticuloService {
 
     // ── Consultas (paginacion lazy para p:dataTable) ──
 
-    public long contar(String filtro) {
-        var q = em.createQuery(
-            "SELECT COUNT(a) FROM Articulo a WHERE (:f = '' OR lower(a.codigo) LIKE :like OR lower(a.descripcion) LIKE :like)",
-            Long.class);
-        aplicarFiltro(q, filtro);
+    /** Rutas JPQL permitidas para ordenar (clave = field de la columna en la vista). */
+    private static final Map<String, String> CAMPOS_ORDEN = Map.of(
+        "codigo", "a.codigo",
+        "descripcion", "a.descripcion",
+        "tipo", "a.tipo",
+        "impuesto.descripcion", "i.descripcion",
+        "precioUnitario", "a.precioUnitario",
+        "estado", "a.estado");
+
+    /** Rutas JPQL permitidas para filtrar por columna (igualdad exacta, combos). */
+    private static final Map<String, String> CAMPOS_FILTRO = Map.of(
+        "tipo", "a.tipo",
+        "impuesto.descripcion", "i.descripcion",
+        "estado", "a.estado");
+
+    public long contar(String filtro, Map<String, Object> filtros) {
+        var q = em.createQuery(jpql("SELECT COUNT(a)", filtros, null, true), Long.class);
+        aplicarParametros(q, filtro, filtros);
         return q.getSingleResult();
     }
 
-    public List<Articulo> listar(int primero, int cantidad, String filtro) {
-        var q = em.createQuery(
-            "SELECT a FROM Articulo a WHERE (:f = '' OR lower(a.codigo) LIKE :like OR lower(a.descripcion) LIKE :like) ORDER BY a.descripcion",
-            Articulo.class);
-        aplicarFiltro(q, filtro);
+    public List<Articulo> listar(int primero, int cantidad, String filtro,
+                                 Map<String, Object> filtros, String ordenarPor, boolean ascendente) {
+        var q = em.createQuery(jpql("SELECT a", filtros, ordenarPor, ascendente), Articulo.class);
+        aplicarParametros(q, filtro, filtros);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
     }
 
-    private void aplicarFiltro(jakarta.persistence.TypedQuery<?> q, String filtro) {
+    /** El filtro global busca en codigo, descripcion, tipo e impuesto; solo se ordena/filtra por rutas whitelisted. */
+    private String jpql(String select, Map<String, Object> filtros, String ordenarPor, boolean ascendente) {
+        var sb = new StringBuilder(select)
+            .append(" FROM Articulo a LEFT JOIN a.impuesto i")
+            .append(" WHERE (:f = '' OR lower(a.codigo) LIKE :like OR lower(a.descripcion) LIKE :like")
+            .append(" OR lower(a.tipo) LIKE :like OR lower(coalesce(i.descripcion, '')) LIKE :like)");
+        int n = 0;
+        for (String campo : filtros.keySet()) {
+            String ruta = CAMPOS_FILTRO.get(campo);
+            if (ruta != null) {
+                sb.append(" AND ").append(ruta).append(" = :fc").append(n++);
+            }
+        }
+        if (select.startsWith("SELECT a")) {
+            String ruta = ordenarPor == null ? null : CAMPOS_ORDEN.get(ordenarPor);
+            sb.append(" ORDER BY ").append(ruta == null ? "a.descripcion" : ruta)
+              .append(ascendente ? " ASC" : " DESC");
+        }
+        return sb.toString();
+    }
+
+    private void aplicarParametros(jakarta.persistence.TypedQuery<?> q, String filtro, Map<String, Object> filtros) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         q.setParameter("f", f);
         q.setParameter("like", "%" + f + "%");
+        int n = 0;
+        for (var e : filtros.entrySet()) {
+            if (CAMPOS_FILTRO.containsKey(e.getKey())) {
+                q.setParameter("fc" + n++, e.getValue());
+            }
+        }
     }
 
     // ── Escrituras ──

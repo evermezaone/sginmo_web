@@ -37,7 +37,8 @@
                 <div class="barra-tabla">
                     <p:commandButton value="Nuevo" icon="pi pi-plus"
                                      actionListener="#{articuloBean.nuevo()}"
-                                     update=":frmEdicion" oncomplete="PF('dlgArticulo').show()"/>
+                                     update=":frmEdicion"
+                                     oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
                     <p:commandButton id="btnColumnas" icon="pi pi-sliders-h" title="Elegir columnas (afecta la exportación)"
                                      styleClass="ui-button-outlined" type="button"/>
                     <p:columnToggler datasource="tabla" trigger="btnColumnas"/>
@@ -51,38 +52,64 @@
                         <p:dataExporter type="pdf" target="tabla" fileName="articulos"/>
                     </p:commandButton>
                     <span style="flex:1"></span>
-                    <p:inputText value="#{articuloBean.filtroGlobal}" placeholder="Buscar código o descripción"
-                                 style="width:15rem;">
+                    <p:inputText value="#{articuloBean.filtroGlobal}" placeholder="Buscar código, descripción, tipo o impuesto"
+                                 style="width:17rem;">
                         <p:ajax event="keyup" delay="400" update="tabla"/>
                     </p:inputText>
                 </div>
             </f:facet>
 
-            <!-- Anchos segun dominio del dato: codigo/estado angostos, descripcion toma el resto -->
-            <p:column headerText="Código" style="width:6rem; white-space:nowrap;" toggleable="false">
+            <!-- Anchos segun dominio del dato: codigo/estado angostos, descripcion toma el resto.
+                 Orden: click en el titulo. Filtros por columna: combos de igualdad exacta. -->
+            <p:column headerText="Código" sortBy="#{art.codigo}" style="width:6rem; white-space:nowrap;" toggleable="false">
                 <h:outputText value="#{art.codigo}"/>
             </p:column>
-            <p:column headerText="Descripción" style="min-width:18rem;">
+            <p:column headerText="Descripción" sortBy="#{art.descripcion}" style="min-width:18rem;">
                 <h:outputText value="#{art.descripcion}"/>
             </p:column>
-            <p:column headerText="Tipo" style="width:6.5rem;">
+            <p:column headerText="Tipo" sortBy="#{art.tipo}" filterBy="#{art.tipo}" style="width:8rem;">
+                <f:facet name="filter">
+                    <p:selectOneMenu onchange="PF('tabla').filter()" styleClass="ui-column-filter">
+                        <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="Servicio" itemValue="SERVICIO"/>
+                        <f:selectItem itemLabel="Producto" itemValue="PRODUCTO"/>
+                    </p:selectOneMenu>
+                </f:facet>
                 <h:outputText value="#{art.tipo}"/>
             </p:column>
-            <p:column headerText="Impuesto" style="width:6.5rem;">
+            <p:column headerText="Impuesto" sortBy="#{art.impuesto.descripcion}" filterBy="#{art.impuesto.descripcion}"
+                      style="width:8rem;">
+                <f:facet name="filter">
+                    <p:selectOneMenu onchange="PF('tabla').filter()" styleClass="ui-column-filter">
+                        <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{articuloBean.impuestos}" var="impF"
+                                       itemLabel="#{impF.descripcion}" itemValue="#{impF.descripcion}"/>
+                    </p:selectOneMenu>
+                </f:facet>
                 <h:outputText value="#{art.impuesto.descripcion}"/>
             </p:column>
-            <p:column headerText="Precio (Gs.)" style="width:7.5rem; text-align:right; white-space:nowrap;">
+            <p:column headerText="Precio (Gs.)" sortBy="#{art.precioUnitario}"
+                      style="width:7.5rem; text-align:right; white-space:nowrap;">
                 <h:outputText value="#{art.precioUnitario}">
                     <f:convertNumber groupingUsed="true" maxFractionDigits="0"/>
                 </h:outputText>
             </p:column>
-            <p:column headerText="Estado" style="width:5.5rem; text-align:center;">
+            <p:column headerText="Estado" sortBy="#{art.estado}" filterBy="#{art.estado}"
+                      style="width:7rem; text-align:center;">
+                <f:facet name="filter">
+                    <p:selectOneMenu onchange="PF('tabla').filter()" styleClass="ui-column-filter">
+                        <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="Activo" itemValue="ACTIVO"/>
+                        <f:selectItem itemLabel="Inactivo" itemValue="INACTIVO"/>
+                    </p:selectOneMenu>
+                </f:facet>
                 <p:tag value="#{art.estado}" severity="#{art.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
             </p:column>
             <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
                 <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="ui-button-flat"
                                  actionListener="#{articuloBean.editar(art)}"
-                                 update=":frmEdicion" oncomplete="PF('dlgArticulo').show()"/>
+                                 update=":frmEdicion"
+                                 oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
                 <p:commandButton icon="#{art.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
                                  title="#{art.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
                                  styleClass="ui-button-flat"
@@ -107,10 +134,9 @@
             <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <ui:fragment rendered="#{not empty articuloBean.seleccionado}">
 
-                <!-- activeIndex en el bean: se resetea a Principal al abrir y queda sincronizado
-                     con el servidor (evita el desfasaje titulo/contenido observado por el usuario) -->
-                <p:tabView id="tabs" activeIndex="#{articuloBean.tabActivo}">
-                    <p:ajax event="tabChange"/>
+                <!-- Al abrir el dialogo siempre se vuelve a Principal via PF('wtabs').select(0)
+                     (evita el desfasaje titulo/contenido observado por el usuario) -->
+                <p:tabView id="tabs" widgetVar="wtabs" activeIndex="#{articuloBean.tabActivo}">
                     <!-- TAB 1: lo principal -->
                     <p:tab title="Principal">
                         <div class="fila-2">
@@ -220,7 +246,7 @@
                         <div class="fila-2" style="align-items:end;">
                             <div class="campo">
                                 <label>Propiedad</label>
-                                <p:selectOneMenu value="#{articuloBean.nuevaPropiedadCodigo}" label="Propiedad">
+                                <p:selectOneMenu id="cboPropiedad" value="#{articuloBean.nuevaPropiedadCodigo}" label="Propiedad">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.propiedadesDisponibles}" var="pd"
                                                    itemLabel="#{pd.descripcion}" itemValue="#{pd.codigo}"/>
@@ -229,10 +255,13 @@
                             <div class="campo">
                                 <label>Valor</label>
                                 <div style="display:flex; gap:.5rem;">
-                                    <p:inputText value="#{articuloBean.nuevaPropiedadValor}" label="Valor" maxlength="100" style="flex:1;"/>
+                                    <p:inputText id="txtValorPropiedad" value="#{articuloBean.nuevaPropiedadValor}"
+                                                 label="Valor" maxlength="100" style="flex:1;"/>
+                                    <!-- process parcial: no valida los campos de los otros tabs -->
                                     <p:commandButton icon="pi pi-plus" title="Agregar"
                                                      actionListener="#{articuloBean.agregarPropiedad()}"
-                                                     update="tabs:tblPropiedades msjEdicion"/>
+                                                     process="@this cboPropiedad txtValorPropiedad"
+                                                     update="tblPropiedades cboPropiedad txtValorPropiedad :frmEdicion:msjEdicion"/>
                                 </div>
                             </div>
                         </div>
@@ -247,7 +276,8 @@
                             <p:column style="width:4rem; text-align:center;">
                                 <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
                                                  actionListener="#{articuloBean.eliminarPropiedad(prop.id)}"
-                                                 update="tabs:tblPropiedades msjEdicion"/>
+                                                 process="@this"
+                                                 update="tblPropiedades :frmEdicion:msjEdicion"/>
                             </p:column>
                         </p:dataTable>
                     </p:tab>
