@@ -43,8 +43,9 @@ CREATE TABLE ubicacion_geografica (
   estado       varchar(10) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO','INACTIVO')),
   usuario_creacion varchar(20) NOT NULL, fecha_creacion timestamptz NOT NULL,
   usuario_modificacion varchar(20), fecha_modificacion timestamptz,
-  FOREIGN KEY (nivel_lista, nivel_codigo) REFERENCES entidad,
-  UNIQUE (padre, nombre, nivel_codigo)
+  FOREIGN KEY (nivel_lista, nivel_codigo) REFERENCES entidad
+  -- Sin UNIQUE por nombre: el INE registra barrios homonimos con codigos distintos
+  -- bajo un mismo distrito; la unicidad real es codigo_oficial.
 );
 CREATE INDEX ix_ubicacion_padre ON ubicacion_geografica (padre);
 
