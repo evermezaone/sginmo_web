@@ -25,7 +25,7 @@
     </div>
 
     <h:form id="frmLista">
-        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
 
         <p:dataTable id="tabla" widgetVar="tabla" var="art" value="#{articuloBean.modelo}"
                      lazy="true" paginator="true" rows="10"
@@ -104,21 +104,24 @@
     <p:dialog header="Artículo" widgetVar="dlgArticulo" modal="true" resizable="false"
               responsive="true" width="680" dynamic="true">
         <h:form id="frmEdicion">
-            <p:messages id="msjEdicion" showDetail="true" closable="true"/>
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <ui:fragment rendered="#{not empty articuloBean.seleccionado}">
 
-                <p:tabView id="tabs">
+                <!-- activeIndex en el bean: se resetea a Principal al abrir y queda sincronizado
+                     con el servidor (evita el desfasaje titulo/contenido observado por el usuario) -->
+                <p:tabView id="tabs" activeIndex="#{articuloBean.tabActivo}">
+                    <p:ajax event="tabChange"/>
                     <!-- TAB 1: lo principal -->
                     <p:tab title="Principal">
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Código *</label>
-                                <p:inputText value="#{articuloBean.seleccionado.codigo}" required="true"
+                                <p:inputText value="#{articuloBean.seleccionado.codigo}" required="true" label="Código"
                                              requiredMessage="El código es obligatorio" maxlength="25"/>
                             </div>
                             <div class="campo">
                                 <label>Tipo *</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.tipo}" required="true"
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.tipo}" required="true" label="Tipo"
                                                  requiredMessage="El tipo es obligatorio">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItem itemLabel="Servicio" itemValue="SERVICIO"/>
@@ -128,13 +131,13 @@
                         </div>
                         <div class="campo">
                             <label>Descripción *</label>
-                            <p:inputText value="#{articuloBean.seleccionado.descripcion}" required="true"
+                            <p:inputText value="#{articuloBean.seleccionado.descripcion}" required="true" label="Descripción"
                                          requiredMessage="La descripción es obligatoria" maxlength="150" style="width:100%;"/>
                         </div>
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Impuesto *</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.impuesto}" required="true"
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.impuesto}" required="true" label="Impuesto"
                                                  requiredMessage="El impuesto es obligatorio" converter="impuestoConverter">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.impuestos}" var="imp"
@@ -143,7 +146,7 @@
                             </div>
                             <div class="campo">
                                 <label>Precio unitario (Gs.)</label>
-                                <p:inputNumber value="#{articuloBean.seleccionado.precioUnitario}"
+                                <p:inputNumber value="#{articuloBean.seleccionado.precioUnitario}" label="Precio unitario"
                                                decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
                             </div>
                         </div>
@@ -154,7 +157,7 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Categoría</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.categoriaCodigo}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.categoriaCodigo}" label="Categoría">
                                     <f:selectItem itemLabel="Sin categoría" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.categorias}" var="cat"
                                                    itemLabel="#{cat.descripcion}" itemValue="#{cat.codigo}"/>
@@ -162,7 +165,7 @@
                             </div>
                             <div class="campo">
                                 <label>Unidad de medida</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedidaCodigo}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedidaCodigo}" label="Unidad de medida">
                                     <f:selectItem itemLabel="Sin unidad" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.unidadesMedida}" var="um"
                                                    itemLabel="#{um.descripcion}" itemValue="#{um.codigo}"/>
@@ -172,7 +175,7 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Movimiento de dinero</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.tipoMovimiento}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.tipoMovimiento}" label="Movimiento de dinero">
                                     <f:selectItem itemLabel="No aplica" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItem itemLabel="Ingreso" itemValue="INGRESO"/>
                                     <f:selectItem itemLabel="Egreso" itemValue="EGRESO"/>
@@ -181,7 +184,7 @@
                             </div>
                             <div class="campo">
                                 <label>Aplicación (clave del negocio)</label>
-                                <p:inputText value="#{articuloBean.seleccionado.aplicacion}" maxlength="30"/>
+                                <p:inputText value="#{articuloBean.seleccionado.aplicacion}" label="Aplicación" maxlength="30"/>
                             </div>
                         </div>
                         <div class="campo">
@@ -195,18 +198,18 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Stock mínimo</label>
-                                <p:inputNumber value="#{articuloBean.seleccionado.stockMinimo}"
+                                <p:inputNumber value="#{articuloBean.seleccionado.stockMinimo}" label="Stock mínimo"
                                                decimalPlaces="0" thousandSeparator="."/>
                             </div>
                             <div class="campo">
                                 <label>Stock máximo</label>
-                                <p:inputNumber value="#{articuloBean.seleccionado.stockMaximo}"
+                                <p:inputNumber value="#{articuloBean.seleccionado.stockMaximo}" label="Stock máximo"
                                                decimalPlaces="0" thousandSeparator="."/>
                             </div>
                         </div>
                         <div class="campo">
                             <label>Observación</label>
-                            <p:inputTextarea value="#{articuloBean.seleccionado.observacion}" rows="3"
+                            <p:inputTextarea value="#{articuloBean.seleccionado.observacion}" rows="3" label="Observación"
                                              maxlength="250" style="width:100%;" autoResize="false"/>
                         </div>
                     </p:tab>
@@ -217,7 +220,7 @@
                         <div class="fila-2" style="align-items:end;">
                             <div class="campo">
                                 <label>Propiedad</label>
-                                <p:selectOneMenu value="#{articuloBean.nuevaPropiedadCodigo}">
+                                <p:selectOneMenu value="#{articuloBean.nuevaPropiedadCodigo}" label="Propiedad">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.propiedadesDisponibles}" var="pd"
                                                    itemLabel="#{pd.descripcion}" itemValue="#{pd.codigo}"/>
@@ -226,7 +229,7 @@
                             <div class="campo">
                                 <label>Valor</label>
                                 <div style="display:flex; gap:.5rem;">
-                                    <p:inputText value="#{articuloBean.nuevaPropiedadValor}" maxlength="100" style="flex:1;"/>
+                                    <p:inputText value="#{articuloBean.nuevaPropiedadValor}" label="Valor" maxlength="100" style="flex:1;"/>
                                     <p:commandButton icon="pi pi-plus" title="Agregar"
                                                      actionListener="#{articuloBean.agregarPropiedad()}"
                                                      update="tabs:tblPropiedades msjEdicion"/>

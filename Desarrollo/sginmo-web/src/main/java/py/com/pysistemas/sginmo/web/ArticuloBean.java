@@ -49,6 +49,9 @@ public class ArticuloBean implements Serializable {
     private String nuevaPropiedadCodigo;
     private String nuevaPropiedadValor;
 
+    /** Pestana activa del dialogo; se resetea a Principal en cada apertura (obs del usuario). */
+    private int tabActivo;
+
     @PostConstruct
     public void iniciar() {
         categorias = catalogoService.opciones("TIPOS_ARTICULO");
@@ -76,12 +79,14 @@ public class ArticuloBean implements Serializable {
         seleccionado = new Articulo();
         propiedades = java.util.List.of();
         limpiarNuevaPropiedad();
+        tabActivo = 0;
     }
 
     public void editar(Articulo articulo) {
         seleccionado = articulo;
         propiedades = articuloService.listarPropiedades(articulo.getId());
         limpiarNuevaPropiedad();
+        tabActivo = 0;
     }
 
     public void agregarPropiedad() {
@@ -156,4 +161,7 @@ public class ArticuloBean implements Serializable {
 
     public String getNuevaPropiedadValor() { return nuevaPropiedadValor; }
     public void setNuevaPropiedadValor(String nuevaPropiedadValor) { this.nuevaPropiedadValor = nuevaPropiedadValor; }
+
+    public int getTabActivo() { return tabActivo; }
+    public void setTabActivo(int tabActivo) { this.tabActivo = tabActivo; }
 }

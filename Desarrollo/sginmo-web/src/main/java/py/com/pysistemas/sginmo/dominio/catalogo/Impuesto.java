@@ -57,4 +57,15 @@ public class Impuesto extends Auditable {
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+
+    /** Igualdad por id: imprescindible para combos JSF (el converter carga otra instancia). */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Impuesto otro)) return false;
+        return id != null && id.equals(otro.id);
+    }
+
+    @Override
+    public int hashCode() { return getClass().hashCode(); }
 }
