@@ -1,1 +1,2 @@
 {"ts":"2026-07-04T01:59:16.705Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"Esquema PostgreSQL inicial + seed de dominios y parametros"}
+{"ts":"2026-07-05T14:30:00Z","actor":"claude","event":"IMPLEMENTACION_COMPLETA","status":"EN_DESARROLLO","nota":"Esquema aprobado por el usuario (6 revisiones, 11 observaciones) y aplicado en VPS: 36 tablas + v_persona + seeds + 8.276 ubicaciones INE."}

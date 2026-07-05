@@ -1,36 +1,28 @@
 # Preauditoria Claude - REQ-0003
 
-Fecha: 2026-07-04
+Fecha: 2026-07-05
 Responsable: Claude
 
-Antes de ejecutar `npm run handoff:ready -- REQ-0003`, completar todo:
+Antes de ejecutar la compuerta (`python tools/handoff.py ready SGI REQ-0003`), completar todo:
 
-- [ ] Lei `codex-review.md` y todas las observaciones previas aplicables.
-- [ ] Consulte `AUDITORIA_OBSERVACION` y no quedan observaciones `pendiente` para este REQ.
-- [ ] Si cerre observaciones, quedaron marcadas como `corregido`, `aceptado` o `diferido` con nota.
-- [ ] Si cerre observaciones, documente cada una abajo con problema original, cambio aplicado, archivos tocados, evidencia y validacion propia.
-- [ ] Revise que no haya credenciales, tokens, passwords ni hosts sensibles hardcodeados en archivos nuevos o modificados.
-- [ ] `req.md` no tiene criterios `[ ]` pendientes salvo bloqueo formal documentado.
-- [ ] `claude-implementation.md` contiene `Manifiesto Minimo Para Codex`, archivos clave y comandos probados.
-- [ ] `test-plan.md` solo afirma funcionalidades que existen en codigo real.
-- [ ] Si corregi una regla compartida, busque flujos equivalentes y documente archivos/comandos revisados.
-- [ ] Si toque BD, triggers, SPs o logica compartida, documente invariantes y regresiones cubiertas.
-- [ ] Si aprendi una regla general, la aplique a REQs mayores pendientes o la documente en `.ai-handoff/standards/`.
-- [ ] Ejecute `npm run handoff:check` y paso sin errores.
+- [x] Lei `codex-review.md` y todas las observaciones previas aplicables. (Primera entrega.)
+- [x] Consulte `AUDITORIA_OBSERVACION` y no quedan observaciones `pendiente`/abiertas para este REQ.
+- [x] Si cerre observaciones, quedaron marcadas con nota. (No aplica.)
+- [x] Si cerre observaciones, documente cada una abajo. (No aplica.)
+- [x] Revise que no haya credenciales ni secretos en archivos nuevos/modificados versionados. (Los scripts SQL no contienen credenciales; APP_DB_* solo en .env gitignoreado.)
+- [x] `req.md` no tiene criterios `[ ]` pendientes.
+- [x] `claude-implementation.md` contiene Manifiesto, archivos clave y comandos probados.
+- [x] `test-plan.md` solo afirma lo que ocurrio realmente (incluida la incidencia del UNIQUE y su fix).
+- [x] Si corregi una regla compartida, busque flujos equivalentes. (El fix del UNIQUE afecta solo a ubicacion_geografica; sin otros usos.)
+- [x] Si toque BD, documente invariantes: unicidades de negocio (documento por empresa+tipo+serie+numero; cuota por operacion+numero; liquidacion por operacion; persona por documento; codigo_oficial INE), CHECKs de estados y de saldo 0..total.
+- [x] Regla repetible documentada: los datos oficiales externos (INE) se importan GENERADOS desde la fuente con codigo oficial para upsert (aplicable a futuros catalogos externos).
+- [x] Compuerta de check ejecutada sin errores.
 
 Notas:
 
--
+- Decision de arquitectura del usuario registrada (standards/database-postgresql.md): triggers+SPs de consistencia en BD llegan en V4+ (fase dinero); no son alcance de este REQ.
+- El usuario dirigio ademas saltar a desarrollar el ABM propuesto (REQ-0006) antes que REQ-0004/0005 — excepcion de prioridad aprobada por el usuario.
 
 ## Respuesta Por Observacion Cerrada
 
-Usar este bloque para cada observacion que se cierre antes de reenviar:
-
-```text
-Obs NN:
-- Problema original:
-- Cambio aplicado:
-- Archivos tocados:
-- Evidencia:
-- Validacion propia:
-```
+No aplica: primera entrega.
