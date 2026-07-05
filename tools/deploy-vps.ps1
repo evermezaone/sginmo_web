@@ -21,13 +21,12 @@ if (-not $SoloDeploy) {
 
 if (-not (Test-Path $war)) { Write-Error ('No existe ' + $war); exit 1 }
 
-# Subida ATOMICA: primero a un nombre temporal (el scanner ignora .tmp) y luego mv.
-# Si se sube directo al .war el scanner puede tomar el archivo a medio copiar
-# ("Unexpected end of ZLIB input stream") y dejar corriendo la version vieja.
-ssh -o BatchMode=yes sginmo-vps 'rm -f ~/apps/wildfly-40.0.0.Final/standalone/deployments/sginmo-web.war.deployed ~/apps/wildfly-40.0.0.Final/standalone/deployments/sginmo-web.war.failed'
+# Subida ATOMICA: primero a un nombre temporal (el scanner ignora .tmp), luego mv y
+# .dodeploy para forzar el redeploy. NUNCA borrar .deployed antes de subir: el scanner
+# lo interpreta como pedido de UNDEPLOY y deja la app fuera de linea.
 scp -O $war sginmo-vps:apps/wildfly-40.0.0.Final/standalone/deployments/sginmo-web.war.tmp
 if ($LASTEXITCODE -ne 0) { Write-Error 'scp fallo'; exit 1 }
 
-ssh -o BatchMode=yes sginmo-vps 'd=~/apps/wildfly-40.0.0.Final/standalone/deployments; mv $d/sginmo-web.war.tmp $d/sginmo-web.war; for i in $(seq 1 60); do [ -f $d/sginmo-web.war.deployed ] && { echo "Redeploy OK"; break; }; [ -f $d/sginmo-web.war.failed ] && { echo "REDEPLOY FALLO:"; cat $d/sginmo-web.war.failed; exit 1; }; sleep 2; done; [ -f $d/sginmo-web.war.deployed ] || { echo "Timeout esperando redeploy"; exit 1; }; curl -s -o /dev/null -w "Verificacion VPS: HTTP %{http_code}\n" http://localhost:8080/sginmo-web/'
+ssh -o BatchMode=yes sginmo-vps 'd=~/apps/wildfly-40.0.0.Final/standalone/deployments; mv $d/sginmo-web.war.tmp $d/sginmo-web.war; rm -f $d/sginmo-web.war.deployed $d/sginmo-web.war.failed $d/sginmo-web.war.undeployed; touch $d/sginmo-web.war.dodeploy; for i in $(seq 1 60); do [ -f $d/sginmo-web.war.deployed ] && { echo "Redeploy OK"; break; }; [ -f $d/sginmo-web.war.failed ] && { echo "REDEPLOY FALLO:"; cat $d/sginmo-web.war.failed; exit 1; }; sleep 2; done; [ -f $d/sginmo-web.war.deployed ] || { echo "Timeout esperando redeploy"; exit 1; }; curl -s -o /dev/null -w "Verificacion VPS: HTTP %{http_code}\n" http://localhost:8080/sginmo-web/articulos.xhtml'
 if ($LASTEXITCODE -ne 0) { Write-Error 'Redeploy fallo en la VPS'; exit 1 }
 Write-Output 'Deploy completado.'
