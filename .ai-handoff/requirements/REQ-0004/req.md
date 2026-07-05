@@ -23,3 +23,12 @@
 
 - Depende de: ninguna
 - Requerido por: ninguno
+
+## Alcance agregado por decision del usuario (2026-07-05)
+
+**Preferencias por usuario (Opcion B, validacion del ABM Articulos):** una vez que exista
+login, implementar la tabla `preferencia_usuario` (usuario + pantalla + clave + valor,
+UNIQUE por los tres primeros) y un `PreferenciaService` generico. Primer uso: persistir
+las columnas visibles del selector de columnas (p:columnToggler) de cada ABM, para que
+cada usuario recupere su configuracion al volver a entrar. El usuario decidio NO activar
+un mecanismo provisorio sin login; hasta este REQ el selector funciona pero no recuerda.
