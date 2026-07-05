@@ -13,7 +13,8 @@ INSERT INTO parametro_sistema (clave, valor, descripcion, usuario_creacion, fech
  ('PORCENTAJE_COMISION_ALQUILER','50',      'Porcentaje de comision por alquiler',            'sistema', now()),
  ('PORCENTAJE_COMISION_VENTA',   '5',       'Porcentaje de comision por venta',               'sistema', now()),
  ('SUELDO_MINIMO',               '2112562', 'Sueldo minimo vigente (Gs.)',                    'sistema', now()),
- ('JORNAL_MINIMO',               '81252',   'Jornal minimo (sueldo/26) (Gs.)',                'sistema', now());
+ ('JORNAL_MINIMO',               '81252',   'Jornal minimo (sueldo/26) (Gs.)',                'sistema', now()),
+ ('IMPUESTOS_MODO_AVANZADO',     'NO',      'SI = ABM de impuestos muestra base imponible parcial; NO = modo simplificado', 'sistema', now());
 
 -- ── Listas configurables (tabla entidad) ───────────────────────────────────
 
@@ -125,11 +126,14 @@ SELECT setval(pg_get_serial_sequence('moneda','moneda'), 4, true);
 
 -- ── Impuestos (regimen IVA Paraguay; el administrador ajusta) ───────────────
 
-INSERT INTO impuesto (impuesto, descripcion, porcentaje_impuesto, factor_discriminado, factor_impuesto, usuario_creacion, fecha_creacion) VALUES
- (1, 'IVA 10%', 10, 11, 1.10, 'sistema', now()),
- (2, 'IVA 5%',   5, 21, 1.05, 'sistema', now()),
- (3, 'Exenta',   0,  0, 1.00, 'sistema', now());
+INSERT INTO impuesto (impuesto, descripcion, porcentaje_impuesto, factor_discriminado, factor_impuesto, porcentaje_base_gravada, usuario_creacion, fecha_creacion) VALUES
+ (1, 'IVA 10%', 10, 11, 1.10, 100, 'sistema', now()),
+ (2, 'IVA 5%',   5, 21, 1.05, 100, 'sistema', now()),
+ (3, 'Exenta',   0,  0, 1.00, 100, 'sistema', now());
 SELECT setval(pg_get_serial_sequence('impuesto','impuesto'), 3, true);
+-- Ejemplos de base reducida (los crea el administrador en modo avanzado cuando los necesite):
+--   'IVA 10% base 20%' -> porcentaje 10, factores del 10%, base_gravada 20
+--   'IVA 10% base 30% (venta inmuebles)' -> porcentaje 10, factores del 10%, base_gravada 30
 
 -- ── Formas de pago (flags requiere_* segun el medio) ───────────────────────
 

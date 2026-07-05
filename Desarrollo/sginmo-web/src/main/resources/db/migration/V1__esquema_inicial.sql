@@ -88,6 +88,12 @@ CREATE TABLE impuesto (
   porcentaje_impuesto numeric(5,2) NOT NULL,
   factor_discriminado numeric(15,2) NOT NULL,
   factor_impuesto     numeric(15,2) NOT NULL,
+  -- Base imponible parcial (regimenes PY de base reducida, ej. gravado solo el 20% o 30% del precio):
+  -- el motor calcula gravadas/impuestos sobre monto*base/100 y el resto va a exentas.
+  -- 100 = comportamiento normal (todo gravado). La UI lo muestra solo en modo avanzado
+  -- (parametro IMPUESTOS_MODO_AVANZADO); en modo simplificado queda fijo en 100.
+  porcentaje_base_gravada numeric(5,2) NOT NULL DEFAULT 100
+    CHECK (porcentaje_base_gravada > 0 AND porcentaje_base_gravada <= 100),
   estado varchar(10) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO','INACTIVO')),
   usuario_creacion varchar(20) NOT NULL, fecha_creacion timestamptz NOT NULL,
   usuario_modificacion varchar(20), fecha_modificacion timestamptz
