@@ -9,13 +9,20 @@
 |---|---|---|
 | `DOCUMENTO` | **(EMPRESA, TIPO, SERIE, NUMERO)** | comprobante universal: totales (exentas/gravadas/impuestos/total), **SALDO vivo**, ESTADO ('PE' pendiente / 'CA' cancelado / 'AN' anulado), FECHA_VENCIMIENTO, **TIMBRADO**, monedas cpte/local + COTIZACION, montos _EXT, referencia a otro doc (TIPO_REF/SERIE_REF/NUMERO_REF), cliente/c_identidad, sucursal, usuario |
 | `DETALLE_DOCUMENTO` | (EMPRESA, TIPO, SERIE, NUMERO, **NRO_DETALLE**) | líneas: articulo/concepto, cantidad, precio, **exentas/gravadas/%imp/impuestos por línea**, estado, saldo |
+| `ARTICULOS` | (EMPRESA, **ARTICULO**) | maestro de productos/servicios: descripcion, tipo/categoria, unidad, presentacion, marca/modelo/familia/grupo/subgrupo/procedencia, impuesto, codigos, stock, proveedor, costos |
+| `DETALLE_ARTICULO` | (EMPRESA, ARTICULO, **CODBARRA**) | variantes/codigos de barra del articulo: descripcion, color, talle |
+| `ANEXO_ARTICULO` | (EMPRESA, ARTICULO, AMBITO_DATO_ADICIONAL, DATO_ADICIONAL) | propiedades adicionales del articulo: valor, numero, fecha y referencia opcional a otra entidad |
+| `ARTICULO_COSTO` | (EMPRESA, ARTICULO, **FECHA**) | historico de costo local y costo externo |
 | `TIPO_COMPROBANTE` | (TIPO) | catálogo: **AFECTACION 'I'/'E'** (entrada/salida de dinero), flag **CTA_CTE**, EXCENTO, prioridad, destino |
 | `RANGO_COMPROBANTE` | (EMPRESA, SERIE, TIPO, NUMERO_DESDE) | numeración administrada: NUMERO_ACTUAL/HASTA, **FECHA_VENCIMIENTO** del rango, **CODIGO_AUTORZACION (timbrado)**, ESTADO 'A' |
 | `COBROS` | (EMPRESA, CODIGO_COBRO, SUCURSAL) | acto de cobro: FPAGO, **PLANILLA (caja)**, cajero, moneda+cotización, monto_ext, vuelto, datos de cheque, RECIBO/FACTURA, ESTADO 'A' activo / 'H' anulado |
 | `COBRODETALLE` | (EMPRESA, SUCURSAL, CODIGO_COBRO, SECUENCIA) | aplicación del cobro a un documento: (EMPRESA_CPTE, TIPO, SERIE, NUMERO) + MONTO |
 | `PLANILLAS` | (EMPRESA, PLANILLA) | **caja diaria** por usuario/sucursal: apertura/cierre, montos, estado |
 | `ANULACIONES` | (NRODETALLE) | log de anulaciones con motivo, usuario, fecha |
-| `MOTIVO_DE_ANULACION` | | catálogo de motivos |
+| `MOTIVO_DE_ANULACION` | (MOTIVO) | catálogo de motivos con ALCANCE |
+| `DATOS_COBROS` | (EMPRESA, SUCURSAL, CODIGO_COBRO) | **anexo del cobro**: datos del medio de pago — emisor/procesador (tarjeta), numero/serie y vencimiento (cheque diferido), cuenta, referencia, cobrador, datos de depósito (fecha/nro/estado/motivo rechazo), NC aplicada (NTCR tipo/serie/numero) |
+| `DETALLES_AFECTADOS` | (EMPRESA, SUCURSAL, CODIGO_COBRO, SECUENCIA, ...) | a qué **líneas** del documento se aplicó cada pago (FIFO por línea con saldo>0) |
+| `DOCUMENTO_CUOTAS` | (EMPRESA, TIPO, SERIE, NUMERO, NRO_CUOTA) | cuotas del documento crédito: vencimiento, monto, **SALDO por cuota**, estado 'PE'/'CA' |
 
 ## 2. Procedimientos y funciones clave (lógica relevada)
 
@@ -44,6 +51,15 @@ Valida existe y no está 'AN'; borra cobrodetalles activos y detalles afectados;
 ### `F_SALDOCPTE` / `F_DEUDACLIENTE`
 Saldo = columna SALDO del documento. Deuda cliente = Σ saldos de docs con AFECTACION 'I' y CTA_CTE 'C' − Σ totales de docs 'E'/'C' (notas de crédito).
 
+### `P_DETALLES_AFECTADOS(...)` (llamado por cada pago)
+Distribuye el monto pagado entre las **líneas** del documento con saldo>0 en orden de `NRO_DETALLE` (FIFO), registrando cada aplicación en `DETALLES_AFECTADOS`.
+
+### `P_ACTUALIZASALDOCUOTAS(...)` (llamado tras pagar o anular)
+Recalcula las cuotas del documento: resetea todas a 'PE' con saldo=monto y luego aplica lo total pagado del documento **cuota a cuota en cascada**: cubre completa → saldo 0 y 'CA'; parcial → saldo restante y 'PE'. Es la lógica exacta que necesitan las cuotas de alquiler de SGInmo (pagos parciales incluidos).
+
+### `F_FACTURAS_COBRODETALLE`
+Helper de impresión: lista "TIPO-SERIE-NUMERO" de los comprobantes pagados por un cobro.
+
 ## 3. Triggers (los que sostienen la integridad del dinero)
 
 | Trigger | Momento | Qué hace |
@@ -58,7 +74,7 @@ Saldo = columna SALDO del documento. Deuda cliente = Σ saldos de docs con AFECT
 
 ## 4. Traducción a SGInmo Web (qué se adopta y dónde vive)
 
-**Principio (estándar backend-jakarta.md):** en la web esta lógica NO va en triggers — va en los **servicios transaccionales** (`@Transactional`), con las mismas invariantes. Los triggers de Oracle son la ESPECIFICACIÓN del comportamiento.
+**Principio (ACTUALIZADO por decisión del usuario, 2026-07-05):** la lógica de consistencia SÍ vive en la base de datos, como en Gestión — triggers PL/pgSQL para el cuadre básico (documento/cobros/utilización/liberación de saldos) y procedimientos/funciones/vistas para las operaciones estándar (pagos, anulaciones, saldos). Motivo: consistencia única ante múltiples clientes futuros (web, web services, integraciones). Los servicios Java llaman a los SPs dentro de sus transacciones; las correcciones al patrón Oracle (sin COMMIT interno, numeración con FOR UPDATE, CHECKs de respaldo) se aplican al portarlos. Los fuentes de Oracle de este documento son la ESPECIFICACIÓN a portar.
 
 Se adopta en el esquema (doc 09 §B.5 actualizado):
 
@@ -68,8 +84,10 @@ Se adopta en el esquema (doc 09 §B.5 actualizado):
 4. **`planillas`** (caja diaria): regla "no registrar cobros sin planilla abierta" — [A CONFIRMAR por el usuario si aplica a la inmobiliaria].
 5. Invariantes de servicio (espejo de los triggers): crear detalle recalcula totales+saldo de cabecera; cobrar descuenta saldo y deriva estado; anular revierte exacto; nunca saldo<0 ni saldo>total; prohibido tocar registros anulados.
 6. Reglas de negocio a portar: pago 'C'/'T' (FIFO por vencimiento), recibo automático para crédito, redondeo comercial Gs. a 50/100, límite de crédito (aplicable a inquilinos si se define), deuda de cliente.
+7. **`forma_pago` parametriza `datos_cobros`**: cada forma de pago define los campos exigibles al cobrar (`requiere_*`: emisor/procesador, número/serie, vencimiento, cuenta, referencia, cobrador, depósito, rechazo, nota de crédito). El servicio valida esos flags antes de registrar `cobros` + `datos_cobros`.
+8. **`articulo` reemplaza `items_ingresos_egresos`**: Oracle `DETALLE_DOCUMENTO` referencia `ARTICULOS`, por tanto SGInmo usa un maestro unico `articulo` para productos/servicios y lo referencia desde `documentos_detalles`, `ingresos_egresos` y `liquidaciones_detalles`. Se porta lo util de `ARTICULOS`, `DETALLE_ARTICULO`, `ANEXO_ARTICULO` y `ARTICULO_COSTO`.
 
-**No se adopta:** stock/existencias, promociones, artículos, asientos contables (fuera del alcance de SGInmo por ahora), tablas espejo `*_AN` (la web conserva el documento anulado en la misma tabla con estado ANULADO + log en anulaciones — más simple y auditable).
+**No se adopta:** stock/existencias como logica operativa, promociones, asientos contables (fuera del alcance de SGInmo por ahora), tablas espejo `*_AN` (la web conserva el documento anulado en la misma tabla con estado ANULADO + log en anulaciones — más simple y auditable).
 
 ## 5. Observaciones técnicas del sistema auditado (para conocimiento)
 

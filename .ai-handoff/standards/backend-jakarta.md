@@ -6,11 +6,11 @@
 - Los backing beans JSF (`@ViewScoped`/`@RequestScoped`, paquete `web`) orquestan UI: no calculan montos, no cambian estados, no validan reglas de negocio.
 - Repositorios/DAO con `EntityManager` inyectado; consultas con named queries o Criteria, siempre parametrizadas. Prohibido concatenar SQL/JPQL con input.
 
-## Transacciones (regla crítica del proyecto)
+## Transacciones y división con la BD (regla crítica del proyecto — actualizada 2026-07-05)
 
-- Toda operación multi-tabla va en UN método de servicio anotado `@Transactional`: guardar cobro (cabecera + detalles + estado de cuotas), guardar operación (+ cronograma + movimientos automáticos + estado de propiedad), liquidación (+ detalles + cierre de operación + liberación de propiedad), anulación de cobro (reversa de cuotas).
-- El estado de PROPIEDAD se deriva SIEMPRE dentro de la misma transacción que la operación que lo causa (invariante: nunca un SP de "corrección" como en el legado).
-- Renovación: cerrar contrato anterior y crear el nuevo en la misma transacción, sin duplicar cuotas (bug del legado que NO se replica).
+- **La lógica de consistencia del dinero vive en la BD** (decisión del usuario, ver `database-postgresql.md`): triggers de cuadre + SPs/funciones para pagos, anulaciones y saldos. El servicio Java **LLAMA a esos SPs** dentro de su `@Transactional`; prohibido reimplementar en Java el cuadre que ya hace la BD (una sola fuente de verdad para web, WS e integraciones).
+- Toda operación multi-tabla sigue siendo UN caso de uso transaccional. Ojo con la división: los SPs que hacen COMMIT propio (estilo Gestión, ej. numeración) se invocan FUERA del `@Transactional` de JTA (conexión en autocommit); los demás corren dentro de la transacción del servicio. Cada SP declara su modalidad en su cabecera (ver database-postgresql.md).
+- Lo que sí es del servicio Java: validación de entrada, autorización, orquestación del caso de uso (ej.: renovar = cerrar contrato anterior + crear nuevo + generar cronograma, sin duplicar cuotas), reglas de dominio inmobiliario (mora, generación de cronograma, estado del activo derivado de la operación en la misma transacción).
 
 ## Dinero y cálculos
 
