@@ -15,6 +15,8 @@
         .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
         .pie-dialogo { text-align: right; margin-top: .8rem; border-top: 1px solid #e0e0e0; padding-top: .8rem; }
         .barra-tabla { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+        /* Busqueda avanzada: los filtros por columna solo se ven al activarla con el boton */
+        .filtros-ocultos .ui-column-filter { display: none !important; }
     </style>
 </h:head>
 <h:body>
@@ -27,6 +29,8 @@
     <h:form id="frmLista">
         <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
 
+        <!-- El contenedor guarda el estado mostrar/ocultar filtros: no se pierde al re-renderizar la tabla -->
+        <h:panelGroup layout="block" id="contFiltros" styleClass="filtros-ocultos">
         <p:dataTable id="tabla" widgetVar="tabla" var="art" value="#{articuloBean.modelo}"
                      lazy="true" paginator="true" rows="10"
                      paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
@@ -56,15 +60,21 @@
                                  style="width:17rem;">
                         <p:ajax event="keyup" delay="400" update="tabla"/>
                     </p:inputText>
+                    <!-- Muestra/oculta los filtros por columna; al ocultarlos los limpia -->
+                    <p:commandButton type="button" icon="pi pi-filter" title="Búsqueda avanzada (filtros por columna)"
+                                     styleClass="ui-button-outlined"
+                                     onclick="var c=document.getElementById('frmLista:contFiltros');c.classList.toggle('filtros-ocultos');if(c.classList.contains('filtros-ocultos'))PF('tabla').clearFilters();"/>
                 </div>
             </f:facet>
 
             <!-- Anchos segun dominio del dato: codigo/estado angostos, descripcion toma el resto.
                  Orden: click en el titulo. Filtros por columna: combos de igualdad exacta. -->
-            <p:column headerText="Código" sortBy="#{art.codigo}" style="width:6rem; white-space:nowrap;" toggleable="false">
+            <p:column headerText="Código" sortBy="#{art.codigo}" filterBy="#{art.codigo}"
+                      style="width:6rem; white-space:nowrap;" toggleable="false">
                 <h:outputText value="#{art.codigo}"/>
             </p:column>
-            <p:column headerText="Descripción" sortBy="#{art.descripcion}" style="min-width:18rem;">
+            <p:column headerText="Descripción" sortBy="#{art.descripcion}" filterBy="#{art.descripcion}"
+                      style="min-width:18rem;">
                 <h:outputText value="#{art.descripcion}"/>
             </p:column>
             <p:column headerText="Tipo" sortBy="#{art.tipo}" filterBy="#{art.tipo}" style="width:8rem;">
@@ -121,6 +131,7 @@
                 </p:commandButton>
             </p:column>
         </p:dataTable>
+        </h:panelGroup>
 
         <p:confirmDialog global="true" showEffect="fade">
             <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>

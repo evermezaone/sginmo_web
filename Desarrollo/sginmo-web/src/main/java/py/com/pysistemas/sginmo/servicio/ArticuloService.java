@@ -31,11 +31,16 @@ public class ArticuloService {
         "precioUnitario", "a.precioUnitario",
         "estado", "a.estado");
 
-    /** Rutas JPQL permitidas para filtrar por columna (igualdad exacta, combos). */
-    private static final Map<String, String> CAMPOS_FILTRO = Map.of(
+    /** Rutas JPQL permitidas para filtrar por columna con igualdad exacta (combos). */
+    private static final Map<String, String> CAMPOS_FILTRO_IGUAL = Map.of(
         "tipo", "a.tipo",
         "impuesto.descripcion", "i.descripcion",
         "estado", "a.estado");
+
+    /** Rutas JPQL permitidas para filtrar por columna con LIKE (campos de texto libre). */
+    private static final Map<String, String> CAMPOS_FILTRO_LIKE = Map.of(
+        "codigo", "a.codigo",
+        "descripcion", "a.descripcion");
 
     public long contar(String filtro, Map<String, Object> filtros) {
         var q = em.createQuery(jpql("SELECT COUNT(a)", filtros, null, true), Long.class);
@@ -58,9 +63,12 @@ public class ArticuloService {
             .append(" OR lower(a.tipo) LIKE :like OR lower(coalesce(i.descripcion, '')) LIKE :like)");
         int n = 0;
         for (String campo : filtros.keySet()) {
-            String ruta = CAMPOS_FILTRO.get(campo);
-            if (ruta != null) {
-                sb.append(" AND ").append(ruta).append(" = :fc").append(n++);
+            String igual = CAMPOS_FILTRO_IGUAL.get(campo);
+            String like = CAMPOS_FILTRO_LIKE.get(campo);
+            if (igual != null) {
+                sb.append(" AND ").append(igual).append(" = :fc").append(n++);
+            } else if (like != null) {
+                sb.append(" AND lower(").append(like).append(") LIKE :fc").append(n++);
             }
         }
         if (select.startsWith("SELECT a")) {
@@ -77,8 +85,10 @@ public class ArticuloService {
         q.setParameter("like", "%" + f + "%");
         int n = 0;
         for (var e : filtros.entrySet()) {
-            if (CAMPOS_FILTRO.containsKey(e.getKey())) {
+            if (CAMPOS_FILTRO_IGUAL.containsKey(e.getKey())) {
                 q.setParameter("fc" + n++, e.getValue());
+            } else if (CAMPOS_FILTRO_LIKE.containsKey(e.getKey())) {
+                q.setParameter("fc" + n++, "%" + e.getValue().toString().trim().toLowerCase() + "%");
             }
         }
     }
