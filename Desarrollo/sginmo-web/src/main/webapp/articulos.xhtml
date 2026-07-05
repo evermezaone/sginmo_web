@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+<h:head>
+    <title>Artículos — SGInmo Web</title>
+    <style>
+        body { margin: 0; background: #f4f6f9; }
+        .contenido { max-width: 1100px; margin: 1.5rem auto; padding: 0 1rem; }
+        .titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .campo { margin-bottom: 1rem; display: flex; flex-direction: column; gap: .3rem; }
+        .campo > label { font-weight: 600; font-size: .85rem; color: #495057; }
+        .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+    </style>
+</h:head>
+<h:body>
+<div class="contenido">
+    <div class="titulo">
+        <h2 style="margin:0;">Maestro de Artículos <span style="font-size:.6em;color:#888;">(ABM propuesto — patrón estándar)</span></h2>
+        <h:outputLink value="index.xhtml">Inicio</h:outputLink>
+    </div>
+
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+        <p:dataTable id="tabla" widgetVar="tabla" var="art" value="#{articuloBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="Sin artículos para mostrar">
+
+            <f:facet name="header">
+                <div style="display:flex; gap:.5rem; align-items:center;">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus"
+                                     actionListener="#{articuloBean.nuevo()}"
+                                     update=":frmEdicion" oncomplete="PF('dlgArticulo').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{articuloBean.filtroGlobal}" placeholder="Buscar código o descripción"
+                                 style="width:16rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+
+            <p:column headerText="Código" style="width:7rem;">
+                <h:outputText value="#{art.codigo}"/>
+            </p:column>
+            <p:column headerText="Descripción">
+                <h:outputText value="#{art.descripcion}"/>
+            </p:column>
+            <p:column headerText="Tipo" style="width:7rem;">
+                <h:outputText value="#{art.tipo}"/>
+            </p:column>
+            <p:column headerText="Impuesto" style="width:7rem;">
+                <h:outputText value="#{art.impuesto.descripcion}"/>
+            </p:column>
+            <p:column headerText="Precio" style="width:8rem; text-align:right;">
+                <h:outputText value="#{art.precioUnitario}">
+                    <f:convertNumber groupingUsed="true" maxFractionDigits="0"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Estado" style="width:6rem; text-align:center;">
+                <p:tag value="#{art.estado}" severity="#{art.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:8rem; text-align:center;">
+                <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="ui-button-flat"
+                                 actionListener="#{articuloBean.editar(art)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgArticulo').show()"/>
+                <p:commandButton icon="#{art.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 title="#{art.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
+                                 styleClass="ui-button-flat"
+                                 actionListener="#{articuloBean.cambiarEstado(art)}"
+                                 update="tabla mensajes">
+                    <p:confirm header="Confirmar"
+                               message="¿#{art.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} el artículo #{art.descripcion}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Artículo" widgetVar="dlgArticulo" modal="true" resizable="false"
+              responsive="true" width="640" dynamic="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" closable="true"/>
+            <ui:fragment rendered="#{not empty articuloBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Código *</label>
+                        <p:inputText value="#{articuloBean.seleccionado.codigo}" required="true"
+                                     requiredMessage="El código es obligatorio" maxlength="25"/>
+                    </div>
+                    <div class="campo">
+                        <label>Tipo *</label>
+                        <p:selectOneMenu value="#{articuloBean.seleccionado.tipo}" required="true"
+                                         requiredMessage="El tipo es obligatorio">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="Servicio" itemValue="SERVICIO"/>
+                            <f:selectItem itemLabel="Producto" itemValue="PRODUCTO"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Descripción *</label>
+                    <p:inputText value="#{articuloBean.seleccionado.descripcion}" required="true"
+                                 requiredMessage="La descripción es obligatoria" maxlength="150" style="width:100%;"/>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Impuesto *</label>
+                        <p:selectOneMenu value="#{articuloBean.seleccionado.impuesto}" required="true"
+                                         requiredMessage="El impuesto es obligatorio" converter="impuestoConverter">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{articuloBean.impuestos}" var="imp"
+                                           itemLabel="#{imp.descripcion}" itemValue="#{imp}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <label>Categoría</label>
+                        <p:selectOneMenu value="#{articuloBean.seleccionado.categoriaCodigo}">
+                            <f:selectItem itemLabel="Sin categoría" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{articuloBean.categorias}" var="cat"
+                                           itemLabel="#{cat.descripcion}" itemValue="#{cat.codigo}"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Unidad de medida</label>
+                        <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedidaCodigo}">
+                            <f:selectItem itemLabel="Sin unidad" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{articuloBean.unidadesMedida}" var="um"
+                                           itemLabel="#{um.descripcion}" itemValue="#{um.codigo}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <label>Movimiento de dinero</label>
+                        <p:selectOneMenu value="#{articuloBean.seleccionado.tipoMovimiento}">
+                            <f:selectItem itemLabel="No aplica" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItem itemLabel="Ingreso" itemValue="INGRESO"/>
+                            <f:selectItem itemLabel="Egreso" itemValue="EGRESO"/>
+                            <f:selectItem itemLabel="Descuento" itemValue="DESCUENTO"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Precio unitario (Gs.)</label>
+                        <p:inputNumber value="#{articuloBean.seleccionado.precioUnitario}"
+                                       decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
+                    </div>
+                    <div class="campo">
+                        <label>Aplicación (clave del negocio)</label>
+                        <p:inputText value="#{articuloBean.seleccionado.aplicacion}" maxlength="30"/>
+                    </div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Stock mínimo</label>
+                        <p:inputNumber value="#{articuloBean.seleccionado.stockMinimo}"
+                                       decimalPlaces="0" thousandSeparator="."/>
+                    </div>
+                    <div class="campo">
+                        <label>Stock máximo</label>
+                        <p:inputNumber value="#{articuloBean.seleccionado.stockMaximo}"
+                                       decimalPlaces="0" thousandSeparator="."/>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Modifica estado del documento (cuadre)</label>
+                    <p:toggleSwitch value="#{articuloBean.seleccionado.modificaEstado}"/>
+                </div>
+                <div class="campo">
+                    <label>Observación</label>
+                    <p:inputTextarea value="#{articuloBean.seleccionado.observacion}" rows="2"
+                                     maxlength="250" style="width:100%;" autoResize="false"/>
+                </div>
+                <div style="text-align:right; margin-top:.5rem;">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgArticulo').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save"
+                                     actionListener="#{articuloBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</div>
+</h:body>
+</html>
