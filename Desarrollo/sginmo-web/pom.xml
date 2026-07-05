@@ -35,6 +35,13 @@
       <classifier>jakarta</classifier>
     </dependency>
 
+    <!-- Exportacion PDF del DataExporter de PrimeFaces -->
+    <dependency>
+      <groupId>com.github.librepdf</groupId>
+      <artifactId>openpdf</artifactId>
+      <version>1.3.43</version>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

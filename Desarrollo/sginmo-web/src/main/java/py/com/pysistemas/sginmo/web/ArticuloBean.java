@@ -43,11 +43,18 @@ public class ArticuloBean implements Serializable {
     private List<Entidad> unidadesMedida;
     private List<Impuesto> impuestos;
 
+    // Propiedades parametrizables (tab habilitado solo con articulo guardado)
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> propiedades = java.util.List.of();
+    private List<Entidad> propiedadesDisponibles;
+    private String nuevaPropiedadCodigo;
+    private String nuevaPropiedadValor;
+
     @PostConstruct
     public void iniciar() {
         categorias = catalogoService.opciones("TIPOS_ARTICULO");
         unidadesMedida = catalogoService.opciones("UNIDADES_MEDIDA");
         impuestos = catalogoService.impuestosActivos();
+        propiedadesDisponibles = catalogoService.opciones("PROPIEDADES_ARTICULO");
 
         modelo = new LazyDataModel<>() {
             @Override
@@ -67,10 +74,34 @@ public class ArticuloBean implements Serializable {
 
     public void nuevo() {
         seleccionado = new Articulo();
+        propiedades = java.util.List.of();
+        limpiarNuevaPropiedad();
     }
 
     public void editar(Articulo articulo) {
         seleccionado = articulo;
+        propiedades = articuloService.listarPropiedades(articulo.getId());
+        limpiarNuevaPropiedad();
+    }
+
+    public void agregarPropiedad() {
+        try {
+            articuloService.agregarPropiedad(seleccionado.getId(), nuevaPropiedadCodigo, nuevaPropiedadValor);
+            propiedades = articuloService.listarPropiedades(seleccionado.getId());
+            limpiarNuevaPropiedad();
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar la propiedad", e.getMessage());
+        }
+    }
+
+    public void eliminarPropiedad(Long propiedadId) {
+        articuloService.eliminarPropiedad(propiedadId);
+        propiedades = articuloService.listarPropiedades(seleccionado.getId());
+    }
+
+    private void limpiarNuevaPropiedad() {
+        nuevaPropiedadCodigo = null;
+        nuevaPropiedadValor = null;
     }
 
     public void guardar() {
@@ -116,4 +147,13 @@ public class ArticuloBean implements Serializable {
     public List<Entidad> getCategorias() { return categorias; }
     public List<Entidad> getUnidadesMedida() { return unidadesMedida; }
     public List<Impuesto> getImpuestos() { return impuestos; }
+
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> getPropiedades() { return propiedades; }
+    public List<Entidad> getPropiedadesDisponibles() { return propiedadesDisponibles; }
+
+    public String getNuevaPropiedadCodigo() { return nuevaPropiedadCodigo; }
+    public void setNuevaPropiedadCodigo(String nuevaPropiedadCodigo) { this.nuevaPropiedadCodigo = nuevaPropiedadCodigo; }
+
+    public String getNuevaPropiedadValor() { return nuevaPropiedadValor; }
+    public void setNuevaPropiedadValor(String nuevaPropiedadValor) { this.nuevaPropiedadValor = nuevaPropiedadValor; }
 }

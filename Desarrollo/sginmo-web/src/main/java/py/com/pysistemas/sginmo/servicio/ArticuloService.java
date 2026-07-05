@@ -65,6 +65,48 @@ public class ArticuloService {
         a.setEstado(estadoNuevo);
     }
 
+    // ── Propiedades parametrizables del articulo (solo con articulo ya guardado) ──
+
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> listarPropiedades(Long articuloId) {
+        return em.createQuery(
+                "SELECT p FROM ArticuloPropiedad p WHERE p.articulo = :art ORDER BY p.propiedadCodigo",
+                py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad.class)
+            .setParameter("art", articuloId)
+            .getResultList();
+    }
+
+    @Transactional
+    public void agregarPropiedad(Long articuloId, String codigo, String valor) {
+        if (articuloId == null) {
+            throw new NegocioException("Guarde el artículo antes de cargar propiedades");
+        }
+        if (codigo == null || codigo.isBlank()) {
+            throw new NegocioException("Debe elegir la propiedad");
+        }
+        Long repetidas = em.createQuery(
+                "SELECT COUNT(p) FROM ArticuloPropiedad p WHERE p.articulo = :art AND p.propiedadCodigo = :cod",
+                Long.class)
+            .setParameter("art", articuloId)
+            .setParameter("cod", codigo)
+            .getSingleResult();
+        if (repetidas > 0) {
+            throw new NegocioException("El artículo ya tiene cargada esa propiedad");
+        }
+        var p = new py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad();
+        p.setArticulo(articuloId);
+        p.setPropiedadCodigo(codigo);
+        p.setValor(valor);
+        em.persist(p);
+    }
+
+    @Transactional
+    public void eliminarPropiedad(Long propiedadId) {
+        var p = em.find(py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad.class, propiedadId);
+        if (p != null) {
+            em.remove(p);
+        }
+    }
+
     private void validar(Articulo a) {
         // Unicidad de codigo (ademas del UNIQUE de la BD, para dar mensaje claro)
         Long repetidos = em.createQuery(
