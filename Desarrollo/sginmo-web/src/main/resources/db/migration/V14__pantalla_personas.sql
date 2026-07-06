@@ -1,3 +1,4 @@
 -- V14 (REQ-0012): pantalla de socios de negocios / personas.
 INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion) VALUES
-  ('PANTALLAS', 'personas', 'Personas y socios de negocios', 'sistema', now());
+  ('PANTALLAS', 'personas', 'Personas y socios de negocios', 'sistema', now())
+ON CONFLICT (entidad, codigo) DO NOTHING;

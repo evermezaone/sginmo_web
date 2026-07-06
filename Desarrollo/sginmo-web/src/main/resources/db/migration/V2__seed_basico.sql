@@ -14,7 +14,8 @@ INSERT INTO parametro_sistema (clave, valor, descripcion, usuario_creacion, fech
  ('PORCENTAJE_COMISION_VENTA',   '5',       'Porcentaje de comision por venta',               'sistema', now()),
  ('SUELDO_MINIMO',               '2112562', 'Sueldo minimo vigente (Gs.)',                    'sistema', now()),
  ('JORNAL_MINIMO',               '81252',   'Jornal minimo (sueldo/26) (Gs.)',                'sistema', now()),
- ('IMPUESTOS_MODO_AVANZADO',     'NO',      'SI = ABM de impuestos muestra base imponible parcial; NO = modo simplificado', 'sistema', now());
+ ('IMPUESTOS_MODO_AVANZADO',     'NO',      'SI = ABM de impuestos muestra base imponible parcial
+ON CONFLICT (clave) DO NOTHING; NO = modo simplificado', 'sistema', now());
 
 -- ── Listas configurables (tabla entidad) ───────────────────────────────────
 
@@ -79,7 +80,8 @@ INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creac
  ('MOTIVOS_RECHAZO','FIRMA_DIFIERE','Firma difiere','sistema',now()),
  ('MOTIVOS_RECHAZO','CUENTA_CERRADA','Cuenta cerrada','sistema',now()),
  ('MOTIVOS_RECHAZO','OTRO','Otro motivo','sistema',now()),
- -- Gastos e imputaciones (doc 07 §3; codigos del legado para el ETL)
+ -- Gastos e imputaciones (doc 07 §3
+ON CONFLICT (entidad, codigo) DO NOTHING; codigos del legado para el ETL)
  ('TIPOS_GASTOS','FIJO','Fijo','sistema',now()),
  ('TIPOS_GASTOS','VARIABLE','Variable','sistema',now()),
  ('TIPOS_IMPUTACION','ADMINISTRADOR','Administrador','sistema',now()),

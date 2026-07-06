@@ -15,11 +15,12 @@ CREATE TABLE preferencia_usuario (
 
 -- Cambio de contrasena obligatorio: true por defecto para usuarios NUEVOS (ABM de usuarios
 -- y reseteo de contrasena); los usuarios ya existentes no quedan forzados retroactivamente.
-ALTER TABLE usuario ADD COLUMN debe_cambiar_password boolean NOT NULL DEFAULT true;
+ALTER TABLE usuario ADD COLUMN IF NOT EXISTS debe_cambiar_password boolean NOT NULL DEFAULT true;
 UPDATE usuario SET debe_cambiar_password = false;
 
 -- Pantallas del sistema (para el combo de permisos del ABM de usuarios)
 INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion) VALUES
   ('PANTALLAS', '*',         'Todas las pantallas', 'sistema', now()),
   ('PANTALLAS', 'articulos', 'Artículos',           'sistema', now()),
-  ('PANTALLAS', 'usuarios',  'Usuarios y permisos', 'sistema', now());
+  ('PANTALLAS', 'usuarios',  'Usuarios y permisos', 'sistema', now())
+ON CONFLICT (entidad, codigo) DO NOTHING;

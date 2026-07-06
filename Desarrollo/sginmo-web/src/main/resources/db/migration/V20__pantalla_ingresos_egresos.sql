@@ -1,6 +1,7 @@
 -- V20 (REQ-0024): pantalla de ingresos/egresos + seed de tipos de imputacion si falta.
 INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion) VALUES
-  ('PANTALLAS', 'ingresos-egresos', 'Ingresos y egresos', 'sistema', now());
+  ('PANTALLAS', 'ingresos-egresos', 'Ingresos y egresos', 'sistema', now())
+ON CONFLICT (entidad, codigo) DO NOTHING;
 
 INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion)
 SELECT 'TIPOS_IMPUTACION', v.codigo, v.descripcion, 'sistema', now()

@@ -9,4 +9,5 @@ INSERT INTO parametro_sistema (clave, valor, descripcion, usuario_creacion, fech
   ('SMTP_CLAVE',            '',                'Clave SMTP (completar)',                                         'sistema', now()),
   ('SMTP_DESDE',            '',                'Remitente de los correos (vacio = igual al usuario SMTP)',       'sistema', now()),
   ('SMTP_TLS',              'SI',              'Usar STARTTLS (SI/NO)',                                          'sistema', now()),
-  ('ALERTA_LOGIN_FALLIDO',  'SI',              'Enviar alerta por correo ante intento de acceso fallido (SI/NO)','sistema', now());
+  ('ALERTA_LOGIN_FALLIDO',  'SI',              'Enviar alerta por correo ante intento de acceso fallido (SI/NO)','sistema', now())
+ON CONFLICT (clave) DO NOTHING;

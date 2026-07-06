@@ -22,7 +22,7 @@ public class PersonaJuridica extends Auditable implements Serializable {
     private Long id;
 
     @MapsId
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @OneToOne(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "persona")
     private Persona persona;
 

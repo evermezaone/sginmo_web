@@ -1,10 +1,12 @@
--- V13 (REQ-0009): empresas y sucursales.
+-- V13 (REQ-0009): empresas y sucursales. IDEMPOTENTE (obs 208 de Codex): reproducible
+-- sobre BD parcialmente migrada / re-ejecucion.
 -- sucursal: le faltaba estado (regla 13: toda tabla maestra tiene baja logica).
-ALTER TABLE sucursal ADD COLUMN estado varchar(10) NOT NULL DEFAULT 'ACTIVO'
+ALTER TABLE sucursal ADD COLUMN IF NOT EXISTS estado varchar(10) NOT NULL DEFAULT 'ACTIVO'
   CHECK (estado IN ('ACTIVO','INACTIVO'));
 
-INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion) VALUES
-  ('PANTALLAS', 'empresas', 'Empresas y sucursales', 'sistema', now());
+INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion)
+SELECT 'PANTALLAS', 'empresas', 'Empresas y sucursales', 'sistema', now()
+WHERE NOT EXISTS (SELECT 1 FROM entidad e WHERE e.entidad = 'PANTALLAS' AND e.codigo = 'empresas');
 
 -- La empresa placeholder del seed V5 recibe su rol EMPRESA (regla: empresa del sistema =
 -- persona juridica con rol EMPRESA activo) y una casa matriz para el selector de contexto.

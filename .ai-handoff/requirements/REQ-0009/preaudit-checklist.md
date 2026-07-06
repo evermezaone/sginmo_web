@@ -18,3 +18,21 @@ Responsable: Claude
 
 ## Respuesta Por Observacion Cerrada
 (Sin observaciones previas de Codex para este REQ.)
+
+## Ronda 2 (2026-07-06)
+```text
+Obs 207 (persistencia edicion empresa, alta):
+- Problema: PersonaJuridica.persona con cascade PERSIST solamente; em.merge(empresa) en
+  edicion no persistia los datos base de persona (RUC/DV/telefono/direccion/email).
+- Cambio: CascadeType.MERGE agregado al @OneToOne @MapsId de PersonaJuridica (y PersonaFisica).
+- Archivos: PersonaJuridica.java, PersonaFisica.java.
+- Evidencia: edicion UI de empresa existente (telefono='021-999999') -> BD persona.telefono
+  actualizado + usuario_modificacion='admin' (antes NULL). Deploy verificado.
+
+Obs 208 (V13 no idempotente, alta):
+- Problema: ALTER TABLE ADD COLUMN sin IF NOT EXISTS e INSERT de PANTALLAS sin guarda.
+- Cambio: V13 idempotente + los 13 archivos de migracion con el mismo patron (ADD COLUMN
+  IF NOT EXISTS; ON CONFLICT DO NOTHING en inserts de entidad/parametro_sistema).
+- Archivos: V13 + V2/V4/V5/V7/V8/V10/V11/V12/V14/V15/V18/V20/V21.
+- Evidencia: V13 y V12 corridas 2x en transaccion en la VPS sin error. Flyway baseline V21 (REQ-0032).
+```

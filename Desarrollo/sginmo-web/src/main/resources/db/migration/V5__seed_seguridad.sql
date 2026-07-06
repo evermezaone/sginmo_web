@@ -4,7 +4,8 @@
 
 INSERT INTO parametro_sistema (clave, valor, descripcion, usuario_creacion, fecha_creacion) VALUES
   ('LOGIN_MAX_INTENTOS',    '5',  'Intentos fallidos de login antes de bloquear al usuario', 'sistema', now()),
-  ('LOGIN_BLOQUEO_MINUTOS', '15', 'Minutos de bloqueo tras superar los intentos fallidos',   'sistema', now());
+  ('LOGIN_BLOQUEO_MINUTOS', '15', 'Minutos de bloqueo tras superar los intentos fallidos',   'sistema', now())
+ON CONFLICT (clave) DO NOTHING;
 
 -- Empresa propietaria del sistema (persona juridica placeholder: se edita en el ABM de personas)
 INSERT INTO persona (tipo_personeria, nombre, numero_documento, es_contribuyente, usuario_creacion, fecha_creacion)

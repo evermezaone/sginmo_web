@@ -37,11 +37,12 @@ CREATE TABLE permiso_grupo (
   UNIQUE (grupo, pantalla, accion)
 );
 
-ALTER TABLE usuario ADD COLUMN email varchar(180);
-ALTER TABLE usuario ADD COLUMN telefono varchar(30);
+ALTER TABLE usuario ADD COLUMN IF NOT EXISTS email varchar(180);
+ALTER TABLE usuario ADD COLUMN IF NOT EXISTS telefono varchar(30);
 
 INSERT INTO entidad (entidad, codigo, descripcion, usuario_creacion, fecha_creacion) VALUES
-  ('PANTALLAS', 'grupos', 'Grupos de seguridad', 'sistema', now());
+  ('PANTALLAS', 'grupos', 'Grupos de seguridad', 'sistema', now())
+ON CONFLICT (entidad, codigo) DO NOTHING;
 
 -- Grupo de ejemplo listo para usar: operadores de articulos
 INSERT INTO grupo (codigo, descripcion, usuario_creacion, fecha_creacion)
