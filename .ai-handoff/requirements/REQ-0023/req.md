@@ -1,25 +1,14 @@
 # REQ-0023 - Descuentos y anulacion de cobros
 
-**Numero:** REQ-0023
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+Anulacion de cobro que invoca f_anular_cobro (V17): repone el saldo del documento, reabre las cuotas afectadas y descuenta de la caja, todo en la BD. Boton anular en la lista de cobros de la planilla. Verificado (repone 10M/caja 0).
 
 ## Criterios De Aceptacion
+- [x] Logica en la BD (SPs/triggers V16/V17), Java solo invoca.
+- [x] Pantalla/accion con estandar y enforcement de permisos.
+- [x] Motor verificado NUMERICAMENTE (bateria 9 checks + E2E operacion->cobro->anulacion).
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+## Bloqueo Formal Documentado
+Validacion visual/funcional del usuario PENDIENTE (desarrollo continuo 0012-0032).

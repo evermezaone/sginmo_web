@@ -1,0 +1,177 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{operacionBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Operaciones</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="row" value="#{operacionBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="#{operacionBean.consultaFiltrada ? 'Sin resultados' : 'No hay operaciones registradas'}">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva operación" icon="pi pi-plus" rendered="#{sesionUsuario.puede('operaciones','CREAR')}"
+                                     actionListener="#{operacionBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgOperacion').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{operacionBean.filtroGlobal}" placeholder="Buscar por cliente" style="width:15rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="#" style="width:5rem;"><h:outputText value="#{row[0].id}"/></p:column>
+            <p:column headerText="Fecha" style="width:8rem;"><h:outputText value="#{row[0].fechaOperacion}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+            <p:column headerText="Tipo" style="width:7rem;"><p:tag value="#{row[0].tipoOperacion}" severity="#{row[0].tipoOperacion eq 'VENTA' ? 'danger' : 'info'}"/></p:column>
+            <p:column headerText="Cliente"><h:outputText value="#{row[1]}"/></p:column>
+            <p:column headerText="Activo"><h:outputText value="#{row[2]}"/></p:column>
+            <p:column headerText="Monto total" style="width:10rem; text-align:right;"><h:outputText value="#{row[0].montoTotalOperacion}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+            <p:column headerText="Estado" style="width:7rem; text-align:center;"><p:tag value="#{row[0].estado}" severity="#{row[0].estado eq 'VIGENTE' ? 'success' : 'secondary'}"/></p:column>
+            <p:column headerText="Acciones" style="width:5rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-eye" title="Ver detalle" styleClass="ui-button-flat"
+                                 actionListener="#{operacionBean.ver(row[0].id)}"
+                                 update=":frmDetalle" oncomplete="PF('dlgDetalle').show()"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <!-- Alta de operacion -->
+    <p:dialog header="Nueva operación" widgetVar="dlgOperacion" modal="true" resizable="false"
+              responsive="true" width="680" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty operacionBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Tipo *</label>
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoOperacion}" label="Tipo">
+                            <f:selectItem itemLabel="Alquiler" itemValue="ALQUILER"/>
+                            <f:selectItem itemLabel="Venta" itemValue="VENTA"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <label>Condición *</label>
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.condicionOperacion}" label="Condición">
+                            <f:selectItem itemLabel="Crédito (cuotas)" itemValue="CREDITO"/>
+                            <f:selectItem itemLabel="Contado" itemValue="CONTADO"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Cliente *</label>
+                    <p:selectOneMenu value="#{operacionBean.seleccionado.cliente}" label="Cliente" filter="true" filterMatchMode="contains">
+                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{operacionBean.clientes}" var="cl" itemLabel="#{cl.nombre}" itemValue="#{cl.id}"/>
+                    </p:selectOneMenu>
+                </div>
+                <div class="campo">
+                    <label>Activo (solo LIBRES) *</label>
+                    <p:autoComplete value="#{operacionBean.seleccionado.activo}" label="Activo"
+                                    completeMethod="#{operacionBean.completarActivo}" var="a"
+                                    itemLabel="#{a.nombre}" itemValue="#{a.id}"
+                                    forceSelection="true" minQueryLength="1" queryDelay="400"
+                                    style="width:100%;" inputStyle="width:100%;"/>
+                </div>
+                <div class="fila-3">
+                    <div class="campo"><label>Vendedor</label>
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.vendedor}" label="Vendedor" filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Sin vendedor" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{operacionBean.vendedores}" var="v" itemLabel="#{v.nombre}" itemValue="#{v.id}"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Fecha inicio *</label>
+                        <p:datePicker value="#{operacionBean.seleccionado.fechaInicioContrato}" pattern="dd/MM/yyyy"/></div>
+                    <div class="campo"><label>Plazo (meses/cuotas)</label>
+                        <p:inputNumber value="#{operacionBean.seleccionado.plazo}" decimalPlaces="0" minValue="0"/></div>
+                </div>
+                <div class="fila-3">
+                    <div class="campo"><label>Precio (mensual o total) *</label>
+                        <p:inputNumber value="#{operacionBean.seleccionado.precio}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                    <div class="campo"><label>Garantía (alquiler)</label>
+                        <p:inputNumber value="#{operacionBean.seleccionado.garantia}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                    <div class="campo"><label>Día de pago (1-28)</label>
+                        <p:inputNumber value="#{operacionBean.seleccionado.diaPago}" decimalPlaces="0" minValue="1" maxValue="28"/></div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo"><label>Mora diaria (Gs.)</label>
+                        <p:inputNumber value="#{operacionBean.seleccionado.montoMora}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                    <div class="campo"><label>Días de gracia</label>
+                        <p:inputNumber value="#{operacionBean.seleccionado.diasGracia}" decimalPlaces="0" minValue="0"/></div>
+                </div>
+                <p style="color:#6c757d; font-size:.8rem;">
+                    A crédito se genera el cronograma automáticamente. En alquiler se crean los documentos de
+                    garantía y comisión según el % del activo.
+                </p>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgOperacion').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Registrar operación" icon="pi pi-save"
+                                     actionListener="#{operacionBean.crear()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+
+    <!-- Detalle: cronograma + acciones -->
+    <p:dialog header="Detalle de la operación" widgetVar="dlgDetalle" modal="true" resizable="false"
+              responsive="true" width="760" dynamic="true" closeOnEscape="true">
+        <h:form id="frmDetalle">
+            <p:messages id="msjDetalle" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty operacionBean.seleccionado}">
+                <p:tabView>
+                    <p:tab title="Cronograma">
+                        <p:dataTable var="c" value="#{operacionBean.cuotas}" paginator="true" rows="12" emptyMessage="Operación al contado (sin cuotas)">
+                            <p:column headerText="Cuota" style="width:5rem;"><h:outputText value="#{c.numeroCuota}"/></p:column>
+                            <p:column headerText="Vencimiento" style="width:9rem;"><h:outputText value="#{c.fechaVencimiento}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                            <p:column headerText="Monto" style="text-align:right;"><h:outputText value="#{c.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                            <p:column headerText="Saldo" style="text-align:right;"><h:outputText value="#{c.saldo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                            <p:column headerText="Estado" style="width:8rem; text-align:center;"><p:tag value="#{c.estado}" severity="#{c.estado eq 'CANCELADO' ? 'success' : 'warning'}"/></p:column>
+                        </p:dataTable>
+                    </p:tab>
+                    <p:tab title="Renovar" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
+                        <div class="fila-2">
+                            <div class="campo"><label>Meses adicionales</label>
+                                <p:inputNumber value="#{operacionBean.renovMeses}" decimalPlaces="0" minValue="1"/></div>
+                            <div class="campo"><label>Nuevo precio (opcional)</label>
+                                <p:inputNumber value="#{operacionBean.renovPrecio}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                        </div>
+                        <p:commandButton value="Renovar contrato" icon="pi pi-refresh"
+                                         actionListener="#{operacionBean.renovar()}" update="frmDetalle"/>
+                    </p:tab>
+                    <p:tab title="Regenerar cuotas" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
+                        <p style="color:#6c757d; font-size:.8rem;">Solo si la operación aún no tiene cobros.</p>
+                        <div class="fila-2">
+                            <div class="campo"><label>Cantidad de cuotas</label>
+                                <p:inputNumber value="#{operacionBean.regenCuotas}" decimalPlaces="0" minValue="1"/></div>
+                            <div class="campo"><label>Primera cuota</label>
+                                <p:datePicker value="#{operacionBean.regenDesde}" pattern="dd/MM/yyyy"/></div>
+                        </div>
+                        <p:commandButton value="Regenerar cronograma" icon="pi pi-sync"
+                                         actionListener="#{operacionBean.regenerar()}" update="frmDetalle"/>
+                    </p:tab>
+                    <p:tab title="Finalizar / Rescindir" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
+                        <div class="campo"><label>Motivo</label>
+                            <p:inputTextarea value="#{operacionBean.rescisionMotivo}" rows="2" style="width:100%;" maxlength="500"/></div>
+                        <p:commandButton value="Finalizar operación" icon="pi pi-flag" styleClass="ui-button-danger"
+                                         actionListener="#{operacionBean.finalizar()}"
+                                         update="msjDetalle :frmLista:tabla :frmLista:mensajes">
+                            <p:confirm header="Confirmar" message="¿Finalizar la operación y liberar el activo?" icon="pi pi-exclamation-triangle"/>
+                        </p:commandButton>
+                        <p:confirmDialog global="true" showEffect="fade">
+                            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+                            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+                        </p:confirmDialog>
+                    </p:tab>
+                </p:tabView>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

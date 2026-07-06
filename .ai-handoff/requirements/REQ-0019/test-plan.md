@@ -1,19 +1,4 @@
-# REQ-0019 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0019
+- [x] Motor verificado en la VPS (transacciones con rollback): cuadre, cronograma exacto, cobro FIFO, mora, anulacion que repone, cancelacion total.
+- [x] Pantalla responde HTTP 200 con sesion admin, sin excepciones.
+- [ ] Validacion visual/funcional del usuario: PENDIENTE.

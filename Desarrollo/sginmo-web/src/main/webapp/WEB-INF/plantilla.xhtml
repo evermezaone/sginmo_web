@@ -61,6 +61,12 @@
         </div>
         <a class="item" href="index.xhtml"><i class="pi pi-home"></i> Inicio</a>
 
+        <div class="seccion">Operaciones</div>
+        <h:outputLink styleClass="item" value="operaciones.xhtml"
+                      rendered="#{sesionUsuario.puede('operaciones','VER')}"><i class="pi pi-file-edit"></i> Operaciones</h:outputLink>
+        <h:outputLink styleClass="item" value="caja.xhtml"
+                      rendered="#{sesionUsuario.puede('caja','VER')}"><i class="pi pi-wallet"></i> Caja y cobros</h:outputLink>
+
         <div class="seccion">Catálogos</div>
         <h:outputLink styleClass="item" value="personas.xhtml"
                       rendered="#{sesionUsuario.puede('personas','VER')}"><i class="pi pi-id-card"></i> Personas</h:outputLink>

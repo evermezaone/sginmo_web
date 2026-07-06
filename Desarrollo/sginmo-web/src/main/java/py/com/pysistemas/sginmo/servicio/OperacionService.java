@@ -1,0 +1,269 @@
+package py.com.pysistemas.sginmo.servicio;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import py.com.one.core.ErroresBd;
+import py.com.one.core.NegocioException;
+import py.com.pysistemas.sginmo.dominio.activo.Activo;
+import py.com.pysistemas.sginmo.dominio.operacion.CronogramaCuota;
+import py.com.pysistemas.sginmo.dominio.operacion.Operacion;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
+
+/**
+ * Operaciones de alquiler/venta (REQ-0016/0017/0018/0019/0020/0021).
+ * TODA la matematica financiera vive en la BD (V16/V17): este servicio orquesta e
+ * INVOCA f_generar_cronograma / f_mora_cuota; jamas recalcula cuadres en Java.
+ * Movimientos automaticos (REQ-0018): documento interno de deposito de garantia
+ * (alquiler) y de comision (segun % del activo) al confirmar la operacion.
+ */
+@ApplicationScoped
+public class OperacionService {
+
+    @PersistenceContext(unitName = "sginmoPU")
+    private EntityManager em;
+
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
+    // ── Consultas ──
+
+    public long contar(String filtro) {
+        var q = em.createQuery(
+            "SELECT COUNT(o) FROM Operacion o, Persona p WHERE p.id = o.cliente"
+            + " AND (:f = '' OR lower(p.nombre) LIKE :like)", Long.class);
+        filtroGlobal(q, filtro);
+        return q.getSingleResult();
+    }
+
+    /** Filas: [operacion, nombreCliente, nombreActivo]. */
+    public List<Object[]> listar(int primero, int cantidad, String filtro) {
+        var q = em.createQuery(
+            "SELECT o, p.nombre, a.nombre FROM Operacion o, Persona p, Activo a"
+            + " WHERE p.id = o.cliente AND a.id = o.activo"
+            + " AND (:f = '' OR lower(p.nombre) LIKE :like)"
+            + " ORDER BY o.id DESC", Object[].class);
+        filtroGlobal(q, filtro);
+        return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
+    }
+
+    private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
+        String f = filtro == null ? "" : filtro.trim().toLowerCase();
+        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+    }
+
+    public List<CronogramaCuota> cuotasDe(Long operacionId) {
+        return em.createQuery(
+                "SELECT c FROM CronogramaCuota c WHERE c.operacion = :op ORDER BY c.numeroCuota",
+                CronogramaCuota.class)
+            .setParameter("op", operacionId).getResultList();
+    }
+
+    /** Mora de una cuota a hoy, calculada por la BD (f_mora_cuota). */
+    public BigDecimal moraDe(Long cuotaId) {
+        Object r = em.createNativeQuery("SELECT f_mora_cuota(:c, current_date)")
+            .setParameter("c", cuotaId).getSingleResult();
+        return r == null ? BigDecimal.ZERO : new BigDecimal(r.toString());
+    }
+
+    /** Activos disponibles para operar (LIBRES) por autocomplete. */
+    public List<Activo> activosLibres(String texto) {
+        String f = texto == null ? "" : texto.trim().toLowerCase();
+        return em.createQuery(
+                "SELECT a FROM Activo a WHERE a.estado = 'LIBRE' AND lower(a.nombre) LIKE :like ORDER BY a.nombre",
+                Activo.class)
+            .setParameter("like", "%" + f + "%").setMaxResults(15).getResultList();
+    }
+
+    // ── Alta de operacion (REQ-0016): transaccion completa ──
+
+    @Transactional
+    public Operacion crear(Operacion op) {
+        autorizacion.exigir("operaciones", "CREAR");
+        validar(op);
+        Activo activo = em.find(Activo.class, op.getActivo());
+        if (activo == null) throw new NegocioException("El activo no existe");
+        if (!"LIBRE".equals(activo.getEstado())) {
+            throw new NegocioException("El activo '" + activo.getNombre() + "' no está LIBRE (está " + activo.getEstado() + ")");
+        }
+        try {
+            // monto total: precio x plazo en alquiler credito; precio en venta/contado
+            if ("ALQUILER".equals(op.getTipoOperacion()) && op.getPlazo() != null && op.getPlazo() > 0) {
+                op.setMontoTotalOperacion(op.getPrecio().multiply(BigDecimal.valueOf(op.getPlazo())));
+                op.setFechaFinContrato(op.getFechaInicioContrato().plusMonths(op.getPlazo()));
+            } else {
+                op.setMontoTotalOperacion(op.getPrecio());
+            }
+            em.persist(op);
+            em.flush();
+
+            // documento interno de cuenta corriente que respalda el cronograma
+            Long doc = crearDocumentoInterno(op, op.getMontoTotalOperacion(),
+                    ("ALQUILER".equals(op.getTipoOperacion()) ? "Alquiler " : "Venta ") + activo.getNombre()
+                    + " - Operación " + op.getId());
+
+            // cronograma en la BD (cuadre exacto garantizado por f_generar_cronograma)
+            if ("CREDITO".equals(op.getCondicionOperacion()) && op.getPlazo() != null && op.getPlazo() > 0) {
+                em.createNativeQuery("SELECT f_generar_cronograma(:op, :n, :total, :desde, :dia, :mon, :usr)")
+                    .setParameter("op", op.getId())
+                    .setParameter("n", op.getPlazo())
+                    .setParameter("total", op.getMontoTotalOperacion())
+                    .setParameter("desde", java.sql.Date.valueOf(op.getFechaInicioContrato().plusMonths(1)))
+                    .setParameter("dia", op.getDiaPago())
+                    .setParameter("mon", op.getMoneda())
+                    .setParameter("usr", "sistema")
+                    .getSingleResult();
+                em.createNativeQuery("UPDATE cronograma_cuota SET documento = :doc WHERE operacion = :op")
+                    .setParameter("doc", doc).setParameter("op", op.getId()).executeUpdate();
+            }
+
+            // REQ-0018: movimientos automaticos
+            if ("ALQUILER".equals(op.getTipoOperacion()) && op.getGarantia() != null
+                    && op.getGarantia().signum() > 0) {
+                crearDocumentoInterno(op, op.getGarantia(),
+                        "Depósito de garantía - Operación " + op.getId());
+            }
+            BigDecimal pctComision = "ALQUILER".equals(op.getTipoOperacion())
+                    ? activo.getComisionAlquiler() : activo.getComisionVenta();
+            if (pctComision != null && pctComision.signum() > 0) {
+                BigDecimal comision = op.getPrecio().multiply(pctComision)
+                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                crearDocumentoInterno(op, comision,
+                        "Comisión " + pctComision + "% - Operación " + op.getId());
+            }
+
+            // el activo pasa a OCUPADA (alquiler) o VENDIDA (venta)
+            activo.setEstado("ALQUILER".equals(op.getTipoOperacion()) ? "OCUPADA" : "VENDIDA");
+            em.flush();
+            return op;
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);
+        }
+    }
+
+    /** Documento interno (DINT) ENTRADA: numerado por f_siguiente_numero, detalle unico. */
+    private Long crearDocumentoInterno(Operacion op, BigDecimal monto, String concepto) {
+        Object num = em.createNativeQuery("SELECT f_siguiente_numero(:emp, 'DINT', 'OP')")
+            .setParameter("emp", op.getEmpresa()).getSingleResult();
+        em.createNativeQuery(
+            "INSERT INTO documento (empresa, tipo_codigo, serie, numero, fecha, persona, sucursal,"
+            + " moneda, direccion_dinero, observacion, usuario_creacion, fecha_creacion)"
+            + " VALUES (:emp, 'DINT', 'OP', :num, :fec, :per, :suc, :mon, 'ENTRADA', :obs, 'sistema', now())")
+            .setParameter("emp", op.getEmpresa()).setParameter("num", ((Number) num).longValue())
+            .setParameter("fec", java.sql.Date.valueOf(op.getFechaOperacion()))
+            .setParameter("per", op.getCliente()).setParameter("suc", op.getSucursal())
+            .setParameter("mon", op.getMoneda()).setParameter("obs", concepto)
+            .executeUpdate();
+        Object doc = em.createNativeQuery(
+            "SELECT documento FROM documento WHERE empresa = :emp AND tipo_codigo = 'DINT' AND serie = 'OP' AND numero = :num")
+            .setParameter("emp", op.getEmpresa()).setParameter("num", ((Number) num).longValue())
+            .getSingleResult();
+        Long docId = ((Number) doc).longValue();
+        em.createNativeQuery(
+            "INSERT INTO documento_detalle (documento, numero_item, concepto, cantidad, precio_unitario,"
+            + " monto, saldo, usuario_creacion, fecha_creacion)"
+            + " VALUES (:doc, 1, :con, 1, :monto, :monto, :monto, 'sistema', now())")
+            .setParameter("doc", docId).setParameter("con", concepto).setParameter("monto", monto)
+            .executeUpdate();
+        return docId;
+    }
+
+    private void validar(Operacion op) {
+        if (op.getCliente() == null) throw new NegocioException("El cliente es obligatorio");
+        if (op.getActivo() == null) throw new NegocioException("El activo es obligatorio");
+        if (op.getPrecio() == null || op.getPrecio().signum() <= 0) {
+            throw new NegocioException("El precio debe ser mayor a cero");
+        }
+        if ("CREDITO".equals(op.getCondicionOperacion())
+                && (op.getPlazo() == null || op.getPlazo() < 1)) {
+            throw new NegocioException("A crédito el plazo (cuotas) es obligatorio");
+        }
+        if (op.getEmpresa() == null || op.getSucursal() == null) {
+            throw new NegocioException("Falta el contexto de empresa/sucursal (selector de la barra superior)");
+        }
+    }
+
+    // ── REQ-0019: regeneracion de cuotas (solo sin cobros; la BD lo garantiza) ──
+
+    @Transactional
+    public void regenerarCuotas(Long operacionId, int cuotas, java.time.LocalDate primeraFecha) {
+        autorizacion.exigir("operaciones", "EDITAR");
+        Operacion op = em.find(Operacion.class, operacionId);
+        if (op == null) throw new NegocioException("La operación no existe");
+        if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("La operación no está vigente");
+        try {
+            em.createNativeQuery("SELECT f_generar_cronograma(:op, :n, :total, :desde, :dia, :mon, :usr)")
+                .setParameter("op", operacionId).setParameter("n", cuotas)
+                .setParameter("total", op.getMontoTotalOperacion())
+                .setParameter("desde", java.sql.Date.valueOf(primeraFecha))
+                .setParameter("dia", op.getDiaPago()).setParameter("mon", op.getMoneda())
+                .setParameter("usr", "sistema").getSingleResult();
+            op.setPlazo(cuotas);
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);   // "ya tiene cuotas con cobros" viene de la BD
+        }
+    }
+
+    // ── REQ-0020: renovacion (extiende contrato y agrega cuotas nuevas) ──
+
+    @Transactional
+    public void renovar(Long operacionId, int mesesAdicionales, BigDecimal nuevoPrecio) {
+        autorizacion.exigir("operaciones", "EDITAR");
+        Operacion op = em.find(Operacion.class, operacionId);
+        if (op == null) throw new NegocioException("La operación no existe");
+        if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("Solo se renuevan operaciones vigentes");
+        if (mesesAdicionales < 1) throw new NegocioException("Los meses adicionales deben ser al menos 1");
+        BigDecimal precio = nuevoPrecio == null || nuevoPrecio.signum() <= 0 ? op.getPrecio() : nuevoPrecio;
+        Integer ultima = (Integer) em.createNativeQuery(
+                "SELECT COALESCE(MAX(numero_cuota),0)::int FROM cronograma_cuota WHERE operacion = :op")
+            .setParameter("op", operacionId).getSingleResult();
+        java.time.LocalDate base = op.getFechaFinContrato() != null ? op.getFechaFinContrato() : java.time.LocalDate.now();
+        for (int i = 1; i <= mesesAdicionales; i++) {
+            java.time.LocalDate venc = base.plusMonths(i);
+            if (op.getDiaPago() != null && op.getDiaPago() >= 1 && op.getDiaPago() <= 28) {
+                venc = venc.withDayOfMonth(op.getDiaPago());
+            }
+            em.createNativeQuery(
+                "INSERT INTO cronograma_cuota (operacion, numero_cuota, fecha_vencimiento, monto, saldo,"
+                + " estado, moneda, usuario_creacion, fecha_creacion)"
+                + " VALUES (:op, :n, :venc, :monto, :monto, 'PENDIENTE', :mon, 'sistema', now())")
+                .setParameter("op", operacionId).setParameter("n", ultima + i)
+                .setParameter("venc", java.sql.Date.valueOf(venc))
+                .setParameter("monto", precio).setParameter("mon", op.getMoneda())
+                .executeUpdate();
+        }
+        op.setPrecio(precio);
+        op.setFechaRenovacion(java.time.LocalDate.now());
+        op.setFechaFinContrato(base.plusMonths(mesesAdicionales));
+        op.setMontoTotalOperacion(op.getMontoTotalOperacion().add(precio.multiply(BigDecimal.valueOf(mesesAdicionales))));
+        op.setPlazo((op.getPlazo() == null ? 0 : op.getPlazo()) + mesesAdicionales);
+    }
+
+    // ── REQ-0021: rescision / finalizacion ──
+
+    @Transactional
+    public void finalizar(Long operacionId, String motivoRescision) {
+        autorizacion.exigir("operaciones", "EDITAR");
+        Operacion op = em.find(Operacion.class, operacionId);
+        if (op == null) throw new NegocioException("La operación no existe");
+        if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("La operación ya está finalizada");
+        op.setEstado("FINALIZADO");
+        op.setFechaFinalizacion(java.time.LocalDate.now());
+        // el activo vuelve a LIBRE salvo venta consumada
+        Activo a = em.find(Activo.class, op.getActivo());
+        if (a != null && !"VENDIDA".equals(a.getEstado())) {
+            a.setEstado("LIBRE");
+        }
+        if (motivoRescision != null && !motivoRescision.isBlank()) {
+            em.createNativeQuery(
+                "INSERT INTO rescision (operacion, fecha, tipo, observacion, usuario_creacion, fecha_creacion)"
+                + " VALUES (:op, current_date, 'RESCISION', :mot, 'sistema', now())")
+                .setParameter("op", operacionId).setParameter("mot", motivoRescision)
+                .executeUpdate();
+        }
+    }
+}

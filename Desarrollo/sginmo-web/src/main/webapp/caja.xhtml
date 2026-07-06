@@ -1,0 +1,109 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{cajaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Caja y cobros</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+
+        <!-- Caja cerrada: abrir -->
+        <p:panel header="Caja" rendered="#{!cajaBean.cajaAbierta}" style="margin-bottom:1rem;">
+            <p style="color:#6c757d;">No hay una caja abierta para la sucursal activa. Ábrala para registrar cobros.</p>
+            <div style="display:flex; gap:.6rem; align-items:end;">
+                <div class="campo" style="margin:0;">
+                    <label>Monto de apertura</label>
+                    <p:inputNumber value="#{cajaBean.montoApertura}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
+                </div>
+                <p:commandButton value="Abrir caja" icon="pi pi-lock-open" rendered="#{sesionUsuario.puede('caja','CREAR')}"
+                                 actionListener="#{cajaBean.abrirCaja()}" update="frm"/>
+            </div>
+        </p:panel>
+
+        <!-- Caja abierta -->
+        <ui:fragment rendered="#{cajaBean.cajaAbierta}">
+            <p:panel style="margin-bottom:1rem;">
+                <div style="display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap;">
+                    <span><strong>Planilla #{cajaBean.planilla.id}</strong> — abierta #{cajaBean.planilla.fechaApertura}</span>
+                    <span>Apertura: <strong><h:outputText value="#{cajaBean.planilla.montoApertura}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong></span>
+                    <span>Cobrado: <strong style="color:#2a9d8f;"><h:outputText value="#{cajaBean.planilla.montoCobro}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong></span>
+                    <span style="flex:1"></span>
+                    <p:commandButton value="Cerrar caja" icon="pi pi-lock" styleClass="ui-button-danger ui-button-outlined"
+                                     rendered="#{sesionUsuario.puede('caja','EDITAR')}"
+                                     actionListener="#{cajaBean.cerrarCaja()}" update="frm">
+                        <p:confirm header="Confirmar" message="¿Cerrar la caja del día?" icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
+                </div>
+            </p:panel>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                <!-- Registrar cobro -->
+                <p:panel header="Registrar cobro">
+                    <div class="campo">
+                        <label>Cliente</label>
+                        <p:selectOneMenu value="#{cajaBean.clienteSel}" label="Cliente" filter="true" filterMatchMode="contains">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{cajaBean.clientes}" var="cl" itemLabel="#{cl.nombre}" itemValue="#{cl.id}"/>
+                            <p:ajax listener="#{cajaBean.clienteCambiado()}" update="cboDoc tblCuotas"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <label>Documento pendiente</label>
+                        <p:selectOneMenu id="cboDoc" value="#{cajaBean.documentoSel}" label="Documento">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{cajaBean.documentos}" var="d"
+                                           itemLabel="#{d[1]} #{d[2]}-#{d[3]} · saldo #{d[6]} · #{d[7]}" itemValue="#{d[0]}"/>
+                            <p:ajax listener="#{cajaBean.documentoCambiado()}" update="tblCuotas"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <p:dataTable id="tblCuotas" var="q" value="#{cajaBean.cuotas}" emptyMessage="Sin cuotas pendientes" style="margin-bottom:.8rem;">
+                        <p:column headerText="Cuota" style="width:4rem;"><h:outputText value="#{q[1]}"/></p:column>
+                        <p:column headerText="Vence"><h:outputText value="#{q[2]}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                        <p:column headerText="Saldo" style="text-align:right;"><h:outputText value="#{q[4]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                        <p:column headerText="Mora" style="text-align:right;"><h:outputText value="#{q[5]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                    </p:dataTable>
+                    <div class="fila-2">
+                        <div class="campo"><label>Forma de pago</label>
+                            <p:selectOneMenu value="#{cajaBean.formaPagoSel}" label="Forma de pago">
+                                <f:selectItem itemLabel="Efectivo / sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{cajaBean.formasPago}" var="fp" itemLabel="#{fp.descripcion}" itemValue="#{fp.id}"/>
+                            </p:selectOneMenu></div>
+                        <div class="campo"><label>Monto a cobrar</label>
+                            <p:inputNumber value="#{cajaBean.montoCobro}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                    </div>
+                    <p:commandButton value="Registrar cobro" icon="pi pi-money-bill" rendered="#{sesionUsuario.puede('caja','CREAR')}"
+                                     actionListener="#{cajaBean.cobrar()}" update="frm"/>
+                </p:panel>
+
+                <!-- Cobros de la planilla -->
+                <p:panel header="Cobros de la planilla">
+                    <p:dataTable var="cb" value="#{cajaBean.cobros}" paginator="true" rows="10" emptyMessage="Aún no hay cobros">
+                        <p:column headerText="#" style="width:4rem;"><h:outputText value="#{cb[0]}"/></p:column>
+                        <p:column headerText="Cliente"><h:outputText value="#{cb[2]}"/></p:column>
+                        <p:column headerText="Monto" style="text-align:right;"><h:outputText value="#{cb[3]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                        <p:column headerText="Forma"><h:outputText value="#{cb[4]}"/></p:column>
+                        <p:column headerText="Estado" style="width:6rem; text-align:center;"><p:tag value="#{cb[5]}" severity="#{cb[5] eq 'ACTIVO' ? 'success' : 'danger'}"/></p:column>
+                        <p:column style="width:4rem; text-align:center;">
+                            <p:commandButton icon="pi pi-times" title="Anular" styleClass="ui-button-flat ui-button-danger"
+                                             rendered="#{cb[5] eq 'ACTIVO' and sesionUsuario.puede('caja','INACTIVAR')}"
+                                             actionListener="#{cajaBean.anular(cb[0])}" update="frm">
+                                <p:confirm header="Confirmar" message="¿Anular este cobro? Se repone el saldo y las cuotas." icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+                        </p:column>
+                    </p:dataTable>
+                </p:panel>
+            </div>
+        </ui:fragment>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+</ui:define>
+</ui:composition>

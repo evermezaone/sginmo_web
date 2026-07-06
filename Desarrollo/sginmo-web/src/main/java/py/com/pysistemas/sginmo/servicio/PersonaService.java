@@ -67,6 +67,8 @@ public class PersonaService {
             .getResultList();
     }
 
+    public Persona buscar(Long id) { return id == null ? null : em.find(Persona.class, id); }
+
     public PersonaFisica fisicaDe(Long id) { return em.find(PersonaFisica.class, id); }
     public PersonaJuridica juridicaDe(Long id) { return em.find(PersonaJuridica.class, id); }
 

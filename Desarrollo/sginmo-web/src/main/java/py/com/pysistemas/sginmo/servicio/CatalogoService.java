@@ -33,4 +33,25 @@ public class CatalogoService {
                 "SELECT i FROM Impuesto i WHERE i.estado = 'ACTIVO' ORDER BY i.descripcion", Impuesto.class)
             .getResultList();
     }
+
+    /** Formas de pago ACTIVO y HABILITADO para nuevos cobros (caja). */
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.FormaPago> formasHabilitadas() {
+        return em.createQuery(
+                "SELECT fp FROM FormaPago fp WHERE fp.estado = 'ACTIVO' AND fp.habilitado = true ORDER BY fp.descripcion",
+                py.com.pysistemas.sginmo.dominio.catalogo.FormaPago.class)
+            .getResultList();
+    }
+
+    /** Id de la moneda LOCAL (guarani) para cobros en moneda base; primera moneda si no hay LOCAL. */
+    public Long monedaLocalId() {
+        var locales = em.createQuery(
+                "SELECT m.id FROM Moneda m WHERE m.tipoMoneda = 'LOCAL' AND m.estado = 'ACTIVO' ORDER BY m.id", Long.class)
+            .setMaxResults(1).getResultList();
+        if (!locales.isEmpty()) {
+            return locales.get(0);
+        }
+        var cualquiera = em.createQuery("SELECT m.id FROM Moneda m ORDER BY m.id", Long.class)
+            .setMaxResults(1).getResultList();
+        return cualquiera.isEmpty() ? null : cualquiera.get(0);
+    }
 }

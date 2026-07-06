@@ -13,14 +13,14 @@
 {"req": "REQ-0013", "titulo": "Entidades inmobiliarias y propietarios", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:28.851Z", "ts_actualizado": "2026-07-04T01:59:28.851Z"}
 {"req": "REQ-0014", "titulo": "Propiedades", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:30.034Z", "ts_actualizado": "2026-07-04T01:59:30.034Z"}
 {"req": "REQ-0015", "titulo": "Lotes y generacion masiva de lotes", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:31.317Z", "ts_actualizado": "2026-07-04T01:59:31.317Z"}
-{"req": "REQ-0016", "titulo": "Operaciones alquiler-venta", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:32.517Z", "ts_actualizado": "2026-07-04T01:59:32.517Z"}
-{"req": "REQ-0017", "titulo": "Cronograma de cuotas: generacion y edicion", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:33.731Z", "ts_actualizado": "2026-07-04T01:59:33.731Z"}
-{"req": "REQ-0018", "titulo": "Movimientos automaticos: comision y deposito de garantia", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:34.998Z", "ts_actualizado": "2026-07-04T01:59:34.998Z"}
-{"req": "REQ-0019", "titulo": "Regeneracion de cuotas", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:36.248Z", "ts_actualizado": "2026-07-04T01:59:36.248Z"}
-{"req": "REQ-0020", "titulo": "Renovacion de contratos", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:37.603Z", "ts_actualizado": "2026-07-04T01:59:37.603Z"}
-{"req": "REQ-0021", "titulo": "Rescisiones", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:39.051Z", "ts_actualizado": "2026-07-04T01:59:39.051Z"}
-{"req": "REQ-0022", "titulo": "Cobros con calculo de mora", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:40.324Z", "ts_actualizado": "2026-07-04T01:59:40.324Z"}
-{"req": "REQ-0023", "titulo": "Descuentos y anulacion de cobros", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:41.536Z", "ts_actualizado": "2026-07-04T01:59:41.536Z"}
+{"req": "REQ-0016", "titulo": "Operaciones alquiler-venta", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:32.517Z", "ts_actualizado": "2026-07-04T01:59:32.517Z"}
+{"req": "REQ-0017", "titulo": "Cronograma de cuotas: generacion y edicion", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:33.731Z", "ts_actualizado": "2026-07-04T01:59:33.731Z"}
+{"req": "REQ-0018", "titulo": "Movimientos automaticos: comision y deposito de garantia", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:34.998Z", "ts_actualizado": "2026-07-04T01:59:34.998Z"}
+{"req": "REQ-0019", "titulo": "Regeneracion de cuotas", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:36.248Z", "ts_actualizado": "2026-07-04T01:59:36.248Z"}
+{"req": "REQ-0020", "titulo": "Renovacion de contratos", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:37.603Z", "ts_actualizado": "2026-07-04T01:59:37.603Z"}
+{"req": "REQ-0021", "titulo": "Rescisiones", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:39.051Z", "ts_actualizado": "2026-07-04T01:59:39.051Z"}
+{"req": "REQ-0022", "titulo": "Cobros con calculo de mora", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:40.324Z", "ts_actualizado": "2026-07-04T01:59:40.324Z"}
+{"req": "REQ-0023", "titulo": "Descuentos y anulacion de cobros", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:41.536Z", "ts_actualizado": "2026-07-04T01:59:41.536Z"}
 {"req": "REQ-0024", "titulo": "Ingresos-egresos e items", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:42.762Z", "ts_actualizado": "2026-07-04T01:59:42.762Z"}
 {"req": "REQ-0025", "titulo": "Liquidaciones y plantilla de gastos", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:44.019Z", "ts_actualizado": "2026-07-04T01:59:44.019Z"}
 {"req": "REQ-0026", "titulo": "Infraestructura JasperReports, contrato y pagare", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:45.329Z", "ts_actualizado": "2026-07-04T01:59:45.329Z"}
