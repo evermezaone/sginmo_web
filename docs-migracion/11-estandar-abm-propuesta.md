@@ -126,6 +126,25 @@ este estudio → aprobar → replicar a todos los ABMs.
    reporte de rechazos, auditoría del archivo) → REQ propio; primeros: articulos, ubicaciones, entidades, personas.
 7. **Auditoría de exportaciones** (quién, qué entidad, filtros, filas, formato) → REQ auditoría; requiere login.
 
+## 5.5 Estado de implementación en el ABM de referencia (Artículos) — 2026-07-05
+
+Aplicado y desplegado (verificado contra la VPS):
+- Grilla: paginación lazy, orden por columna, búsqueda global multi-campo, búsqueda avanzada
+  con botón, selector de columnas, exportación CSV/XML/PDF (pageOnly) por permiso EXPORTAR,
+  anchos por dominio, mensajes de vacío diferenciados, columnas de auditoría por VER_AUDITORIA.
+- Edición: diálogo con pestañas, validaciones claras, combos desde `entidad`, converter+equals,
+  atributos parametrizables, baja lógica con confirmación, aviso de éxito.
+- Estándar (estudio): concurrencia optimista (@Version), duplicados antes del submit,
+  errores de BD traducidos (ErroresBd), validación de dominios en el Service (regla 11),
+  referencia estable por clave, reactivación segura (regla 7), **estado/habilitado separados**
+  (regla 1, V8), **clonado "Duplicar"** (regla 3), **"Mi vista"** por usuario (columnas+orden+
+  filtros+filas), permisos por acción + modo solo lectura.
+
+Falta para "estándar 100%" en Artículos (siguiente iteración): historial visible (pestaña
+Auditoría, requiere REQ auditoría por triggers), dependencias visibles + validación de uso
+antes de inactivar (requiere motores documento/cobro), importación controlada, auditoría de
+exportaciones. Todos dependen de módulos aún no desarrollados; se agregan al replicar.
+
 ## 6. Pendientes que no bloquean la aprobación
 
 - Skeleton de carga por grilla (hoy: overlay estándar de PrimeFaces). Pulido menor.

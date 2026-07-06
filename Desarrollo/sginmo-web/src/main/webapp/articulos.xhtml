@@ -40,8 +40,10 @@
     <h:form id="frmLista">
         <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
 
-        <!-- El contenedor guarda el estado mostrar/ocultar filtros: no se pierde al re-renderizar la tabla -->
-        <h:panelGroup layout="block" id="contFiltros" styleClass="filtros-ocultos">
+        <!-- El contenedor guarda el estado mostrar/ocultar filtros: no se pierde al re-renderizar la tabla.
+             Si Mi vista trae filtros, el panel arranca visible (nunca filtros activos invisibles). -->
+        <h:panelGroup layout="block" id="contFiltros"
+                      styleClass="#{articuloBean.filtrosVisibles ? '' : 'filtros-ocultos'}">
         <p:dataTable id="tabla" widgetVar="tabla" var="art" value="#{articuloBean.modelo}"
                      lazy="true" paginator="true" rows="10"
                      paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
@@ -57,7 +59,18 @@
                                      oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
                     <p:commandButton id="btnColumnas" icon="pi pi-sliders-h" title="Elegir columnas (afecta la exportación)"
                                      styleClass="ui-button-outlined" type="button"/>
-                    <p:columnToggler datasource="tabla" trigger="btnColumnas"/>
+                    <p:columnToggler datasource="tabla" trigger="btnColumnas">
+                        <!-- el toggle viaja al servidor: asi "Guardar mi vista" conoce las columnas elegidas -->
+                        <p:ajax event="toggle"/>
+                    </p:columnToggler>
+                    <p:commandButton icon="pi pi-bookmark" title="Guardar mi vista (columnas, orden, filtros y filas por página)"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{articuloBean.guardarMiVista()}"
+                                     process="@this" update="mensajes"/>
+                    <p:commandButton icon="pi pi-refresh" title="Quitar mi vista (volver al estándar)"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{articuloBean.quitarMiVista()}"
+                                     process="@this" update="mensajes"/>
                     <!-- pageOnly: se exporta la pagina visible (la exportacion masiva sera un REQ aparte,
                          con limite y proceso asincrono, para no tumbar el servidor por error).
                          Exportar es un PERMISO (EXPORTAR), no un derecho implicito. -->
@@ -126,6 +139,9 @@
                     <f:convertNumber groupingUsed="true" maxFractionDigits="0"/>
                 </h:outputText>
             </p:column>
+            <p:column headerText="Habilitado" visible="false" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{art.habilitado ? 'SÍ' : 'NO'}" severity="#{art.habilitado ? 'success' : 'warning'}"/>
+            </p:column>
             <p:column headerText="Estado" sortBy="#{art.estado}" filterBy="#{art.estado}"
                       style="width:7rem; text-align:center;">
                 <f:facet name="filter">
@@ -149,12 +165,18 @@
                     <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
                 </h:outputText>
             </p:column>
-            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+            <p:column headerText="Acciones" style="width:8.5rem; text-align:center;" exportable="false" toggleable="false">
                 <!-- con EDITAR: lapiz (edicion); solo con VER: ojo (consulta, dialogo bloqueado) -->
                 <p:commandButton icon="#{sesionUsuario.puede('articulos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
                                  title="#{sesionUsuario.puede('articulos','EDITAR') ? 'Editar' : 'Ver detalle'}"
                                  styleClass="ui-button-flat"
                                  actionListener="#{articuloBean.editar(art)}"
+                                 update=":frmEdicion"
+                                 oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
+                <p:commandButton icon="pi pi-copy" title="Duplicar (copia todo salvo código y aplicación)"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('articulos','CREAR')}"
+                                 actionListener="#{articuloBean.duplicar(art)}"
                                  update=":frmEdicion"
                                  oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
                 <p:commandButton icon="#{art.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
@@ -278,10 +300,17 @@
                                 </p:inputText>
                             </div>
                         </div>
-                        <div class="campo">
-                            <label>Modifica estado del documento (cuadre)</label>
-                            <p:toggleSwitch value="#{articuloBean.seleccionado.modificaEstado}"
-                                            disabled="#{articuloBean.soloLectura}"/>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Modifica estado del documento (cuadre)</label>
+                                <p:toggleSwitch value="#{articuloBean.seleccionado.modificaEstado}"
+                                                disabled="#{articuloBean.soloLectura}"/>
+                            </div>
+                            <div class="campo">
+                                <label>Habilitado para operaciones nuevas</label>
+                                <p:toggleSwitch value="#{articuloBean.seleccionado.habilitado}"
+                                                disabled="#{articuloBean.soloLectura}"/>
+                            </div>
                         </div>
                     </p:tab>
 

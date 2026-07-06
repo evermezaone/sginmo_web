@@ -35,8 +35,16 @@ columnas del selector) y ABM de usuarios con cambio de contrasena.
 - [x] Datos de auditoria (Modificado por / Fecha modif. en la grilla, historial futuro) SOLO
       con VER_AUDITORIA o perfil ADMINISTRADOR (decision del usuario 2026-07-05); columnas
       ocultas por defecto, se activan desde el selector de columnas.
-- [ ] preferencia_usuario + "Mi vista" (columnas, orden, filtros, tamano de pagina).
-- [ ] ABM de usuarios con cambio de contrasena obligatorio al primer ingreso.
+- [x] preferencia_usuario (V7) + "Mi vista": guarda/aplica columnas visibles, orden, filtros
+      y filas por pagina por usuario y pantalla (JSON). Botones guardar/quitar en Articulos.
+- [x] ABM de usuarios (usuarios.xhtml/UsuarioBean/UsuarioService) con permisos por accion,
+      desbloqueo manual, no auto-inactivacion, reseteo de contrasena por administrador.
+- [x] Cambio de contrasena obligatorio al primer ingreso (alta/reseteo): flag
+      debe_cambiar_password (V7); el filtro fuerza cambiar-password.xhtml hasta cambiarla;
+      politica minima 8 caracteres + confirmacion + distinta de la actual.
+
+## Estado: REQ-0004 COMPLETO (nucleo + permisos + preferencias + ABM usuarios + cambio clave).
+Verificado end-to-end contra la VPS. Listo para gate/derivacion a Codex.
 
 ## Dependencias
 

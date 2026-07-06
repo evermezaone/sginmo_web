@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+<h:head>
+    <title>Usuarios — SGInmo Web</title>
+    <style>
+        body { margin: 0; background: #f4f6f9; }
+        .contenido { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
+        .titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .campo { margin-bottom: .9rem; display: flex; flex-direction: column; gap: .3rem; }
+        .campo > label { font-weight: 600; font-size: .85rem; color: #495057; }
+        .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+        .pie-dialogo { text-align: right; margin-top: .8rem; border-top: 1px solid #e0e0e0; padding-top: .8rem; }
+        .barra-tabla { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+    </style>
+</h:head>
+<h:body>
+<f:metadata>
+    <f:viewAction action="#{usuarioBean.verificarAcceso()}"/>
+</f:metadata>
+<div class="contenido">
+    <div class="titulo">
+        <h2 style="margin:0;">Usuarios</h2>
+        <span style="display:flex; gap:.5rem; align-items:center;">
+            <p:button outcome="index" icon="pi pi-home" title="Inicio" styleClass="ui-button-rounded ui-button-outlined"/>
+            <h:form style="display:inline;">
+                <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión (#{sesionUsuario.codigoUsuario()})" ajax="false"
+                                 action="#{sesionUsuario.cerrarSesion()}"
+                                 styleClass="ui-button-rounded ui-button-outlined ui-button-secondary"/>
+            </h:form>
+        </span>
+    </div>
+
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+
+        <p:dataTable id="tabla" widgetVar="tabla" var="usr" value="#{usuarioBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="Sin usuarios para mostrar">
+
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus"
+                                     rendered="#{sesionUsuario.puede('usuarios','CREAR')}"
+                                     actionListener="#{usuarioBean.nuevo()}"
+                                     update=":frmEdicion"
+                                     oncomplete="PF('dlgUsuario').show(); try{PF('wtabsUsr').select(0)}catch(e){}"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{usuarioBean.filtroGlobal}" placeholder="Buscar usuario o perfil"
+                                 style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+
+            <p:column headerText="Usuario" style="width:10rem; white-space:nowrap;" toggleable="false">
+                <h:outputText value="#{usr.codigoUsuario}"/>
+            </p:column>
+            <p:column headerText="Perfil" style="width:10rem;">
+                <h:outputText value="#{usr.perfil}"/>
+            </p:column>
+            <p:column headerText="Situación">
+                <p:tag value="#{usr.estado}" severity="#{usr.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+                <p:tag value="BLOQUEADO" severity="warning" style="margin-left:.3rem;"
+                       rendered="#{usr.bloqueadoHasta != null}"/>
+                <p:tag value="DEBE CAMBIAR CLAVE" severity="info" style="margin-left:.3rem;"
+                       rendered="#{usr.debeCambiar}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('usuarios','VER_AUDITORIA')}">
+                <h:outputText value="#{empty usr.usuarioModificacion ? usr.usuarioCreacion : usr.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Fecha modif." visible="false" style="width:9rem; white-space:nowrap;"
+                      rendered="#{sesionUsuario.puede('usuarios','VER_AUDITORIA')}">
+                <h:outputText value="#{empty usr.fechaModificacion ? usr.fechaCreacion : usr.fechaModificacion}">
+                    <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Acciones" style="width:8rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('usuarios','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 title="#{sesionUsuario.puede('usuarios','EDITAR') ? 'Editar' : 'Ver detalle'}"
+                                 styleClass="ui-button-flat"
+                                 actionListener="#{usuarioBean.editar(usr)}"
+                                 update=":frmEdicion"
+                                 oncomplete="PF('dlgUsuario').show(); try{PF('wtabsUsr').select(0)}catch(e){}"/>
+                <p:commandButton icon="pi pi-unlock" title="Desbloquear" styleClass="ui-button-flat"
+                                 rendered="#{usr.bloqueadoHasta != null and sesionUsuario.puede('usuarios','EDITAR')}"
+                                 actionListener="#{usuarioBean.desbloquear(usr)}"
+                                 update="tabla mensajes"/>
+                <p:commandButton icon="#{usr.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 title="#{usr.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('usuarios', usr.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{usuarioBean.cambiarEstado(usr)}"
+                                 update="tabla mensajes">
+                    <p:confirm header="Confirmar"
+                               message="¿#{usr.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} el usuario #{usr.codigoUsuario}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Usuario" widgetVar="dlgUsuario" modal="true" resizable="false"
+              responsive="true" width="620" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty usuarioBean.seleccionado}">
+
+                <p:tabView id="tabs" widgetVar="wtabsUsr" activeIndex="#{usuarioBean.tabActivo}">
+                    <p:tab title="Datos">
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Código de usuario *</label>
+                                <p:inputText value="#{usuarioBean.seleccionado.codigoUsuario}" required="true"
+                                             label="Código de usuario" requiredMessage="El código es obligatorio"
+                                             maxlength="20"/>
+                            </div>
+                            <div class="campo">
+                                <label>Perfil *</label>
+                                <p:selectOneMenu value="#{usuarioBean.seleccionado.perfil}" required="true" label="Perfil">
+                                    <f:selectItem itemLabel="Usuario (permisos explícitos)" itemValue="USUARIO"/>
+                                    <f:selectItem itemLabel="Administrador (todo)" itemValue="ADMINISTRADOR"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>
+                                #{usuarioBean.seleccionado.id == null
+                                  ? 'Contraseña inicial * (deberá cambiarla al ingresar)'
+                                  : 'Nueva contraseña (dejar vacío para no cambiar; si se carga, se fuerza el cambio al ingresar)'}
+                            </label>
+                            <p:password value="#{usuarioBean.passwordInicial}" label="Contraseña" feedback="false"
+                                        toggleMask="true" maxlength="60" style="width:100%;"/>
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Permisos"
+                           disabled="#{usuarioBean.seleccionado.id == null or usuarioBean.seleccionado.perfil eq 'ADMINISTRADOR'}"
+                           titletip="#{usuarioBean.seleccionado.id == null
+                                       ? 'Guarde el usuario para asignar permisos'
+                                       : (usuarioBean.seleccionado.perfil eq 'ADMINISTRADOR' ? 'El administrador tiene todos los permisos' : '')}">
+                        <div class="fila-2" style="align-items:end;">
+                            <div class="campo">
+                                <label>Pantalla</label>
+                                <p:selectOneMenu id="cboPantalla" value="#{usuarioBean.nuevoPermisoPantalla}" label="Pantalla">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{usuarioBean.pantallas}" var="pt"
+                                                   itemLabel="#{pt.descripcion}" itemValue="#{pt.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Acción</label>
+                                <div style="display:flex; gap:.5rem;">
+                                    <p:selectOneMenu id="cboAccion" value="#{usuarioBean.nuevoPermisoAccion}" label="Acción" style="flex:1;">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{usuarioBean.acciones}" var="ac"
+                                                       itemLabel="#{ac}" itemValue="#{ac}"/>
+                                    </p:selectOneMenu>
+                                    <p:commandButton icon="pi pi-plus" title="Otorgar permiso"
+                                                     actionListener="#{usuarioBean.agregarPermiso()}"
+                                                     process="@this cboPantalla cboAccion"
+                                                     update="tblPermisos cboPantalla cboAccion :frmEdicion:msjEdicion"/>
+                                </div>
+                            </div>
+                        </div>
+                        <p:dataTable id="tblPermisos" var="perm" value="#{usuarioBean.permisos}"
+                                     emptyMessage="Sin permisos otorgados" style="margin-top:.5rem;">
+                            <p:column headerText="Pantalla" style="width:14rem;">
+                                <h:outputText value="#{perm.pantalla}"/>
+                            </p:column>
+                            <p:column headerText="Acción">
+                                <h:outputText value="#{perm.accion}"/>
+                            </p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
+                                                 actionListener="#{usuarioBean.eliminarPermiso(perm.id)}"
+                                                 process="@this"
+                                                 update="tblPermisos :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgUsuario').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save"
+                                     actionListener="#{usuarioBean.guardar()}"
+                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</div>
+</h:body>
+</html>

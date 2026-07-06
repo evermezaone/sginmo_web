@@ -24,7 +24,13 @@
                 #{inicioBean.stack}
             </p>
             <p style="margin: 0 0 1rem 0;">
-                <h:outputLink value="articulos.xhtml">➜ ABM de Artículos (propuesta de patrón estándar)</h:outputLink>
+                <h:outputLink value="articulos.xhtml" rendered="#{sesionUsuario.puede('articulos','VER')}">➜ ABM de Artículos (patrón estándar)</h:outputLink>
+            </p>
+            <p style="margin: 0 0 1rem 0;">
+                <h:outputLink value="usuarios.xhtml" rendered="#{sesionUsuario.puede('usuarios','VER')}">➜ Usuarios y permisos</h:outputLink>
+            </p>
+            <p style="margin: 0 0 1rem 0;">
+                <h:outputLink value="cambiar-password.xhtml">Cambiar mi contraseña</h:outputLink>
             </p>
             <h:form>
                 <p:commandButton value="Probar AJAX (JSF + PrimeFaces)"

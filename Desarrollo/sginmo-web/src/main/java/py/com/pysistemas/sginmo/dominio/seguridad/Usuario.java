@@ -48,6 +48,10 @@ public class Usuario extends Auditable implements Serializable {
     @Column(name = "bloqueado_hasta")
     private LocalDateTime bloqueadoHasta;
 
+    /** true: al proximo ingreso se exige cambiar la contrasena (alta y reseteo). */
+    @Column(name = "debe_cambiar_password", nullable = false)
+    private Boolean debeCambiarPassword = Boolean.TRUE;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -74,6 +78,10 @@ public class Usuario extends Auditable implements Serializable {
 
     public LocalDateTime getBloqueadoHasta() { return bloqueadoHasta; }
     public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) { this.bloqueadoHasta = bloqueadoHasta; }
+
+    public Boolean getDebeCambiarPassword() { return debeCambiarPassword; }
+    public void setDebeCambiarPassword(Boolean debeCambiarPassword) { this.debeCambiarPassword = debeCambiarPassword; }
+    public boolean isDebeCambiar() { return Boolean.TRUE.equals(debeCambiarPassword); }
 
     /** Igualdad por id (regla del estandar para entidades usadas fuera del contexto de persistencia). */
     @Override

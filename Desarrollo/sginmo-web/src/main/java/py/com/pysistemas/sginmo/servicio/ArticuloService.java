@@ -111,6 +111,8 @@ public class ArticuloService {
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException(
                 "El registro fue modificado por otro usuario. Cierre el diálogo, vuelva a abrirlo y cargue de nuevo sus cambios.");
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);   // regla 8: constraint por concurrencia -> mensaje de negocio
         }
     }
 
@@ -121,7 +123,31 @@ public class ArticuloService {
         if (a == null) {
             throw new NegocioException("El artículo no existe");
         }
+        if ("ACTIVO".equals(estadoNuevo)) {
+            validar(a);   // reactivacion segura (regla 7): re-valida unicidades y reglas vigentes
+        }
         a.setEstado(estadoNuevo);
+    }
+
+    /** Copia las propiedades de un articulo a otro (clonado, regla 3); omite las ya cargadas. */
+    @Transactional
+    public void copiarPropiedades(Long origenId, Long destinoId) {
+        var origen = listarPropiedades(origenId);
+        for (var p : origen) {
+            Long repetidas = em.createQuery(
+                    "SELECT COUNT(x) FROM ArticuloPropiedad x WHERE x.articulo = :art AND x.propiedadCodigo = :cod",
+                    Long.class)
+                .setParameter("art", destinoId)
+                .setParameter("cod", p.getPropiedadCodigo())
+                .getSingleResult();
+            if (repetidas == 0) {
+                var copia = new py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad();
+                copia.setArticulo(destinoId);
+                copia.setPropiedadCodigo(p.getPropiedadCodigo());
+                copia.setValor(p.getValor());
+                em.persist(copia);
+            }
+        }
     }
 
     // ── Propiedades parametrizables del articulo (solo con articulo ya guardado) ──
@@ -141,6 +167,9 @@ public class ArticuloService {
         }
         if (codigo == null || codigo.isBlank()) {
             throw new NegocioException("Debe elegir la propiedad");
+        }
+        if (!existeEntidadActiva("PROPIEDADES_ARTICULO", codigo)) {
+            throw new NegocioException("La propiedad elegida no existe o está inactiva");
         }
         Long repetidas = em.createQuery(
                 "SELECT COUNT(p) FROM ArticuloPropiedad p WHERE p.articulo = :art AND p.propiedadCodigo = :cod",
@@ -205,5 +234,24 @@ public class ArticuloService {
                 && a.getStockMinimo().compareTo(a.getStockMaximo()) > 0) {
             throw new NegocioException("El stock mínimo no puede ser mayor que el máximo");
         }
+        // Regla 11 del estandar: los dominios se re-validan en el Service aunque el combo
+        // "no deberia" mandar otra cosa (anti-manipulacion de request / pantalla vieja)
+        if (a.getCategoriaCodigo() != null && !a.getCategoriaCodigo().isBlank()
+                && !existeEntidadActiva("TIPOS_ARTICULO", a.getCategoriaCodigo())) {
+            throw new NegocioException("La categoría elegida no existe o está inactiva");
+        }
+        if (a.getUnidadMedidaCodigo() != null && !a.getUnidadMedidaCodigo().isBlank()
+                && !existeEntidadActiva("UNIDADES_MEDIDA", a.getUnidadMedidaCodigo())) {
+            throw new NegocioException("La unidad de medida elegida no existe o está inactiva");
+        }
+    }
+
+    private boolean existeEntidadActiva(String lista, String codigo) {
+        return em.createQuery(
+                "SELECT COUNT(e) FROM Entidad e WHERE e.entidad = :lista AND e.codigo = :codigo AND e.estado = 'ACTIVO'",
+                Long.class)
+            .setParameter("lista", lista)
+            .setParameter("codigo", codigo)
+            .getSingleResult() > 0;
     }
 }

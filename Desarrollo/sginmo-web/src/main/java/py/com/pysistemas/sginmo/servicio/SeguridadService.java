@@ -85,6 +85,35 @@ public class SeguridadService {
         return BCrypt.hashpw(passwordPlano, BCrypt.gensalt(10));
     }
 
+    /** Cambio de contrasena del propio usuario (exige la actual). */
+    @Transactional
+    public Usuario cambiarPassword(Long usuarioId, String actual, String nueva, String repetida) {
+        validarNueva(nueva, repetida);
+        Usuario u = em.find(Usuario.class, usuarioId);
+        if (u == null) {
+            throw new NegocioException("El usuario no existe");
+        }
+        if (actual == null || !BCrypt.checkpw(actual, u.getPasswordHash())) {
+            throw new NegocioException("La contraseña actual no es correcta");
+        }
+        if (BCrypt.checkpw(nueva, u.getPasswordHash())) {
+            throw new NegocioException("La contraseña nueva debe ser distinta de la actual");
+        }
+        u.setPasswordHash(hash(nueva));
+        u.setDebeCambiarPassword(false);
+        return u;
+    }
+
+    /** Politica minima de contrasenas del sistema. */
+    public void validarNueva(String nueva, String repetida) {
+        if (nueva == null || nueva.length() < 8) {
+            throw new NegocioException("La contraseña nueva debe tener al menos 8 caracteres");
+        }
+        if (!nueva.equals(repetida)) {
+            throw new NegocioException("Las contraseñas no coinciden");
+        }
+    }
+
     private int parametroEntero(String clave, int defecto) {
         try {
             var filas = em.createNativeQuery("SELECT valor FROM parametro_sistema WHERE clave = :clave")

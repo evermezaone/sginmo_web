@@ -30,7 +30,10 @@ public class LoginBean {
             var ctx = FacesContext.getCurrentInstance().getExternalContext();
             ((HttpServletRequest) ctx.getRequest()).changeSessionId();
             sesion.iniciar(usuario, seguridadService.permisosDe(usuario.getId()));
-            return "/index?faces-redirect=true";
+            // alta o reseteo de contrasena: se exige cambiarla antes de usar el sistema
+            return usuario.isDebeCambiar()
+                    ? "/cambiar-password?faces-redirect=true"
+                    : "/index?faces-redirect=true";
         } catch (NegocioException e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_WARN, e.getMessage(), null));

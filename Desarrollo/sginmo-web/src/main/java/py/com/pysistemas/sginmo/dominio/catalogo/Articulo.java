@@ -78,6 +78,10 @@ public class Articulo extends Auditable {
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
 
+    /** Disponible para operaciones NUEVAS (V8, regla 1 del estandar): independiente de estado. */
+    @Column(name = "habilitado", nullable = false)
+    private Boolean habilitado = Boolean.TRUE;
+
     @Column(name = "observacion", length = 250)
     private String observacion;
 
@@ -129,6 +133,20 @@ public class Articulo extends Auditable {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
+    public Boolean getHabilitado() { return habilitado; }
+    public void setHabilitado(Boolean habilitado) { this.habilitado = habilitado; }
+
     public String getObservacion() { return observacion; }
     public void setObservacion(String observacion) { this.observacion = observacion; }
+
+    /** Igualdad por id (regla del estandar). */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Articulo otro)) return false;
+        return id != null && id.equals(otro.id);
+    }
+
+    @Override
+    public int hashCode() { return getClass().hashCode(); }
 }

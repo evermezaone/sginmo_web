@@ -33,13 +33,24 @@ public class FiltroAutenticacion implements Filter {
         String uri = req.getRequestURI();
         boolean esLogin = uri.endsWith("/login.xhtml");
         boolean esRecurso = uri.contains("/jakarta.faces.resource/");
+        boolean esCambioPassword = uri.endsWith("/cambiar-password.xhtml");
 
-        if (esLogin || esRecurso || sesion.isLogueado()) {
+        if (esLogin || esRecurso) {
             cadena.doFilter(solicitud, respuesta);
             return;
         }
 
-        String destino = req.getContextPath() + "/login.xhtml";
+        String destino;
+        if (sesion.isLogueado()) {
+            // con cambio de contrasena pendiente, la unica pantalla permitida es esa
+            if (esCambioPassword || !sesion.getUsuario().isDebeCambiar()) {
+                cadena.doFilter(solicitud, respuesta);
+                return;
+            }
+            destino = req.getContextPath() + "/cambiar-password.xhtml";
+        } else {
+            destino = req.getContextPath() + "/login.xhtml";
+        }
         if ("partial/ajax".equals(req.getHeader("Faces-Request"))) {
             res.setContentType("text/xml");
             res.setCharacterEncoding("UTF-8");
