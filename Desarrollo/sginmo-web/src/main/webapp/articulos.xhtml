@@ -4,6 +4,10 @@
       xmlns:f="jakarta.faces.core"
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="primefaces">
+<f:metadata>
+    <!-- sin permiso VER, vuelve a Inicio; con acceso, aplica Mi vista -->
+    <f:viewAction action="#{articuloBean.verificarAcceso()}"/>
+</f:metadata>
 <h:head>
     <title>Artículos — SGInmo Web</title>
     <style>
@@ -20,10 +24,6 @@
     </style>
 </h:head>
 <h:body>
-<f:metadata>
-    <!-- sin permiso VER, vuelve a Inicio -->
-    <f:viewAction action="#{articuloBean.verificarAcceso()}"/>
-</f:metadata>
 <div class="contenido">
     <div class="titulo">
         <h2 style="margin:0;">Artículos</h2>
@@ -63,14 +63,16 @@
                         <!-- el toggle viaja al servidor: asi "Guardar mi vista" conoce las columnas elegidas -->
                         <p:ajax event="toggle"/>
                     </p:columnToggler>
+                    <!-- OJO estandar: desde ADENTRO de la dataTable (naming container) toda
+                         referencia externa debe ser ABSOLUTA (:frmLista:...) o la pagina rompe -->
                     <p:commandButton icon="pi pi-bookmark" title="Guardar mi vista (columnas, orden, filtros y filas por página)"
                                      styleClass="ui-button-outlined"
                                      actionListener="#{articuloBean.guardarMiVista()}"
-                                     process="@this" update="mensajes"/>
+                                     process="@this" update=":frmLista:mensajes"/>
                     <p:commandButton icon="pi pi-refresh" title="Quitar mi vista (volver al estándar)"
                                      styleClass="ui-button-outlined"
                                      actionListener="#{articuloBean.quitarMiVista()}"
-                                     process="@this" update="mensajes"/>
+                                     process="@this" update=":frmLista:mensajes"/>
                     <!-- pageOnly: se exporta la pagina visible (la exportacion masiva sera un REQ aparte,
                          con limite y proceso asincrono, para no tumbar el servidor por error).
                          Exportar es un PERMISO (EXPORTAR), no un derecho implicito. -->
@@ -184,7 +186,7 @@
                                  styleClass="ui-button-flat"
                                  rendered="#{sesionUsuario.puede('articulos', art.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
                                  actionListener="#{articuloBean.cambiarEstado(art)}"
-                                 update="tabla mensajes">
+                                 update=":frmLista:tabla :frmLista:mensajes">
                     <p:confirm header="Confirmar"
                                message="¿#{art.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} el artículo #{art.descripcion}?"
                                icon="pi pi-exclamation-triangle"/>

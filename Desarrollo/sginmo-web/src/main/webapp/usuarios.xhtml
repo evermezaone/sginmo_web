@@ -4,6 +4,9 @@
       xmlns:f="jakarta.faces.core"
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{usuarioBean.verificarAcceso()}"/>
+</f:metadata>
 <h:head>
     <title>Usuarios — SGInmo Web</title>
     <style>
@@ -18,9 +21,6 @@
     </style>
 </h:head>
 <h:body>
-<f:metadata>
-    <f:viewAction action="#{usuarioBean.verificarAcceso()}"/>
-</f:metadata>
 <div class="contenido">
     <div class="titulo">
         <h2 style="margin:0;">Usuarios</h2>
@@ -91,13 +91,13 @@
                 <p:commandButton icon="pi pi-unlock" title="Desbloquear" styleClass="ui-button-flat"
                                  rendered="#{usr.bloqueadoHasta != null and sesionUsuario.puede('usuarios','EDITAR')}"
                                  actionListener="#{usuarioBean.desbloquear(usr)}"
-                                 update="tabla mensajes"/>
+                                 update=":frmLista:tabla :frmLista:mensajes"/>
                 <p:commandButton icon="#{usr.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
                                  title="#{usr.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
                                  styleClass="ui-button-flat"
                                  rendered="#{sesionUsuario.puede('usuarios', usr.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
                                  actionListener="#{usuarioBean.cambiarEstado(usr)}"
-                                 update="tabla mensajes">
+                                 update=":frmLista:tabla :frmLista:mensajes">
                     <p:confirm header="Confirmar"
                                message="¿#{usr.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} el usuario #{usr.codigoUsuario}?"
                                icon="pi pi-exclamation-triangle"/>
@@ -165,7 +165,8 @@
                                     <p:selectOneMenu id="cboAccion" value="#{usuarioBean.nuevoPermisoAccion}" label="Acción" style="flex:1;">
                                         <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                         <f:selectItems value="#{usuarioBean.acciones}" var="ac"
-                                                       itemLabel="#{ac}" itemValue="#{ac}"/>
+                                                       itemLabel="#{ac eq 'OPERAR' ? 'OPERAR (ABM completo, sin auditoría)' : ac}"
+                                                       itemValue="#{ac}"/>
                                     </p:selectOneMenu>
                                     <p:commandButton icon="pi pi-plus" title="Otorgar permiso"
                                                      actionListener="#{usuarioBean.agregarPermiso()}"

@@ -2,10 +2,12 @@ package py.com.pysistemas.sginmo.dominio.seguridad;
 
 /**
  * Acciones autorizables de un ABM (enum cerrado, REQ-0004).
- * VER_AUDITORIA: los datos de auditoria (usuario/fecha de modificacion, historial)
- * solo se muestran al ADMINISTRADOR o con este permiso explicito.
+ * OPERAR: paquete de trabajo normal del ABM — incluye VER, CREAR, EDITAR, INACTIVAR,
+ * REACTIVAR y EXPORTAR en un solo permiso (pedido del usuario: al encargado de una
+ * pantalla se le da OPERAR y listo). NO incluye VER_AUDITORIA, que siempre es explicito.
  */
 public enum Accion {
+    OPERAR,
     VER,
     CREAR,
     EDITAR,

@@ -29,8 +29,9 @@ public class SesionUsuario implements UsuarioActual, Serializable {
 
     /**
      * Autorizacion por accion (REQ-0004): ADMINISTRADOR todo; USUARIO solo permisos
-     * explicitos (pantalla exacta o comodin '*'). Los datos de auditoria requieren
-     * VER_AUDITORIA (decision del usuario 2026-07-05).
+     * explicitos (pantalla exacta o comodin '*'). OPERAR cubre todas las acciones del
+     * ABM salvo VER_AUDITORIA, que siempre requiere permiso explicito (decision del
+     * usuario 2026-07-05).
      */
     public boolean puede(String pantalla, String accion) {
         if (usuario == null) {
@@ -39,7 +40,11 @@ public class SesionUsuario implements UsuarioActual, Serializable {
         if (isAdministrador()) {
             return true;
         }
-        return permisos.contains(pantalla + ":" + accion) || permisos.contains("*:" + accion);
+        if (permisos.contains(pantalla + ":" + accion) || permisos.contains("*:" + accion)) {
+            return true;
+        }
+        return !"VER_AUDITORIA".equals(accion)
+                && (permisos.contains(pantalla + ":OPERAR") || permisos.contains("*:OPERAR"));
     }
 
     public boolean isLogueado() {
