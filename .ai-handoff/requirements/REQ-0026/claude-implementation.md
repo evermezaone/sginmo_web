@@ -1,54 +1,8 @@
-﻿# REQ-0026 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0026
 
 ## Manifiesto Minimo Para Codex
+Generacion de PDFs estandar con OpenPDF (com.lowagie.text), sin JasperReports (decision del usuario). PdfService.iniciar/tabla/parrafo/cerrar arma el PDF; ReporteService tiene los reportes concretos; DescargaBean los envia por HTTP.
 
-- REQ: REQ-0026
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos:** PdfService, ReporteService, DescargaBean; botones PDF en activos/operaciones/caja.
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn clean package EXIT 0; deploy; descarga real verificada por curl (application/pdf, %PDF-).

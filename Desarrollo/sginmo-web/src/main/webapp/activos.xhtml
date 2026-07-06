@@ -24,6 +24,8 @@
                     <p:commandButton value="Generar lotes" icon="pi pi-th-large" rendered="#{sesionUsuario.puede('activos','CREAR')}"
                                      styleClass="ui-button-outlined" type="button"
                                      onclick="PF('dlgLotes').show()"/>
+                    <p:commandButton value="PDF" icon="pi pi-file-pdf" ajax="false" styleClass="ui-button-outlined"
+                                     actionListener="#{descargaBean.listadoActivos()}"/>
                     <span style="flex:1"></span>
                     <p:inputText value="#{activoBean.filtroGlobal}" placeholder="Buscar nombre o dirección" style="width:16rem;">
                         <p:ajax event="keyup" delay="400" update="tabla"/>

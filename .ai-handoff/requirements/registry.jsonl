@@ -23,7 +23,7 @@
 {"req": "REQ-0023", "titulo": "Descuentos y anulacion de cobros", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:41.536Z", "ts_actualizado": "2026-07-04T01:59:41.536Z"}
 {"req": "REQ-0024", "titulo": "Ingresos-egresos e items", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:42.762Z", "ts_actualizado": "2026-07-04T01:59:42.762Z"}
 {"req": "REQ-0025", "titulo": "Liquidaciones y plantilla de gastos", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:44.019Z", "ts_actualizado": "2026-07-04T01:59:44.019Z"}
-{"req": "REQ-0026", "titulo": "Infraestructura JasperReports, contrato y pagare", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:45.329Z", "ts_actualizado": "2026-07-04T01:59:45.329Z"}
+{"req": "REQ-0026", "titulo": "Infraestructura JasperReports, contrato y pagare", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:45.329Z", "ts_actualizado": "2026-07-04T01:59:45.329Z"}
 {"req": "REQ-0027", "titulo": "Reportes de propiedades", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:46.745Z", "ts_actualizado": "2026-07-04T01:59:46.745Z"}
 {"req": "REQ-0028", "titulo": "Reportes de cobros y cronogramas", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:48.061Z", "ts_actualizado": "2026-07-04T01:59:48.061Z"}
 {"req": "REQ-0029", "titulo": "Reportes de egresos y recaudacion", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:49.161Z", "ts_actualizado": "2026-07-04T01:59:49.161Z"}

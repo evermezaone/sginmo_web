@@ -1,25 +1,15 @@
-# REQ-0026 - Infraestructura JasperReports, contrato y pagare
+# REQ-0026 - Generacion de PDFs estandar (OpenPDF, sin JasperReports)
 
-**Numero:** REQ-0026
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+DECISION DEL USUARIO: NO usar JasperReports (pesado, para reportes complejos con subreportes/graficos). Se generan PDFs ESTANDAR y directos con OpenPDF (ya en el pom por el dataExporter). Servicio generico reutilizable por todos los reportes.
 
 ## Criterios De Aceptacion
+- [x] PdfService generico: encabezado (empresa+titulo+fecha+usuario), tabla estandar (cabecera azul, filas alternadas), parrafos, pie; devuelve byte[].
+- [x] DescargaBean escribe el PDF en la respuesta HTTP (application/pdf, attachment).
+- [x] Sin JasperReports ni plantillas .jrxml; una sola dependencia (openpdf) ya presente.
+- [x] Verificado: descarga real de PDF (content-type application/pdf, %PDF-, en la VPS).
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+## Bloqueo Formal Documentado
+Validacion visual del usuario PENDIENTE.

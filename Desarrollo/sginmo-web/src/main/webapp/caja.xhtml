@@ -88,7 +88,9 @@
                         <p:column headerText="Monto" style="text-align:right;"><h:outputText value="#{cb[3]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
                         <p:column headerText="Forma"><h:outputText value="#{cb[4]}"/></p:column>
                         <p:column headerText="Estado" style="width:6rem; text-align:center;"><p:tag value="#{cb[5]}" severity="#{cb[5] eq 'ACTIVO' ? 'success' : 'danger'}"/></p:column>
-                        <p:column style="width:4rem; text-align:center;">
+                        <p:column style="width:6rem; text-align:center;">
+                            <p:commandButton icon="pi pi-print" title="Recibo PDF" styleClass="ui-button-flat" ajax="false"
+                                             actionListener="#{descargaBean.recibo(cb[0])}"/>
                             <p:commandButton icon="pi pi-times" title="Anular" styleClass="ui-button-flat ui-button-danger"
                                              rendered="#{cb[5] eq 'ACTIVO' and sesionUsuario.puede('caja','INACTIVAR')}"
                                              actionListener="#{cajaBean.anular(cb[0])}" update="frm">
