@@ -55,6 +55,14 @@ public class ActivoBean implements Serializable {
     private List<Persona> propietariosPosibles;
     private Long nuevoPropietario;
 
+    // Generacion masiva de lotes (REQ-0015)
+    private Long loteContenedor;
+    private String loteManzana;
+    private int loteDesde = 1;
+    private int loteCantidad = 10;
+    private java.math.BigDecimal lotePrecio = java.math.BigDecimal.ZERO;
+    private java.math.BigDecimal loteComision = java.math.BigDecimal.ZERO;
+
     @PostConstruct
     public void iniciar() {
         tipos = catalogoService.opciones("TIPOS_ACTIVO");
@@ -141,6 +149,25 @@ public class ActivoBean implements Serializable {
         propietarios = activoService.propietariosConId(seleccionado.getId());
     }
 
+    public List<Activo> completarLoteamiento(String texto) {
+        return activoService.buscarContenedor(texto, null);
+    }
+
+    public void generarLotes() {
+        try {
+            if (!sesion.puede(PANTALLA, "CREAR")) return;
+            int creados = activoService.generarLotes(loteContenedor, "LOTE", loteManzana,
+                    loteDesde, loteCantidad, lotePrecio, loteComision);
+            aviso(FacesMessage.SEVERITY_INFO, "Lotes generados", creados + " lote(s) creado(s)");
+            loteContenedor = null; loteManzana = null; loteDesde = 1; loteCantidad = 10;
+            lotePrecio = java.math.BigDecimal.ZERO; loteComision = java.math.BigDecimal.ZERO;
+            org.primefaces.PrimeFaces.current().executeScript("PF('dlgLotes').hide()");
+            org.primefaces.PrimeFaces.current().ajax().update("frmLista:tabla", "frmLista:mensajes");
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudieron generar los lotes", e.getMessage());
+        }
+    }
+
     public String descripcionTipo(String codigo) {
         return tipos.stream().filter(t -> t.getCodigo().equals(codigo)).map(Entidad::getDescripcion).findFirst().orElse(codigo);
     }
@@ -164,4 +191,17 @@ public class ActivoBean implements Serializable {
     public List<Persona> getPropietariosPosibles() { return propietariosPosibles; }
     public Long getNuevoPropietario() { return nuevoPropietario; }
     public void setNuevoPropietario(Long nuevoPropietario) { this.nuevoPropietario = nuevoPropietario; }
+
+    public Long getLoteContenedor() { return loteContenedor; }
+    public void setLoteContenedor(Long v) { this.loteContenedor = v; }
+    public String getLoteManzana() { return loteManzana; }
+    public void setLoteManzana(String v) { this.loteManzana = v; }
+    public int getLoteDesde() { return loteDesde; }
+    public void setLoteDesde(int v) { this.loteDesde = v; }
+    public int getLoteCantidad() { return loteCantidad; }
+    public void setLoteCantidad(int v) { this.loteCantidad = v; }
+    public java.math.BigDecimal getLotePrecio() { return lotePrecio; }
+    public void setLotePrecio(java.math.BigDecimal v) { this.lotePrecio = v; }
+    public java.math.BigDecimal getLoteComision() { return loteComision; }
+    public void setLoteComision(java.math.BigDecimal v) { this.loteComision = v; }
 }

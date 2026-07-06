@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0010, REQ-0011, REQ-0012, REQ-0013, REQ-0014
-TS: 2026-07-06T16:20:22Z
+REQ: REQ-0010, REQ-0011, REQ-0012, REQ-0013, REQ-0014, REQ-0015
+TS: 2026-07-06T17:09:05Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0010, REQ-0011, REQ-0012, REQ-0013, REQ-0014. Ultimo derivado REQ-0014: Propiedades sobre la misma tabla activo; comparte ABM con REQ-0013
+MENSAJE: [SGI] Cola de auditoria: REQ-0010, REQ-0011, REQ-0012, REQ-0013, REQ-0014, REQ-0015. Ultimo derivado REQ-0015: Generacion masiva de lotes sobre activo (transaccion unica, omite duplicados)
 
 ---
 # Estados validos (Claude escribe, Codex lee):

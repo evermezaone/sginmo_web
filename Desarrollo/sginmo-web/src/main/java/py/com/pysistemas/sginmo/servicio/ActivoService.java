@@ -173,6 +173,57 @@ public class ActivoService {
         }
     }
 
+    /**
+     * Generacion masiva de lotes (REQ-0015): crea N lotes hijos de un contenedor
+     * (loteamiento), numerados desde numeroDesde, con manzana, precio y comision comunes.
+     * Devuelve la cantidad creada. Omite numeros de lote ya existentes bajo ese padre.
+     */
+    @Transactional
+    public int generarLotes(Long contenedorId, String tipoLoteCodigo, String manzana,
+                            int numeroDesde, int cantidad, java.math.BigDecimal precioVenta,
+                            java.math.BigDecimal comisionVenta) {
+        autorizacion.exigir("activos", "CREAR");
+        if (contenedorId == null) {
+            throw new NegocioException("Elija el loteamiento contenedor");
+        }
+        if (cantidad < 1 || cantidad > 500) {
+            throw new NegocioException("La cantidad debe estar entre 1 y 500");
+        }
+        Activo padre = em.find(Activo.class, contenedorId);
+        if (padre == null) {
+            throw new NegocioException("El contenedor no existe");
+        }
+        String tipo = tipoLoteCodigo == null || tipoLoteCodigo.isBlank() ? "LOTE" : tipoLoteCodigo;
+        int creados = 0;
+        for (int i = 0; i < cantidad; i++) {
+            String numero = String.valueOf(numeroDesde + i);
+            Long rep = em.createQuery(
+                    "SELECT COUNT(a) FROM Activo a WHERE a.padre = :p AND a.numeroLote = :n"
+                    + " AND (:m IS NULL OR a.numeroManzana = :m)", Long.class)
+                .setParameter("p", contenedorId).setParameter("n", numero)
+                .setParameter("m", manzana == null || manzana.isBlank() ? null : manzana)
+                .getSingleResult();
+            if (rep > 0) {
+                continue;   // ya existe ese lote/manzana: no duplicar
+            }
+            var lote = new Activo();
+            lote.setPadre(contenedorId);
+            lote.setTipoCodigo(tipo);
+            lote.setNombre(padre.getNombre() + " - Lote " + numero
+                    + (manzana == null || manzana.isBlank() ? "" : " Mz " + manzana));
+            lote.setNumeroLote(numero);
+            lote.setNumeroManzana(manzana);
+            lote.setEmpresa(padre.getEmpresa());
+            lote.setUbicacion(padre.getUbicacion());
+            lote.setPrecioVenta(precioVenta == null ? java.math.BigDecimal.ZERO : precioVenta);
+            lote.setComisionVenta(comisionVenta == null ? java.math.BigDecimal.ZERO : comisionVenta);
+            em.persist(lote);
+            creados++;
+        }
+        em.flush();
+        return creados;
+    }
+
     @Transactional
     public void cambiarEstadoLogico(Long id, boolean inactivar) {
         // Los activos no tienen estado ACTIVO/INACTIVO (usan LIBRE/OCUPADA/VENDIDA operativo).

@@ -21,6 +21,9 @@
                     <p:commandButton value="Nuevo" icon="pi pi-plus" rendered="#{sesionUsuario.puede('activos','CREAR')}"
                                      actionListener="#{activoBean.nuevo()}" update=":frmEdicion"
                                      oncomplete="PF('dlgActivo').show(); try{PF('wtabsAct').select(0)}catch(e){}"/>
+                    <p:commandButton value="Generar lotes" icon="pi pi-th-large" rendered="#{sesionUsuario.puede('activos','CREAR')}"
+                                     styleClass="ui-button-outlined" type="button"
+                                     onclick="PF('dlgLotes').show()"/>
                     <span style="flex:1"></span>
                     <p:inputText value="#{activoBean.filtroGlobal}" placeholder="Buscar nombre o dirección" style="width:16rem;">
                         <p:ajax event="keyup" delay="400" update="tabla"/>
@@ -50,6 +53,45 @@
             </p:column>
         </p:dataTable>
     </h:form>
+
+    <p:dialog header="Generación masiva de lotes" widgetVar="dlgLotes" modal="true" resizable="false"
+              responsive="true" width="560" dynamic="true" closeOnEscape="true">
+        <h:form id="frmLotes">
+            <p:messages id="msjLotes" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <div class="campo">
+                <label>Loteamiento contenedor *</label>
+                <p:autoComplete value="#{activoBean.loteContenedor}" label="Loteamiento"
+                                completeMethod="#{activoBean.completarLoteamiento}" var="lc"
+                                itemLabel="#{lc.nombre}" itemValue="#{lc.id}"
+                                forceSelection="true" minQueryLength="2" queryDelay="400"
+                                style="width:100%;" inputStyle="width:100%;"/>
+            </div>
+            <div class="fila-3">
+                <div class="campo"><label>Manzana</label>
+                    <p:inputText value="#{activoBean.loteManzana}" label="Manzana" maxlength="20"/></div>
+                <div class="campo"><label>Numerar desde *</label>
+                    <p:inputNumber value="#{activoBean.loteDesde}" label="Desde" decimalPlaces="0" minValue="1"/></div>
+                <div class="campo"><label>Cantidad * (máx. 500)</label>
+                    <p:inputNumber value="#{activoBean.loteCantidad}" label="Cantidad" decimalPlaces="0" minValue="1" maxValue="500"/></div>
+            </div>
+            <div class="fila-2">
+                <div class="campo"><label>Precio de venta por lote (Gs.)</label>
+                    <p:inputNumber value="#{activoBean.lotePrecio}" label="Precio" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                <div class="campo"><label>Comisión venta (%)</label>
+                    <p:inputNumber value="#{activoBean.loteComision}" label="Comisión" decimalPlaces="2" minValue="0" maxValue="100"/></div>
+            </div>
+            <p style="color:#6c757d; font-size:.8rem;">
+                Crea lotes hijos del contenedor numerados correlativamente; omite los que ya existan.
+            </p>
+            <div class="pie-dialogo">
+                <p:commandButton value="Cancelar" type="button" onclick="PF('dlgLotes').hide()"
+                                 styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                <p:commandButton value="Generar" icon="pi pi-th-large"
+                                 actionListener="#{activoBean.generarLotes()}"
+                                 update="msjLotes :frmLista:tabla :frmLista:mensajes"/>
+            </div>
+        </h:form>
+    </p:dialog>
 
     <p:dialog header="Activo inmobiliario" widgetVar="dlgActivo" modal="true" resizable="false"
               responsive="true" width="740" dynamic="true" closeOnEscape="true">
