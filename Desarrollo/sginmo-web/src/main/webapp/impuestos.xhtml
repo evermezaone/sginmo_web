@@ -15,7 +15,7 @@
                      lazy="true" paginator="true" rows="10"
                      paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
                      currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
-                     emptyMessage="No hay impuestos cargados">
+                     emptyMessage="#{impuestoBean.consultaFiltrada ? 'No hay resultados para esta búsqueda' : 'No hay impuestos cargados'}">
             <f:facet name="header">
                 <div class="barra-tabla">
                     <p:commandButton value="Nuevo" icon="pi pi-plus" rendered="#{sesionUsuario.puede('impuestos','CREAR')}"
@@ -24,6 +24,32 @@
                     <p:tag value="#{impuestoBean.modoAvanzado ? 'Modo avanzado' : 'Modo simplificado'}"
                            severity="#{impuestoBean.modoAvanzado ? 'warning' : 'info'}"
                            title="Se cambia con el parámetro IMPUESTOS_MODO_AVANZADO"/>
+                    <p:commandButton id="btnColumnas" icon="pi pi-sliders-h" title="Elegir columnas (afecta la exportación)"
+                                     styleClass="ui-button-outlined" type="button"/>
+                    <p:columnToggler datasource="tabla" trigger="btnColumnas">
+                        <p:ajax event="toggle"/>
+                    </p:columnToggler>
+                    <p:commandButton icon="pi pi-file" title="Exportar CSV (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('impuestos','EXPORTAR')}">
+                        <p:dataExporter type="csv" target="tabla" fileName="impuestos" pageOnly="true"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-code" title="Exportar XML (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('impuestos','EXPORTAR')}">
+                        <p:dataExporter type="xml" target="tabla" fileName="impuestos" pageOnly="true"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-file-pdf" title="Exportar PDF (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('impuestos','EXPORTAR')}">
+                        <p:dataExporter type="pdf" target="tabla" fileName="impuestos" pageOnly="true"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-bookmark" title="Guardar mi vista (columnas, orden, filas y búsqueda)"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{impuestoBean.guardarMiVista()}" process="@this" update=":frmLista:mensajes"/>
+                    <p:commandButton icon="pi pi-refresh" title="Quitar mi vista (volver al estándar)"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{impuestoBean.quitarMiVista()}" process="@this" update=":frmLista:mensajes"/>
+                    <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{impuestoBean.limpiarBusqueda()}" update=":frmLista:tabla"/>
                     <span style="flex:1"></span>
                     <p:inputText value="#{impuestoBean.filtroGlobal}" placeholder="Buscar" style="width:14rem;">
                         <p:ajax event="keyup" delay="400" update="tabla"/>

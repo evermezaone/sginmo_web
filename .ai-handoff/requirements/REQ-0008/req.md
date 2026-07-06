@@ -14,7 +14,7 @@ impuestos en modo simplificado por defecto y formas de pago con habilitado y req
       (formulas de Gestion; exenta = factores 0/1). Modo avanzado edita factores y
       porcentaje_base_gravada (regimenes 20%/30%).
 - [x] Formas de pago: habilitado separado de estado (V12, regla 1), "por defecto" unica
-      (se apaga en las demas), pestana con los 14 requisitos del cobro (patron Gestion),
+      (se apaga en las demas), pestana con los 13 requisitos del cobro (los 13 flags requiere_* del esquema V1/doc 09 aprobado por el usuario; el "14" anterior era un error de documentacion — obs 205),
       unicidad de codigo.
 - [x] Estandar completo en los tres (permisos por accion + enforcement en servicio,
       solo lectura, optimista, errores traducidos, auditoria por permiso).

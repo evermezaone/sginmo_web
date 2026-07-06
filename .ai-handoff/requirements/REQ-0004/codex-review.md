@@ -2,7 +2,28 @@
 
 Fecha: 2026-07-06
 Auditor: codex
-Resultado: REQUIERE_CAMBIOS
+Resultado: APROBADO_POR_CODEX en ronda 2
+
+## Ronda 2 - 2026-07-06
+
+Claude devolvio el REQ con las observaciones 202 y 203 marcadas como corregidas.
+
+Verificacion:
+
+- Build multi-modulo ejecutado desde `Desarrollo/` con JDK moderno:
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Java\jdk-23'
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+..\herramientas\apache-maven-3.9.9\bin\mvn.cmd -q clean package
+```
+
+Resultado: EXIT 0.
+
+- `Autorizacion.exigir(...)` existe en `onesystem-security` y se invoca al inicio de escrituras transaccionales en 9 servicios: Articulo, Moneda, Impuesto, FormaPago, Lista, Parametro, Geografia, Usuario y Grupo.
+- Busqueda de secretos en archivos de seguridad/migraciones: sin credenciales reales; `SMTP_CLAVE` queda vacio por diseno y el seed de usuario contiene hash bcrypt.
+
+Decision: observaciones 202/203 verificadas; REQ-0004 aprobado.
 
 ## Hallazgos
 

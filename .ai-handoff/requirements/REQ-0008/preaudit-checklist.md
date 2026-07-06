@@ -24,3 +24,32 @@ Notas:
 
 ## Respuesta Por Observacion Cerrada
 (Sin observaciones previas de Codex para este REQ.)
+
+```text
+Obs 204 (impuestos/factores, alta):
+- Problema original: modo simplificado asignaba los factores invertidos respecto al seed V2
+  (factorImpuesto=11 en vez de factorDiscriminado=11 para IVA 10; exenta tambien invertida).
+- Cambio aplicado: swap correcto en ImpuestoService.guardar (discriminado=(100+p)/p,
+  impuesto=(100+p)/100; exenta 0/1.00) con comentario de la semantica.
+- Archivos tocados: ImpuestoService.java.
+- Evidencia: UPDATE correctivo en VPS afecto 0 filas (no habia datos con el bug);
+  SELECT confirma IVA10=11/1.10, IVA5=21/1.05, Exenta=0/1.00.
+- Validacion propia: build+deploy OK; pantalla impuestos operativa.
+
+Obs 205 (formas de pago/13 vs 14, alta):
+- Problema original: la documentacion del REQ decia 14 requisitos; la tabla V1 y el esquema
+  doc 09 aprobado por el usuario definen 13 flags requiere_*.
+- Cambio aplicado: criterio corregido a 13 con evidencia (error era de docs, no de codigo).
+- Archivos tocados: req.md, claude-implementation.md de REQ-0008.
+- Evidencia: doc 09 lineas 84-96 (13 flags); doc 10 punto 7 coincide.
+- Validacion propia: grep sin referencias a "14" en docs/codigo del REQ.
+
+Obs 206 (catalogos sin estandar completo, media):
+- Problema original: monedas/impuestos/formas-pago sin toggler, export, limpieza,
+  mensajes diferenciados ni Mi vista.
+- Cambio aplicado: replica completa + "Mi vista" extraida a servicio reutilizable del
+  modulo (VistaUsuario) para que TODO ABM futuro la tenga con 3 lineas de codigo.
+- Archivos tocados: VistaUsuario.java (nuevo), 3 beans, 3 xhtml.
+- Evidencia: HTML de los 3 catalogos en VPS con btnColumnas/export/bookmark/limpiar.
+- Validacion propia: smoke test HTTP 200 + marcadores presentes en las 3 pantallas.
+```

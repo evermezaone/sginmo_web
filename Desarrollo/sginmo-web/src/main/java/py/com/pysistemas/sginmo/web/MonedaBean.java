@@ -36,6 +36,13 @@ public class MonedaBean implements Serializable {
     private String filtroGlobal = "";
     private boolean soloLectura;
 
+    /** true si la ultima consulta tenia filtro global (mensaje de grilla vacia diferenciado). */
+    private boolean consultaFiltrada;
+
+    /** Mi vista reutilizable del modulo (obs 206 de Codex). */
+    @jakarta.inject.Inject
+    private transient py.com.one.security.servicio.VistaUsuario vista;
+
     @PostConstruct
     public void iniciar() {
         modelo = new LazyDataModel<>() {
@@ -46,6 +53,7 @@ public class MonedaBean implements Serializable {
 
             @Override
             public List<Moneda> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+                consultaFiltrada = filtroGlobal != null && !filtroGlobal.isBlank();
                 String orden = null; boolean asc = true;
                 if (sortBy != null && !sortBy.isEmpty()) {
                     SortMeta sm = sortBy.values().iterator().next();
@@ -57,7 +65,14 @@ public class MonedaBean implements Serializable {
     }
 
     public String verificarAcceso() {
-        return sesion.puede(PANTALLA, "VER") ? null : "/index?faces-redirect=true";
+        if (!sesion.puede(PANTALLA, "VER")) {
+            return "/index?faces-redirect=true";
+        }
+        String filtroVista = vista.aplicar(PANTALLA);
+        if (filtroVista != null) {
+            filtroGlobal = filtroVista;
+        }
+        return null;
     }
 
     public void nuevo() {
@@ -94,6 +109,23 @@ public class MonedaBean implements Serializable {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo cambiar el estado", e.getMessage());
         }
     }
+
+    public void guardarMiVista() {
+        if (vista.guardar(PANTALLA, filtroGlobal)) {
+            aviso(FacesMessage.SEVERITY_INFO, "Mi vista guardada", "Se aplicará automáticamente al entrar a esta pantalla");
+        }
+    }
+
+    public void quitarMiVista() {
+        vista.quitar(PANTALLA);
+        aviso(FacesMessage.SEVERITY_INFO, "Mi vista eliminada", "La pantalla vuelve a la configuración estándar");
+    }
+
+    public void limpiarBusqueda() {
+        filtroGlobal = "";
+    }
+
+    public boolean isConsultaFiltrada() { return consultaFiltrada; }
 
     private void aviso(FacesMessage.Severity s, String t, String d) {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(s, t, d));

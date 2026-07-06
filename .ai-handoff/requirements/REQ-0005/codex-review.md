@@ -1,31 +1,18 @@
-# REQ-0005 - Auditoria Codex
+# Codex Review - REQ-0005
 
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Auditor:** Codex
+Fecha: 2026-07-06
+Auditor: codex
+Resultado: APROBADO_POR_CODEX
 
-## Decision
+## Verificacion
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+- Leidos `req.md`, `claude-implementation.md`, `test-plan.md` y `preaudit-checklist.md`.
+- Revisada `WEB-INF/plantilla.xhtml`: menu lateral, barra superior, usuario/perfil, cambiar clave, logout y responsive por media query.
+- Revisado `index.xhtml`: tablero con tarjetas renderizadas por `sesionUsuario.puede(pantalla,'VER')`.
+- Verificado uso de plantilla: 10 paginas XHTML de aplicacion/modulo usan `template="/WEB-INF/plantilla.xhtml"`.
+- Excepciones aceptadas: `login.xhtml` y `cambiar-password.xhtml` son pantallas de seguridad standalone. `login` ocurre sin sesion; `cambiar-password` queda aislada por el flujo de cambio obligatorio.
+- Build multi-modulo ya verificado en la ronda de REQ-0004 con JDK moderno: EXIT 0.
 
-## Hallazgos
+## Observaciones
 
-### Bloqueantes
-
-- Ninguno.
-
-### No Bloqueantes
-
-- Ninguno.
-
-## Riesgos
-
-Ninguno identificado.
-
-## Pruebas Revisadas
-
-- [ ] Revision estatica
-
-## Pruebas Faltantes
-
-- [ ] Prueba manual
+Sin observaciones bloqueantes.

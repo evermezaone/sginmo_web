@@ -15,12 +15,38 @@
                      lazy="true" paginator="true" rows="10"
                      paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
                      currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
-                     emptyMessage="No hay monedas cargadas">
+                     emptyMessage="#{monedaBean.consultaFiltrada ? 'No hay resultados para esta búsqueda' : 'No hay monedas cargadas'}">
             <f:facet name="header">
                 <div class="barra-tabla">
                     <p:commandButton value="Nueva" icon="pi pi-plus" rendered="#{sesionUsuario.puede('monedas','CREAR')}"
                                      actionListener="#{monedaBean.nuevo()}" update=":frmEdicion"
                                      oncomplete="PF('dlgMoneda').show()"/>
+                    <p:commandButton id="btnColumnas" icon="pi pi-sliders-h" title="Elegir columnas (afecta la exportación)"
+                                     styleClass="ui-button-outlined" type="button"/>
+                    <p:columnToggler datasource="tabla" trigger="btnColumnas">
+                        <p:ajax event="toggle"/>
+                    </p:columnToggler>
+                    <p:commandButton icon="pi pi-file" title="Exportar CSV (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('monedas','EXPORTAR')}">
+                        <p:dataExporter type="csv" target="tabla" fileName="monedas" pageOnly="true"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-code" title="Exportar XML (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('monedas','EXPORTAR')}">
+                        <p:dataExporter type="xml" target="tabla" fileName="monedas" pageOnly="true"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-file-pdf" title="Exportar PDF (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('monedas','EXPORTAR')}">
+                        <p:dataExporter type="pdf" target="tabla" fileName="monedas" pageOnly="true"/>
+                    </p:commandButton>
+                    <p:commandButton icon="pi pi-bookmark" title="Guardar mi vista (columnas, orden, filas y búsqueda)"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{monedaBean.guardarMiVista()}" process="@this" update=":frmLista:mensajes"/>
+                    <p:commandButton icon="pi pi-refresh" title="Quitar mi vista (volver al estándar)"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{monedaBean.quitarMiVista()}" process="@this" update=":frmLista:mensajes"/>
+                    <p:commandButton icon="pi pi-filter-slash" title="Limpiar búsqueda"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{monedaBean.limpiarBusqueda()}" update=":frmLista:tabla"/>
                     <span style="flex:1"></span>
                     <p:inputText value="#{monedaBean.filtroGlobal}" placeholder="Buscar" style="width:14rem;">
                         <p:ajax event="keyup" delay="400" update="tabla"/>

@@ -69,15 +69,18 @@ public class ImpuestoService {
         BigDecimal p = impuesto.getPorcentajeImpuesto();
         if (p == null || p.signum() < 0) throw new NegocioException("El porcentaje no puede ser negativo");
         if (!avanzado) {
-            // Modo simplificado: base gravada 100% y factores derivados (formulas de Gestión).
+            // Modo simplificado: base gravada 100% y factores derivados con la semantica
+            // del seed V2 / Gestion (obs 204 de Codex): factor_DISCRIMINADO = divisor del
+            // total para obtener el impuesto (IVA 10 -> 11; IVA 5 -> 21) y factor_IMPUESTO
+            // = multiplicador neto->total (IVA 10 -> 1.10). Exenta: 0 / 1.00.
             impuesto.setPorcentajeBaseGravada(new BigDecimal("100"));
-            if (p.signum() == 0) {           // exenta
-                impuesto.setFactorImpuesto(BigDecimal.ZERO);
-                impuesto.setFactorDiscriminado(BigDecimal.ONE);
-            } else {                          // IVA 10 -> factor 11; IVA 5 -> 21
+            if (p.signum() == 0) {           // exenta (seed: discriminado 0, impuesto 1.00)
+                impuesto.setFactorDiscriminado(BigDecimal.ZERO);
+                impuesto.setFactorImpuesto(BigDecimal.ONE);
+            } else {
                 var cien = new BigDecimal("100");
-                impuesto.setFactorImpuesto(cien.add(p).divide(p, 2, RoundingMode.HALF_UP));
-                impuesto.setFactorDiscriminado(cien.add(p).divide(cien, 2, RoundingMode.HALF_UP));
+                impuesto.setFactorDiscriminado(cien.add(p).divide(p, 2, RoundingMode.HALF_UP));
+                impuesto.setFactorImpuesto(cien.add(p).divide(cien, 2, RoundingMode.HALF_UP));
             }
         } else {
             if (impuesto.getFactorImpuesto() == null || impuesto.getFactorDiscriminado() == null
