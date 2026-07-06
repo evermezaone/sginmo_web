@@ -1,54 +1,8 @@
-﻿# REQ-0014 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0014
 
 ## Manifiesto Minimo Para Codex
+Misma tabla `activo` con tipo_codigo de propiedad (DEPARTAMENTO/CASA/TERRENO...): el ABM de activos cubre propiedades y sus contenedores (edificio). Precios/comisiones de venta y alquiler, datos catastrales, atributos por tipo. El estado LIBRE/OCUPADA/VENDIDA lo mueven las operaciones (REQ-0016+).
 
-- REQ: REQ-0014
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos clave:** Comparte codigo con REQ-0013 (activos.xhtml/ActivoService); ver ese REQ.
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn -q clean package (multi-modulo, EXIT 0); tools/deploy-vps.ps1; verificacion por HTML contra la VPS.

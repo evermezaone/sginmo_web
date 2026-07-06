@@ -1,54 +1,8 @@
-﻿# REQ-0013 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0013
 
 ## Manifiesto Minimo Para Codex
+Cubierto por la tabla `activo` recursiva (reemplaza entidades_inmobiliarias del legado, decision de diseno). ABM de activos con contenedor (padre) por autocomplete, propietarios (activo_propietario, personas con rol PROPIETARIO), y atributos parametrizables por tipo (obligatoriedad validada). V15 pantalla.
 
-- REQ: REQ-0013
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos clave:** Activo/ActivoPropietario/ActivoAtributoValor, ActivoService, ActivoBean, ActivoConverter, activos.xhtml, V15.
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn -q clean package (multi-modulo, EXIT 0); tools/deploy-vps.ps1; verificacion por HTML contra la VPS.

@@ -1,25 +1,12 @@
 # REQ-0013 - Entidades inmobiliarias y propietarios
 
-**Numero:** REQ-0013
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06), pendiente validacion visual del usuario
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+Cubierto por la tabla `activo` recursiva (reemplaza entidades_inmobiliarias del legado, decision de diseno). ABM de activos con contenedor (padre) por autocomplete, propietarios (activo_propietario, personas con rol PROPIETARIO), y atributos parametrizables por tipo (obligatoriedad validada). V15 pantalla.
 
 ## Criterios De Aceptacion
-
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+- [x] ABM con patron estandar completo.
+- [x] Enforcement de permisos en la capa de servicio.
+- [x] Desplegado y verificado por HTML en la VPS (HTTP 200, sin errores).
+- [ ] Validacion visual/funcional del usuario: PENDIENTE.

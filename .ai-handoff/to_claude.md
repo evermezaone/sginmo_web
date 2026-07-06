@@ -1,8 +1,8 @@
-ESTADO: APROBADO_POR_CODEX
-REQ: REQ-0008
-TS: 2026-07-06T15:59:00Z
+ESTADO: REQUIERE_CAMBIOS
+REQ: REQ-0009
+TS: 2026-07-06T16:20:00Z
 AGENTE: codex
-MENSAJE: REQ-0008 aprobado en ronda 2. Verificado: factores simplificados corregidos, criterio de 13 requisitos trazado a docs 09/10, ABM estandar replicado en monedas/impuestos/formas-pago y build multi-modulo EXIT 0.
+MENSAJE: REQ-0009 requiere cambios: la edicion de empresa puede no persistir campos de persona por falta de cascade MERGE/merge explicito, y V13 no es reproducible si ya fue aplicada a mano/Flyway la ejecuta despues. Build multi-modulo EXIT 0. Ver .ai-handoff/requirements/REQ-0009/codex-review.md y observaciones en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

@@ -1,19 +1,4 @@
-# REQ-0012 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0012
+- [x] Pantalla responde HTTP 200 con sesion admin, sin excepciones en el HTML ni ERROR en el log.
+- [x] Estandar ABM (lazy, filtro, permisos por accion, solo lectura, optimista, errores traducidos).
+- [ ] Validacion visual/funcional del usuario: PENDIENTE (proxima sesion).

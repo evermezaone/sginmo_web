@@ -1,0 +1,187 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{activoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Activos inmobiliarios</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="act" value="#{activoBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="#{activoBean.consultaFiltrada ? 'No hay resultados para esta búsqueda' : 'No hay activos cargados'}">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus" rendered="#{sesionUsuario.puede('activos','CREAR')}"
+                                     actionListener="#{activoBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgActivo').show(); try{PF('wtabsAct').select(0)}catch(e){}"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{activoBean.filtroGlobal}" placeholder="Buscar nombre o dirección" style="width:16rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Nombre" sortBy="#{act.nombre}" toggleable="false">
+                <h:outputText value="#{act.nombre}"/>
+            </p:column>
+            <p:column headerText="Tipo" sortBy="#{act.tipoCodigo}" style="width:10rem;">
+                <h:outputText value="#{activoBean.descripcionTipo(act.tipoCodigo)}"/>
+            </p:column>
+            <p:column headerText="Precio venta" sortBy="#{act.precioVenta}" style="width:9rem; text-align:right;">
+                <h:outputText value="#{act.precioVenta}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Precio alquiler" sortBy="#{act.precioAlquiler}" style="width:9rem; text-align:right;">
+                <h:outputText value="#{act.precioAlquiler}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Situación" sortBy="#{act.estado}" style="width:7rem; text-align:center;">
+                <p:tag value="#{act.estado}"
+                       severity="#{act.estado eq 'LIBRE' ? 'success' : (act.estado eq 'VENDIDA' ? 'danger' : 'warning')}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('activos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{activoBean.editar(act)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgActivo').show(); try{PF('wtabsAct').select(0)}catch(e){}"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Activo inmobiliario" widgetVar="dlgActivo" modal="true" resizable="false"
+              responsive="true" width="740" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty activoBean.seleccionado}">
+                <p:tabView id="tabs" widgetVar="wtabsAct" activeIndex="#{activoBean.tabActivo}">
+                    <p:tab title="Datos">
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Nombre *</label>
+                                <p:inputText value="#{activoBean.seleccionado.nombre}" required="true" label="Nombre"
+                                             disabled="#{activoBean.soloLectura}" requiredMessage="El nombre es obligatorio" maxlength="180"/>
+                            </div>
+                            <div class="campo">
+                                <label>Tipo *</label>
+                                <p:selectOneMenu value="#{activoBean.seleccionado.tipoCodigo}" required="true" label="Tipo"
+                                                 disabled="#{activoBean.soloLectura}" requiredMessage="El tipo es obligatorio">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{activoBean.tipos}" var="tp" itemLabel="#{tp.descripcion}" itemValue="#{tp.codigo}"/>
+                                    <p:ajax listener="#{activoBean.tipoCambiado()}" update="tabs:tblAtributos"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Contenedor (edificio/loteamiento — opcional)</label>
+                            <p:autoComplete value="#{activoBean.seleccionado.padre}" label="Contenedor"
+                                            completeMethod="#{activoBean.completarContenedor}" var="c"
+                                            itemLabel="#{c.nombre}" itemValue="#{c.id}"
+                                            forceSelection="true" minQueryLength="2" queryDelay="400"
+                                            disabled="#{activoBean.soloLectura}" style="width:100%;" inputStyle="width:100%;"/>
+                        </div>
+                        <div class="campo">
+                            <label>Dirección</label>
+                            <p:inputText value="#{activoBean.seleccionado.direccion}" label="Dirección"
+                                         disabled="#{activoBean.soloLectura}" maxlength="250" style="width:100%;"/>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Precio de venta (Gs.)</label>
+                                <p:inputNumber value="#{activoBean.seleccionado.precioVenta}" label="Precio de venta"
+                                               disabled="#{activoBean.soloLectura}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
+                            </div>
+                            <div class="campo">
+                                <label>Comisión venta (%)</label>
+                                <p:inputNumber value="#{activoBean.seleccionado.comisionVenta}" label="Comisión venta"
+                                               disabled="#{activoBean.soloLectura}" decimalPlaces="2" minValue="0" maxValue="100"/>
+                            </div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Precio de alquiler (Gs.)</label>
+                                <p:inputNumber value="#{activoBean.seleccionado.precioAlquiler}" label="Precio de alquiler"
+                                               disabled="#{activoBean.soloLectura}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
+                            </div>
+                            <div class="campo">
+                                <label>Comisión alquiler (%)</label>
+                                <p:inputNumber value="#{activoBean.seleccionado.comisionAlquiler}" label="Comisión alquiler"
+                                               disabled="#{activoBean.soloLectura}" decimalPlaces="2" minValue="0" maxValue="100"/>
+                            </div>
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Catastro">
+                        <div class="fila-2">
+                            <div class="campo"><label>Cuenta catastral</label>
+                                <p:inputText value="#{activoBean.seleccionado.cuentaCatastral}" label="Cuenta catastral" disabled="#{activoBean.soloLectura}" maxlength="120"/></div>
+                            <div class="campo"><label>Número de finca</label>
+                                <p:inputText value="#{activoBean.seleccionado.numeroFinca}" label="Número de finca" disabled="#{activoBean.soloLectura}" maxlength="20"/></div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo"><label>Número de lote</label>
+                                <p:inputText value="#{activoBean.seleccionado.numeroLote}" label="Número de lote" disabled="#{activoBean.soloLectura}" maxlength="20"/></div>
+                            <div class="campo"><label>Número de manzana</label>
+                                <p:inputText value="#{activoBean.seleccionado.numeroManzana}" label="Número de manzana" disabled="#{activoBean.soloLectura}" maxlength="20"/></div>
+                        </div>
+                        <div class="campo"><label>Observación</label>
+                            <p:inputTextarea value="#{activoBean.seleccionado.observacion}" rows="2" disabled="#{activoBean.soloLectura}" maxlength="250" style="width:100%;"/></div>
+                    </p:tab>
+
+                    <p:tab title="Atributos del tipo">
+                        <p style="color:#6c757d; font-size:.8rem; margin:0 0 .6rem;">
+                            Atributos parametrizados para el tipo elegido. Los marcados con * son obligatorios.
+                        </p>
+                        <p:dataTable id="tblAtributos" var="atr" value="#{activoBean.atributos}"
+                                     emptyMessage="Este tipo no tiene atributos configurados">
+                            <p:column headerText="Atributo" style="width:16rem;">
+                                <h:outputText value="#{atr.descripcion}#{atr.obligatorio ? ' *' : ''}"/>
+                            </p:column>
+                            <p:column headerText="Valor">
+                                <p:inputText value="#{atr.valor}" disabled="#{activoBean.soloLectura}" style="width:100%;"
+                                             rendered="#{atr.tipoDato ne 'BOOLEANO'}"/>
+                                <p:toggleSwitch value="#{atr.valor}" disabled="#{activoBean.soloLectura}"
+                                                rendered="#{atr.tipoDato eq 'BOOLEANO'}"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+
+                    <p:tab title="Propietarios"
+                           disabled="#{activoBean.seleccionado.id == null}"
+                           titletip="#{activoBean.seleccionado.id == null ? 'Guarde el activo para asignar propietarios' : ''}">
+                        <div class="campo">
+                            <label>Propietario (personas con rol Propietario)</label>
+                            <div style="display:flex; gap:.5rem;">
+                                <p:selectOneMenu id="cboProp" value="#{activoBean.nuevoPropietario}" label="Propietario" filter="true" filterMatchMode="contains" style="flex:1;">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{activoBean.propietariosPosibles}" var="pp" itemLabel="#{pp.nombre}" itemValue="#{pp.id}"/>
+                                </p:selectOneMenu>
+                                <p:commandButton icon="pi pi-plus" title="Agregar propietario" rendered="#{!activoBean.soloLectura}"
+                                                 actionListener="#{activoBean.agregarPropietario()}"
+                                                 process="@this cboProp" update="tblProp cboProp :frmEdicion:msjEdicion"/>
+                            </div>
+                        </div>
+                        <p:dataTable id="tblProp" var="pr" value="#{activoBean.propietarios}" emptyMessage="Sin propietarios" style="margin-top:.5rem;">
+                            <p:column headerText="Propietario"><h:outputText value="#{pr[1]}"/></p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar" rendered="#{!activoBean.soloLectura}"
+                                                 actionListener="#{activoBean.quitarPropietario(pr[0])}"
+                                                 process="@this" update="tblProp :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgActivo').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!activoBean.soloLectura}"
+                                     actionListener="#{activoBean.guardar()}"
+                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

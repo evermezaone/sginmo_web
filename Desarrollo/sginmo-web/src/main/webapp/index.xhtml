@@ -21,6 +21,12 @@
         Versión #{inicioBean.version} · #{inicioBean.stack}
     </p>
     <div class="tarjetas">
+        <h:outputLink styleClass="tarjeta" value="personas.xhtml" rendered="#{sesionUsuario.puede('personas','VER')}">
+            <i class="pi pi-id-card"></i><h3>Personas</h3><p>Clientes, proveedores, propietarios e inquilinos</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="activos.xhtml" rendered="#{sesionUsuario.puede('activos','VER')}">
+            <i class="pi pi-home"></i><h3>Activos / Propiedades</h3><p>Edificios, departamentos, terrenos y lotes</p>
+        </h:outputLink>
         <h:outputLink styleClass="tarjeta" value="articulos.xhtml" rendered="#{sesionUsuario.puede('articulos','VER')}">
             <i class="pi pi-box"></i><h3>Artículos</h3><p>Productos y servicios del sistema</p>
         </h:outputLink>

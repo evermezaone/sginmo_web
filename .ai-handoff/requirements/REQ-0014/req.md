@@ -1,25 +1,12 @@
 # REQ-0014 - Propiedades
 
-**Numero:** REQ-0014
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06), pendiente validacion visual del usuario
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+Misma tabla `activo` con tipo_codigo de propiedad (DEPARTAMENTO/CASA/TERRENO...): el ABM de activos cubre propiedades y sus contenedores (edificio). Precios/comisiones de venta y alquiler, datos catastrales, atributos por tipo. El estado LIBRE/OCUPADA/VENDIDA lo mueven las operaciones (REQ-0016+).
 
 ## Criterios De Aceptacion
-
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+- [x] ABM con patron estandar completo.
+- [x] Enforcement de permisos en la capa de servicio.
+- [x] Desplegado y verificado por HTML en la VPS (HTTP 200, sin errores).
+- [ ] Validacion visual/funcional del usuario: PENDIENTE.

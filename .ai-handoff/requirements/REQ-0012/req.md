@@ -1,25 +1,12 @@
-# REQ-0012 - Socios de negocios
+# REQ-0012 - Socios de negocios / personas
 
-**Numero:** REQ-0012
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06), pendiente validacion visual del usuario
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+ABM unificado de personas fisicas y juridicas (subtabla por @MapsId), documento unico global, roles multiples por persona (CLIENTE/PROVEEDOR/PROPIETARIO/INQUILINO/...). PersonaService.porRol alimenta los combos de otros modulos. Estandar completo + enforcement en servicio. V14 pantalla.
 
 ## Criterios De Aceptacion
-
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+- [x] ABM con patron estandar completo.
+- [x] Enforcement de permisos en la capa de servicio.
+- [x] Desplegado y verificado por HTML en la VPS (HTTP 200, sin errores).
+- [ ] Validacion visual/funcional del usuario: PENDIENTE.

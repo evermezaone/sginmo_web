@@ -62,6 +62,10 @@
         <a class="item" href="index.xhtml"><i class="pi pi-home"></i> Inicio</a>
 
         <div class="seccion">Catálogos</div>
+        <h:outputLink styleClass="item" value="personas.xhtml"
+                      rendered="#{sesionUsuario.puede('personas','VER')}"><i class="pi pi-id-card"></i> Personas</h:outputLink>
+        <h:outputLink styleClass="item" value="activos.xhtml"
+                      rendered="#{sesionUsuario.puede('activos','VER')}"><i class="pi pi-home"></i> Activos / Propiedades</h:outputLink>
         <h:outputLink styleClass="item" value="articulos.xhtml"
                       rendered="#{sesionUsuario.puede('articulos','VER')}"><i class="pi pi-box"></i> Artículos</h:outputLink>
         <h:outputLink styleClass="item" value="monedas.xhtml"

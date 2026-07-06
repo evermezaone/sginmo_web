@@ -1,0 +1,218 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{personaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Personas y socios de negocios</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="per" value="#{personaBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="#{personaBean.consultaFiltrada ? 'No hay resultados para esta búsqueda' : 'No hay personas cargadas'}">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva persona física" icon="pi pi-user" rendered="#{sesionUsuario.puede('personas','CREAR')}"
+                                     actionListener="#{personaBean.nuevoFisica()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgPersona').show(); try{PF('wtabsPer').select(0)}catch(e){}"/>
+                    <p:commandButton value="Nueva empresa/jurídica" icon="pi pi-building" rendered="#{sesionUsuario.puede('personas','CREAR')}"
+                                     styleClass="ui-button-outlined"
+                                     actionListener="#{personaBean.nuevoJuridica()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgPersona').show(); try{PF('wtabsPer').select(0)}catch(e){}"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{personaBean.filtroGlobal}" placeholder="Buscar nombre o documento" style="width:16rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Nombre / Razón social" sortBy="#{per.nombre}" toggleable="false">
+                <h:outputText value="#{per.nombre}"/>
+            </p:column>
+            <p:column headerText="Tipo" sortBy="#{per.tipoPersoneria}" style="width:7rem;">
+                <p:tag value="#{per.tipoPersoneria eq 'FISICA' ? 'Física' : 'Jurídica'}"
+                       severity="#{per.tipoPersoneria eq 'FISICA' ? 'info' : 'warning'}"/>
+            </p:column>
+            <p:column headerText="Documento" sortBy="#{per.numeroDocumento}" style="width:10rem; white-space:nowrap;">
+                <h:outputText value="#{per.numeroDocumento}#{empty per.digitoVerificador ? '' : '-'}#{per.digitoVerificador}"
+                              style="font-family:monospace;"/>
+            </p:column>
+            <p:column headerText="Teléfono" style="width:9rem;">
+                <h:outputText value="#{per.telefono}"/>
+            </p:column>
+            <p:column headerText="Estado" sortBy="#{per.estado}" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{per.estado}" severity="#{per.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('personas','VER_AUDITORIA')}">
+                <h:outputText value="#{empty per.usuarioModificacion ? per.usuarioCreacion : per.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('personas','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{personaBean.editar(per)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgPersona').show(); try{PF('wtabsPer').select(0)}catch(e){}"/>
+                <p:commandButton icon="#{per.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('personas', per.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{personaBean.cambiarEstado(per)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{per.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} #{per.nombre}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="#{personaBean.fisica != null ? 'Persona física' : 'Persona jurídica'}" widgetVar="dlgPersona"
+              modal="true" resizable="false" responsive="true" width="700" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty personaBean.seleccionado}">
+                <p:tabView id="tabs" widgetVar="wtabsPer" activeIndex="#{personaBean.tabActivo}">
+                    <p:tab title="Datos">
+                        <!-- Persona FISICA -->
+                        <ui:fragment rendered="#{personaBean.fisica != null}">
+                            <div class="fila-2">
+                                <div class="campo">
+                                    <label>Nombres *</label>
+                                    <p:inputText value="#{personaBean.fisica.nombres}" required="true" label="Nombres"
+                                                 disabled="#{personaBean.soloLectura}" requiredMessage="Los nombres son obligatorios" maxlength="120"/>
+                                </div>
+                                <div class="campo">
+                                    <label>Apellidos *</label>
+                                    <p:inputText value="#{personaBean.fisica.apellidos}" required="true" label="Apellidos"
+                                                 disabled="#{personaBean.soloLectura}" requiredMessage="Los apellidos son obligatorios" maxlength="120"/>
+                                </div>
+                            </div>
+                            <div class="fila-3">
+                                <div class="campo">
+                                    <label>Sexo</label>
+                                    <p:selectOneMenu value="#{personaBean.fisica.sexo}" label="Sexo" disabled="#{personaBean.soloLectura}">
+                                        <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItem itemLabel="Masculino" itemValue="MASCULINO"/>
+                                        <f:selectItem itemLabel="Femenino" itemValue="FEMENINO"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo">
+                                    <label>Fecha de nacimiento</label>
+                                    <p:datePicker value="#{personaBean.fisica.fechaNacimiento}" pattern="dd/MM/yyyy"
+                                                  disabled="#{personaBean.soloLectura}"/>
+                                </div>
+                                <div class="campo">
+                                    <label>Estado civil</label>
+                                    <p:selectOneMenu value="#{personaBean.fisica.estadoCivilCodigo}" label="Estado civil" disabled="#{personaBean.soloLectura}">
+                                        <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaBean.estadosCiviles}" var="ec" itemLabel="#{ec.descripcion}" itemValue="#{ec.codigo}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                            </div>
+                            <div class="campo">
+                                <label>Nacionalidad</label>
+                                <p:inputText value="#{personaBean.fisica.nacionalidad}" label="Nacionalidad"
+                                             disabled="#{personaBean.soloLectura}" maxlength="80"/>
+                            </div>
+                        </ui:fragment>
+                        <!-- Persona JURIDICA -->
+                        <ui:fragment rendered="#{personaBean.juridica != null}">
+                            <div class="fila-2">
+                                <div class="campo">
+                                    <label>Razón social *</label>
+                                    <p:inputText value="#{personaBean.juridica.razonSocial}" required="true" label="Razón social"
+                                                 disabled="#{personaBean.soloLectura}" requiredMessage="La razón social es obligatoria" maxlength="180"/>
+                                </div>
+                                <div class="campo">
+                                    <label>Nombre de fantasía</label>
+                                    <p:inputText value="#{personaBean.juridica.nombreFantasia}" label="Nombre de fantasía"
+                                                 disabled="#{personaBean.soloLectura}" maxlength="120"/>
+                                </div>
+                            </div>
+                        </ui:fragment>
+                        <!-- Comun -->
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>#{personaBean.fisica != null ? 'Documento (CI/RUC) *' : 'RUC *'}</label>
+                                <p:inputText value="#{personaBean.seleccionado.numeroDocumento}" required="true" label="Documento"
+                                             disabled="#{personaBean.soloLectura}" requiredMessage="El documento es obligatorio" maxlength="20"/>
+                            </div>
+                            <div class="campo">
+                                <label>DV</label>
+                                <p:inputText value="#{personaBean.seleccionado.digitoVerificador}" label="DV"
+                                             disabled="#{personaBean.soloLectura}" maxlength="1" style="width:4rem;"/>
+                            </div>
+                            <div class="campo">
+                                <label>Contribuyente</label>
+                                <p:toggleSwitch value="#{personaBean.seleccionado.esContribuyente}" disabled="#{personaBean.soloLectura}"/>
+                            </div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Teléfono</label>
+                                <p:inputText value="#{personaBean.seleccionado.telefono}" label="Teléfono"
+                                             disabled="#{personaBean.soloLectura}" maxlength="20"/>
+                            </div>
+                            <div class="campo">
+                                <label>Email</label>
+                                <p:inputText value="#{personaBean.seleccionado.email}" label="Email" type="email"
+                                             disabled="#{personaBean.soloLectura}" maxlength="180"/>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Dirección</label>
+                            <p:inputText value="#{personaBean.seleccionado.direccion}" label="Dirección"
+                                         disabled="#{personaBean.soloLectura}" maxlength="180" style="width:100%;"/>
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Roles"
+                           disabled="#{personaBean.seleccionado.id == null}"
+                           titletip="#{personaBean.seleccionado.id == null ? 'Guarde la persona para asignar roles' : ''}">
+                        <p style="color:#6c757d; font-size:.8rem; margin:0 0 .8rem;">
+                            Una misma persona puede ser cliente, proveedor, propietario, inquilino, etc.
+                        </p>
+                        <div class="campo">
+                            <label>Rol</label>
+                            <div style="display:flex; gap:.5rem;">
+                                <p:selectOneMenu id="cboRol" value="#{personaBean.nuevoRol}" label="Rol" style="flex:1;">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{personaBean.roles}" var="rl" itemLabel="#{rl.descripcion}" itemValue="#{rl.codigo}"/>
+                                </p:selectOneMenu>
+                                <p:commandButton icon="pi pi-plus" title="Agregar rol" rendered="#{!personaBean.soloLectura}"
+                                                 actionListener="#{personaBean.agregarRol()}"
+                                                 process="@this cboRol" update="tblRoles cboRol :frmEdicion:msjEdicion"/>
+                            </div>
+                        </div>
+                        <p:dataTable id="tblRoles" var="rp" value="#{personaBean.rolesPersona}"
+                                     emptyMessage="Sin roles asignados" style="margin-top:.5rem;">
+                            <p:column headerText="Rol">
+                                <h:outputText value="#{personaBean.descripcionRol(rp.rolCodigo)}"/>
+                            </p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
+                                                 rendered="#{!personaBean.soloLectura}"
+                                                 actionListener="#{personaBean.quitarRol(rp.id)}"
+                                                 process="@this" update="tblRoles :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgPersona').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!personaBean.soloLectura}"
+                                     actionListener="#{personaBean.guardar()}"
+                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>
