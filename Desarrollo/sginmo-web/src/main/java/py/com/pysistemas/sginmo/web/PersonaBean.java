@@ -113,13 +113,17 @@ public class PersonaBean implements Serializable {
         tabActivo = 0;
     }
 
-    public boolean isFisica() { return seleccionado != null && "FISICA".equals(seleccionado.getTipoPersoneria()); }
+    /** Metodo (no getter) para no colisionar en EL con getFisica() -> la propiedad "fisica"
+     *  debe resolver a la entidad PersonaFisica, no a un boolean. */
+    private boolean seleccionadoEsFisica() {
+        return seleccionado != null && "FISICA".equals(seleccionado.getTipoPersoneria());
+    }
 
     public void guardar() {
         try {
             boolean esNueva = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
-            if (isFisica()) {
+            if (seleccionadoEsFisica()) {
                 personaService.guardarFisica(seleccionado, fisica);
             } else {
                 personaService.guardarJuridica(seleccionado, juridica);
