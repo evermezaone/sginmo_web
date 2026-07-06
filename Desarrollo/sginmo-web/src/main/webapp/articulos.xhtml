@@ -23,7 +23,14 @@
 <div class="contenido">
     <div class="titulo">
         <h2 style="margin:0;">Artículos</h2>
-        <p:button outcome="index" icon="pi pi-home" title="Inicio" styleClass="ui-button-rounded ui-button-outlined"/>
+        <span style="display:flex; gap:.5rem; align-items:center;">
+            <p:button outcome="index" icon="pi pi-home" title="Inicio" styleClass="ui-button-rounded ui-button-outlined"/>
+            <h:form style="display:inline;">
+                <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión (#{sesionUsuario.codigoUsuario()})" ajax="false"
+                                 action="#{sesionUsuario.cerrarSesion()}"
+                                 styleClass="ui-button-rounded ui-button-outlined ui-button-secondary"/>
+            </h:form>
+        </span>
     </div>
 
     <h:form id="frmLista">

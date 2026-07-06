@@ -93,7 +93,40 @@ todos los ABM del sistema (REQ-0007 geografía, REQ-0008 monedas/formas de pago/
 5. Bean `@ViewScoped` solo orquesta; entidad con `equals/hashCode` por id.
 6. Checklist de prueba del REQ: paginación, orden, filtros, unicidad, baja lógica, concurrencia.
 
-## 5. Pendientes que no bloquean la aprobación
+## 5. Segunda ronda de estudio (2026-07-05, 14 observaciones del usuario)
+
+**Decisión del usuario:** implementar YA el login (REQ-0004) → pulir el estándar con todo
+este estudio → aprobar → replicar a todos los ABMs.
+
+### 5.1 Reglas del estándar aceptadas (se aplican en el pulido post-login)
+
+| # | Regla | Nota de implementación |
+|---|-------|------------------------|
+| 1 | `estado` (vigencia lógica) separado de `habilitado` (seleccionable para operaciones nuevas) | Se agrega `habilitado` SOLO donde aplica (forma_pago, articulo, rango_comprobante); no es columna universal. Los combos de operación filtran por habilitado; los históricos muestran todo. |
+| 2 | Alcance del dato declarado: global / por empresa / por sucursal / mixto | Cada ABM lo declara en su REQ. moneda=global, forma_pago=global, rango_comprobante=empresa+sucursal, articulo=global (revisable). |
+| 3 | Clonado de registros ("Duplicar") | Botón en Acciones: copia todo salvo claves únicas (codigo/aplicacion) y abre el diálogo en modo Nuevo; estado inicial ACTIVO sin guardar hasta confirmar. |
+| 5 | Campos calculados solo lectura | El estándar exige documentar el origen (columna BD / vista / servicio / cálculo UI) y renderizarlos como salida, nunca como input deshabilitado editable por request. |
+| 7 | Reactivación segura | `cambiarEstado(→ACTIVO)` re-ejecuta las validaciones de unicidad y reglas vigentes. Matiz: con UNIQUE total en BD (caso articulo.codigo) el conflicto es imposible por construcción; la regla es crítica donde la unicidad sea parcial (solo activos). |
+| 8 | Errores técnicos traducidos | Mapper estándar en la capa Service: unique violation → mensaje de negocio; FK violation → "está en uso"; optimistic lock → "otro usuario modificó" (ya implementado). Nunca mensajes crudos de PostgreSQL. |
+| 11 | Validación de dominios al guardar | El Service rechaza códigos de `entidad` inexistentes o inactivos aunque el combo "no debería" mandarlos (anti-manipulación de request / pantalla vieja). Excepción declarada: edición histórica. |
+| 12 | Referencia estable en combos | Ya es el diseño (FKs compuestas lista+codigo; entidades por id). Queda como regla EXPLÍCITA: se guarda clave, jamás descripción. |
+| 13 | Columnas obligatorias de toda grilla | código, descripción, estado + fecha_modificacion y usuario_modificacion (ocultas por defecto, disponibles en el selector de columnas — oro para soporte). |
+| 14 | Verificación mínima de UI | Checklist manual obligatoria por REQ: abrir, buscar, filtrar, ordenar, crear, editar, inactivar/reactivar, exportar, responsive. Playwright cuando haya CI. |
+
+### 5.2 Aceptadas como REQs propios (en orden de prioridad del usuario)
+
+1. ~~Concurrencia optimista~~ — YA IMPLEMENTADA (V4 + @Version).
+2. **Permisos por acción** + **modo solo lectura** (obs 9: mismo ABM abre en consulta sin
+   botones según permiso, sin duplicar pantallas) → REQ-0004.
+3. **Vistas/filtros persistentes** ("Mi vista") → REQ-0004.
+4. **Validación de uso antes de inactivar** + **dependencias visibles** (obs 6: "aparece en
+   12 documentos y 2 liquidaciones" — trazabilidad, no solo advertencia) → REQ con los motores.
+5. **Historial visible** + motivo obligatorio al inactivar maestros sensibles → REQ auditoría (triggers en BD).
+6. **Importación controlada** CSV/XLSX (prevalidación, vista previa de errores, todo-o-nada,
+   reporte de rechazos, auditoría del archivo) → REQ propio; primeros: articulos, ubicaciones, entidades, personas.
+7. **Auditoría de exportaciones** (quién, qué entidad, filtros, filas, formato) → REQ auditoría; requiere login.
+
+## 6. Pendientes que no bloquean la aprobación
 
 - Skeleton de carga por grilla (hoy: overlay estándar de PrimeFaces). Pulido menor.
 - Filtro numérico por rango (ej. precio entre X e Y): se agrega si un ABM lo necesita.

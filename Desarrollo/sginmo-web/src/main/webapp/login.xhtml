@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:p="primefaces">
+<h:head>
+    <title>Ingreso — SGInmo Web</title>
+    <style>
+        body { margin: 0; background: linear-gradient(160deg, #1d3557 0%, #457b9d 100%); min-height: 100vh; }
+        .caja-login { max-width: 380px; margin: 10vh auto 0; background: #fff; border-radius: 10px;
+                      padding: 2rem 2.2rem 1.6rem; box-shadow: 0 12px 40px rgba(0,0,0,.35); }
+        .caja-login h1 { margin: 0 0 .2rem; font-size: 1.5rem; color: #1d3557; }
+        .caja-login .sub { color: #6c757d; font-size: .85rem; margin: 0 0 1.4rem; }
+        .campo { margin-bottom: 1rem; display: flex; flex-direction: column; gap: .3rem; }
+        .campo > label { font-weight: 600; font-size: .85rem; color: #495057; }
+        .campo .ui-inputtext, .campo .ui-password { width: 100%; }
+    </style>
+</h:head>
+<h:body>
+    <div class="caja-login">
+        <h1>SGInmo</h1>
+        <p class="sub">Gestión inmobiliaria — ingrese con su usuario</p>
+        <h:form id="frmLogin">
+            <p:messages id="msj" showDetail="false" closable="true"/>
+            <div class="campo">
+                <label>Usuario</label>
+                <p:inputText id="usuario" value="#{loginBean.codigo}" label="Usuario"
+                             required="true" requiredMessage="Ingrese su usuario" maxlength="20"/>
+            </div>
+            <div class="campo">
+                <label>Contraseña</label>
+                <p:password id="clave" value="#{loginBean.password}" label="Contraseña" feedback="false"
+                            required="true" requiredMessage="Ingrese su contraseña" maxlength="60" toggleMask="true"/>
+            </div>
+            <p:commandButton id="btnEntrar" widgetVar="btnEntrar" value="Ingresar" icon="pi pi-sign-in"
+                             action="#{loginBean.entrar()}" update="frmLogin" style="width:100%;"/>
+            <p:defaultCommand target="btnEntrar"/>
+        </h:form>
+    </div>
+</h:body>
+</html>

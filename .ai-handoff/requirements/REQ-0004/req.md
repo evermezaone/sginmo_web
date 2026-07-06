@@ -7,17 +7,30 @@
 
 ## Texto Original
 
-[Copiar el mensaje exacto del usuario aqui]
+"entonces debemos implementar ya el login, y luego volver a pulir e implementar el ABM
+estandar, y una vez aprobado, aplicar a todos los ABMs" (usuario, 2026-07-05; el REQ nace
+del backlog doc 08: seguridad con login, bcrypt, roles y bloqueo de intentos).
 
 ## Objetivo Funcional
 
-[Que debe poder hacer el usuario o el sistema]
+El sistema exige autenticacion para acceder a cualquier pantalla. Login con usuario y
+contrasena (bcrypt), bloqueo temporal por intentos fallidos (parametrizable), sesion con
+logout, y el usuario autenticado alimenta la auditoria de entidades. Fases siguientes del
+mismo REQ: permisos por accion + modo solo lectura, preferencias por usuario ("Mi vista",
+columnas del selector) y ABM de usuarios con cambio de contrasena.
 
 ## Criterios De Aceptacion
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
+- [x] Sin sesion, cualquier *.xhtml redirige a login.xhtml (tambien los POST AJAX vencidos, via partial-response).
+- [x] Login valido inicia sesion, renueva el id de sesion (anti-fijacion) y va a index.
+- [x] Credenciales invalidas: mismo mensaje para usuario inexistente y password erronea.
+- [x] Bloqueo tras LOGIN_MAX_INTENTOS fallidos por LOGIN_BLOQUEO_MINUTOS (parametro_sistema); el contador de intentos SE GRABA aunque la autenticacion falle (dontRollbackOn).
+- [x] Usuario INACTIVO no puede ingresar.
+- [x] Logout invalida la sesion y vuelve al login.
+- [x] La auditoria (usuario_creacion/modificacion) registra el codigo del usuario logueado.
+- [ ] Permisos por accion (ver/crear/editar/inactivar/reactivar/exportar/ver auditoria) + modo solo lectura.
+- [ ] preferencia_usuario + "Mi vista" (columnas, orden, filtros, tamano de pagina).
+- [ ] ABM de usuarios con cambio de contrasena obligatorio al primer ingreso.
 
 ## Dependencias
 

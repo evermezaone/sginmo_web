@@ -1,0 +1,88 @@
+package py.com.pysistemas.sginmo.dominio.seguridad;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import py.com.pysistemas.sginmo.dominio.base.Auditable;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+/**
+ * Usuario del sistema (REQ-0004): login con bcrypt, perfil y bloqueo por intentos.
+ * Serializable porque vive en la sesion web.
+ */
+@jakarta.persistence.Entity
+@Table(name = "usuario")
+public class Usuario extends Auditable implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "usuario")
+    private Long id;
+
+    @Column(name = "codigo_usuario", length = 20, nullable = false, unique = true)
+    private String codigoUsuario;
+
+    /** Hash bcrypt; NUNCA se muestra ni se registra en logs. */
+    @Column(name = "password_hash", length = 100, nullable = false)
+    private String passwordHash;
+
+    @Column(name = "perfil", length = 20, nullable = false)
+    private String perfil;                   // ADMINISTRADOR | USUARIO
+
+    @Column(name = "estado", length = 10, nullable = false)
+    private String estado = "ACTIVO";
+
+    @Column(name = "empresa", nullable = false)
+    private Long empresa;
+
+    @Column(name = "persona")
+    private Long persona;
+
+    @Column(name = "intentos_fallidos", nullable = false)
+    private Integer intentosFallidos = 0;
+
+    @Column(name = "bloqueado_hasta")
+    private LocalDateTime bloqueadoHasta;
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getCodigoUsuario() { return codigoUsuario; }
+    public void setCodigoUsuario(String codigoUsuario) { this.codigoUsuario = codigoUsuario; }
+
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+
+    public String getPerfil() { return perfil; }
+    public void setPerfil(String perfil) { this.perfil = perfil; }
+
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
+
+    public Long getEmpresa() { return empresa; }
+    public void setEmpresa(Long empresa) { this.empresa = empresa; }
+
+    public Long getPersona() { return persona; }
+    public void setPersona(Long persona) { this.persona = persona; }
+
+    public Integer getIntentosFallidos() { return intentosFallidos; }
+    public void setIntentosFallidos(Integer intentosFallidos) { this.intentosFallidos = intentosFallidos; }
+
+    public LocalDateTime getBloqueadoHasta() { return bloqueadoHasta; }
+    public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) { this.bloqueadoHasta = bloqueadoHasta; }
+
+    /** Igualdad por id (regla del estandar para entidades usadas fuera del contexto de persistencia). */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Usuario otro)) return false;
+        return id != null && id.equals(otro.id);
+    }
+
+    @Override
+    public int hashCode() { return getClass().hashCode(); }
+}

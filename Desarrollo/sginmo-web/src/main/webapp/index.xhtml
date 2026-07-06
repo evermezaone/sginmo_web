@@ -8,6 +8,14 @@
 </h:head>
 <h:body>
     <div style="max-width: 640px; margin: 4rem auto;">
+        <h:form style="display:flex; justify-content:flex-end; align-items:center; gap:.6rem; margin-bottom:.6rem;">
+            <span style="color:#495057; font-size:.9rem;">
+                <strong>#{sesionUsuario.usuario.codigoUsuario}</strong> (#{sesionUsuario.usuario.perfil})
+            </span>
+            <p:commandButton value="Salir" icon="pi pi-sign-out" ajax="false"
+                             action="#{sesionUsuario.cerrarSesion()}"
+                             styleClass="ui-button-secondary ui-button-outlined"/>
+        </h:form>
         <p:panel header="#{inicioBean.sistema} — esqueleto operativo">
             <p style="margin: 0 0 1rem 0;">
                 Versión <strong>#{inicioBean.version}</strong>
