@@ -52,6 +52,13 @@ public class Usuario extends Auditable implements Serializable {
     @Column(name = "debe_cambiar_password", nullable = false)
     private Boolean debeCambiarPassword = Boolean.TRUE;
 
+    /** Base para validacion de dos pasos y alertas de acceso fallido (V10). */
+    @Column(name = "email", length = 180)
+    private String email;
+
+    @Column(name = "telefono", length = 30)
+    private String telefono;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -82,6 +89,12 @@ public class Usuario extends Auditable implements Serializable {
     public Boolean getDebeCambiarPassword() { return debeCambiarPassword; }
     public void setDebeCambiarPassword(Boolean debeCambiarPassword) { this.debeCambiarPassword = debeCambiarPassword; }
     public boolean isDebeCambiar() { return Boolean.TRUE.equals(debeCambiarPassword); }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
 
     /** Igualdad por id (regla del estandar para entidades usadas fuera del contexto de persistencia). */
     @Override

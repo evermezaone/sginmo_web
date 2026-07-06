@@ -68,14 +68,22 @@ public class SeguridadService {
     }
 
     /**
-     * Permisos explicitos del usuario como claves "pantalla:accion" (se cargan una vez
-     * al iniciar sesion). El ADMINISTRADOR no necesita filas: tiene todo implicito.
+     * Permisos EFECTIVOS del usuario como claves "pantalla:accion", cargados una vez al
+     * iniciar sesion: permisos directos UNION permisos de sus grupos ACTIVOS (V10).
+     * El ADMINISTRADOR no necesita filas: tiene todo implicito.
      */
     public java.util.Set<String> permisosDe(Long usuarioId) {
-        return em.createQuery(
+        var directos = em.createQuery(
                 "SELECT p.pantalla, p.accion FROM PermisoUsuario p WHERE p.usuario = :usuario", Object[].class)
             .setParameter("usuario", usuarioId)
-            .getResultStream()
+            .getResultStream();
+        var porGrupo = em.createQuery(
+                "SELECT pg.pantalla, pg.accion FROM PermisoGrupo pg, UsuarioGrupo ug, Grupo g "
+                + "WHERE ug.usuario = :usuario AND pg.grupo = ug.grupo AND g.id = ug.grupo AND g.estado = 'ACTIVO'",
+                Object[].class)
+            .setParameter("usuario", usuarioId)
+            .getResultStream();
+        return java.util.stream.Stream.concat(directos, porGrupo)
             .map(fila -> fila[0] + ":" + fila[1])
             .collect(java.util.stream.Collectors.toUnmodifiableSet());
     }

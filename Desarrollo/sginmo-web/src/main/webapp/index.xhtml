@@ -30,6 +30,9 @@
                 <h:outputLink value="usuarios.xhtml" rendered="#{sesionUsuario.puede('usuarios','VER')}">➜ Usuarios y permisos</h:outputLink>
             </p>
             <p style="margin: 0 0 1rem 0;">
+                <h:outputLink value="grupos.xhtml" rendered="#{sesionUsuario.puede('grupos','VER')}">➜ Grupos de seguridad</h:outputLink>
+            </p>
+            <p style="margin: 0 0 1rem 0;">
                 <h:outputLink value="cambiar-password.xhtml">Cambiar mi contraseña</h:outputLink>
             </p>
             <h:form>

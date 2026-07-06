@@ -92,9 +92,62 @@ public class UsuarioService {
             usuario.setIntentosFallidos(0);
             usuario.setBloqueadoHasta(null);
         }
-        var resultado = em.merge(usuario);
-        em.flush();
-        return resultado;
+        try {
+            var resultado = em.merge(usuario);
+            em.flush();
+            return resultado;
+        } catch (jakarta.persistence.OptimisticLockException e) {
+            // ESTE era el bug del "no acepta el pass": el choque de version fallaba EN SILENCIO
+            throw new NegocioException(
+                "El usuario fue modificado por otra sesión. Cierre el diálogo, vuelva a abrirlo y reintente.");
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);
+        }
+    }
+
+    // ── Grupos del usuario (V10) ──
+
+    public List<py.com.pysistemas.sginmo.dominio.seguridad.UsuarioGrupo> listarGruposDe(Long usuarioId) {
+        return em.createQuery(
+                "SELECT ug FROM UsuarioGrupo ug WHERE ug.usuario = :u ORDER BY ug.id",
+                py.com.pysistemas.sginmo.dominio.seguridad.UsuarioGrupo.class)
+            .setParameter("u", usuarioId)
+            .getResultList();
+    }
+
+    public java.util.Map<Long, py.com.pysistemas.sginmo.dominio.seguridad.Grupo> gruposPorId() {
+        var mapa = new java.util.LinkedHashMap<Long, py.com.pysistemas.sginmo.dominio.seguridad.Grupo>();
+        em.createQuery("SELECT g FROM Grupo g ORDER BY g.descripcion",
+                py.com.pysistemas.sginmo.dominio.seguridad.Grupo.class)
+            .getResultList()
+            .forEach(g -> mapa.put(g.getId(), g));
+        return mapa;
+    }
+
+    @Transactional
+    public void agregarAGrupo(Long usuarioId, Long grupoId) {
+        if (usuarioId == null || grupoId == null) {
+            throw new NegocioException("Elija el grupo");
+        }
+        Long repetidos = em.createQuery(
+                "SELECT COUNT(ug) FROM UsuarioGrupo ug WHERE ug.usuario = :u AND ug.grupo = :g", Long.class)
+            .setParameter("u", usuarioId).setParameter("g", grupoId)
+            .getSingleResult();
+        if (repetidos > 0) {
+            throw new NegocioException("El usuario ya integra ese grupo");
+        }
+        var ug = new py.com.pysistemas.sginmo.dominio.seguridad.UsuarioGrupo();
+        ug.setUsuario(usuarioId);
+        ug.setGrupo(grupoId);
+        em.persist(ug);
+    }
+
+    @Transactional
+    public void quitarDeGrupo(Long usuarioGrupoId) {
+        var ug = em.find(py.com.pysistemas.sginmo.dominio.seguridad.UsuarioGrupo.class, usuarioGrupoId);
+        if (ug != null) {
+            em.remove(ug);
+        }
     }
 
     @Transactional

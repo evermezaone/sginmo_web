@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{grupoBean.verificarAcceso()}"/>
+</f:metadata>
+<h:head>
+    <title>Grupos de seguridad — SGInmo Web</title>
+    <style>
+        body { margin: 0; background: #f4f6f9; }
+        .contenido { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
+        .titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .campo { margin-bottom: .9rem; display: flex; flex-direction: column; gap: .3rem; }
+        .campo > label { font-weight: 600; font-size: .85rem; color: #495057; }
+        .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
+        .pie-dialogo { text-align: right; margin-top: .8rem; border-top: 1px solid #e0e0e0; padding-top: .8rem; }
+        .barra-tabla { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+    </style>
+</h:head>
+<h:body>
+<div class="contenido">
+    <div class="titulo">
+        <div>
+            <h2 style="margin:0;">Grupos de seguridad</h2>
+            <span style="color:#6c757d; font-size:.85rem;">Un grupo funciona como perfil: sus permisos se suman a los de cada integrante</span>
+        </div>
+        <span style="display:flex; gap:.5rem; align-items:center;">
+            <p:button outcome="usuarios" icon="pi pi-users" title="Usuarios" styleClass="ui-button-rounded ui-button-outlined"/>
+            <p:button outcome="index" icon="pi pi-home" title="Inicio" styleClass="ui-button-rounded ui-button-outlined"/>
+            <h:form style="display:inline;">
+                <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión (#{sesionUsuario.codigoUsuario()})" ajax="false"
+                                 action="#{sesionUsuario.cerrarSesion()}"
+                                 styleClass="ui-button-rounded ui-button-outlined ui-button-secondary"/>
+            </h:form>
+        </span>
+    </div>
+
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+
+        <p:dataTable id="tabla" widgetVar="tabla" var="grp" value="#{grupoBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="Sin grupos definidos">
+
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus"
+                                     rendered="#{sesionUsuario.puede('grupos','CREAR')}"
+                                     actionListener="#{grupoBean.nuevo()}"
+                                     update=":frmEdicion"
+                                     oncomplete="PF('dlgGrupo').show(); try{PF('wtabsGrp').select(0)}catch(e){}"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{grupoBean.filtroGlobal}" placeholder="Buscar código o descripción"
+                                 style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+
+            <p:column headerText="Código" style="width:12rem; white-space:nowrap;" toggleable="false">
+                <h:outputText value="#{grp.codigo}"/>
+            </p:column>
+            <p:column headerText="Descripción">
+                <h:outputText value="#{grp.descripcion}"/>
+            </p:column>
+            <p:column headerText="Estado" style="width:6rem; text-align:center;">
+                <p:tag value="#{grp.estado}" severity="#{grp.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('grupos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 title="#{sesionUsuario.puede('grupos','EDITAR') ? 'Editar' : 'Ver detalle'}"
+                                 styleClass="ui-button-flat"
+                                 actionListener="#{grupoBean.editar(grp)}"
+                                 update=":frmEdicion"
+                                 oncomplete="PF('dlgGrupo').show(); try{PF('wtabsGrp').select(0)}catch(e){}"/>
+                <p:commandButton icon="#{grp.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 title="#{grp.estado eq 'ACTIVO' ? 'Inactivar (sus permisos dejan de aplicar)' : 'Activar'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('grupos', grp.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{grupoBean.cambiarEstado(grp)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar"
+                               message="¿#{grp.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} el grupo #{grp.descripcion}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Grupo de seguridad" widgetVar="dlgGrupo" modal="true" resizable="false"
+              responsive="true" width="640" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty grupoBean.seleccionado}">
+
+                <p:tabView id="tabs" widgetVar="wtabsGrp" activeIndex="#{grupoBean.tabActivo}">
+                    <p:tab title="Principal">
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Código *</label>
+                                <p:inputText value="#{grupoBean.seleccionado.codigo}" required="true" label="Código"
+                                             requiredMessage="El código es obligatorio" maxlength="30"/>
+                            </div>
+                            <div class="campo">
+                                <label>Descripción *</label>
+                                <p:inputText value="#{grupoBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                             requiredMessage="La descripción es obligatoria" maxlength="120"/>
+                            </div>
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Permisos del grupo"
+                           disabled="#{grupoBean.seleccionado.id == null}"
+                           titletip="#{grupoBean.seleccionado.id == null ? 'Guarde el grupo para asignar permisos' : ''}">
+                        <div class="fila-2" style="align-items:end;">
+                            <div class="campo">
+                                <label>Pantalla</label>
+                                <p:selectOneMenu id="cboPantalla" value="#{grupoBean.nuevoPermisoPantalla}" label="Pantalla">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{grupoBean.pantallas}" var="pt"
+                                                   itemLabel="#{pt.descripcion}" itemValue="#{pt.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Acción</label>
+                                <div style="display:flex; gap:.5rem;">
+                                    <p:selectOneMenu id="cboAccion" value="#{grupoBean.nuevoPermisoAccion}" label="Acción" style="flex:1;">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{grupoBean.acciones}" var="ac"
+                                                       itemLabel="#{ac eq 'OPERAR' ? 'OPERAR (ABM completo, sin auditoría)' : ac}"
+                                                       itemValue="#{ac}"/>
+                                    </p:selectOneMenu>
+                                    <p:commandButton icon="pi pi-plus" title="Otorgar permiso"
+                                                     actionListener="#{grupoBean.agregarPermiso()}"
+                                                     process="@this cboPantalla cboAccion"
+                                                     update="tblPermisos cboPantalla cboAccion :frmEdicion:msjEdicion"/>
+                                </div>
+                            </div>
+                        </div>
+                        <p:dataTable id="tblPermisos" var="perm" value="#{grupoBean.permisos}"
+                                     emptyMessage="Sin permisos otorgados" style="margin-top:.5rem;">
+                            <p:column headerText="Pantalla" style="width:14rem;">
+                                <h:outputText value="#{perm.pantalla}"/>
+                            </p:column>
+                            <p:column headerText="Acción">
+                                <h:outputText value="#{perm.accion}"/>
+                            </p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
+                                                 actionListener="#{grupoBean.eliminarPermiso(perm.id)}"
+                                                 process="@this"
+                                                 update="tblPermisos :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+
+                    <p:tab title="Integrantes"
+                           disabled="#{grupoBean.seleccionado.id == null}"
+                           titletip="#{grupoBean.seleccionado.id == null ? 'Guarde el grupo para agregar integrantes' : ''}">
+                        <div class="campo">
+                            <label>Usuario</label>
+                            <div style="display:flex; gap:.5rem;">
+                                <p:selectOneMenu id="cboUsuario" value="#{grupoBean.nuevoIntegrante}" label="Usuario" style="flex:1;">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{grupoBean.usuarios}" var="us"
+                                                   itemLabel="#{us.codigoUsuario} (#{us.perfil})" itemValue="#{us.id}"/>
+                                </p:selectOneMenu>
+                                <p:commandButton icon="pi pi-plus" title="Agregar integrante"
+                                                 actionListener="#{grupoBean.agregarIntegrante()}"
+                                                 process="@this cboUsuario"
+                                                 update="tblIntegrantes cboUsuario :frmEdicion:msjEdicion"/>
+                            </div>
+                        </div>
+                        <p:dataTable id="tblIntegrantes" var="integ" value="#{grupoBean.integrantes}"
+                                     emptyMessage="Sin integrantes" style="margin-top:.5rem;">
+                            <p:column headerText="Usuario">
+                                <h:outputText value="#{grupoBean.nombreUsuario(integ.usuario)}"/>
+                            </p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar del grupo"
+                                                 actionListener="#{grupoBean.quitarIntegrante(integ.id)}"
+                                                 process="@this"
+                                                 update="tblIntegrantes :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgGrupo').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save"
+                                     actionListener="#{grupoBean.guardar()}"
+                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</div>
+</h:body>
+</html>

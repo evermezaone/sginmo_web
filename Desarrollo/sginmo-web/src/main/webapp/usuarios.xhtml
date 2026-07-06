@@ -134,18 +134,67 @@
                                 </p:selectOneMenu>
                             </div>
                         </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Email (avisos y validación en dos pasos)</label>
+                                <p:inputText value="#{usuarioBean.seleccionado.email}" label="Email"
+                                             maxlength="180" type="email"/>
+                            </div>
+                            <div class="campo">
+                                <label>Teléfono</label>
+                                <p:inputText value="#{usuarioBean.seleccionado.telefono}" label="Teléfono"
+                                             maxlength="30"/>
+                            </div>
+                        </div>
                         <div class="campo">
                             <label>
                                 #{usuarioBean.seleccionado.id == null
-                                  ? 'Contraseña inicial * (deberá cambiarla al ingresar)'
-                                  : 'Nueva contraseña (dejar vacío para no cambiar; si se carga, se fuerza el cambio al ingresar)'}
+                                  ? 'Contraseña inicial * (mínimo 8 caracteres; deberá cambiarla al ingresar)'
+                                  : 'Nueva contraseña (mínimo 8; vacío = no cambiar; si se carga, se fuerza el cambio al ingresar)'}
                             </label>
                             <p:password value="#{usuarioBean.passwordInicial}" label="Contraseña" feedback="false"
                                         toggleMask="true" maxlength="60" style="width:100%;"/>
                         </div>
                     </p:tab>
 
-                    <p:tab title="Permisos"
+                    <p:tab title="Grupos"
+                           disabled="#{usuarioBean.seleccionado.id == null}"
+                           titletip="#{usuarioBean.seleccionado.id == null ? 'Guarde el usuario para asignarle grupos' : ''}">
+                        <div class="fila-2" style="align-items:end;">
+                            <div class="campo">
+                                <label>Grupo (suma sus permisos a los del usuario)</label>
+                                <div style="display:flex; gap:.5rem;">
+                                    <p:selectOneMenu id="cboGrupo" value="#{usuarioBean.nuevoGrupo}" label="Grupo" style="flex:1;">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{usuarioBean.gruposActivos}" var="gr"
+                                                       itemLabel="#{gr.descripcion} (#{gr.codigo})" itemValue="#{gr.id}"/>
+                                    </p:selectOneMenu>
+                                    <p:commandButton icon="pi pi-plus" title="Agregar al grupo"
+                                                     actionListener="#{usuarioBean.agregarGrupo()}"
+                                                     process="@this cboGrupo"
+                                                     update="tblGrupos cboGrupo :frmEdicion:msjEdicion"/>
+                                </div>
+                            </div>
+                        </div>
+                        <p:dataTable id="tblGrupos" var="ug" value="#{usuarioBean.grupos}"
+                                     emptyMessage="No integra ningún grupo" style="margin-top:.5rem;">
+                            <p:column headerText="Grupo">
+                                <h:outputText value="#{usuarioBean.nombreGrupo(ug.grupo)}"/>
+                            </p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar del grupo"
+                                                 actionListener="#{usuarioBean.quitarGrupo(ug.id)}"
+                                                 process="@this"
+                                                 update="tblGrupos :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                        <p style="color:#6c757d; font-size:.8rem; margin:.6rem 0 0;">
+                            Los permisos efectivos del usuario son: sus permisos directos + los de sus grupos ACTIVOS.
+                            Los cambios aplican en el próximo inicio de sesión del usuario.
+                        </p>
+                    </p:tab>
+
+                    <p:tab title="Permisos directos"
                            disabled="#{usuarioBean.seleccionado.id == null or usuarioBean.seleccionado.perfil eq 'ADMINISTRADOR'}"
                            titletip="#{usuarioBean.seleccionado.id == null
                                        ? 'Guarde el usuario para asignar permisos'

@@ -35,6 +35,9 @@ public class UsuarioBean implements Serializable {
     private transient CatalogoService catalogoService;
 
     @Inject
+    private transient py.com.pysistemas.sginmo.servicio.GrupoService grupoService;
+
+    @Inject
     private SesionUsuario sesion;
 
     private LazyDataModel<Usuario> modelo;
@@ -48,9 +51,17 @@ public class UsuarioBean implements Serializable {
     private String nuevoPermisoPantalla;
     private String nuevoPermisoAccion;
 
+    // Grupos del usuario (V10)
+    private List<py.com.pysistemas.sginmo.dominio.seguridad.UsuarioGrupo> grupos = java.util.List.of();
+    private List<py.com.pysistemas.sginmo.dominio.seguridad.Grupo> gruposActivos = java.util.List.of();
+    private java.util.Map<Long, py.com.pysistemas.sginmo.dominio.seguridad.Grupo> gruposPorId = java.util.Map.of();
+    private Long nuevoGrupo;
+
     @PostConstruct
     public void iniciar() {
         pantallas = catalogoService.opciones("PANTALLAS");
+        gruposActivos = grupoService.gruposActivos();
+        gruposPorId = usuarioService.gruposPorId();
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> filterBy) {
@@ -77,6 +88,7 @@ public class UsuarioBean implements Serializable {
         seleccionado.setPerfil("USUARIO");
         passwordInicial = null;
         permisos = java.util.List.of();
+        grupos = java.util.List.of();
         limpiarNuevoPermiso();
         tabActivo = 0;
     }
@@ -85,6 +97,7 @@ public class UsuarioBean implements Serializable {
         seleccionado = usuario;
         passwordInicial = null;
         permisos = usuarioService.listarPermisos(usuario.getId());
+        grupos = usuarioService.listarGruposDe(usuario.getId());
         limpiarNuevoPermiso();
         tabActivo = 0;
     }
@@ -151,6 +164,29 @@ public class UsuarioBean implements Serializable {
     private void limpiarNuevoPermiso() {
         nuevoPermisoPantalla = null;
         nuevoPermisoAccion = null;
+        nuevoGrupo = null;
+    }
+
+    // ── Grupos del usuario ──
+
+    public void agregarGrupo() {
+        try {
+            usuarioService.agregarAGrupo(seleccionado.getId(), nuevoGrupo);
+            grupos = usuarioService.listarGruposDe(seleccionado.getId());
+            limpiarNuevoPermiso();
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar al grupo", e.getMessage());
+        }
+    }
+
+    public void quitarGrupo(Long usuarioGrupoId) {
+        usuarioService.quitarDeGrupo(usuarioGrupoId);
+        grupos = usuarioService.listarGruposDe(seleccionado.getId());
+    }
+
+    public String nombreGrupo(Long grupoId) {
+        var g = gruposPorId.get(grupoId);
+        return g == null ? String.valueOf(grupoId) : g.getDescripcion() + " (" + g.getCodigo() + ")";
     }
 
     public Accion[] getAcciones() {
@@ -185,4 +221,10 @@ public class UsuarioBean implements Serializable {
 
     public String getNuevoPermisoAccion() { return nuevoPermisoAccion; }
     public void setNuevoPermisoAccion(String nuevoPermisoAccion) { this.nuevoPermisoAccion = nuevoPermisoAccion; }
+
+    public List<py.com.pysistemas.sginmo.dominio.seguridad.UsuarioGrupo> getGrupos() { return grupos; }
+    public List<py.com.pysistemas.sginmo.dominio.seguridad.Grupo> getGruposActivos() { return gruposActivos; }
+
+    public Long getNuevoGrupo() { return nuevoGrupo; }
+    public void setNuevoGrupo(Long nuevoGrupo) { this.nuevoGrupo = nuevoGrupo; }
 }
