@@ -1,54 +1,8 @@
-﻿# REQ-0010 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0010
 
 ## Manifiesto Minimo Para Codex
-
-- REQ: REQ-0010
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
-
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+- Modulo: UsuarioService (guardar con password opcional, cambiarEstado con proteccion de
+  auto-inactivacion, desbloquear, permisos y grupos del usuario), UsuarioBean, usuarios.xhtml
+  (en el JAR, plantilla del anfitrion), SeguridadService.validarNueva/hash.
+- Ver claude-implementation.md de REQ-0004 para el modulo completo.
+- Comandos probados: build+deploy; validacion manual del usuario (creo/edito/reseteo cuentas).

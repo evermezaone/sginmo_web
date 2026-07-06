@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0004
-TS: 2026-07-06T15:09:59Z
+REQ: REQ-0004, REQ-0005, REQ-0006, REQ-0007, REQ-0008, REQ-0010
+TS: 2026-07-06T15:12:37Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0004. Ultimo derivado REQ-0004: Ronda 2: obs 202 (build: instanceof clasico + compiler release 21 explicito) y obs 203 (enforcement de permisos en capa de servicio via Autorizacion.exigir, 27 llamadas en 9 servicios) corregidas y desplegadas
+MENSAJE: [SGI] Cola de auditoria: REQ-0004, REQ-0005, REQ-0006, REQ-0007, REQ-0008, REQ-0010. Ultimo derivado REQ-0010: ABM de usuarios completo (Datos/Grupos/Permisos, reseteo con cambio forzado, desbloqueo) sobre ONEsystem-security
 
 ---
 # Estados validos (Claude escribe, Codex lee):

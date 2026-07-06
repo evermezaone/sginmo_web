@@ -1,19 +1,5 @@
-# REQ-0007 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0007
+- [x] Grilla pagina 8.276 filas reales (verificado el contador contra la VPS).
+- [x] Busqueda por nombre y codigo INE filtra en servidor.
+- [x] Autocomplete de padre responde con max 15 resultados desde 2 caracteres.
+- [x] Permisos: sin VER rebota a inicio; escrituras exigen permiso en el servicio.

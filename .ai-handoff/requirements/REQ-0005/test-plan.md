@@ -1,19 +1,6 @@
-# REQ-0005 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0005
+- [x] Las 10 pantallas renderizan dentro del layout (HTTP 200 + marcador class="menu").
+- [x] Items del menu ausentes sin permiso VER (probado con usuario restringido: solo ve lo suyo).
+- [x] Salir invalida sesion; Cambiar contrasena navega a la pantalla del modulo.
+- [x] Tablero de inicio muestra solo tarjetas permitidas.
+- [x] Responsive validado por el usuario en celular (menu superior).

@@ -1,54 +1,12 @@
-﻿# REQ-0005 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0005
 
 ## Manifiesto Minimo Para Codex
-
-- REQ: REQ-0005
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
-
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+- `sginmo-web/src/main/webapp/WEB-INF/plantilla.xhtml`: layout (menu lateral, barra
+  superior, CSS compartido del estandar ABM, media query responsive).
+- `index.xhtml`: tablero de tarjetas por permiso. Todas las pantallas usan
+  ui:composition template=/WEB-INF/plantilla.xhtml; f:metadata como hijo directo de la
+  composicion (viewAction de acceso).
+- Paginas del modulo (usuarios/grupos, en el JAR) tambien usan la plantilla por convencion.
+- Comandos probados: mvn -q clean package (EXIT 0); deploy tools/deploy-vps.ps1;
+  10 pantallas HTTP 200 con menu presente (grep class="menu" = 1 por pagina).
+- Pendiente diferido: contexto empresa/sucursal -> REQ-0009.

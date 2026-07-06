@@ -1,54 +1,8 @@
-﻿# REQ-0007 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0007
 
 ## Manifiesto Minimo Para Codex
-
-- REQ: REQ-0007
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
-
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+- UbicacionGeografica (entidad, padre @ManyToOne EAGER + LEFT JOIN FETCH en listados),
+  GeografiaService (whitelist orden, buscar() max 15 para autocomplete, exigir() permisos),
+  GeografiaBean, geografia.xhtml, UbicacionConverter (managed).
+- Datos: V3 (INE 2022) ya aplicada; V12 agrega pantalla 'geografia' a PANTALLAS.
+- Comandos probados: build+deploy; grilla reporta "de 8276" contra la VPS.

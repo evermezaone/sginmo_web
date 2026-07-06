@@ -1,19 +1,6 @@
-# REQ-0010 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0010
+- [x] Alta de usuario -> debe_cambiar_password=true; login redirige a cambiar-password.
+- [x] Reseteo por admin -> hash nuevo + flag + intentos/bloqueo limpios.
+- [x] Version optimista en conflicto -> mensaje claro (probado; antes fallaba en silencio).
+- [x] Grupos y permisos directos: alta/quita con anti-duplicado y refresco.
+- [x] Validado manualmente por el usuario desde el ABM (2026-07-06).

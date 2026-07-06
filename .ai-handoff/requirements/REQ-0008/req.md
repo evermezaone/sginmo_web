@@ -1,33 +1,20 @@
 # REQ-0008 - Catalogos: monedas, formas de pago e impuestos
 
-**Numero:** REQ-0008
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
-
-## Decisiones del usuario ya tomadas (2026-07-05 — incorporar al desarrollar este REQ)
-
-1. **Impuestos con base imponible parcial**: la tabla `impuesto` tiene `porcentaje_base_gravada` (default 100) para regimenes PY de base reducida (ej. gravado solo el 20% o 30% del precio). El motor de documento calcula gravadas/IVA sobre `monto * base/100` y el resto va a exentas.
-2. **ABM de impuestos con modo simplificado/avanzado**: el parametro `IMPUESTOS_MODO_AVANZADO` (parametro_sistema, default 'NO') controla la pantalla:
-   - `NO` (simplificado): el campo base gravada NO se muestra (queda fijo en 100); el administrador ve solo descripcion + porcentaje — sin complicaciones.
-   - `SI` (avanzado): se muestra y edita `porcentaje_base_gravada`, con los factores calculados automaticamente a partir del porcentaje.
-   El objetivo textual del usuario: "mostrar solo impuestos mas simples y no complicar a los administradores".
+**Numero:** REQ-0008 · **Estado:** implementado y validado por el usuario (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+ABMs estandar de los tres catalogos economicos, con las reglas del negocio decididas:
+impuestos en modo simplificado por defecto y formas de pago con habilitado y requisitos.
 
 ## Criterios De Aceptacion
-
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+- [x] Monedas: ABM completo; V12 agrega estado (baja logica) que faltaba en V1;
+      precision decimal 0-6; unicidad de descripcion.
+- [x] Impuestos: modo SIMPLIFICADO (parametro IMPUESTOS_MODO_AVANZADO='NO', decision del
+      usuario): solo descripcion+porcentaje, factores y base gravada calculados solos
+      (formulas de Gestion; exenta = factores 0/1). Modo avanzado edita factores y
+      porcentaje_base_gravada (regimenes 20%/30%).
+- [x] Formas de pago: habilitado separado de estado (V12, regla 1), "por defecto" unica
+      (se apaga en las demas), pestana con los 14 requisitos del cobro (patron Gestion),
+      unicidad de codigo.
+- [x] Estandar completo en los tres (permisos por accion + enforcement en servicio,
+      solo lectura, optimista, errores traducidos, auditoria por permiso).
