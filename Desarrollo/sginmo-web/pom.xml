@@ -4,26 +4,34 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>py.com.one</groupId>
+    <artifactId>onesystem-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
   <groupId>py.com.pysistemas</groupId>
   <artifactId>sginmo-web</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
   <packaging>war</packaging>
   <name>SGInmo Web</name>
   <description>ERP inmobiliario SGInmo - migracion web (WildFly 40 / Jakarta EE 11 / PrimeFaces 15)</description>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.release>21</maven.compiler.release>
     <failOnMissingWebXml>false</failOnMissingWebXml>
-    <primefaces.version>15.0.0</primefaces.version>
   </properties>
 
   <dependencies>
+    <!-- Modulo de seguridad reutilizable (login, usuarios, grupos, permisos, alertas) -->
+    <dependency>
+      <groupId>py.com.one</groupId>
+      <artifactId>onesystem-security</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+
     <!-- APIs Jakarta EE 11: las provee WildFly 40 -->
     <dependency>
       <groupId>jakarta.platform</groupId>
       <artifactId>jakarta.jakartaee-api</artifactId>
-      <version>11.0.0</version>
       <scope>provided</scope>
     </dependency>
 
@@ -31,7 +39,6 @@
     <dependency>
       <groupId>org.primefaces</groupId>
       <artifactId>primefaces</artifactId>
-      <version>${primefaces.version}</version>
       <classifier>jakarta</classifier>
     </dependency>
 
@@ -40,13 +47,6 @@
       <groupId>com.github.librepdf</groupId>
       <artifactId>openpdf</artifactId>
       <version>1.3.43</version>
-    </dependency>
-
-    <!-- Hash bcrypt de contrasenas (REQ-0004) -->
-    <dependency>
-      <groupId>org.mindrot</groupId>
-      <artifactId>jbcrypt</artifactId>
-      <version>0.4</version>
     </dependency>
 
     <!-- Tests -->
@@ -65,6 +65,14 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <version>3.4.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <!-- jakarta.mail lo provee WildFly (alertas SMTP de ONEsystem-security) -->
+              <Dependencies>jakarta.mail.api services</Dependencies>
+            </manifestEntries>
+          </archive>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

@@ -1,5 +1,7 @@
 package py.com.pysistemas.sginmo.servicio;
 
+import py.com.one.core.NegocioException;
+import py.com.one.core.ErroresBd;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

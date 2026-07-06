@@ -1,5 +1,6 @@
 package py.com.pysistemas.sginmo.web;
 
+import py.com.one.security.web.SesionUsuario;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
@@ -14,7 +15,7 @@ import py.com.pysistemas.sginmo.dominio.catalogo.Entidad;
 import py.com.pysistemas.sginmo.dominio.catalogo.Impuesto;
 import py.com.pysistemas.sginmo.servicio.ArticuloService;
 import py.com.pysistemas.sginmo.servicio.CatalogoService;
-import py.com.pysistemas.sginmo.servicio.NegocioException;
+import py.com.one.core.NegocioException;
 
 import java.io.Serializable;
 import java.util.List;
@@ -39,7 +40,7 @@ public class ArticuloBean implements Serializable {
     private SesionUsuario sesion;
 
     @Inject
-    private transient py.com.pysistemas.sginmo.servicio.PreferenciaService preferenciaService;
+    private transient py.com.one.security.servicio.PreferenciaService preferenciaService;
 
     /** Id de pantalla para permisos por accion (REQ-0004). */
     public static final String PANTALLA = "articulos";

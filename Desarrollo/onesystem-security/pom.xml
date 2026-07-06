@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>py.com.one</groupId>
+    <artifactId>onesystem-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>onesystem-security</artifactId>
+  <packaging>jar</packaging>
+  <name>ONEsystem Security</name>
+  <description>Modulo de seguridad reutilizable: login bcrypt con bloqueo de intentos,
+    usuarios, grupos, permisos por accion (usuario y grupo), preferencias por usuario,
+    cambio de contrasena forzado, alertas por correo (SMTP configurable) y pantallas
+    JSF/PrimeFaces listas (login, usuarios, grupos, cambiar-password).
+    Puntos de integracion por proyecto: ProveedorPantallas, ProveedorParametros,
+    UsuarioActual (auditoria). Esquema de referencia en src/main/resources/db/.</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>jakarta.platform</groupId>
+      <artifactId>jakarta.jakartaee-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Los beans usan PrimeFaces (LazyDataModel, PrimeFaces.current()); lo provee el WAR -->
+    <dependency>
+      <groupId>org.primefaces</groupId>
+      <artifactId>primefaces</artifactId>
+      <classifier>jakarta</classifier>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>0.4</version>
+    </dependency>
+  </dependencies>
+</project>

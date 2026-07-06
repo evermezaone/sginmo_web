@@ -13,8 +13,11 @@ $war = Join-Path $proyecto 'target\sginmo-web.war'
 if (-not $SoloDeploy) {
     $env:JAVA_HOME = 'C:\Program Files\Java\jdk-23'
     $env:MAVEN_OPTS = '-Djavax.net.ssl.trustStoreType=Windows-ROOT'
-    Set-Location $proyecto
-    & (Join-Path $mig 'herramientas\apache-maven-3.9.9\bin\mvn.cmd') -q package
+    # Build multi-modulo desde el padre (onesystem-security + sginmo-web)
+    Set-Location (Join-Path $mig 'Desarrollo')
+    # clean SIEMPRE: clases de fuentes borrados/movidos en target provocan
+    # DuplicateMappingException u otros fantasmas al desplegar
+    & (Join-Path $mig 'herramientas\apache-maven-3.9.9\bin\mvn.cmd') -q clean package
     if ($LASTEXITCODE -ne 0) { Write-Error 'Build fallo'; exit 1 }
     Write-Output 'Build OK'
 }

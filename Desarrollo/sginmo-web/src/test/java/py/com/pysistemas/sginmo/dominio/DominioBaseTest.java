@@ -1,9 +1,9 @@
 package py.com.pysistemas.sginmo.dominio;
 
 import org.junit.jupiter.api.Test;
-import py.com.pysistemas.sginmo.dominio.base.Auditable;
-import py.com.pysistemas.sginmo.dominio.base.AuditoriaListener;
-import py.com.pysistemas.sginmo.dominio.base.UsuarioActual;
+import py.com.one.core.Auditable;
+import py.com.one.core.AuditoriaListener;
+import py.com.one.core.UsuarioActual;
 import py.com.pysistemas.sginmo.dominio.enums.*;
 
 import static org.junit.jupiter.api.Assertions.*;

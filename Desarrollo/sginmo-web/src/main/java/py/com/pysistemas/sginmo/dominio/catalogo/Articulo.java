@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import py.com.pysistemas.sginmo.dominio.base.Auditable;
+import py.com.one.core.Auditable;
 
 import java.math.BigDecimal;
 

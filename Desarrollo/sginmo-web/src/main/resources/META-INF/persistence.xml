@@ -5,6 +5,15 @@
              version="3.0">
   <persistence-unit name="sginmoPU" transaction-type="JTA">
     <jta-data-source>java:/jdbc/SGInmoDS</jta-data-source>
+    <!-- Entidades del modulo ONEsystem-security (viven en un JAR de WEB-INF/lib:
+         hay que listarlas, el escaneo automatico solo cubre WEB-INF/classes) -->
+    <class>py.com.one.core.Auditable</class>
+    <class>py.com.one.security.dominio.Usuario</class>
+    <class>py.com.one.security.dominio.Grupo</class>
+    <class>py.com.one.security.dominio.UsuarioGrupo</class>
+    <class>py.com.one.security.dominio.PermisoUsuario</class>
+    <class>py.com.one.security.dominio.PermisoGrupo</class>
+    <class>py.com.one.security.dominio.PreferenciaUsuario</class>
     <properties>
       <!-- El esquema lo administran las migraciones Flyway; Hibernate NUNCA lo toca -->
       <property name="hibernate.hbm2ddl.auto" value="none"/>

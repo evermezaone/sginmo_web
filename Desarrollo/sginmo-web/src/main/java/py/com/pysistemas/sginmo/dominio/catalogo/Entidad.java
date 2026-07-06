@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
-import py.com.pysistemas.sginmo.dominio.base.Auditable;
+import py.com.one.core.Auditable;
 
 /**
  * Listas abiertas configurables (decision de diseño 3 del usuario):
