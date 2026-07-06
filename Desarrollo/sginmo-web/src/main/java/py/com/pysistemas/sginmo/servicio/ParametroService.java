@@ -17,6 +17,10 @@ public class ParametroService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(p) FROM ParametroSistema p WHERE (:f = '' OR lower(p.clave) LIKE :like OR lower(p.descripcion) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -36,6 +40,7 @@ public class ParametroService {
 
     @Transactional
     public ParametroSistema guardar(ParametroSistema parametro, boolean esNuevo) {
+        autorizacion.exigir("parametros", esNuevo ? "CREAR" : "EDITAR");
         if (parametro.getClave() == null || parametro.getClave().isBlank()) {
             throw new NegocioException("La clave es obligatoria");
         }

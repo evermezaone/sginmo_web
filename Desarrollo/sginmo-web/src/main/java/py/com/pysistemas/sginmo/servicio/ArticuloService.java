@@ -22,6 +22,10 @@ public class ArticuloService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     // ── Consultas (paginacion lazy para p:dataTable) ──
 
     /** Rutas JPQL permitidas para ordenar (clave = field de la columna en la vista). */
@@ -99,6 +103,7 @@ public class ArticuloService {
 
     @Transactional
     public Articulo guardar(Articulo articulo) {
+        autorizacion.exigir("articulos", articulo.getId() == null ? "CREAR" : "EDITAR");
         validar(articulo);
         try {
             Articulo resultado;
@@ -121,6 +126,7 @@ public class ArticuloService {
     /** Baja/alta logica: los maestros nunca se borran fisicamente (conservan historial). */
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
+        autorizacion.exigir("articulos", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Articulo a = em.find(Articulo.class, id);
         if (a == null) {
             throw new NegocioException("El artículo no existe");
@@ -134,6 +140,7 @@ public class ArticuloService {
     /** Copia las propiedades de un articulo a otro (clonado, regla 3); omite las ya cargadas. */
     @Transactional
     public void copiarPropiedades(Long origenId, Long destinoId) {
+        autorizacion.exigir("articulos", "CREAR");
         var origen = listarPropiedades(origenId);
         for (var p : origen) {
             Long repetidas = em.createQuery(
@@ -164,6 +171,7 @@ public class ArticuloService {
 
     @Transactional
     public void agregarPropiedad(Long articuloId, String codigo, String valor) {
+        autorizacion.exigir("articulos", "EDITAR");
         if (articuloId == null) {
             throw new NegocioException("Guarde el artículo antes de cargar propiedades");
         }
@@ -191,6 +199,7 @@ public class ArticuloService {
 
     @Transactional
     public void eliminarPropiedad(Long propiedadId) {
+        autorizacion.exigir("articulos", "EDITAR");
         var p = em.find(py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad.class, propiedadId);
         if (p != null) {
             em.remove(p);

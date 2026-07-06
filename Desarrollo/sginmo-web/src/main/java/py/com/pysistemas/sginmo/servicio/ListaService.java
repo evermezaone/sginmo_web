@@ -21,6 +21,10 @@ public class ListaService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     /** Nombres de listas existentes (para el combo selector de la pantalla). */
     public List<String> listas() {
         return em.createQuery("SELECT DISTINCT e.entidad FROM Entidad e ORDER BY e.entidad", String.class)
@@ -38,6 +42,7 @@ public class ListaService {
 
     @Transactional
     public Entidad guardar(Entidad opcion, boolean esNueva) {
+        autorizacion.exigir("listas", esNueva ? "CREAR" : "EDITAR");
         if (opcion.getEntidad() == null || opcion.getEntidad().isBlank()
                 || opcion.getCodigo() == null || opcion.getCodigo().isBlank()) {
             throw new NegocioException("Lista y código son obligatorios");
@@ -68,6 +73,7 @@ public class ListaService {
 
     @Transactional
     public void cambiarEstado(String lista, String codigo, String estadoNuevo) {
+        autorizacion.exigir("listas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         var pk = new py.com.pysistemas.sginmo.dominio.catalogo.EntidadId(lista, codigo);
         Entidad e = em.find(Entidad.class, pk);
         if (e == null) throw new NegocioException("La opción no existe");

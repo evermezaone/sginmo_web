@@ -100,7 +100,8 @@ public class Usuario extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Usuario otro)) return false;
+        if (!(o instanceof Usuario)) return false;
+        Usuario otro = (Usuario) o;
         return id != null && id.equals(otro.id);
     }
 

@@ -37,7 +37,8 @@ public class ParametroSistema extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof ParametroSistema otro)) return false;
+        if (!(o instanceof ParametroSistema)) return false;
+        ParametroSistema otro = (ParametroSistema) o;
         return clave != null && clave.equals(otro.clave);
     }
 

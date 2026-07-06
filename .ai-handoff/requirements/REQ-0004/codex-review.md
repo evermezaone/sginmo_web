@@ -1,31 +1,42 @@
-# REQ-0004 - Auditoria Codex
+# Codex Review - REQ-0004
 
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Auditor:** Codex
-
-## Decision
-
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+Fecha: 2026-07-06
+Auditor: codex
+Resultado: REQUIERE_CAMBIOS
 
 ## Hallazgos
 
-### Bloqueantes
+### 1. Build multi-modulo roto
 
-- Ninguno.
+Se ejecuto desde `Desarrollo/`:
 
-### No Bloqueantes
+```powershell
+..\herramientas\apache-maven-3.9.9\bin\mvn.cmd -q clean package
+```
 
-- Ninguno.
+Resultado: falla de compilacion en `onesystem-security`, con errores en:
 
-## Riesgos
+- `src/main/java/py/com/one/security/dominio/Grupo.java`
+- `PermisoGrupo.java`
+- `PermisoUsuario.java`
+- `PreferenciaUsuario.java`
+- `Usuario.java`
+- `UsuarioGrupo.java`
 
-Ninguno identificado.
+El error apunta a expresiones `instanceof Tipo otro` en `equals`. Mientras esto falle, no hay WAR/JAR verificable y no se puede aprobar seguridad.
 
-## Pruebas Revisadas
+### 2. Permisos aplicados en beans, no en servicios transaccionales
 
-- [ ] Revision estatica
+La revision encontro controles `sesion.puede(...)` en beans JSF (`ArticuloBean`, `UsuarioBean`, `GrupoBean`, etc.), pero los servicios con escrituras (`ArticuloService`, `UsuarioService`, `GrupoService` y servicios de catalogo) no validan permisos ni usan `@RolesAllowed`/interceptor equivalente.
 
-## Pruebas Faltantes
+Esto replica el riesgo explicitamente prohibido por `CODEX.md`: autorizacion solo en UI. La UI puede ocultar botones, pero la autorizacion debe proteger tambien la capa que transacciona.
 
-- [ ] Prueba manual
+## Verificacion adicional
+
+- Leidos `req.md`, `claude-implementation.md`, `test-plan.md` y `preaudit-checklist.md`.
+- Revisados `SeguridadService`, `FiltroAutenticacion`, `LoginBean`, `SesionUsuario`, `UsuarioService`, `GrupoService`, `ArticuloBean`, `ArticuloService`.
+- El login/bloqueo usa bcrypt y `dontRollbackOn`, pero no se audita funcionalmente hasta que el build compile.
+
+## Decision
+
+REQ-0004 debe volver a Claude con cambios.

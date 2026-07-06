@@ -43,7 +43,8 @@ public class PermisoGrupo extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PermisoGrupo otro)) return false;
+        if (!(o instanceof PermisoGrupo)) return false;
+        PermisoGrupo otro = (PermisoGrupo) o;
         return id != null && id.equals(otro.id);
     }
 

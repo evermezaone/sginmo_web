@@ -22,6 +22,10 @@ public class GrupoService {
     @PersistenceContext
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     // ── Consultas ──
 
     public long contar(String filtro) {
@@ -55,6 +59,7 @@ public class GrupoService {
 
     @Transactional
     public Grupo guardar(Grupo grupo) {
+        autorizacion.exigir("grupos", grupo.getId() == null ? "CREAR" : "EDITAR");
         if (grupo.getCodigo() == null || grupo.getCodigo().isBlank()) {
             throw new NegocioException("El código del grupo es obligatorio");
         }
@@ -86,6 +91,7 @@ public class GrupoService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
+        autorizacion.exigir("grupos", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Grupo g = em.find(Grupo.class, id);
         if (g == null) {
             throw new NegocioException("El grupo no existe");
@@ -104,6 +110,7 @@ public class GrupoService {
 
     @Transactional
     public void agregarPermiso(Long grupoId, String pantalla, String accion) {
+        autorizacion.exigir("grupos", "EDITAR");
         if (pantalla == null || pantalla.isBlank() || accion == null || accion.isBlank()) {
             throw new NegocioException("Elija pantalla y acción");
         }
@@ -124,6 +131,7 @@ public class GrupoService {
 
     @Transactional
     public void eliminarPermiso(Long permisoId) {
+        autorizacion.exigir("grupos", "EDITAR");
         var p = em.find(PermisoGrupo.class, permisoId);
         if (p != null) {
             em.remove(p);

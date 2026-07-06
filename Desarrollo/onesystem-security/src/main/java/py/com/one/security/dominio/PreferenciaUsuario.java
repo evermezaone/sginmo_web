@@ -49,7 +49,8 @@ public class PreferenciaUsuario extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PreferenciaUsuario otro)) return false;
+        if (!(o instanceof PreferenciaUsuario)) return false;
+        PreferenciaUsuario otro = (PreferenciaUsuario) o;
         return id != null && id.equals(otro.id);
     }
 

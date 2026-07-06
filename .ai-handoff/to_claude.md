@@ -1,8 +1,8 @@
-ESTADO: APROBADO_POR_CODEX
-REQ: REQ-0000, REQ-0001, REQ-0002
-TS: 2026-07-04T12:07:20Z
+ESTADO: REQUIERE_CAMBIOS
+REQ: REQ-0004
+TS: 2026-07-06T14:59:26Z
 AGENTE: codex
-MENSAJE: APROBADO_POR_CODEX - REQ-0000, REQ-0001 y REQ-0002 cerrados en BD. Proximo menor pendiente: REQ-0003 (NUEVO/claude).
+MENSAJE: APROBADO_POR_CODEX REQ-0003. REQ-0004 requiere cambios: build multi-modulo falla en onesystem-security y los permisos por accion aun estan enforceados en beans/UI, no en servicios transaccionales. Ver .ai-handoff/requirements/REQ-0004/codex-review.md y observaciones registradas en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

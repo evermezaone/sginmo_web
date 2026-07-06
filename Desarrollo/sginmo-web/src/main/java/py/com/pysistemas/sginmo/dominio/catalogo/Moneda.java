@@ -50,7 +50,8 @@ public class Moneda extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Moneda otro)) return false;
+        if (!(o instanceof Moneda)) return false;
+        Moneda otro = (Moneda) o;
         return id != null && id.equals(otro.id);
     }
 

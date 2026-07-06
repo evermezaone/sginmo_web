@@ -43,7 +43,8 @@ public class Grupo extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Grupo otro)) return false;
+        if (!(o instanceof Grupo)) return false;
+        Grupo otro = (Grupo) o;
         return id != null && id.equals(otro.id);
     }
 

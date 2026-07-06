@@ -22,6 +22,10 @@ public class MonedaService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(m) FROM Moneda m WHERE (:f = '' OR lower(m.descripcion) LIKE :like OR lower(m.simbolo) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -50,6 +54,7 @@ public class MonedaService {
 
     @Transactional
     public Moneda guardar(Moneda moneda) {
+        autorizacion.exigir("monedas", moneda.getId() == null ? "CREAR" : "EDITAR");
         validar(moneda);
         try {
             Moneda r = moneda.getId() == null ? persistir(moneda) : em.merge(moneda);
@@ -66,6 +71,7 @@ public class MonedaService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
+        autorizacion.exigir("monedas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Moneda m = em.find(Moneda.class, id);
         if (m == null) throw new NegocioException("La moneda no existe");
         if ("ACTIVO".equals(estadoNuevo)) validar(m);

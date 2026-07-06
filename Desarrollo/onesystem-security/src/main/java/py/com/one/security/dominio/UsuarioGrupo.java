@@ -37,7 +37,8 @@ public class UsuarioGrupo extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof UsuarioGrupo otro)) return false;
+        if (!(o instanceof UsuarioGrupo)) return false;
+        UsuarioGrupo otro = (UsuarioGrupo) o;
         return id != null && id.equals(otro.id);
     }
 

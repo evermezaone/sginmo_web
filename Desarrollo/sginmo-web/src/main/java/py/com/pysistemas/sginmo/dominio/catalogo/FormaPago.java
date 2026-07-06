@@ -96,7 +96,8 @@ public class FormaPago extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FormaPago otro)) return false;
+        if (!(o instanceof FormaPago)) return false;
+        FormaPago otro = (FormaPago) o;
         return id != null && id.equals(otro.id);
     }
 

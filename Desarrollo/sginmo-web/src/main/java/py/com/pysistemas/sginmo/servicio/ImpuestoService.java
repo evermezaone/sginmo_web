@@ -28,6 +28,10 @@ public class ImpuestoService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(i) FROM Impuesto i WHERE (:f = '' OR lower(i.descripcion) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -54,6 +58,7 @@ public class ImpuestoService {
 
     @Transactional
     public Impuesto guardar(Impuesto impuesto, boolean avanzado) {
+        autorizacion.exigir("impuestos", impuesto.getId() == null ? "CREAR" : "EDITAR");
         if (impuesto.getDescripcion() == null || impuesto.getDescripcion().isBlank()) {
             throw new NegocioException("La descripción es obligatoria");
         }
@@ -95,6 +100,7 @@ public class ImpuestoService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
+        autorizacion.exigir("impuestos", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Impuesto i = em.find(Impuesto.class, id);
         if (i == null) throw new NegocioException("El impuesto no existe");
         i.setEstado(estadoNuevo);

@@ -22,6 +22,22 @@
     <primefaces.version>15.0.0</primefaces.version>
   </properties>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Toolchain explicito y reproducible (obs 202 de Codex): Java 21 en todos los modulos -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.13.0</version>
+          <configuration>
+            <release>21</release>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
   <dependencyManagement>
     <dependencies>
       <dependency>

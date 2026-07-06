@@ -23,6 +23,10 @@ public class UsuarioService {
     @PersistenceContext
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     @Inject
     private SeguridadService seguridadService;
 
@@ -67,6 +71,7 @@ public class UsuarioService {
     /** Alta/edicion. passwordPlano: obligatorio al crear; en edicion, si viene, resetea (y fuerza cambio). */
     @Transactional
     public Usuario guardar(Usuario usuario, String passwordPlano, Long empresaDefecto) {
+        autorizacion.exigir("usuarios", usuario.getId() == null ? "CREAR" : "EDITAR");
         if (usuario.getCodigoUsuario() == null || usuario.getCodigoUsuario().isBlank()) {
             throw new NegocioException("El código de usuario es obligatorio");
         }
@@ -128,6 +133,7 @@ public class UsuarioService {
 
     @Transactional
     public void agregarAGrupo(Long usuarioId, Long grupoId) {
+        autorizacion.exigir("usuarios", "EDITAR");
         if (usuarioId == null || grupoId == null) {
             throw new NegocioException("Elija el grupo");
         }
@@ -146,6 +152,7 @@ public class UsuarioService {
 
     @Transactional
     public void quitarDeGrupo(Long usuarioGrupoId) {
+        autorizacion.exigir("usuarios", "EDITAR");
         var ug = em.find(py.com.one.security.dominio.UsuarioGrupo.class, usuarioGrupoId);
         if (ug != null) {
             em.remove(ug);
@@ -154,6 +161,7 @@ public class UsuarioService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo, Long usuarioActualId) {
+        autorizacion.exigir("usuarios", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         if (id != null && id.equals(usuarioActualId) && "INACTIVO".equals(estadoNuevo)) {
             throw new NegocioException("No puede inactivar su propio usuario");
         }
@@ -171,6 +179,7 @@ public class UsuarioService {
     /** Desbloqueo manual sin esperar el vencimiento del bloqueo. */
     @Transactional
     public void desbloquear(Long id) {
+        autorizacion.exigir("usuarios", "EDITAR");
         Usuario u = em.find(Usuario.class, id);
         if (u != null) {
             u.setIntentosFallidos(0);
@@ -190,6 +199,7 @@ public class UsuarioService {
 
     @Transactional
     public void agregarPermiso(Long usuarioId, String pantalla, String accion) {
+        autorizacion.exigir("usuarios", "EDITAR");
         if (pantalla == null || pantalla.isBlank() || accion == null || accion.isBlank()) {
             throw new NegocioException("Elija pantalla y acción");
         }
@@ -210,6 +220,7 @@ public class UsuarioService {
 
     @Transactional
     public void eliminarPermiso(Long permisoId) {
+        autorizacion.exigir("usuarios", "EDITAR");
         var p = em.find(PermisoUsuario.class, permisoId);
         if (p != null) {
             em.remove(p);

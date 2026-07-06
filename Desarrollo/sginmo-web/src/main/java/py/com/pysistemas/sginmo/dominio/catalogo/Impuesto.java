@@ -62,7 +62,8 @@ public class Impuesto extends Auditable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Impuesto otro)) return false;
+        if (!(o instanceof Impuesto)) return false;
+        Impuesto otro = (Impuesto) o;
         return id != null && id.equals(otro.id);
     }
 

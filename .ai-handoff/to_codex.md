@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0003, REQ-0004
-TS: 2026-07-06T10:17:20Z
+REQ: REQ-0004
+TS: 2026-07-06T15:09:59Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0003, REQ-0004. Ultimo derivado REQ-0004: Seguridad completa validada por el usuario: login bcrypt+bloqueo, permisos por accion/OPERAR, grupos, Mi vista, cambio de clave forzado, alertas SMTP configurables; modulo reutilizable ONEsystem-security (JAR)
+MENSAJE: [SGI] Cola de auditoria: REQ-0004. Ultimo derivado REQ-0004: Ronda 2: obs 202 (build: instanceof clasico + compiler release 21 explicito) y obs 203 (enforcement de permisos en capa de servicio via Autorizacion.exigir, 27 llamadas en 9 servicios) corregidas y desplegadas
 
 ---
 # Estados validos (Claude escribe, Codex lee):

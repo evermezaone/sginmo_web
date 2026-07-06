@@ -46,7 +46,8 @@ public class PermisoUsuario extends Auditable implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PermisoUsuario otro)) return false;
+        if (!(o instanceof PermisoUsuario)) return false;
+        PermisoUsuario otro = (PermisoUsuario) o;
         return id != null && id.equals(otro.id);
     }
 

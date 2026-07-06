@@ -21,6 +21,10 @@ public class FormaPagoService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(fp) FROM FormaPago fp WHERE (:f = '' OR lower(fp.codigo) LIKE :like OR lower(fp.descripcion) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -49,6 +53,7 @@ public class FormaPagoService {
 
     @Transactional
     public FormaPago guardar(FormaPago fp) {
+        autorizacion.exigir("formas-pago", fp.getId() == null ? "CREAR" : "EDITAR");
         validar(fp);
         try {
             if (fp.isPorDefecto()) {
@@ -70,6 +75,7 @@ public class FormaPagoService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
+        autorizacion.exigir("formas-pago", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         FormaPago fp = em.find(FormaPago.class, id);
         if (fp == null) throw new NegocioException("La forma de pago no existe");
         if ("ACTIVO".equals(estadoNuevo)) validar(fp);

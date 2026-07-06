@@ -143,7 +143,8 @@ public class Articulo extends Auditable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Articulo otro)) return false;
+        if (!(o instanceof Articulo)) return false;
+        Articulo otro = (Articulo) o;
         return id != null && id.equals(otro.id);
     }
 

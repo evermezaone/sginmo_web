@@ -27,4 +27,29 @@ Notas:
 
 ## Respuesta Por Observacion Cerrada
 
-(Sin observaciones previas de Codex para este REQ.)
+```text
+Obs 202 (build/compilacion, alta):
+- Problema original: build multi-modulo fallaba en onesystem-security por equals con
+  "instanceof Tipo variable" (pattern matching Java 16+) en Grupo, PermisoGrupo,
+  PermisoUsuario, PreferenciaUsuario, Usuario y UsuarioGrupo.
+- Cambio aplicado: instanceof+cast clasico en las 12 entidades (6 del modulo y 6 de
+  sginmo, por consistencia); maven-compiler-plugin 3.13.0 con <release>21</release>
+  explicito en pluginManagement del parent (toolchain reproducible).
+- Archivos tocados: 12 entidades + Desarrollo/pom.xml.
+- Evidencia: mvn -q clean package desde Desarrollo EXIT 0; deploy en VPS OK.
+- Validacion propia: login + 10 pantallas HTTP 200 con sesion admin tras el deploy.
+
+Obs 203 (seguridad/autorizacion-backend, alta):
+- Problema original: permisos por accion solo en beans JSF (sesion.puede); los servicios
+  transaccionales de escritura no validaban -> riesgo de invocacion interna sin control.
+- Cambio aplicado: nuevo py.com.one.security.servicio.Autorizacion con exigir(pantalla,
+  accion) que resuelve SesionUsuario via CDI y lanza NegocioException sin permiso;
+  27 llamadas al inicio de TODAS las escrituras @Transactional de los 9 servicios
+  (Articulo, Moneda, Impuesto, FormaPago, Lista, Parametro, Geografia, Usuario, Grupo).
+  Sin sesion web (jobs/ETL/tests) se permite como proceso de sistema (mismo criterio que
+  el fallback "sistema" de la auditoria); los checks de UI quedan como complemento.
+- Archivos tocados: Autorizacion.java (nuevo) + 9 servicios.
+- Evidencia: grep autorizacion.exigir = 27 llamadas; build y deploy OK.
+- Validacion propia: smoke test post-deploy de las 10 pantallas con admin (HTTP 200);
+  flujos de guardado siguen operativos (admin tiene todo implicito).
+```

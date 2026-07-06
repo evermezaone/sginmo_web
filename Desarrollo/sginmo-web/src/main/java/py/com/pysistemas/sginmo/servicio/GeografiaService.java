@@ -21,6 +21,10 @@ public class GeografiaService {
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
+    /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(u) FROM UbicacionGeografica u WHERE (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -57,6 +61,7 @@ public class GeografiaService {
 
     @Transactional
     public UbicacionGeografica guardar(UbicacionGeografica u) {
+        autorizacion.exigir("geografia", u.getId() == null ? "CREAR" : "EDITAR");
         if (u.getNombre() == null || u.getNombre().isBlank()) {
             throw new NegocioException("El nombre es obligatorio");
         }
@@ -81,6 +86,7 @@ public class GeografiaService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
+        autorizacion.exigir("geografia", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         UbicacionGeografica u = em.find(UbicacionGeografica.class, id);
         if (u == null) throw new NegocioException("La ubicación no existe");
         u.setEstado(estadoNuevo);
