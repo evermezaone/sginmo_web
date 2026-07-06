@@ -67,6 +67,19 @@ public class SeguridadService {
         return u;
     }
 
+    /**
+     * Permisos explicitos del usuario como claves "pantalla:accion" (se cargan una vez
+     * al iniciar sesion). El ADMINISTRADOR no necesita filas: tiene todo implicito.
+     */
+    public java.util.Set<String> permisosDe(Long usuarioId) {
+        return em.createQuery(
+                "SELECT p.pantalla, p.accion FROM PermisoUsuario p WHERE p.usuario = :usuario", Object[].class)
+            .setParameter("usuario", usuarioId)
+            .getResultStream()
+            .map(fila -> fila[0] + ":" + fila[1])
+            .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    }
+
     /** Hash bcrypt para alta/cambio de contrasena (ABM de usuarios). */
     public String hash(String passwordPlano) {
         return BCrypt.hashpw(passwordPlano, BCrypt.gensalt(10));

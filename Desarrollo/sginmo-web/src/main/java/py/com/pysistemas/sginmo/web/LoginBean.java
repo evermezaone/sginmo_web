@@ -29,7 +29,7 @@ public class LoginBean {
             // renovar el id de sesion al autenticar (evita fijacion de sesion)
             var ctx = FacesContext.getCurrentInstance().getExternalContext();
             ((HttpServletRequest) ctx.getRequest()).changeSessionId();
-            sesion.iniciar(usuario);
+            sesion.iniciar(usuario, seguridadService.permisosDe(usuario.getId()));
             return "/index?faces-redirect=true";
         } catch (NegocioException e) {
             FacesContext.getCurrentInstance().addMessage(null,

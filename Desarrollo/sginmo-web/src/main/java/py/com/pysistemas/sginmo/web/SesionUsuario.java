@@ -19,8 +19,27 @@ public class SesionUsuario implements UsuarioActual, Serializable {
 
     private Usuario usuario;
 
-    public void iniciar(Usuario usuario) {
+    /** Permisos explicitos "pantalla:accion" cargados al iniciar sesion (perfil USUARIO). */
+    private java.util.Set<String> permisos = java.util.Set.of();
+
+    public void iniciar(Usuario usuario, java.util.Set<String> permisos) {
         this.usuario = usuario;
+        this.permisos = permisos == null ? java.util.Set.of() : permisos;
+    }
+
+    /**
+     * Autorizacion por accion (REQ-0004): ADMINISTRADOR todo; USUARIO solo permisos
+     * explicitos (pantalla exacta o comodin '*'). Los datos de auditoria requieren
+     * VER_AUDITORIA (decision del usuario 2026-07-05).
+     */
+    public boolean puede(String pantalla, String accion) {
+        if (usuario == null) {
+            return false;
+        }
+        if (isAdministrador()) {
+            return true;
+        }
+        return permisos.contains(pantalla + ":" + accion) || permisos.contains("*:" + accion);
     }
 
     public boolean isLogueado() {

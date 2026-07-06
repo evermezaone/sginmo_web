@@ -35,6 +35,12 @@ public class ArticuloBean implements Serializable {
     @Inject
     private transient CatalogoService catalogoService;
 
+    @Inject
+    private SesionUsuario sesion;
+
+    /** Id de pantalla para permisos por accion (REQ-0004). */
+    public static final String PANTALLA = "articulos";
+
     private LazyDataModel<Articulo> modelo;
     private Articulo seleccionado;
     private String filtroGlobal = "";
@@ -54,6 +60,9 @@ public class ArticuloBean implements Serializable {
 
     /** true si la ultima consulta tenia filtro global o de columna (para diferenciar el mensaje de grilla vacia). */
     private boolean consultaFiltrada;
+
+    /** Dialogo en modo consulta: sin permiso EDITAR se puede VER el detalle pero no tocarlo. */
+    private boolean soloLectura;
 
     @PostConstruct
     public void iniciar() {
@@ -102,11 +111,20 @@ public class ArticuloBean implements Serializable {
 
     // ── Acciones ──
 
+    /** viewAction: sin permiso VER no se entra a la pantalla. */
+    public String verificarAcceso() {
+        return sesion.puede(PANTALLA, "VER") ? null : "/index?faces-redirect=true";
+    }
+
     public void nuevo() {
+        if (!sesion.puede(PANTALLA, "CREAR")) {
+            return;
+        }
         seleccionado = new Articulo();
         propiedades = java.util.List.of();
         limpiarNuevaPropiedad();
         tabActivo = 0;
+        soloLectura = false;
     }
 
     public void editar(Articulo articulo) {
@@ -114,6 +132,7 @@ public class ArticuloBean implements Serializable {
         propiedades = articuloService.listarPropiedades(articulo.getId());
         limpiarNuevaPropiedad();
         tabActivo = 0;
+        soloLectura = !sesion.puede(PANTALLA, "EDITAR");
     }
 
     /** Limpia el buscador global; los filtros de columna los limpia PF('tabla').clearFilters() en el oncomplete. */
@@ -162,6 +181,9 @@ public class ArticuloBean implements Serializable {
     public void guardar() {
         try {
             boolean esNuevo = seleccionado.getId() == null;
+            if (soloLectura || !sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) {
+                return;
+            }
             articuloService.guardar(seleccionado);
             aviso(FacesMessage.SEVERITY_INFO, esNuevo ? "Artículo creado" : "Artículo actualizado",
                     seleccionado.getDescripcion());
@@ -176,6 +198,9 @@ public class ArticuloBean implements Serializable {
     public void cambiarEstado(Articulo articulo) {
         try {
             String nuevo = "ACTIVO".equals(articulo.getEstado()) ? "INACTIVO" : "ACTIVO";
+            if (!sesion.puede(PANTALLA, "ACTIVO".equals(nuevo) ? "REACTIVAR" : "INACTIVAR")) {
+                return;
+            }
             articuloService.cambiarEstado(articulo.getId(), nuevo);
             aviso(FacesMessage.SEVERITY_INFO,
                     "ACTIVO".equals(nuevo) ? "Artículo activado" : "Artículo inactivado",
@@ -216,4 +241,6 @@ public class ArticuloBean implements Serializable {
     public void setTabActivo(int tabActivo) { this.tabActivo = tabActivo; }
 
     public boolean isConsultaFiltrada() { return consultaFiltrada; }
+
+    public boolean isSoloLectura() { return soloLectura; }
 }

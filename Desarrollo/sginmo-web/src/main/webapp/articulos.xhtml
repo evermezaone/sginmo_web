@@ -20,6 +20,10 @@
     </style>
 </h:head>
 <h:body>
+<f:metadata>
+    <!-- sin permiso VER, vuelve a Inicio -->
+    <f:viewAction action="#{articuloBean.verificarAcceso()}"/>
+</f:metadata>
 <div class="contenido">
     <div class="titulo">
         <h2 style="margin:0;">Artículos</h2>
@@ -47,6 +51,7 @@
             <f:facet name="header">
                 <div class="barra-tabla">
                     <p:commandButton value="Nuevo" icon="pi pi-plus"
+                                     rendered="#{sesionUsuario.puede('articulos','CREAR')}"
                                      actionListener="#{articuloBean.nuevo()}"
                                      update=":frmEdicion"
                                      oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
@@ -54,14 +59,18 @@
                                      styleClass="ui-button-outlined" type="button"/>
                     <p:columnToggler datasource="tabla" trigger="btnColumnas"/>
                     <!-- pageOnly: se exporta la pagina visible (la exportacion masiva sera un REQ aparte,
-                         con limite y proceso asincrono, para no tumbar el servidor por error) -->
-                    <p:commandButton icon="pi pi-file" title="Exportar CSV (página visible)" styleClass="ui-button-outlined" ajax="false">
+                         con limite y proceso asincrono, para no tumbar el servidor por error).
+                         Exportar es un PERMISO (EXPORTAR), no un derecho implicito. -->
+                    <p:commandButton icon="pi pi-file" title="Exportar CSV (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('articulos','EXPORTAR')}">
                         <p:dataExporter type="csv" target="tabla" fileName="articulos" pageOnly="true"/>
                     </p:commandButton>
-                    <p:commandButton icon="pi pi-code" title="Exportar XML (página visible)" styleClass="ui-button-outlined" ajax="false">
+                    <p:commandButton icon="pi pi-code" title="Exportar XML (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('articulos','EXPORTAR')}">
                         <p:dataExporter type="xml" target="tabla" fileName="articulos" pageOnly="true"/>
                     </p:commandButton>
-                    <p:commandButton icon="pi pi-file-pdf" title="Exportar PDF (página visible)" styleClass="ui-button-outlined" ajax="false">
+                    <p:commandButton icon="pi pi-file-pdf" title="Exportar PDF (página visible)" styleClass="ui-button-outlined" ajax="false"
+                                     rendered="#{sesionUsuario.puede('articulos','EXPORTAR')}">
                         <p:dataExporter type="pdf" target="tabla" fileName="articulos" pageOnly="true"/>
                     </p:commandButton>
                     <span style="flex:1"></span>
@@ -128,14 +137,30 @@
                 </f:facet>
                 <p:tag value="#{art.estado}" severity="#{art.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
             </p:column>
+            <!-- Datos de auditoria: SOLO administrador o permiso VER_AUDITORIA (ocultas por
+                 defecto; se activan desde el selector de columnas) -->
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('articulos','VER_AUDITORIA')}">
+                <h:outputText value="#{empty art.usuarioModificacion ? art.usuarioCreacion : art.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Fecha modif." visible="false" style="width:9rem; white-space:nowrap;"
+                      rendered="#{sesionUsuario.puede('articulos','VER_AUDITORIA')}">
+                <h:outputText value="#{empty art.fechaModificacion ? art.fechaCreacion : art.fechaModificacion}">
+                    <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/>
+                </h:outputText>
+            </p:column>
             <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
-                <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="ui-button-flat"
+                <!-- con EDITAR: lapiz (edicion); solo con VER: ojo (consulta, dialogo bloqueado) -->
+                <p:commandButton icon="#{sesionUsuario.puede('articulos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 title="#{sesionUsuario.puede('articulos','EDITAR') ? 'Editar' : 'Ver detalle'}"
+                                 styleClass="ui-button-flat"
                                  actionListener="#{articuloBean.editar(art)}"
                                  update=":frmEdicion"
                                  oncomplete="PF('dlgArticulo').show(); try{PF('wtabs').select(0)}catch(e){}"/>
                 <p:commandButton icon="#{art.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
                                  title="#{art.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
                                  styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('articulos', art.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
                                  actionListener="#{articuloBean.cambiarEstado(art)}"
                                  update="tabla mensajes">
                     <p:confirm header="Confirmar"
@@ -167,6 +192,7 @@
                             <div class="campo">
                                 <label>Código *</label>
                                 <p:inputText value="#{articuloBean.seleccionado.codigo}" required="true" label="Código"
+                                             disabled="#{articuloBean.soloLectura}"
                                              requiredMessage="El código es obligatorio" maxlength="25">
                                     <!-- aviso temprano de duplicado al salir del campo (el guardado re-valida igual) -->
                                     <p:ajax event="change" listener="#{articuloBean.verificarCodigo()}"
@@ -176,6 +202,7 @@
                             <div class="campo">
                                 <label>Tipo *</label>
                                 <p:selectOneMenu value="#{articuloBean.seleccionado.tipo}" required="true" label="Tipo"
+                                                 disabled="#{articuloBean.soloLectura}"
                                                  requiredMessage="El tipo es obligatorio">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItem itemLabel="Servicio" itemValue="SERVICIO"/>
@@ -186,12 +213,14 @@
                         <div class="campo">
                             <label>Descripción *</label>
                             <p:inputText value="#{articuloBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                         disabled="#{articuloBean.soloLectura}"
                                          requiredMessage="La descripción es obligatoria" maxlength="150" style="width:100%;"/>
                         </div>
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Impuesto *</label>
                                 <p:selectOneMenu value="#{articuloBean.seleccionado.impuesto}" required="true" label="Impuesto"
+                                                 disabled="#{articuloBean.soloLectura}"
                                                  requiredMessage="El impuesto es obligatorio" converter="impuestoConverter">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.impuestos}" var="imp"
@@ -201,6 +230,7 @@
                             <div class="campo">
                                 <label>Precio unitario (Gs.)</label>
                                 <p:inputNumber value="#{articuloBean.seleccionado.precioUnitario}" label="Precio unitario"
+                                               disabled="#{articuloBean.soloLectura}"
                                                decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
                             </div>
                         </div>
@@ -211,7 +241,8 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Categoría</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.categoriaCodigo}" label="Categoría">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.categoriaCodigo}" label="Categoría"
+                                                 disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="Sin categoría" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.categorias}" var="cat"
                                                    itemLabel="#{cat.descripcion}" itemValue="#{cat.codigo}"/>
@@ -219,7 +250,8 @@
                             </div>
                             <div class="campo">
                                 <label>Unidad de medida</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedidaCodigo}" label="Unidad de medida">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedidaCodigo}" label="Unidad de medida"
+                                                 disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="Sin unidad" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.unidadesMedida}" var="um"
                                                    itemLabel="#{um.descripcion}" itemValue="#{um.codigo}"/>
@@ -229,7 +261,8 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Movimiento de dinero</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.tipoMovimiento}" label="Movimiento de dinero">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.tipoMovimiento}" label="Movimiento de dinero"
+                                                 disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="No aplica" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItem itemLabel="Ingreso" itemValue="INGRESO"/>
                                     <f:selectItem itemLabel="Egreso" itemValue="EGRESO"/>
@@ -238,7 +271,8 @@
                             </div>
                             <div class="campo">
                                 <label>Aplicación (clave del negocio)</label>
-                                <p:inputText value="#{articuloBean.seleccionado.aplicacion}" label="Aplicación" maxlength="30">
+                                <p:inputText value="#{articuloBean.seleccionado.aplicacion}" label="Aplicación" maxlength="30"
+                                             disabled="#{articuloBean.soloLectura}">
                                     <p:ajax event="change" listener="#{articuloBean.verificarAplicacion()}"
                                             process="@this" update=":frmEdicion:msjEdicion"/>
                                 </p:inputText>
@@ -246,7 +280,8 @@
                         </div>
                         <div class="campo">
                             <label>Modifica estado del documento (cuadre)</label>
-                            <p:toggleSwitch value="#{articuloBean.seleccionado.modificaEstado}"/>
+                            <p:toggleSwitch value="#{articuloBean.seleccionado.modificaEstado}"
+                                            disabled="#{articuloBean.soloLectura}"/>
                         </div>
                     </p:tab>
 
@@ -256,17 +291,20 @@
                             <div class="campo">
                                 <label>Stock mínimo</label>
                                 <p:inputNumber value="#{articuloBean.seleccionado.stockMinimo}" label="Stock mínimo"
+                                               disabled="#{articuloBean.soloLectura}"
                                                decimalPlaces="0" thousandSeparator="."/>
                             </div>
                             <div class="campo">
                                 <label>Stock máximo</label>
                                 <p:inputNumber value="#{articuloBean.seleccionado.stockMaximo}" label="Stock máximo"
+                                               disabled="#{articuloBean.soloLectura}"
                                                decimalPlaces="0" thousandSeparator="."/>
                             </div>
                         </div>
                         <div class="campo">
                             <label>Observación</label>
                             <p:inputTextarea value="#{articuloBean.seleccionado.observacion}" rows="3" label="Observación"
+                                             disabled="#{articuloBean.soloLectura}"
                                              maxlength="250" style="width:100%;" autoResize="false"/>
                         </div>
                     </p:tab>
@@ -277,7 +315,8 @@
                         <div class="fila-2" style="align-items:end;">
                             <div class="campo">
                                 <label>Propiedad</label>
-                                <p:selectOneMenu id="cboPropiedad" value="#{articuloBean.nuevaPropiedadCodigo}" label="Propiedad">
+                                <p:selectOneMenu id="cboPropiedad" value="#{articuloBean.nuevaPropiedadCodigo}" label="Propiedad"
+                                                 disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.propiedadesDisponibles}" var="pd"
                                                    itemLabel="#{pd.descripcion}" itemValue="#{pd.codigo}"/>
@@ -287,9 +326,11 @@
                                 <label>Valor</label>
                                 <div style="display:flex; gap:.5rem;">
                                     <p:inputText id="txtValorPropiedad" value="#{articuloBean.nuevaPropiedadValor}"
+                                                 disabled="#{articuloBean.soloLectura}"
                                                  label="Valor" maxlength="100" style="flex:1;"/>
                                     <!-- process parcial: no valida los campos de los otros tabs -->
                                     <p:commandButton icon="pi pi-plus" title="Agregar"
+                                                     rendered="#{!articuloBean.soloLectura}"
                                                      actionListener="#{articuloBean.agregarPropiedad()}"
                                                      process="@this cboPropiedad txtValorPropiedad"
                                                      update="tblPropiedades cboPropiedad txtValorPropiedad :frmEdicion:msjEdicion"/>
@@ -306,6 +347,7 @@
                             </p:column>
                             <p:column style="width:4rem; text-align:center;">
                                 <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
+                                                 rendered="#{!articuloBean.soloLectura}"
                                                  actionListener="#{articuloBean.eliminarPropiedad(prop.id)}"
                                                  process="@this"
                                                  update="tblPropiedades :frmEdicion:msjEdicion"/>
@@ -319,6 +361,7 @@
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgArticulo').hide()"
                                      styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
                     <p:commandButton value="Guardar" icon="pi pi-save"
+                                     rendered="#{!articuloBean.soloLectura}"
                                      actionListener="#{articuloBean.guardar()}"
                                      update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
                 </div>

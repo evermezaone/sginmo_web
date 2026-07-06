@@ -28,7 +28,13 @@ columnas del selector) y ABM de usuarios con cambio de contrasena.
 - [x] Usuario INACTIVO no puede ingresar.
 - [x] Logout invalida la sesion y vuelve al login.
 - [x] La auditoria (usuario_creacion/modificacion) registra el codigo del usuario logueado.
-- [ ] Permisos por accion (ver/crear/editar/inactivar/reactivar/exportar/ver auditoria) + modo solo lectura.
+- [x] Permisos por accion (V6 permiso_usuario): ADMINISTRADOR todo implicito; USUARIO solo
+      permisos explicitos por pantalla+accion (comodin '*'). Verificado con usuario de prueba
+      'consulta' (solo VER en articulos): sin Nuevo, sin exportar, sin inactivar, icono ojo
+      en vez de lapiz y dialogo en modo consulta (campos bloqueados, sin Guardar).
+- [x] Datos de auditoria (Modificado por / Fecha modif. en la grilla, historial futuro) SOLO
+      con VER_AUDITORIA o perfil ADMINISTRADOR (decision del usuario 2026-07-05); columnas
+      ocultas por defecto, se activan desde el selector de columnas.
 - [ ] preferencia_usuario + "Mi vista" (columnas, orden, filtros, tamano de pagina).
 - [ ] ABM de usuarios con cambio de contrasena obligatorio al primer ingreso.
 
