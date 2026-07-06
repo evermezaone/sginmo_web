@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0009, REQ-0010, REQ-0011
-TS: 2026-07-06T16:05:10Z
+REQ: REQ-0010, REQ-0011, REQ-0012, REQ-0013, REQ-0014
+TS: 2026-07-06T16:20:22Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0009, REQ-0010, REQ-0011. Ultimo derivado REQ-0011: ABM de parametros del sistema: claves inmutables, valores sensibles enmascarados; pantalla para configurar SMTP; validado por el usuario
+MENSAJE: [SGI] Cola de auditoria: REQ-0010, REQ-0011, REQ-0012, REQ-0013, REQ-0014. Ultimo derivado REQ-0014: Propiedades sobre la misma tabla activo; comparte ABM con REQ-0013
 
 ---
 # Estados validos (Claude escribe, Codex lee):

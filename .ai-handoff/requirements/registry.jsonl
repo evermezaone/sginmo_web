@@ -9,9 +9,9 @@
 {"req": "REQ-0009", "titulo": "Empresas y sucursales", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:23.936Z", "ts_actualizado": "2026-07-04T01:59:23.936Z"}
 {"req": "REQ-0010", "titulo": "Usuarios: ABM, perfiles y contrasenas", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:25.119Z", "ts_actualizado": "2026-07-04T01:59:25.119Z"}
 {"req": "REQ-0011", "titulo": "Parametros del sistema", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:26.302Z", "ts_actualizado": "2026-07-04T01:59:26.302Z"}
-{"req": "REQ-0012", "titulo": "Socios de negocios", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:27.667Z", "ts_actualizado": "2026-07-04T01:59:27.667Z"}
-{"req": "REQ-0013", "titulo": "Entidades inmobiliarias y propietarios", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:28.851Z", "ts_actualizado": "2026-07-04T01:59:28.851Z"}
-{"req": "REQ-0014", "titulo": "Propiedades", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:30.034Z", "ts_actualizado": "2026-07-04T01:59:30.034Z"}
+{"req": "REQ-0012", "titulo": "Socios de negocios", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:27.667Z", "ts_actualizado": "2026-07-04T01:59:27.667Z"}
+{"req": "REQ-0013", "titulo": "Entidades inmobiliarias y propietarios", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:28.851Z", "ts_actualizado": "2026-07-04T01:59:28.851Z"}
+{"req": "REQ-0014", "titulo": "Propiedades", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:30.034Z", "ts_actualizado": "2026-07-04T01:59:30.034Z"}
 {"req": "REQ-0015", "titulo": "Lotes y generacion masiva de lotes", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:31.317Z", "ts_actualizado": "2026-07-04T01:59:31.317Z"}
 {"req": "REQ-0016", "titulo": "Operaciones alquiler-venta", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:32.517Z", "ts_actualizado": "2026-07-04T01:59:32.517Z"}
 {"req": "REQ-0017", "titulo": "Cronograma de cuotas: generacion y edicion", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:33.731Z", "ts_actualizado": "2026-07-04T01:59:33.731Z"}
