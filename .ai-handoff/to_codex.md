@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0003
-TS: 2026-07-05T19:13:53Z
+REQ: REQ-0003, REQ-0004
+TS: 2026-07-06T10:17:20Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0003. Ultimo derivado REQ-0003: Esquema PostgreSQL fundacional: 36 tablas + v_persona disenadas en revision interactiva con el usuario (11 observaciones aplicadas, aprobacion explicita), seeds con valores reales y 8.276 ubicaciones oficiales INE 2022. Aplicado y verificado en la VPS. Logica BD (triggers/SPs) llega en V4+ por decision de arquitectura.
+MENSAJE: [SGI] Cola de auditoria: REQ-0003, REQ-0004. Ultimo derivado REQ-0004: Seguridad completa validada por el usuario: login bcrypt+bloqueo, permisos por accion/OPERAR, grupos, Mi vista, cambio de clave forzado, alertas SMTP configurables; modulo reutilizable ONEsystem-security (JAR)
 
 ---
 # Estados validos (Claude escribe, Codex lee):

@@ -1,7 +1,7 @@
 {"req": "REQ-0001", "titulo": "Esqueleto Maven + WildFly 40 + PostgreSQL + Flyway", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:13.656Z", "ts_actualizado": "2026-07-04T12:07:20Z"}
 {"req": "REQ-0002", "titulo": "Dominio base: Auditable, listener de auditoria y enums", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:15.321Z", "ts_actualizado": "2026-07-04T12:07:20Z"}
 {"req": "REQ-0003", "titulo": "Esquema PostgreSQL inicial + seed de dominios y parametros", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:16.705Z", "ts_actualizado": "2026-07-04T01:59:16.705Z"}
-{"req": "REQ-0004", "titulo": "Seguridad: login, bcrypt, roles y bloqueo de intentos", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:17.905Z", "ts_actualizado": "2026-07-04T01:59:17.905Z"}
+{"req": "REQ-0004", "titulo": "Seguridad: login, bcrypt, roles y bloqueo de intentos", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:17.905Z", "ts_actualizado": "2026-07-04T01:59:17.905Z"}
 {"req": "REQ-0005", "titulo": "Layout PrimeFaces, menu por rol y contexto empresa-sucursal", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:19.171Z", "ts_actualizado": "2026-07-04T01:59:19.171Z"}
 {"req": "REQ-0006", "titulo": "Componentes genericos ABM y buscador modal", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:20.370Z", "ts_actualizado": "2026-07-04T01:59:20.370Z"}
 {"req": "REQ-0007", "titulo": "Catalogo geografia: paises, departamentos, ciudades y barrios", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:21.603Z", "ts_actualizado": "2026-07-04T01:59:21.603Z"}
