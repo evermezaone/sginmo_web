@@ -1,19 +1,6 @@
-# REQ-0011 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0011
+- [x] Grilla lista los parametros reales (login, SMTP, negocio) con sensibles en '••••'.
+- [x] Edicion de valor operativa; clave deshabilitada al editar.
+- [x] Alta valida clave unica y descripcion obligatoria.
+- [x] Permisos y solo-lectura segun el estandar.
+- [x] Validado por el usuario dentro de la validacion integral del 2026-07-06.

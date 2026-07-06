@@ -1,54 +1,7 @@
-﻿# REQ-0011 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0011
 
 ## Manifiesto Minimo Para Codex
-
-- REQ: REQ-0011
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
-
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+- ParametroSistema (entidad, clave String PK, isSensible()), ParametroService (guardar
+  esNuevo con unicidad de clave + exigir permisos), ParametroBean, parametros.xhtml.
+- Es la pantalla con la que el usuario carga SMTP_CLAVE para activar alertas (REQ-0004).
+- Comandos probados: build+deploy; grilla con ~16 parametros reales y SMTP enmascarado.

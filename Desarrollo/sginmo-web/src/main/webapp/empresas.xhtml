@@ -1,0 +1,185 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{empresaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Empresas y sucursales</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="emp" value="#{empresaBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="#{empresaBean.consultaFiltrada ? 'No hay resultados para esta búsqueda' : 'No hay empresas cargadas'}">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva" icon="pi pi-plus" rendered="#{sesionUsuario.puede('empresas','CREAR')}"
+                                     actionListener="#{empresaBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgEmpresa').show(); try{PF('wtabsEmp').select(0)}catch(e){}"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{empresaBean.filtroGlobal}" placeholder="Buscar razón social o RUC" style="width:15rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Razón social" toggleable="false">
+                <h:outputText value="#{emp.razonSocial}"/>
+                <h:outputText value=" (#{emp.nombreFantasia})" rendered="#{not empty emp.nombreFantasia}"
+                              style="color:#6c757d;"/>
+            </p:column>
+            <p:column headerText="RUC" style="width:9rem; white-space:nowrap;">
+                <h:outputText value="#{emp.persona.numeroDocumento}#{empty emp.persona.digitoVerificador ? '' : '-'}#{emp.persona.digitoVerificador}"
+                              style="font-family:monospace;"/>
+            </p:column>
+            <p:column headerText="Teléfono" style="width:9rem;">
+                <h:outputText value="#{emp.persona.telefono}"/>
+            </p:column>
+            <p:column headerText="Estado" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{emp.persona.estado}" severity="#{emp.persona.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('empresas','VER_AUDITORIA')}">
+                <h:outputText value="#{empty emp.usuarioModificacion ? emp.usuarioCreacion : emp.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('empresas','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{empresaBean.editar(emp)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgEmpresa').show(); try{PF('wtabsEmp').select(0)}catch(e){}"/>
+                <p:commandButton icon="#{emp.persona.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('empresas', emp.persona.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{empresaBean.cambiarEstado(emp)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{emp.persona.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} #{emp.razonSocial}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Empresa" widgetVar="dlgEmpresa" modal="true" resizable="false"
+              responsive="true" width="680" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty empresaBean.seleccionado}">
+                <p:tabView id="tabs" widgetVar="wtabsEmp" activeIndex="#{empresaBean.tabActivo}">
+                    <p:tab title="Principal">
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Razón social *</label>
+                                <p:inputText value="#{empresaBean.seleccionado.razonSocial}" required="true" label="Razón social"
+                                             disabled="#{empresaBean.soloLectura}"
+                                             requiredMessage="La razón social es obligatoria" maxlength="180"/>
+                            </div>
+                            <div class="campo">
+                                <label>Nombre de fantasía</label>
+                                <p:inputText value="#{empresaBean.seleccionado.nombreFantasia}" label="Nombre de fantasía"
+                                             disabled="#{empresaBean.soloLectura}" maxlength="120"/>
+                            </div>
+                        </div>
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>RUC / documento *</label>
+                                <p:inputText value="#{empresaBean.seleccionado.persona.numeroDocumento}" required="true" label="RUC"
+                                             disabled="#{empresaBean.soloLectura}"
+                                             requiredMessage="El RUC es obligatorio" maxlength="20"/>
+                            </div>
+                            <div class="campo">
+                                <label>DV</label>
+                                <p:inputText value="#{empresaBean.seleccionado.persona.digitoVerificador}" label="DV"
+                                             disabled="#{empresaBean.soloLectura}" maxlength="1" style="width:4rem;"/>
+                            </div>
+                            <div class="campo">
+                                <label>Teléfono</label>
+                                <p:inputText value="#{empresaBean.seleccionado.persona.telefono}" label="Teléfono"
+                                             disabled="#{empresaBean.soloLectura}" maxlength="20"/>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Dirección</label>
+                            <p:inputText value="#{empresaBean.seleccionado.persona.direccion}" label="Dirección"
+                                         disabled="#{empresaBean.soloLectura}" maxlength="180" style="width:100%;"/>
+                        </div>
+                        <div class="campo">
+                            <label>Email</label>
+                            <p:inputText value="#{empresaBean.seleccionado.persona.email}" label="Email" type="email"
+                                         disabled="#{empresaBean.soloLectura}" maxlength="180" style="width:100%;"/>
+                        </div>
+                    </p:tab>
+
+                    <p:tab title="Sucursales"
+                           disabled="#{empresaBean.seleccionado.id == null}"
+                           titletip="#{empresaBean.seleccionado.id == null ? 'Guarde la empresa para cargar sucursales' : ''}">
+                        <div class="fila-3" style="align-items:end;">
+                            <div class="campo">
+                                <label>Descripción *</label>
+                                <p:inputText id="sucDesc" value="#{empresaBean.sucursalNueva.descripcion}" label="Descripción"
+                                             maxlength="180"/>
+                            </div>
+                            <div class="campo">
+                                <label>Dirección *</label>
+                                <p:inputText id="sucDir" value="#{empresaBean.sucursalNueva.direccion}" label="Dirección"
+                                             maxlength="180"/>
+                            </div>
+                            <div class="campo">
+                                <label>Teléfono</label>
+                                <div style="display:flex; gap:.5rem;">
+                                    <p:inputText id="sucTel" value="#{empresaBean.sucursalNueva.telefono}" label="Teléfono"
+                                                 maxlength="20" style="flex:1;"/>
+                                    <p:commandButton icon="pi pi-plus" title="Agregar sucursal"
+                                                     rendered="#{!empresaBean.soloLectura}"
+                                                     actionListener="#{empresaBean.agregarSucursal()}"
+                                                     process="@this sucDesc sucDir sucTel sucDef"
+                                                     update="tblSucursales sucDesc sucDir sucTel sucDef :frmEdicion:msjEdicion"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Por defecto (única por empresa)</label>
+                            <p:toggleSwitch id="sucDef" value="#{empresaBean.sucursalNueva.porDefecto}"
+                                            disabled="#{empresaBean.soloLectura}"/>
+                        </div>
+                        <p:dataTable id="tblSucursales" var="suc" value="#{empresaBean.sucursales}"
+                                     emptyMessage="Sin sucursales cargadas" style="margin-top:.5rem;">
+                            <p:column headerText="Descripción">
+                                <h:outputText value="#{suc.descripcion}"/>
+                                <p:tag value="POR DEFECTO" severity="info" style="margin-left:.4rem;" rendered="#{suc.porDefecto}"/>
+                            </p:column>
+                            <p:column headerText="Dirección">
+                                <h:outputText value="#{suc.direccion}"/>
+                            </p:column>
+                            <p:column headerText="Estado" style="width:6.5rem; text-align:center;">
+                                <p:tag value="#{suc.estado}" severity="#{suc.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+                            </p:column>
+                            <p:column style="width:4rem; text-align:center;">
+                                <p:commandButton icon="#{suc.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                                 styleClass="ui-button-flat" title="#{suc.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
+                                                 rendered="#{!empresaBean.soloLectura}"
+                                                 actionListener="#{empresaBean.cambiarEstadoSucursal(suc)}"
+                                                 process="@this"
+                                                 update="tblSucursales :frmEdicion:msjEdicion"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgEmpresa').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!empresaBean.soloLectura}"
+                                     actionListener="#{empresaBean.guardar()}"
+                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

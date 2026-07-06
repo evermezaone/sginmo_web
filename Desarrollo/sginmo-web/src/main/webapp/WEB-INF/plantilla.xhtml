@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="primefaces">
 <h:head>
@@ -73,6 +74,8 @@
                       rendered="#{sesionUsuario.puede('geografia','VER')}"><i class="pi pi-map-marker"></i> Geografía</h:outputLink>
 
         <div class="seccion">Configuración</div>
+        <h:outputLink styleClass="item" value="empresas.xhtml"
+                      rendered="#{sesionUsuario.puede('empresas','VER')}"><i class="pi pi-building"></i> Empresas</h:outputLink>
         <h:outputLink styleClass="item" value="listas.xhtml"
                       rendered="#{sesionUsuario.puede('listas','VER')}"><i class="pi pi-list"></i> Listas del sistema</h:outputLink>
         <h:outputLink styleClass="item" value="parametros.xhtml"
@@ -93,6 +96,15 @@
         <div class="barra">
             <span class="titulo-pagina"><ui:insert name="titulo">SGInmo</ui:insert></span>
             <span class="espacio"></span>
+            <!-- Contexto empresa/sucursal en sesion (REQ-0009): la eleccion se recuerda por usuario -->
+            <span class="quien" style="white-space:nowrap;">#{contextoEmpresa.nombreEmpresa}</span>
+            <h:form rendered="#{contextoEmpresa.tieneSucursales}" style="display:inline;">
+                <p:selectOneMenu value="#{contextoEmpresa.sucursalActiva}" title="Sucursal activa" style="min-width:10rem;">
+                    <f:selectItems value="#{contextoEmpresa.sucursales}" var="suc"
+                                   itemLabel="#{suc.descripcion}" itemValue="#{suc.id}"/>
+                    <p:ajax listener="#{contextoEmpresa.guardarSeleccion()}"/>
+                </p:selectOneMenu>
+            </h:form>
             <span class="quien">
                 <strong>#{sesionUsuario.codigoUsuario()}</strong>
                 <h:outputText value=" (#{sesionUsuario.usuario.perfil})" rendered="#{sesionUsuario.logueado}"/>

@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0008, REQ-0010
-TS: 2026-07-06T15:50:02Z
+REQ: REQ-0009, REQ-0010, REQ-0011
+TS: 2026-07-06T16:05:10Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0008, REQ-0010. Ultimo derivado REQ-0008: Ronda 2: obs 204 (factores simplificado alineados al seed V2), 205 (criterio corregido a 13 requisitos con evidencia doc 09/V1) y 206 (estandar completo replicado + Mi vista extraida a servicio reutilizable VistaUsuario del modulo) corregidas y desplegadas
+MENSAJE: [SGI] Cola de auditoria: REQ-0009, REQ-0010, REQ-0011. Ultimo derivado REQ-0011: ABM de parametros del sistema: claves inmutables, valores sensibles enmascarados; pantalla para configurar SMTP; validado por el usuario
 
 ---
 # Estados validos (Claude escribe, Codex lee):

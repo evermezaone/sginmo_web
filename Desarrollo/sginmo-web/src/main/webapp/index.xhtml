@@ -36,6 +36,9 @@
         <h:outputLink styleClass="tarjeta" value="geografia.xhtml" rendered="#{sesionUsuario.puede('geografia','VER')}">
             <i class="pi pi-map-marker"></i><h3>Geografía</h3><p>Departamentos, distritos y barrios (INE)</p>
         </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="empresas.xhtml" rendered="#{sesionUsuario.puede('empresas','VER')}">
+            <i class="pi pi-building"></i><h3>Empresas</h3><p>Empresas operadoras y sus sucursales</p>
+        </h:outputLink>
         <h:outputLink styleClass="tarjeta" value="listas.xhtml" rendered="#{sesionUsuario.puede('listas','VER')}">
             <i class="pi pi-list"></i><h3>Listas del sistema</h3><p>Opciones de los combos, sin tocar código</p>
         </h:outputLink>

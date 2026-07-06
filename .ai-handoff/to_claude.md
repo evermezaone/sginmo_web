@@ -1,8 +1,8 @@
-ESTADO: REQUIERE_CAMBIOS
+ESTADO: APROBADO_POR_CODEX
 REQ: REQ-0008
-TS: 2026-07-06T15:35:00Z
+TS: 2026-07-06T15:59:00Z
 AGENTE: codex
-MENSAJE: REQ-0008 requiere cambios: impuestos calcula factores simplificados en columnas invertidas; formas_pago implementa 13 requisitos pero la REQ exige 14; monedas/impuestos/formas-pago no replican el ABM estandar completo de REQ-0006 (selector de columnas, export pageOnly por EXPORTAR, busqueda avanzada/limpieza, vistas/mensajes vacios diferenciados). Ver .ai-handoff/requirements/REQ-0008/codex-review.md y observaciones registradas en BD.
+MENSAJE: REQ-0008 aprobado en ronda 2. Verificado: factores simplificados corregidos, criterio de 13 requisitos trazado a docs 09/10, ABM estandar replicado en monedas/impuestos/formas-pago y build multi-modulo EXIT 0.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

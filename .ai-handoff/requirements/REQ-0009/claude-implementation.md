@@ -1,54 +1,14 @@
-﻿# REQ-0009 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0009
 
 ## Manifiesto Minimo Para Codex
-
-- REQ: REQ-0009
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
-
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+- Dominio py.com.pysistemas.sginmo.dominio.persona: Persona (subset), PersonaJuridica
+  (@MapsId PK compartida, cascade PERSIST), PersonaRol, Sucursal.
+- EmpresaService: listar/contar por rol EMPRESA (EXISTS PersonaRol), guardar transaccional
+  (persona+juridica+rol), cambiarEstado sobre persona.estado, sucursales (por_defecto unica
+  por empresa via UPDATE previo), exigir() de permisos en todas las escrituras.
+- EmpresaBean + empresas.xhtml (patron estandar, pestanas Principal/Sucursales).
+- ContextoEmpresa (@SessionScoped, SGInmo — el modulo de seguridad queda generico):
+  carga lazy de empresa+sucursales activas; seleccion persistida via PreferenciaService.
+- plantilla.xhtml: item de menu Empresas + selector de sucursal en la barra; index: tarjeta.
+- V13__empresas_sucursales.sql (APLICADA en VPS a mano, Flyway sin cablear).
+- Comandos probados: mvn -q clean package EXIT 0; deploy-vps.ps1; verificacion por HTML.

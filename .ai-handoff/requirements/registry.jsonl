@@ -6,9 +6,9 @@
 {"req": "REQ-0006", "titulo": "Componentes genericos ABM y buscador modal", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:20.370Z", "ts_actualizado": "2026-07-04T01:59:20.370Z"}
 {"req": "REQ-0007", "titulo": "Catalogo geografia: paises, departamentos, ciudades y barrios", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:21.603Z", "ts_actualizado": "2026-07-04T01:59:21.603Z"}
 {"req": "REQ-0008", "titulo": "Catalogos: monedas, formas de pago e impuestos", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:22.780Z", "ts_actualizado": "2026-07-04T01:59:22.780Z"}
-{"req": "REQ-0009", "titulo": "Empresas y sucursales", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:23.936Z", "ts_actualizado": "2026-07-04T01:59:23.936Z"}
+{"req": "REQ-0009", "titulo": "Empresas y sucursales", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:23.936Z", "ts_actualizado": "2026-07-04T01:59:23.936Z"}
 {"req": "REQ-0010", "titulo": "Usuarios: ABM, perfiles y contrasenas", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:25.119Z", "ts_actualizado": "2026-07-04T01:59:25.119Z"}
-{"req": "REQ-0011", "titulo": "Parametros del sistema", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:26.302Z", "ts_actualizado": "2026-07-04T01:59:26.302Z"}
+{"req": "REQ-0011", "titulo": "Parametros del sistema", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:26.302Z", "ts_actualizado": "2026-07-04T01:59:26.302Z"}
 {"req": "REQ-0012", "titulo": "Socios de negocios", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:27.667Z", "ts_actualizado": "2026-07-04T01:59:27.667Z"}
 {"req": "REQ-0013", "titulo": "Entidades inmobiliarias y propietarios", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:28.851Z", "ts_actualizado": "2026-07-04T01:59:28.851Z"}
 {"req": "REQ-0014", "titulo": "Propiedades", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:30.034Z", "ts_actualizado": "2026-07-04T01:59:30.034Z"}
