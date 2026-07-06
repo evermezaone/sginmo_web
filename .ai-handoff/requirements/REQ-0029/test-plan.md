@@ -1,19 +1,3 @@
-# REQ-0029 - Plan De Pruebas
-
-**Fecha:** 2026-07-04
-
-## Pruebas Tecnicas
-
-| ID | Escenario | Resultado esperado | Resultado real |
-|---|---|---|---|
-| T01 | [escenario] | [esperado] | pendiente |
-
-## Pruebas Manuales
-
-| ID | Escenario | Pasos | Resultado esperado | Resultado real |
-|---|---|---|---|---|
-| M01 | [escenario] | [pasos] | [esperado] | pendiente |
-
-## Datos De Prueba
-
-[Datos necesarios]
+# Test Plan - REQ-0029
+- [x] Pantalla/reporte responde correctamente en la VPS.
+- [ ] Validacion visual del usuario: PENDIENTE.

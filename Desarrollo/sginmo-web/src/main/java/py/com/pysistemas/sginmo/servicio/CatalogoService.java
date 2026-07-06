@@ -42,6 +42,14 @@ public class CatalogoService {
             .getResultList();
     }
 
+    /** Articulos ACTIVOS (para combos de concepto en ingresos/egresos y liquidaciones). */
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Articulo> articulosActivos() {
+        return em.createQuery(
+                "SELECT a FROM Articulo a WHERE a.estado = 'ACTIVO' ORDER BY a.descripcion",
+                py.com.pysistemas.sginmo.dominio.catalogo.Articulo.class)
+            .getResultList();
+    }
+
     /** Id de la moneda LOCAL (guarani) para cobros en moneda base; primera moneda si no hay LOCAL. */
     public Long monedaLocalId() {
         var locales = em.createQuery(

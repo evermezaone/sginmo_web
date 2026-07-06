@@ -1,54 +1,8 @@
-﻿# REQ-0025 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0025
 
 ## Manifiesto Minimo Para Codex
+ABM de liquidacion (una por operacion, UNIQUE) + liquidacion_detalle: al finalizar un alquiler se descuentan los gastos de la garantia. saldo = total_garantia - total_gastos (positivo=devolver al inquilino, negativo=cobrar). Renglones de gasto con articulo+monto, total y saldo calculados en vivo.
 
-- REQ: REQ-0025
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos:** Liquidacion/LiquidacionGasto, LiquidacionService, LiquidacionBean, liquidaciones.xhtml, V21.
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn clean package EXIT 0; deploy; verificacion HTTP/PDF contra la VPS.

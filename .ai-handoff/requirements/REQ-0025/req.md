@@ -1,25 +1,13 @@
 # REQ-0025 - Liquidaciones y plantilla de gastos
 
-**Numero:** REQ-0025
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+ABM de liquidacion (una por operacion, UNIQUE) + liquidacion_detalle: al finalizar un alquiler se descuentan los gastos de la garantia. saldo = total_garantia - total_gastos (positivo=devolver al inquilino, negativo=cobrar). Renglones de gasto con articulo+monto, total y saldo calculados en vivo.
 
 ## Criterios De Aceptacion
+- [x] Funcionalidad implementada con estandar y enforcement de permisos.
+- [x] Desplegado y verificado (HTTP 200 / PDF real).
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+## Bloqueo Formal Documentado
+Validacion visual del usuario PENDIENTE (desarrollo continuo).

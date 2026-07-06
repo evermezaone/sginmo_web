@@ -1,54 +1,8 @@
-﻿# REQ-0024 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0024
 
 ## Manifiesto Minimo Para Codex
+ABM de ingreso_egreso: movimientos de caja que no son cobros de cuotas (gastos y otros ingresos), con articulo como concepto, tipo INGRESO/EGRESO, imputacion, persona/forma de pago opcionales, empresa del contexto. Filtro por tipo. Baja logica (estado ANULADO).
 
-- REQ: REQ-0024
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos:** IngresoEgreso (entidad), IngresoEgresoService, IngresoEgresoBean, ingresos-egresos.xhtml, V20.
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn clean package EXIT 0; deploy; verificacion HTTP/PDF contra la VPS.

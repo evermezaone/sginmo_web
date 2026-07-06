@@ -1,25 +1,13 @@
 # REQ-0024 - Ingresos-egresos e items
 
-**Numero:** REQ-0024
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+ABM de ingreso_egreso: movimientos de caja que no son cobros de cuotas (gastos y otros ingresos), con articulo como concepto, tipo INGRESO/EGRESO, imputacion, persona/forma de pago opcionales, empresa del contexto. Filtro por tipo. Baja logica (estado ANULADO).
 
 ## Criterios De Aceptacion
+- [x] Funcionalidad implementada con estandar y enforcement de permisos.
+- [x] Desplegado y verificado (HTTP 200 / PDF real).
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+## Bloqueo Formal Documentado
+Validacion visual del usuario PENDIENTE (desarrollo continuo).

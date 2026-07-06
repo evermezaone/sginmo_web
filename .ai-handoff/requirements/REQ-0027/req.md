@@ -1,25 +1,13 @@
 # REQ-0027 - Reportes de propiedades
 
-**Numero:** REQ-0027
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+Listado de activos/propiedades en PDF estandar (OpenPDF): nombre, tipo, precios y situacion. Boton PDF en la pantalla de activos.
 
 ## Criterios De Aceptacion
+- [x] Funcionalidad implementada con estandar y enforcement de permisos.
+- [x] Desplegado y verificado (HTTP 200 / PDF real).
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+## Bloqueo Formal Documentado
+Validacion visual del usuario PENDIENTE (desarrollo continuo).

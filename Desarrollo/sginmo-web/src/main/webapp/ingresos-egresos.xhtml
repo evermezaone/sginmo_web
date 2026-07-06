@@ -1,0 +1,111 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{ingresoEgresoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Ingresos y egresos</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="ie" value="#{ingresoEgresoBean.modelo}"
+                     lazy="true" paginator="true" rows="12"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="No hay movimientos registrados">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus" rendered="#{sesionUsuario.puede('ingresos-egresos','CREAR')}"
+                                     actionListener="#{ingresoEgresoBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgIE').show()"/>
+                    <p:selectOneMenu value="#{ingresoEgresoBean.filtroTipo}" style="min-width:9rem;">
+                        <f:selectItem itemLabel="Todos" itemValue=""/>
+                        <f:selectItem itemLabel="Ingresos" itemValue="INGRESO"/>
+                        <f:selectItem itemLabel="Egresos" itemValue="EGRESO"/>
+                        <p:ajax update="tabla"/>
+                    </p:selectOneMenu>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{ingresoEgresoBean.filtroGlobal}" placeholder="Buscar en observación" style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="#" style="width:5rem;"><h:outputText value="#{ie.id}"/></p:column>
+            <p:column headerText="Fecha" style="width:8rem;"><h:outputText value="#{ie.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+            <p:column headerText="Tipo" style="width:7rem;"><p:tag value="#{ie.tipo}" severity="#{ie.tipo eq 'INGRESO' ? 'success' : 'warning'}"/></p:column>
+            <p:column headerText="Concepto"><h:outputText value="#{ingresoEgresoBean.concepto(ie.articulo)}"/></p:column>
+            <p:column headerText="Monto" style="width:10rem; text-align:right;"><h:outputText value="#{ie.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+            <p:column headerText="Estado" style="width:8rem; text-align:center;"><p:tag value="#{ie.estado}" severity="#{ie.estado eq 'ANULADO' ? 'danger' : 'info'}"/></p:column>
+            <p:column headerText="Acciones" style="width:6rem; text-align:center;" exportable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('ingresos-egresos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{ingresoEgresoBean.editar(ie)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgIE').show()"/>
+                <p:commandButton icon="pi pi-times" styleClass="ui-button-flat ui-button-danger" title="Anular"
+                                 rendered="#{ie.estado ne 'ANULADO' and sesionUsuario.puede('ingresos-egresos','INACTIVAR')}"
+                                 actionListener="#{ingresoEgresoBean.anular(ie)}" update="tabla mensajes">
+                    <p:confirm header="Confirmar" message="¿Anular el movimiento?" icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Ingreso / Egreso" widgetVar="dlgIE" modal="true" resizable="false"
+              responsive="true" width="560" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty ingresoEgresoBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo"><label>Tipo *</label>
+                        <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.tipo}" label="Tipo" disabled="#{ingresoEgresoBean.soloLectura}">
+                            <f:selectItem itemLabel="Egreso (gasto)" itemValue="EGRESO"/>
+                            <f:selectItem itemLabel="Ingreso" itemValue="INGRESO"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Fecha *</label>
+                        <p:datePicker value="#{ingresoEgresoBean.seleccionado.fecha}" pattern="dd/MM/yyyy" disabled="#{ingresoEgresoBean.soloLectura}"/></div>
+                </div>
+                <div class="campo"><label>Concepto (artículo) *</label>
+                    <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.articulo}" label="Concepto" filter="true" filterMatchMode="contains" disabled="#{ingresoEgresoBean.soloLectura}">
+                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{ingresoEgresoBean.articulos}" var="a" itemLabel="#{a.descripcion}" itemValue="#{a.id}"/>
+                    </p:selectOneMenu></div>
+                <div class="fila-2">
+                    <div class="campo"><label>Monto *</label>
+                        <p:inputNumber value="#{ingresoEgresoBean.seleccionado.monto}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," disabled="#{ingresoEgresoBean.soloLectura}"/></div>
+                    <div class="campo"><label>Imputación</label>
+                        <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.tipoImputacionCodigo}" label="Imputación" disabled="#{ingresoEgresoBean.soloLectura}">
+                            <f:selectItem itemLabel="Sin imputar" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{ingresoEgresoBean.imputaciones}" var="im" itemLabel="#{im.descripcion}" itemValue="#{im.codigo}"/>
+                        </p:selectOneMenu></div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo"><label>Persona (opcional)</label>
+                        <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.persona}" label="Persona" filter="true" filterMatchMode="contains" disabled="#{ingresoEgresoBean.soloLectura}">
+                            <f:selectItem itemLabel="Sin persona" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{ingresoEgresoBean.personas}" var="pe" itemLabel="#{pe.nombre}" itemValue="#{pe.id}"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Forma de pago</label>
+                        <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.formaPago}" label="Forma de pago" disabled="#{ingresoEgresoBean.soloLectura}">
+                            <f:selectItem itemLabel="Efectivo" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{ingresoEgresoBean.formasPago}" var="fp" itemLabel="#{fp.descripcion}" itemValue="#{fp.id}"/>
+                        </p:selectOneMenu></div>
+                </div>
+                <div class="campo"><label>Observación</label>
+                    <p:inputTextarea value="#{ingresoEgresoBean.seleccionado.observacion}" rows="2" style="width:100%;" maxlength="250" disabled="#{ingresoEgresoBean.soloLectura}"/></div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgIE').hide()" styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!ingresoEgresoBean.soloLectura}"
+                                     actionListener="#{ingresoEgresoBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

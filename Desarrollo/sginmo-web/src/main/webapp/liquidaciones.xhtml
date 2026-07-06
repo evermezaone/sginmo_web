@@ -1,0 +1,115 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{liquidacionBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Liquidaciones</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="row" value="#{liquidacionBean.modelo}"
+                     lazy="true" paginator="true" rows="12"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="No hay liquidaciones">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva liquidación" icon="pi pi-plus" rendered="#{sesionUsuario.puede('liquidaciones','CREAR')}"
+                                     actionListener="#{liquidacionBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgLiq').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{liquidacionBean.filtroGlobal}" placeholder="Buscar por cliente" style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="#" style="width:5rem;"><h:outputText value="#{row[0].id}"/></p:column>
+            <p:column headerText="Fecha" style="width:8rem;"><h:outputText value="#{row[0].fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+            <p:column headerText="Cliente"><h:outputText value="#{row[1]}"/></p:column>
+            <p:column headerText="Operación" style="width:7rem;"><h:outputText value="#{row[2]}"/></p:column>
+            <p:column headerText="Garantía" style="width:9rem; text-align:right;"><h:outputText value="#{row[0].totalGarantia}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+            <p:column headerText="Gastos" style="width:9rem; text-align:right;"><h:outputText value="#{row[0].totalGastos}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+            <p:column headerText="Saldo" style="width:9rem; text-align:right;">
+                <h:outputText value="#{row[0].saldo}" style="#{row[0].saldo lt 0 ? 'color:#e63946;' : 'color:#2a9d8f;'}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Acciones" style="width:4rem; text-align:center;" exportable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('liquidaciones','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{liquidacionBean.editar(row)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgLiq').show()"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Liquidación" widgetVar="dlgLiq" modal="true" resizable="false"
+              responsive="true" width="640" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty liquidacionBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo"><label>Operación (alquiler) *</label>
+                        <p:selectOneMenu value="#{liquidacionBean.operacionSel}" label="Operación" filter="true" filterMatchMode="contains"
+                                         disabled="#{liquidacionBean.soloLectura or liquidacionBean.seleccionado.id != null}">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{liquidacionBean.operacionesLiquidables}" var="op"
+                                           itemLabel="Op #{op[0]} — #{op[1]}" itemValue="#{op[0]}"/>
+                            <p:ajax listener="#{liquidacionBean.operacionElegida()}" update="grpTotales"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Fecha</label>
+                        <p:datePicker value="#{liquidacionBean.seleccionado.fecha}" pattern="dd/MM/yyyy" disabled="#{liquidacionBean.soloLectura}"/></div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo"><label>Motivo</label>
+                        <p:selectOneMenu value="#{liquidacionBean.seleccionado.motivoCodigo}" label="Motivo" disabled="#{liquidacionBean.soloLectura}">
+                            <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{liquidacionBean.motivos}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.codigo}"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Entregó llaves</label>
+                        <p:toggleSwitch value="#{liquidacionBean.seleccionado.entregoLlaves}" disabled="#{liquidacionBean.soloLectura}"/></div>
+                </div>
+
+                <h4 style="margin:.6rem 0 .3rem;">Gastos descontados de la garantía</h4>
+                <p:commandButton value="Agregar gasto" icon="pi pi-plus" styleClass="ui-button-outlined"
+                                 rendered="#{!liquidacionBean.soloLectura}"
+                                 actionListener="#{liquidacionBean.agregarGasto()}" update="tblGastos grpTotales" process="@this"/>
+                <p:dataTable id="tblGastos" var="g" value="#{liquidacionBean.gastos}" emptyMessage="Sin gastos" style="margin-top:.4rem;">
+                    <p:column headerText="Concepto">
+                        <p:selectOneMenu value="#{g.articulo}" filter="true" filterMatchMode="contains" style="width:100%;" disabled="#{liquidacionBean.soloLectura}">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{liquidacionBean.articulos}" var="a" itemLabel="#{a.descripcion}" itemValue="#{a.id}"/>
+                        </p:selectOneMenu>
+                    </p:column>
+                    <p:column headerText="Monto" style="width:11rem;">
+                        <p:inputNumber value="#{g.monto}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," disabled="#{liquidacionBean.soloLectura}">
+                            <p:ajax event="blur" update="grpTotales"/>
+                        </p:inputNumber>
+                    </p:column>
+                    <p:column style="width:3rem; text-align:center;">
+                        <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" rendered="#{!liquidacionBean.soloLectura}"
+                                         actionListener="#{liquidacionBean.quitarGasto(g)}" process="@this" update="tblGastos grpTotales"/>
+                    </p:column>
+                </p:dataTable>
+
+                <h:panelGroup id="grpTotales" layout="block" style="margin-top:.8rem; text-align:right;">
+                    <div>Garantía: <strong><h:outputText value="#{liquidacionBean.seleccionado.totalGarantia}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong></div>
+                    <div>Total gastos: <strong><h:outputText value="#{liquidacionBean.totalGastos}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong></div>
+                    <div style="font-size:1.1rem;">Saldo a #{liquidacionBean.saldoCalculado lt 0 ? 'cobrar al inquilino' : 'devolver'}:
+                        <strong style="#{liquidacionBean.saldoCalculado lt 0 ? 'color:#e63946;' : 'color:#2a9d8f;'}">
+                            <h:outputText value="#{liquidacionBean.saldoCalculado}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong>
+                    </div>
+                </h:panelGroup>
+
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgLiq').hide()" styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!liquidacionBean.soloLectura}"
+                                     actionListener="#{liquidacionBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

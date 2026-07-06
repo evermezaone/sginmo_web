@@ -66,6 +66,10 @@
                       rendered="#{sesionUsuario.puede('operaciones','VER')}"><i class="pi pi-file-edit"></i> Operaciones</h:outputLink>
         <h:outputLink styleClass="item" value="caja.xhtml"
                       rendered="#{sesionUsuario.puede('caja','VER')}"><i class="pi pi-wallet"></i> Caja y cobros</h:outputLink>
+        <h:outputLink styleClass="item" value="ingresos-egresos.xhtml"
+                      rendered="#{sesionUsuario.puede('ingresos-egresos','VER')}"><i class="pi pi-arrow-right-arrow-left"></i> Ingresos/Egresos</h:outputLink>
+        <h:outputLink styleClass="item" value="liquidaciones.xhtml"
+                      rendered="#{sesionUsuario.puede('liquidaciones','VER')}"><i class="pi pi-calculator"></i> Liquidaciones</h:outputLink>
 
         <div class="seccion">Catálogos</div>
         <h:outputLink styleClass="item" value="personas.xhtml"
