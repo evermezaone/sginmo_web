@@ -95,3 +95,28 @@ Se adopta en el esquema (doc 09 §B.5 actualizado):
 - `P_CREARCOMPROBANTE` hace `COMMIT` dentro del procedure (rompe atomicidad si el caller falla después) — en la web la transacción es una sola por caso de uso.
 - La numeración lee `NUMERO_ACTUAL+1` y actualiza sin lock explícito — en PostgreSQL se hará con `SELECT ... FOR UPDATE` sobre el rango para evitar duplicados bajo concurrencia.
 - El estado del documento se deriva por trigger de UPDATE — sensible al orden de operaciones; en la web será una función pura del saldo dentro del servicio.
+
+## 5. Traducción efectiva a PostgreSQL (2026-07-06)
+
+El fuente PL/SQL real de `P_PAGARCOMPROBANTE` y `p_actualizasaldocuotas` se extrajo de
+Oracle (one@XE, all_source) y se tradujo a PostgreSQL en **V19__reconciliacion_cobro_gestion.sql**,
+reemplazando el FIFO incremental de V17:
+
+- **`f_actualiza_saldo_cuotas(documento)`** = traducción fiel de `p_actualizasaldocuotas`:
+  total_pagado = total − saldo; resetea las cuotas a PENDIENTE/saldo=monto; cascada por
+  numero_cuota (cubre completa → CANCELADO; parcial → PENDIENTE saldo restante). Patrón
+  IDEMPOTENTE: se llama tras cada cobro y tras cada anulación.
+- **`f_cobrar_documento`** valida en el mismo orden que el modo 'C' (saldo≤0, monto≤0,
+  monto>saldo con los mismos mensajes), inserta cobro+cobro_detalle, baja el saldo (trigger)
+  y llama a f_actualiza_saldo_cuotas.
+- **`f_anular_cobro`** repone el saldo del documento y recalcula cuotas (mucho más simple
+  que reabrir en orden inverso).
+- **`f_cobrar_total`** = modo 'T' (pago total en cascada FIFO por fecha/vencimiento).
+
+Correcciones del porting: sin COMMIT interno (transacción del servicio Java), estados
+PENDIENTE/CANCELADO en vez de PE/CA, version optimista (+1). Verificado numéricamente
+incluido el caso de pago parcial de cuota.
+
+PENDIENTE (fase siguiente, no bloqueante): recibo automático (rango RECI) para crédito/
+cta-cte y P_DETALLES_AFECTADOS (afectación a nivel de línea del documento) — relevante solo
+para documentos multi-línea; los cobros de cuota de SGInmo son de línea única.
