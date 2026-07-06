@@ -1,0 +1,113 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{geografiaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Geografía (INE 2022)</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="ubi" value="#{geografiaBean.modelo}"
+                     lazy="true" paginator="true" rows="15"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="Sin resultados">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva" icon="pi pi-plus" rendered="#{sesionUsuario.puede('geografia','CREAR')}"
+                                     actionListener="#{geografiaBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgGeo').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{geografiaBean.filtroGlobal}" placeholder="Buscar nombre o código INE" style="width:16rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Nombre" sortBy="#{ubi.nombre}" toggleable="false">
+                <h:outputText value="#{ubi.nombre}"/>
+            </p:column>
+            <p:column headerText="Nivel" sortBy="#{ubi.nivelCodigo}" style="width:9rem;">
+                <h:outputText value="#{ubi.nivelCodigo}"/>
+            </p:column>
+            <p:column headerText="Pertenece a" style="width:14rem;">
+                <h:outputText value="#{ubi.padre.nombre}"/>
+            </p:column>
+            <p:column headerText="Código INE" sortBy="#{ubi.codigoOficial}" style="width:7.5rem; text-align:right;">
+                <h:outputText value="#{ubi.codigoOficial}" style="font-family:monospace;"/>
+            </p:column>
+            <p:column headerText="Estado" sortBy="#{ubi.estado}" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{ubi.estado}" severity="#{ubi.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('geografia','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{geografiaBean.editar(ubi)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgGeo').show()"/>
+                <p:commandButton icon="#{ubi.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('geografia', ubi.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{geografiaBean.cambiarEstado(ubi)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{ubi.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} #{ubi.nombre}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Ubicación geográfica" widgetVar="dlgGeo" modal="true" resizable="false"
+              responsive="true" width="560" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty geografiaBean.seleccionado}">
+                <div class="campo">
+                    <label>Nombre *</label>
+                    <p:inputText value="#{geografiaBean.seleccionado.nombre}" required="true" label="Nombre"
+                                 disabled="#{geografiaBean.soloLectura}"
+                                 requiredMessage="El nombre es obligatorio" maxlength="150" style="width:100%;"/>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Nivel *</label>
+                        <p:selectOneMenu value="#{geografiaBean.seleccionado.nivelCodigo}" required="true" label="Nivel"
+                                         disabled="#{geografiaBean.soloLectura}"
+                                         requiredMessage="El nivel es obligatorio">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{geografiaBean.niveles}" var="niv"
+                                           itemLabel="#{niv.descripcion}" itemValue="#{niv.codigo}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <label>Código INE (oficial, único)</label>
+                        <p:inputText value="#{geografiaBean.seleccionado.codigoOficial}" label="Código INE"
+                                     disabled="#{geografiaBean.soloLectura}" maxlength="10" style="font-family:monospace;"/>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Pertenece a (escriba para buscar; regla: combos grandes usan autocomplete)</label>
+                    <p:autoComplete value="#{geografiaBean.seleccionado.padre}" label="Pertenece a"
+                                    completeMethod="#{geografiaBean.completarUbicacion}"
+                                    var="u" itemLabel="#{u.etiqueta}" itemValue="#{u}"
+                                    converter="ubicacionConverter" forceSelection="true" dropdown="false"
+                                    disabled="#{geografiaBean.soloLectura}"
+                                    minQueryLength="2" queryDelay="400" style="width:100%;" inputStyle="width:100%;"/>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgGeo').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!geografiaBean.soloLectura}"
+                                     actionListener="#{geografiaBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

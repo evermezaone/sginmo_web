@@ -1,0 +1,141 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{formaPagoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Formas de pago</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="fp" value="#{formaPagoBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="No hay formas de pago cargadas">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva" icon="pi pi-plus" rendered="#{sesionUsuario.puede('formas-pago','CREAR')}"
+                                     actionListener="#{formaPagoBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgFormaPago').show(); try{PF('wtabsFp').select(0)}catch(e){}"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{formaPagoBean.filtroGlobal}" placeholder="Buscar código o descripción" style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Código" sortBy="#{fp.codigo}" style="width:7rem; white-space:nowrap;" toggleable="false">
+                <h:outputText value="#{fp.codigo}"/>
+            </p:column>
+            <p:column headerText="Descripción" sortBy="#{fp.descripcion}">
+                <h:outputText value="#{fp.descripcion}"/>
+                <p:tag value="POR DEFECTO" severity="info" style="margin-left:.4rem;" rendered="#{fp.porDefecto}"/>
+            </p:column>
+            <p:column headerText="Días" style="width:5rem; text-align:right;">
+                <h:outputText value="#{fp.dias}"/>
+            </p:column>
+            <p:column headerText="Habilitada" style="width:7rem; text-align:center;">
+                <p:tag value="#{fp.habilitado ? 'SÍ' : 'NO'}" severity="#{fp.habilitado ? 'success' : 'warning'}"/>
+            </p:column>
+            <p:column headerText="Estado" sortBy="#{fp.estado}" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{fp.estado}" severity="#{fp.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('formas-pago','VER_AUDITORIA')}">
+                <h:outputText value="#{empty fp.usuarioModificacion ? fp.usuarioCreacion : fp.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('formas-pago','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{formaPagoBean.editar(fp)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgFormaPago').show(); try{PF('wtabsFp').select(0)}catch(e){}"/>
+                <p:commandButton icon="#{fp.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('formas-pago', fp.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{formaPagoBean.cambiarEstado(fp)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{fp.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} #{fp.descripcion}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Forma de pago" widgetVar="dlgFormaPago" modal="true" resizable="false"
+              responsive="true" width="640" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty formaPagoBean.seleccionado}">
+                <p:tabView id="tabs" widgetVar="wtabsFp" activeIndex="#{formaPagoBean.tabActivo}">
+                    <p:tab title="Principal">
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Código *</label>
+                                <p:inputText value="#{formaPagoBean.seleccionado.codigo}" required="true" label="Código"
+                                             disabled="#{formaPagoBean.soloLectura}"
+                                             requiredMessage="El código es obligatorio" maxlength="20"/>
+                            </div>
+                            <div class="campo">
+                                <label>Descripción *</label>
+                                <p:inputText value="#{formaPagoBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                             disabled="#{formaPagoBean.soloLectura}"
+                                             requiredMessage="La descripción es obligatoria" maxlength="120"/>
+                            </div>
+                        </div>
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>Días (crédito/cheque)</label>
+                                <p:inputNumber value="#{formaPagoBean.seleccionado.dias}" label="Días"
+                                               disabled="#{formaPagoBean.soloLectura}" decimalPlaces="0" minValue="0"/>
+                            </div>
+                            <div class="campo">
+                                <label>Por defecto (única)</label>
+                                <p:toggleSwitch value="#{formaPagoBean.seleccionado.porDefecto}"
+                                                disabled="#{formaPagoBean.soloLectura}"/>
+                            </div>
+                            <div class="campo">
+                                <label>Habilitada para cobros nuevos</label>
+                                <p:toggleSwitch value="#{formaPagoBean.seleccionado.habilitado}"
+                                                disabled="#{formaPagoBean.soloLectura}"/>
+                            </div>
+                        </div>
+                    </p:tab>
+                    <p:tab title="Requisitos del cobro">
+                        <p style="color:#6c757d; font-size:.8rem; margin:0 0 .8rem;">
+                            Qué datos exige esta forma de pago al registrar un cobro (patrón de Gestión).
+                        </p>
+                        <div class="fila-3">
+                            <div class="campo"><label>Emisor</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereEmisor}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Procesadora</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereProcesador}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Número</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereNumero}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Serie</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereSerie}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Vencimiento</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereVencimiento}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Cuenta</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereCuenta}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Referencia</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereReferencia}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Cobrador</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereCobrador}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Fecha depósito</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereFechaDeposito}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Nº depósito</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereNumeroDeposito}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Estado depósito</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereEstadoDeposito}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Motivo rechazo</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereMotivoRechazo}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                            <div class="campo"><label>Nota de crédito</label><p:toggleSwitch value="#{formaPagoBean.seleccionado.requiereNotaCredito}" disabled="#{formaPagoBean.soloLectura}"/></div>
+                        </div>
+                    </p:tab>
+                </p:tabView>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgFormaPago').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!formaPagoBean.soloLectura}"
+                                     actionListener="#{formaPagoBean.guardar()}"
+                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

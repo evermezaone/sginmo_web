@@ -1,0 +1,87 @@
+package py.com.pysistemas.sginmo.servicio;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import py.com.one.core.ErroresBd;
+import py.com.one.core.NegocioException;
+import py.com.pysistemas.sginmo.dominio.catalogo.FormaPago;
+
+import java.util.List;
+import java.util.Map;
+
+/** ABM de formas de pago (contrato estandar) con habilitado y "por defecto" unico. */
+@ApplicationScoped
+public class FormaPagoService {
+
+    private static final Map<String, String> ORDEN = Map.of(
+        "codigo", "fp.codigo", "descripcion", "fp.descripcion", "estado", "fp.estado");
+
+    @PersistenceContext(unitName = "sginmoPU")
+    private EntityManager em;
+
+    public long contar(String filtro) {
+        var q = em.createQuery("SELECT COUNT(fp) FROM FormaPago fp WHERE (:f = '' OR lower(fp.codigo) LIKE :like OR lower(fp.descripcion) LIKE :like)", Long.class);
+        filtroGlobal(q, filtro);
+        return q.getSingleResult();
+    }
+
+    public List<FormaPago> listar(int primero, int cantidad, String filtro, String ordenarPor, boolean asc) {
+        String ruta = ordenarPor == null ? null : ORDEN.get(ordenarPor);
+        var q = em.createQuery("SELECT fp FROM FormaPago fp WHERE (:f = '' OR lower(fp.codigo) LIKE :like OR lower(fp.descripcion) LIKE :like) ORDER BY "
+                + (ruta == null ? "fp.descripcion" : ruta) + (asc ? " ASC" : " DESC"), FormaPago.class);
+        filtroGlobal(q, filtro);
+        return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
+    }
+
+    private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
+        String f = filtro == null ? "" : filtro.trim().toLowerCase();
+        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+    }
+
+    public boolean existeCodigo(String codigo, Long exceptoId) {
+        if (codigo == null || codigo.isBlank()) return false;
+        return em.createQuery("SELECT COUNT(fp) FROM FormaPago fp WHERE lower(fp.codigo) = :c AND (:id IS NULL OR fp.id <> :id)", Long.class)
+            .setParameter("c", codigo.trim().toLowerCase()).setParameter("id", exceptoId)
+            .getSingleResult() > 0;
+    }
+
+    @Transactional
+    public FormaPago guardar(FormaPago fp) {
+        validar(fp);
+        try {
+            if (fp.isPorDefecto()) {
+                // "por defecto" es unico: se apaga en las demas
+                em.createQuery("UPDATE FormaPago x SET x.porDefecto = false WHERE x.porDefecto = true AND (:id IS NULL OR x.id <> :id)")
+                    .setParameter("id", fp.getId()).executeUpdate();
+            }
+            FormaPago r = fp.getId() == null ? persistir(fp) : em.merge(fp);
+            em.flush();
+            return r;
+        } catch (jakarta.persistence.OptimisticLockException e) {
+            throw new NegocioException("La forma de pago fue modificada por otro usuario. Vuelva a abrir el diálogo y reintente.");
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);
+        }
+    }
+
+    private FormaPago persistir(FormaPago fp) { em.persist(fp); return fp; }
+
+    @Transactional
+    public void cambiarEstado(Long id, String estadoNuevo) {
+        FormaPago fp = em.find(FormaPago.class, id);
+        if (fp == null) throw new NegocioException("La forma de pago no existe");
+        if ("ACTIVO".equals(estadoNuevo)) validar(fp);
+        fp.setEstado(estadoNuevo);
+    }
+
+    private void validar(FormaPago fp) {
+        if (existeCodigo(fp.getCodigo(), fp.getId())) {
+            throw new NegocioException("Ya existe una forma de pago con el código '" + fp.getCodigo() + "'");
+        }
+        if (fp.getDias() != null && fp.getDias() < 0) {
+            throw new NegocioException("Los días no pueden ser negativos");
+        }
+    }
+}

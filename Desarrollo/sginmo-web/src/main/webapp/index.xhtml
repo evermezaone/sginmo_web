@@ -1,52 +1,53 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core"
-      xmlns:p="primefaces">
-<h:head>
-    <title>SGInmo Web</title>
-</h:head>
-<h:body>
-    <div style="max-width: 640px; margin: 4rem auto;">
-        <h:form style="display:flex; justify-content:flex-end; align-items:center; gap:.6rem; margin-bottom:.6rem;">
-            <span style="color:#495057; font-size:.9rem;">
-                <strong>#{sesionUsuario.usuario.codigoUsuario}</strong> (#{sesionUsuario.usuario.perfil})
-            </span>
-            <p:commandButton value="Salir" icon="pi pi-sign-out" ajax="false"
-                             action="#{sesionUsuario.cerrarSesion()}"
-                             styleClass="ui-button-secondary ui-button-outlined"/>
-        </h:form>
-        <p:panel header="#{inicioBean.sistema} — esqueleto operativo">
-            <p style="margin: 0 0 1rem 0;">
-                Versión <strong>#{inicioBean.version}</strong>
-            </p>
-            <p style="margin: 0 0 1rem 0; color: #666;">
-                #{inicioBean.stack}
-            </p>
-            <p style="margin: 0 0 1rem 0;">
-                <h:outputLink value="articulos.xhtml" rendered="#{sesionUsuario.puede('articulos','VER')}">➜ ABM de Artículos (patrón estándar)</h:outputLink>
-            </p>
-            <p style="margin: 0 0 1rem 0;">
-                <h:outputLink value="usuarios.xhtml" rendered="#{sesionUsuario.puede('usuarios','VER')}">➜ Usuarios y permisos</h:outputLink>
-            </p>
-            <p style="margin: 0 0 1rem 0;">
-                <h:outputLink value="grupos.xhtml" rendered="#{sesionUsuario.puede('grupos','VER')}">➜ Grupos de seguridad</h:outputLink>
-            </p>
-            <p style="margin: 0 0 1rem 0;">
-                <h:outputLink value="cambiar-password.xhtml">Cambiar mi contraseña</h:outputLink>
-            </p>
-            <h:form>
-                <p:commandButton value="Probar AJAX (JSF + PrimeFaces)"
-                                 update="resultado"
-                                 icon="pi pi-check"/>
-                <p:outputPanel id="resultado" style="margin-top: 1rem;">
-                    <h:outputText value="Render #{inicioBean.version} — AJAX OK a las "
-                                  rendered="#{facesContext.postback}"/>
-                    <h:outputText value="#{inicioBean.hora}"
-                                  rendered="#{facesContext.postback}"/>
-                </p:outputPanel>
-            </h:form>
-        </p:panel>
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<ui:define name="titulo">Inicio</ui:define>
+<ui:define name="estilos">
+    <style>
+        .tarjetas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+        .tarjeta { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.1rem;
+                   text-decoration: none; color: #343a40; display: block; }
+        .tarjeta:hover { border-color: #457b9d; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+        .tarjeta i { font-size: 1.4rem; color: #457b9d; }
+        .tarjeta h3 { margin: .5rem 0 .2rem; font-size: 1rem; }
+        .tarjeta p { margin: 0; font-size: .8rem; color: #6c757d; }
+    </style>
+</ui:define>
+<ui:define name="contenido">
+    <p style="color:#6c757d; margin: 0 0 1rem;">
+        Bienvenido, <strong>#{sesionUsuario.codigoUsuario()}</strong>.
+        Versión #{inicioBean.version} · #{inicioBean.stack}
+    </p>
+    <div class="tarjetas">
+        <h:outputLink styleClass="tarjeta" value="articulos.xhtml" rendered="#{sesionUsuario.puede('articulos','VER')}">
+            <i class="pi pi-box"></i><h3>Artículos</h3><p>Productos y servicios del sistema</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="monedas.xhtml" rendered="#{sesionUsuario.puede('monedas','VER')}">
+            <i class="pi pi-dollar"></i><h3>Monedas</h3><p>Monedas y precisión decimal</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="impuestos.xhtml" rendered="#{sesionUsuario.puede('impuestos','VER')}">
+            <i class="pi pi-percentage"></i><h3>Impuestos</h3><p>IVA y regímenes especiales</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="formas-pago.xhtml" rendered="#{sesionUsuario.puede('formas-pago','VER')}">
+            <i class="pi pi-credit-card"></i><h3>Formas de pago</h3><p>Medios de cobro y sus requisitos</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="geografia.xhtml" rendered="#{sesionUsuario.puede('geografia','VER')}">
+            <i class="pi pi-map-marker"></i><h3>Geografía</h3><p>Departamentos, distritos y barrios (INE)</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="listas.xhtml" rendered="#{sesionUsuario.puede('listas','VER')}">
+            <i class="pi pi-list"></i><h3>Listas del sistema</h3><p>Opciones de los combos, sin tocar código</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="parametros.xhtml" rendered="#{sesionUsuario.puede('parametros','VER')}">
+            <i class="pi pi-sliders-h"></i><h3>Parámetros</h3><p>Valores de configuración (login, SMTP, negocio)</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="usuarios.xhtml" rendered="#{sesionUsuario.puede('usuarios','VER')}">
+            <i class="pi pi-users"></i><h3>Usuarios</h3><p>Cuentas, permisos y desbloqueos</p>
+        </h:outputLink>
+        <h:outputLink styleClass="tarjeta" value="grupos.xhtml" rendered="#{sesionUsuario.puede('grupos','VER')}">
+            <i class="pi pi-shield"></i><h3>Grupos</h3><p>Perfiles funcionales de permisos</p>
+        </h:outputLink>
     </div>
-</h:body>
-</html>
+</ui:define>
+</ui:composition>

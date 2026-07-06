@@ -1,0 +1,84 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{parametroBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Parámetros del sistema</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="par" value="#{parametroBean.modelo}"
+                     lazy="true" paginator="true" rows="15"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="No hay parámetros">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus" rendered="#{sesionUsuario.puede('parametros','CREAR')}"
+                                     actionListener="#{parametroBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgParametro').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{parametroBean.filtroGlobal}" placeholder="Buscar clave o descripción" style="width:15rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Clave" style="width:16rem; white-space:nowrap;" toggleable="false">
+                <h:outputText value="#{par.clave}" style="font-family:monospace;"/>
+            </p:column>
+            <p:column headerText="Valor" style="width:14rem;">
+                <h:outputText value="#{par.sensible ? '••••••••' : par.valor}"/>
+            </p:column>
+            <p:column headerText="Descripción">
+                <h:outputText value="#{par.descripcion}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('parametros','VER_AUDITORIA')}">
+                <h:outputText value="#{empty par.usuarioModificacion ? par.usuarioCreacion : par.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('parametros','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{parametroBean.editar(par)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgParametro').show()"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Parámetro" widgetVar="dlgParametro" modal="true" resizable="false"
+              responsive="true" width="520" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty parametroBean.seleccionado}">
+                <div class="campo">
+                    <label>Clave * (inmutable una vez creada)</label>
+                    <p:inputText value="#{parametroBean.seleccionado.clave}" required="true" label="Clave"
+                                 disabled="#{!parametroBean.esNuevo or parametroBean.soloLectura}"
+                                 requiredMessage="La clave es obligatoria" maxlength="60" style="width:100%; font-family:monospace;"/>
+                </div>
+                <div class="campo">
+                    <label>Valor</label>
+                    <p:inputText value="#{parametroBean.seleccionado.valor}" label="Valor"
+                                 disabled="#{parametroBean.soloLectura}" maxlength="120" style="width:100%;"/>
+                </div>
+                <div class="campo">
+                    <label>Descripción *</label>
+                    <p:inputText value="#{parametroBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                 disabled="#{parametroBean.soloLectura}"
+                                 requiredMessage="La descripción es obligatoria" maxlength="180" style="width:100%;"/>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgParametro').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!parametroBean.soloLectura}"
+                                     actionListener="#{parametroBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

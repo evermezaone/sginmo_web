@@ -1,0 +1,112 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{monedaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Monedas</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="mon" value="#{monedaBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="No hay monedas cargadas">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nueva" icon="pi pi-plus" rendered="#{sesionUsuario.puede('monedas','CREAR')}"
+                                     actionListener="#{monedaBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgMoneda').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{monedaBean.filtroGlobal}" placeholder="Buscar" style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Descripción" sortBy="#{mon.descripcion}" toggleable="false">
+                <h:outputText value="#{mon.descripcion}"/>
+            </p:column>
+            <p:column headerText="Símbolo" sortBy="#{mon.simbolo}" style="width:7rem;">
+                <h:outputText value="#{mon.simbolo}"/>
+            </p:column>
+            <p:column headerText="Tipo" sortBy="#{mon.tipoMoneda}" style="width:8.5rem;">
+                <h:outputText value="#{mon.tipoMoneda}"/>
+            </p:column>
+            <p:column headerText="Decimales" style="width:6.5rem; text-align:center;">
+                <h:outputText value="#{mon.precisionDecimales}"/>
+            </p:column>
+            <p:column headerText="Estado" sortBy="#{mon.estado}" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{mon.estado}" severity="#{mon.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('monedas','VER_AUDITORIA')}">
+                <h:outputText value="#{empty mon.usuarioModificacion ? mon.usuarioCreacion : mon.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('monedas','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{monedaBean.editar(mon)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgMoneda').show()"/>
+                <p:commandButton icon="#{mon.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('monedas', mon.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{monedaBean.cambiarEstado(mon)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{mon.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} #{mon.descripcion}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Moneda" widgetVar="dlgMoneda" modal="true" resizable="false"
+              responsive="true" width="480" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty monedaBean.seleccionado}">
+                <div class="campo">
+                    <label>Descripción *</label>
+                    <p:inputText value="#{monedaBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                 disabled="#{monedaBean.soloLectura}"
+                                 requiredMessage="La descripción es obligatoria" maxlength="120" style="width:100%;"/>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Símbolo *</label>
+                        <p:inputText value="#{monedaBean.seleccionado.simbolo}" required="true" label="Símbolo"
+                                     disabled="#{monedaBean.soloLectura}"
+                                     requiredMessage="El símbolo es obligatorio" maxlength="20"/>
+                    </div>
+                    <div class="campo">
+                        <label>Tipo *</label>
+                        <p:selectOneMenu value="#{monedaBean.seleccionado.tipoMoneda}" label="Tipo"
+                                         disabled="#{monedaBean.soloLectura}">
+                            <f:selectItem itemLabel="Local" itemValue="LOCAL"/>
+                            <f:selectItem itemLabel="Extranjera" itemValue="EXTRANJERA"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Precisión decimal (0 = sin decimales, ej. guaraní)</label>
+                    <p:inputNumber value="#{monedaBean.seleccionado.precisionDecimales}" label="Precisión"
+                                   disabled="#{monedaBean.soloLectura}" decimalPlaces="0" minValue="0" maxValue="6"/>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgMoneda').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!monedaBean.soloLectura}"
+                                     actionListener="#{monedaBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

@@ -1,0 +1,112 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{listaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Listas del sistema</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="opc" value="#{listaBean.opciones}"
+                     paginator="true" rows="15"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="La lista no tiene opciones">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:selectOneMenu id="cboLista" value="#{listaBean.listaSeleccionada}" label="Lista"
+                                     filter="true" filterMatchMode="contains" style="min-width:16rem;">
+                        <f:selectItems value="#{listaBean.listas}"/>
+                        <p:ajax listener="#{listaBean.refrescar()}" update="tabla"/>
+                    </p:selectOneMenu>
+                    <p:commandButton value="Nueva opción" icon="pi pi-plus" rendered="#{sesionUsuario.puede('listas','CREAR')}"
+                                     actionListener="#{listaBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgLista').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{listaBean.filtroGlobal}" placeholder="Buscar código o descripción" style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" listener="#{listaBean.refrescar()}" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Código" style="width:14rem; white-space:nowrap;" toggleable="false">
+                <h:outputText value="#{opc.codigo}" style="font-family:monospace;"/>
+            </p:column>
+            <p:column headerText="Descripción">
+                <h:outputText value="#{opc.descripcion}"/>
+            </p:column>
+            <p:column headerText="Valor extra" style="width:11rem;">
+                <h:outputText value="#{opc.valorTexto}"/>
+            </p:column>
+            <p:column headerText="Estado" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{opc.estado}" severity="#{opc.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('listas','VER_AUDITORIA')}">
+                <h:outputText value="#{empty opc.usuarioModificacion ? opc.usuarioCreacion : opc.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('listas','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{listaBean.editar(opc)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgLista').show()"/>
+                <p:commandButton icon="#{opc.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('listas', opc.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{listaBean.cambiarEstado(opc)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{opc.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} la opción #{opc.codigo}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Opción de lista" widgetVar="dlgLista" modal="true" resizable="false"
+              responsive="true" width="520" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty listaBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Lista *</label>
+                        <p:inputText value="#{listaBean.seleccionado.entidad}" required="true" label="Lista"
+                                     disabled="#{!listaBean.esNueva or listaBean.soloLectura}"
+                                     requiredMessage="La lista es obligatoria" maxlength="40" style="font-family:monospace;"/>
+                    </div>
+                    <div class="campo">
+                        <label>Código * (inmutable una vez creado)</label>
+                        <p:inputText value="#{listaBean.seleccionado.codigo}" required="true" label="Código"
+                                     disabled="#{!listaBean.esNueva or listaBean.soloLectura}"
+                                     requiredMessage="El código es obligatorio" maxlength="40" style="font-family:monospace;"/>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Descripción * (lo que ve el usuario en el combo)</label>
+                    <p:inputText value="#{listaBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                 disabled="#{listaBean.soloLectura}"
+                                 requiredMessage="La descripción es obligatoria" maxlength="180" style="width:100%;"/>
+                </div>
+                <div class="campo">
+                    <label>Valor extra (opcional, uso interno)</label>
+                    <p:inputText value="#{listaBean.seleccionado.valorTexto}" label="Valor extra"
+                                 disabled="#{listaBean.soloLectura}" maxlength="250" style="width:100%;"/>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgLista').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!listaBean.soloLectura}"
+                                     actionListener="#{listaBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes :frmLista:cboLista"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

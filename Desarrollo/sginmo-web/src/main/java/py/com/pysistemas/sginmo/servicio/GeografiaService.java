@@ -1,0 +1,88 @@
+package py.com.pysistemas.sginmo.servicio;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import py.com.one.core.ErroresBd;
+import py.com.one.core.NegocioException;
+import py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica;
+
+import java.util.List;
+import java.util.Map;
+
+/** ABM de geografia (REQ-0007): 8.276 ubicaciones INE, recursivo con autocomplete de padre. */
+@ApplicationScoped
+public class GeografiaService {
+
+    private static final Map<String, String> ORDEN = Map.of(
+        "nombre", "u.nombre", "nivelCodigo", "u.nivelCodigo", "codigoOficial", "u.codigoOficial", "estado", "u.estado");
+
+    @PersistenceContext(unitName = "sginmoPU")
+    private EntityManager em;
+
+    public long contar(String filtro) {
+        var q = em.createQuery("SELECT COUNT(u) FROM UbicacionGeografica u WHERE (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like)", Long.class);
+        filtroGlobal(q, filtro);
+        return q.getSingleResult();
+    }
+
+    public List<UbicacionGeografica> listar(int primero, int cantidad, String filtro, String ordenarPor, boolean asc) {
+        String ruta = ordenarPor == null ? null : ORDEN.get(ordenarPor);
+        var q = em.createQuery("SELECT u FROM UbicacionGeografica u LEFT JOIN FETCH u.padre WHERE (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like) ORDER BY "
+                + (ruta == null ? "u.nombre" : ruta) + (asc ? " ASC" : " DESC"), UbicacionGeografica.class);
+        filtroGlobal(q, filtro);
+        return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
+    }
+
+    private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
+        String f = filtro == null ? "" : filtro.trim().toLowerCase();
+        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+    }
+
+    /** Autocomplete lazy para elegir padre (regla: combos grandes jamas cargan todo). */
+    public List<UbicacionGeografica> buscar(String texto) {
+        String f = texto == null ? "" : texto.trim().toLowerCase();
+        return em.createQuery(
+                "SELECT u FROM UbicacionGeografica u LEFT JOIN FETCH u.padre WHERE u.estado = 'ACTIVO' AND lower(u.nombre) LIKE :like ORDER BY u.nombre",
+                UbicacionGeografica.class)
+            .setParameter("like", f + "%")
+            .setMaxResults(15)
+            .getResultList();
+    }
+
+    public UbicacionGeografica buscarPorId(Long id) {
+        return em.find(UbicacionGeografica.class, id);
+    }
+
+    @Transactional
+    public UbicacionGeografica guardar(UbicacionGeografica u) {
+        if (u.getNombre() == null || u.getNombre().isBlank()) {
+            throw new NegocioException("El nombre es obligatorio");
+        }
+        if (u.getNivelCodigo() == null || u.getNivelCodigo().isBlank()) {
+            throw new NegocioException("El nivel es obligatorio");
+        }
+        if (u.getPadre() != null && u.getId() != null && u.getId().equals(u.getPadre().getId())) {
+            throw new NegocioException("Una ubicación no puede ser su propio padre");
+        }
+        try {
+            UbicacionGeografica r = u.getId() == null ? persistir(u) : em.merge(u);
+            em.flush();
+            return r;
+        } catch (jakarta.persistence.OptimisticLockException e) {
+            throw new NegocioException("La ubicación fue modificada por otro usuario. Vuelva a abrir el diálogo y reintente.");
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);   // codigo_oficial UNIQUE -> mensaje claro
+        }
+    }
+
+    private UbicacionGeografica persistir(UbicacionGeografica u) { em.persist(u); return u; }
+
+    @Transactional
+    public void cambiarEstado(Long id, String estadoNuevo) {
+        UbicacionGeografica u = em.find(UbicacionGeografica.class, id);
+        if (u == null) throw new NegocioException("La ubicación no existe");
+        u.setEstado(estadoNuevo);
+    }
+}

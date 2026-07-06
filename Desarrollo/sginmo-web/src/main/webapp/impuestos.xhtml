@@ -1,0 +1,126 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{impuestoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Impuestos</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" widgetVar="tabla" var="imp" value="#{impuestoBean.modelo}"
+                     lazy="true" paginator="true" rows="10"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink}"
+                     currentPageReportTemplate="{startRecord}-{endRecord} de {totalRecords}"
+                     emptyMessage="No hay impuestos cargados">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Nuevo" icon="pi pi-plus" rendered="#{sesionUsuario.puede('impuestos','CREAR')}"
+                                     actionListener="#{impuestoBean.nuevo()}" update=":frmEdicion"
+                                     oncomplete="PF('dlgImpuesto').show()"/>
+                    <p:tag value="#{impuestoBean.modoAvanzado ? 'Modo avanzado' : 'Modo simplificado'}"
+                           severity="#{impuestoBean.modoAvanzado ? 'warning' : 'info'}"
+                           title="Se cambia con el parámetro IMPUESTOS_MODO_AVANZADO"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{impuestoBean.filtroGlobal}" placeholder="Buscar" style="width:14rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Descripción" sortBy="#{imp.descripcion}" toggleable="false">
+                <h:outputText value="#{imp.descripcion}"/>
+            </p:column>
+            <p:column headerText="%" sortBy="#{imp.porcentajeImpuesto}" style="width:6rem; text-align:right;">
+                <h:outputText value="#{imp.porcentajeImpuesto}"/>
+            </p:column>
+            <p:column headerText="Base gravada %" style="width:8rem; text-align:right;"
+                      visible="#{impuestoBean.modoAvanzado}">
+                <h:outputText value="#{imp.porcentajeBaseGravada}"/>
+            </p:column>
+            <p:column headerText="Factor imp." style="width:7rem; text-align:right;"
+                      visible="#{impuestoBean.modoAvanzado}">
+                <h:outputText value="#{imp.factorImpuesto}"/>
+            </p:column>
+            <p:column headerText="Estado" sortBy="#{imp.estado}" style="width:6.5rem; text-align:center;">
+                <p:tag value="#{imp.estado}" severity="#{imp.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Modificado por" visible="false" style="width:8rem;"
+                      rendered="#{sesionUsuario.puede('impuestos','VER_AUDITORIA')}">
+                <h:outputText value="#{empty imp.usuarioModificacion ? imp.usuarioCreacion : imp.usuarioModificacion}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:6.5rem; text-align:center;" exportable="false" toggleable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('impuestos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 styleClass="ui-button-flat" actionListener="#{impuestoBean.editar(imp)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgImpuesto').show()"/>
+                <p:commandButton icon="#{imp.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('impuestos', imp.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{impuestoBean.cambiarEstado(imp)}"
+                                 update=":frmLista:tabla :frmLista:mensajes">
+                    <p:confirm header="Confirmar" message="¿#{imp.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'} #{imp.descripcion}?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Impuesto" widgetVar="dlgImpuesto" modal="true" resizable="false"
+              responsive="true" width="520" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty impuestoBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Descripción *</label>
+                        <p:inputText value="#{impuestoBean.seleccionado.descripcion}" required="true" label="Descripción"
+                                     disabled="#{impuestoBean.soloLectura}"
+                                     requiredMessage="La descripción es obligatoria" maxlength="120"/>
+                    </div>
+                    <div class="campo">
+                        <label>Porcentaje * (0 = exenta)</label>
+                        <p:inputNumber value="#{impuestoBean.seleccionado.porcentajeImpuesto}" label="Porcentaje"
+                                       disabled="#{impuestoBean.soloLectura}" decimalPlaces="2" minValue="0" maxValue="100"/>
+                    </div>
+                </div>
+                <ui:fragment rendered="#{impuestoBean.modoAvanzado}">
+                    <div class="fila-3">
+                        <div class="campo">
+                            <label>Base gravada % *</label>
+                            <p:inputNumber value="#{impuestoBean.seleccionado.porcentajeBaseGravada}" label="Base gravada"
+                                           disabled="#{impuestoBean.soloLectura}" decimalPlaces="2" minValue="0" maxValue="100"/>
+                        </div>
+                        <div class="campo">
+                            <label>Factor impuesto *</label>
+                            <p:inputNumber value="#{impuestoBean.seleccionado.factorImpuesto}" label="Factor impuesto"
+                                           disabled="#{impuestoBean.soloLectura}" decimalPlaces="2"/>
+                        </div>
+                        <div class="campo">
+                            <label>Factor discriminado *</label>
+                            <p:inputNumber value="#{impuestoBean.seleccionado.factorDiscriminado}" label="Factor discriminado"
+                                           disabled="#{impuestoBean.soloLectura}" decimalPlaces="2"/>
+                        </div>
+                    </div>
+                </ui:fragment>
+                <h:panelGroup layout="block" style="color:#6c757d; font-size:.8rem; margin:.2rem 0 0;"
+                              rendered="#{!impuestoBean.modoAvanzado}">
+                    Modo simplificado: los factores y la base gravada se calculan solos.
+                </h:panelGroup>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgImpuesto').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!impuestoBean.soloLectura}"
+                                     actionListener="#{impuestoBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>
