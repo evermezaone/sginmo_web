@@ -1,54 +1,8 @@
-﻿# REQ-0032 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0032
 
 ## Manifiesto Minimo Para Codex
+WildFly 40 + JDK 21 + PostgreSQL 16 en la VPS; deploy atomico (tools/deploy-vps.ps1: subida .tmp+mv+.dodeploy, espera del marcador, verificacion HTTP). FLYWAY CABLEADO (REQ-0032): FlywayMigrator @Startup @Singleton corre las migraciones al arranque; adopcion sobre BD existente con baselineOnMigrate + baselineVersion=21 (la VPS quedo baseline en 21; V22+ se auto-aplican; una BD nueva corre todo desde V1). El fix @TransactionAttribute(NOT_SUPPORTED) resolvio la friccion JTA/autocommit sin tocar la config de WildFly.
 
-- REQ: REQ-0032
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos:** FlywayMigrator, flyway-core/flyway-database-postgresql en el pom, deploy-vps.ps1.
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn clean package EXIT 0; deploy; verificacion contra la VPS.

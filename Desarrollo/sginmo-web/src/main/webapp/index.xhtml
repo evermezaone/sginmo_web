@@ -1,6 +1,7 @@
 <ui:composition template="/WEB-INF/plantilla.xhtml"
                 xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="primefaces">
 <ui:define name="titulo">Inicio</ui:define>
@@ -13,13 +14,27 @@
         .tarjeta i { font-size: 1.4rem; color: #457b9d; }
         .tarjeta h3 { margin: .5rem 0 .2rem; font-size: 1rem; }
         .tarjeta p { margin: 0; font-size: .8rem; color: #6c757d; }
+        .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .8rem; margin-bottom: 1.4rem; }
+        .kpi { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: .9rem 1rem; }
+        .kpi .n { font-size: 1.6rem; font-weight: 700; color: #1d3557; line-height: 1.1; }
+        .kpi .n.alerta { color: #e63946; }
+        .kpi .n.ok { color: #2a9d8f; }
+        .kpi .t { font-size: .75rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
     </style>
 </ui:define>
 <ui:define name="contenido">
     <p style="color:#6c757d; margin: 0 0 1rem;">
         Bienvenido, <strong>#{sesionUsuario.codigoUsuario()}</strong>.
-        Versión #{inicioBean.version} · #{inicioBean.stack}
     </p>
+    <div class="kpis">
+        <div class="kpi"><div class="n ok">#{inicioBean.activosLibres}</div><div class="t">Activos libres</div></div>
+        <div class="kpi"><div class="n">#{inicioBean.activosOcupados}</div><div class="t">Ocupados</div></div>
+        <div class="kpi"><div class="n">#{inicioBean.activosVendidos}</div><div class="t">Vendidos</div></div>
+        <div class="kpi"><div class="n">#{inicioBean.operacionesVigentes}</div><div class="t">Operaciones vigentes</div></div>
+        <div class="kpi"><div class="n #{inicioBean.cuotasVencidas gt 0 ? 'alerta' : ''}">#{inicioBean.cuotasVencidas}</div><div class="t">Cuotas vencidas</div></div>
+        <div class="kpi"><div class="n ok"><h:outputText value="#{inicioBean.recaudadoHoy}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></div><div class="t">Recaudado hoy (Gs.)</div></div>
+        <div class="kpi"><div class="n"><h:outputText value="#{inicioBean.saldoPorCobrar}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></div><div class="t">Saldo por cobrar (Gs.)</div></div>
+    </div>
     <div class="tarjetas">
         <h:outputLink styleClass="tarjeta" value="personas.xhtml" rendered="#{sesionUsuario.puede('personas','VER')}">
             <i class="pi pi-id-card"></i><h3>Personas</h3><p>Clientes, proveedores, propietarios e inquilinos</p>

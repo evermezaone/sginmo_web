@@ -1,54 +1,8 @@
-﻿# REQ-0030 - Implementacion
-
-**Estado:** LISTO_PARA_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
-**Rama:** [rama]
+# Implementacion Claude - REQ-0030
 
 ## Manifiesto Minimo Para Codex
+El index es un tablero con 7 indicadores del negocio: activos LIBRES/OCUPADOS/VENDIDOS, operaciones vigentes, cuotas vencidas (en rojo), recaudado hoy y saldo por cobrar (este ultimo de la vista v_operacion_saldo del motor). Debajo, las tarjetas de acceso por permiso.
 
-- REQ: REQ-0030
-- Tipo de cambio: documental | UI | backend | BD | reportes | seguridad | configuracion
-- Riesgo: bajo | medio | alto
-- Archivos clave:
-  - `[archivo]`: [motivo]
-- Comandos probados:
-  - `[comando]`: [resultado]
-- Cambios de datos: no | si, ver migracion
-- Cambios de entorno: no | si, variables
-- Impacto LLM/tokens: no | si, detalle
-- Decision esperada: aprobar | revisar riesgo puntual | requiere criterio usuario
-- Notas para auditor: [puntos especificos a mirar]
+**Archivos:** InicioBean (consultas de agregacion + v_operacion_saldo), index.xhtml (fila .kpis).
 
-## Resumen Funcional
-
-[Que cambio para el usuario]
-
-## Resumen Tecnico
-
-[Que cambio en codigo]
-
-## Archivos Modificados
-
-| Archivo | Cambio |
-|---|---|
-| [archivo] | [descripcion] |
-
-## Cambios De Datos
-
-Sin cambios.
-
-## Variables De Entorno
-
-Sin cambios.
-
-## Pruebas Ejecutadas
-
-[Comandos/resultados]
-
-## Pruebas Manuales Sugeridas
-
-1. [Escenario]
-
-## Riesgos Conocidos
-
-Ninguno.
+**Comandos probados:** mvn clean package EXIT 0; deploy; verificacion contra la VPS.

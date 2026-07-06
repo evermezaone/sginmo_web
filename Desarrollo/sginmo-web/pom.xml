@@ -49,6 +49,18 @@
       <version>1.3.43</version>
     </dependency>
 
+    <!-- Migraciones versionadas (REQ-0032): dejan de aplicarse a mano -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <version>10.20.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+      <version>10.20.1</version>
+    </dependency>
+
     <!-- Tests -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

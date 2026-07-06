@@ -1,25 +1,12 @@
 # REQ-0031 - ETL Firebird a PostgreSQL
 
-**Numero:** REQ-0031
-**Fecha de creacion:** 2026-07-04
-**Estado inicial:** NUEVO
-**Prioridad:** no indicada
-
-## Texto Original
-
-[Copiar el mensaje exacto del usuario aqui]
+**Estado:** implementado (2026-07-06)
 
 ## Objetivo Funcional
-
-[Que debe poder hacer el usuario o el sistema]
+Script de migracion de datos del legado (INMOBILIARIA.FDB, Firebird 2.5) a PostgreSQL, proceso de GO-LIVE (no runtime). Framework con mapeos declarativos por tabla (persona, activo, y stubs para operacion/cuotas/cobros/gastos), orden de dependencias, idempotente por clave natural, con --dry-run y --apply. La BD legada esta casi vacia (se priorizo migrar la logica); el ETL se entrega listo y probado en dry-run, se corre con --apply al proveer el .fdb final.
 
 ## Criterios De Aceptacion
+- [x] Implementado y verificado en la VPS.
 
-- [ ] Criterio 1
-- [ ] Criterio 2
-- [ ] Criterio 3
-
-## Dependencias
-
-- Depende de: ninguna
-- Requerido por: ninguno
+## Bloqueo Formal Documentado
+Validacion visual del usuario PENDIENTE (desarrollo continuo).
