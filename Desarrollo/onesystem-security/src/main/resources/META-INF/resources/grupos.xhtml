@@ -1,43 +1,19 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html"
-      xmlns:f="jakarta.faces.core"
-      xmlns:ui="jakarta.faces.facelets"
-      xmlns:p="primefaces">
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<!-- Pagina del modulo ONEsystem-security: usa por convencion la plantilla
+     /WEB-INF/plantilla.xhtml que provee la aplicacion anfitriona -->
 <f:metadata>
     <f:viewAction action="#{grupoBean.verificarAcceso()}"/>
 </f:metadata>
-<h:head>
-    <title>Grupos de seguridad — SGInmo Web</title>
-    <style>
-        body { margin: 0; background: #f4f6f9; }
-        .contenido { max-width: 1000px; margin: 1.5rem auto; padding: 0 1rem; }
-        .titulo { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-        .campo { margin-bottom: .9rem; display: flex; flex-direction: column; gap: .3rem; }
-        .campo > label { font-weight: 600; font-size: .85rem; color: #495057; }
-        .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; }
-        .pie-dialogo { text-align: right; margin-top: .8rem; border-top: 1px solid #e0e0e0; padding-top: .8rem; }
-        .barra-tabla { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
-    </style>
-</h:head>
-<h:body>
-<div class="contenido">
-    <div class="titulo">
-        <div>
-            <h2 style="margin:0;">Grupos de seguridad</h2>
-            <span style="color:#6c757d; font-size:.85rem;">Un grupo funciona como perfil: sus permisos se suman a los de cada integrante</span>
-        </div>
-        <span style="display:flex; gap:.5rem; align-items:center;">
-            <p:button outcome="usuarios" icon="pi pi-users" title="Usuarios" styleClass="ui-button-rounded ui-button-outlined"/>
-            <p:button outcome="index" icon="pi pi-home" title="Inicio" styleClass="ui-button-rounded ui-button-outlined"/>
-            <h:form style="display:inline;">
-                <p:commandButton icon="pi pi-sign-out" title="Cerrar sesión (#{sesionUsuario.codigoUsuario()})" ajax="false"
-                                 action="#{sesionUsuario.cerrarSesion()}"
-                                 styleClass="ui-button-rounded ui-button-outlined ui-button-secondary"/>
-            </h:form>
-        </span>
-    </div>
-
+<ui:define name="titulo">Grupos de seguridad</ui:define>
+<ui:define name="contenido">
+    <p style="color:#6c757d; font-size:.85rem; margin:0 0 .8rem;">
+        Un grupo funciona como perfil: sus permisos se suman a los de cada integrante.
+    </p>
     <h:form id="frmLista">
         <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
 
@@ -206,6 +182,5 @@
             </ui:fragment>
         </h:form>
     </p:dialog>
-</div>
-</h:body>
-</html>
+</ui:define>
+</ui:composition>
