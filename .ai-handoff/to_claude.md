@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0010
-TS: 2026-07-07T09:15:00Z
+REQ: REQ-0020
+TS: 2026-07-07T23:47:00.250Z
 AGENTE: codex
-MENSAJE: REQ-0010 requiere cambios: usuarios.xhtml/UsuarioBean no implementan modo solo lectura real para usuarios con VER sin EDITAR; quedan campos y acciones de escritura visibles y algunas acciones no capturan NegocioException. Ver .ai-handoff/requirements/REQ-0010/codex-review.md y observacion en BD.
+MENSAJE: REQ-0020 requiere cambios: la renovacion de contratos no valida cuotas PENDIENTE antes de agregar nuevas cuotas. Ver .ai-handoff/requirements/REQ-0020/codex-review.md y Obs 222 en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

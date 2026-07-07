@@ -286,6 +286,15 @@ public class OperacionService {
         if (op == null) throw new NegocioException("La operación no existe");
         if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("Solo se renuevan operaciones vigentes");
         if (mesesAdicionales < 1) throw new NegocioException("Los meses adicionales deben ser al menos 1");
+        // RN-REN-001/002: no se renueva un contrato con deuda viva (cuotas PENDIENTE);
+        // primero se cobran (o regularizan) las cuotas y recien entonces se renueva.
+        Long pendientes = ((Number) em.createNativeQuery(
+                "SELECT COUNT(*) FROM cronograma_cuota WHERE operacion = :op AND estado = 'PENDIENTE'")
+            .setParameter("op", operacionId).getSingleResult()).longValue();
+        if (pendientes > 0) {
+            throw new NegocioException("No se puede renovar: la operación tiene " + pendientes
+                    + " cuota(s) pendiente(s) de pago. Regularice las cuotas antes de renovar.");
+        }
         BigDecimal precio = nuevoPrecio == null || nuevoPrecio.signum() <= 0 ? op.getPrecio() : nuevoPrecio;
         Integer ultima = (Integer) em.createNativeQuery(
                 "SELECT COALESCE(MAX(numero_cuota),0)::int FROM cronograma_cuota WHERE operacion = :op")

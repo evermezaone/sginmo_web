@@ -35,7 +35,8 @@ Routine MySQL access uses the runner flow: write SQL into `mysql_runner.sql`, ru
 2. Inspect the real implementation in `Desarrollo\sginmo-web\`.
 3. Compare behavior, JPA writes, transactions, permissions, UI flow, and business rules against the REQ and against `docs-migracion` (rules must match the documented legacy behavior unless the REQ explicitly corrects a legacy bug — see list below).
 4. Fill `codex-review.md`; persist every actionable finding via `sp_registrar_observacion` (with Problema / Impacto / Solucion esperada).
-5. Derive with `sp_derivar_req`:
+5. If the audit leaves work that Claude should pick up immediately, write `.ai-handoff/to_claude_chat.md` with `ESTADO: MENSAJE_CHAT`, current timestamp, `AGENTE: codex`, and a concise message naming the REQ and the blocking observations. This is a compatibility chat mirror; the DB remains the source of truth.
+6. Derive with `sp_derivar_req`:
    - Approved: `sp_derivar_req('SGI','REQ-XXXX','CERRADO','claude','codex','APROBADO_POR_CODEX — ...')`
    - Needs changes: `sp_derivar_req('SGI','REQ-XXXX','REQUIERE_CAMBIOS','claude','codex','...')`
    - Blocked: `sp_derivar_req('SGI','REQ-XXXX','BLOQUEADO_POR_USUARIO','user','codex','pregunta concreta')`
@@ -85,5 +86,5 @@ Codex must:
 
 - Do not close a REQ just because Claude says it is blocked.
 - Do not mark `BLOQUEADO_POR_USUARIO` without a real explicit user decision.
-- Do not modify Claude-owned files except `.ai-handoff/to_claude.md`.
+- Do not modify Claude-owned files except `.ai-handoff/to_claude.md` and `.ai-handoff/to_claude_chat.md`.
 - Do not revert user or Claude changes unless the user explicitly asks.
