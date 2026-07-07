@@ -28,6 +28,10 @@ public class ActivoService {
         "nombre", "a.nombre", "tipoCodigo", "a.tipoCodigo", "estado", "a.estado",
         "precioVenta", "a.precioVenta", "precioAlquiler", "a.precioAlquiler");
 
+    /** Tipos de activo que pueden contener lotes (generacion masiva, REQ-0015). */
+    private static final java.util.Set<String> TIPOS_CONTENEDOR_LOTE =
+        java.util.Set.of("LOTEAMIENTO", "BARRIO_CERRADO");
+
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
@@ -73,6 +77,16 @@ public class ActivoService {
     }
 
     public Activo buscar(Long id) { return id == null ? null : em.find(Activo.class, id); }
+
+    /** Autocomplete de contenedores validos para generar lotes: solo tipos contenedor de lote. */
+    public List<Activo> buscarLoteamiento(String texto) {
+        String f = texto == null ? "" : texto.trim().toLowerCase();
+        return em.createQuery(
+                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND a.tipoCodigo IN :tipos ORDER BY a.nombre",
+                Activo.class)
+            .setParameter("like", f + "%").setParameter("tipos", TIPOS_CONTENEDOR_LOTE)
+            .setMaxResults(15).getResultList();
+    }
 
     /** Ids de todos los descendientes (subarbol) de un activo, via CTE recursiva. */
     private java.util.Set<Long> descendientes(Long rootId) {
@@ -220,26 +234,35 @@ public class ActivoService {
         if (padre == null) {
             throw new NegocioException("El contenedor no existe");
         }
+        if (!TIPOS_CONTENEDOR_LOTE.contains(padre.getTipoCodigo())) {
+            throw new NegocioException("El contenedor debe ser un LOTEAMIENTO o BARRIO_CERRADO; '"
+                    + padre.getNombre() + "' no puede contener lotes");
+        }
+        // Manzana normalizada: null/vacia se tratan como "sin manzana" (una sola vez, para
+        // duplicados Y para el guardado, evitando '' vs null inconsistentes).
+        String mz = manzana == null || manzana.isBlank() ? null : manzana.trim();
         String tipo = tipoLoteCodigo == null || tipoLoteCodigo.isBlank() ? "LOTE" : tipoLoteCodigo;
         int creados = 0;
         for (int i = 0; i < cantidad; i++) {
             String numero = String.valueOf(numeroDesde + i);
+            // Duplicado = mismo padre + mismo numero de lote EN LA MISMA manzana
+            // (sin manzana solo colisiona con otros sin manzana; null y '' son equivalentes).
             Long rep = em.createQuery(
-                    "SELECT COUNT(a) FROM Activo a WHERE a.padre = :p AND a.numeroLote = :n"
-                    + " AND (:m IS NULL OR a.numeroManzana = :m)", Long.class)
-                .setParameter("p", contenedorId).setParameter("n", numero)
-                .setParameter("m", manzana == null || manzana.isBlank() ? null : manzana)
+                    "SELECT COUNT(a) FROM Activo a WHERE a.padre = :p AND a.numeroLote = :n AND "
+                    + "((:m IS NULL AND (a.numeroManzana IS NULL OR a.numeroManzana = '')) OR a.numeroManzana = :m)",
+                    Long.class)
+                .setParameter("p", contenedorId).setParameter("n", numero).setParameter("m", mz)
                 .getSingleResult();
             if (rep > 0) {
-                continue;   // ya existe ese lote/manzana: no duplicar
+                continue;   // ya existe ese lote en esa manzana: no duplicar
             }
             var lote = new Activo();
             lote.setPadre(contenedorId);
             lote.setTipoCodigo(tipo);
             lote.setNombre(padre.getNombre() + " - Lote " + numero
-                    + (manzana == null || manzana.isBlank() ? "" : " Mz " + manzana));
+                    + (mz == null ? "" : " Mz " + mz));
             lote.setNumeroLote(numero);
-            lote.setNumeroManzana(manzana);
+            lote.setNumeroManzana(mz);
             lote.setEmpresa(padre.getEmpresa());
             lote.setUbicacion(padre.getUbicacion());
             lote.setPrecioVenta(precioVenta == null ? java.math.BigDecimal.ZERO : precioVenta);

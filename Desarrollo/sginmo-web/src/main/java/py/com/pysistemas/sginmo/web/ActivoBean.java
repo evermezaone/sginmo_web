@@ -154,7 +154,7 @@ public class ActivoBean implements Serializable {
     }
 
     public List<Activo> completarLoteamiento(String texto) {
-        return activoService.buscarContenedor(texto, null);
+        return activoService.buscarLoteamiento(texto);
     }
 
     public void generarLotes() {
