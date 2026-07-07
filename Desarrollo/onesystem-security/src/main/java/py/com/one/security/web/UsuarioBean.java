@@ -46,6 +46,9 @@ public class UsuarioBean implements Serializable {
     private String passwordInicial;
     private int tabActivo;
 
+    /** Dialogo en modo consulta: sin EDITAR se ve el detalle pero no se toca (obs 209 de Codex). */
+    private boolean soloLectura;
+
     private List<OpcionPantalla> pantallas;
     private List<PermisoUsuario> permisos = java.util.List.of();
     private String nuevoPermisoPantalla;
@@ -91,6 +94,7 @@ public class UsuarioBean implements Serializable {
         grupos = java.util.List.of();
         limpiarNuevoPermiso();
         tabActivo = 0;
+        soloLectura = false;
     }
 
     public void editar(Usuario usuario) {
@@ -100,12 +104,13 @@ public class UsuarioBean implements Serializable {
         grupos = usuarioService.listarGruposDe(usuario.getId());
         limpiarNuevoPermiso();
         tabActivo = 0;
+        soloLectura = !sesion.puede(PANTALLA, "EDITAR");
     }
 
     public void guardar() {
         try {
             boolean esNuevo = seleccionado.getId() == null;
-            if (!sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) {
+            if (soloLectura || !sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) {
                 return;
             }
             usuarioService.guardar(seleccionado, passwordInicial, sesion.getUsuario().getEmpresa());
@@ -137,11 +142,15 @@ public class UsuarioBean implements Serializable {
     }
 
     public void desbloquear(Usuario usuario) {
-        if (!sesion.puede(PANTALLA, "EDITAR")) {
-            return;
+        try {
+            if (!sesion.puede(PANTALLA, "EDITAR")) {
+                return;
+            }
+            usuarioService.desbloquear(usuario.getId());
+            aviso(FacesMessage.SEVERITY_INFO, "Usuario desbloqueado", usuario.getCodigoUsuario());
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo desbloquear", e.getMessage());
         }
-        usuarioService.desbloquear(usuario.getId());
-        aviso(FacesMessage.SEVERITY_INFO, "Usuario desbloqueado", usuario.getCodigoUsuario());
     }
 
     // ── Permisos ──
@@ -157,8 +166,12 @@ public class UsuarioBean implements Serializable {
     }
 
     public void eliminarPermiso(Long permisoId) {
-        usuarioService.eliminarPermiso(permisoId);
-        permisos = usuarioService.listarPermisos(seleccionado.getId());
+        try {
+            usuarioService.eliminarPermiso(permisoId);
+            permisos = usuarioService.listarPermisos(seleccionado.getId());
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el permiso", e.getMessage());
+        }
     }
 
     private void limpiarNuevoPermiso() {
@@ -180,8 +193,12 @@ public class UsuarioBean implements Serializable {
     }
 
     public void quitarGrupo(Long usuarioGrupoId) {
-        usuarioService.quitarDeGrupo(usuarioGrupoId);
-        grupos = usuarioService.listarGruposDe(seleccionado.getId());
+        try {
+            usuarioService.quitarDeGrupo(usuarioGrupoId);
+            grupos = usuarioService.listarGruposDe(seleccionado.getId());
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar del grupo", e.getMessage());
+        }
     }
 
     public String nombreGrupo(Long grupoId) {
@@ -227,4 +244,6 @@ public class UsuarioBean implements Serializable {
 
     public Long getNuevoGrupo() { return nuevoGrupo; }
     public void setNuevoGrupo(Long nuevoGrupo) { this.nuevoGrupo = nuevoGrupo; }
+
+    public boolean isSoloLectura() { return soloLectura; }
 }

@@ -101,11 +101,11 @@
                                 <label>Código de usuario *</label>
                                 <p:inputText value="#{usuarioBean.seleccionado.codigoUsuario}" required="true"
                                              label="Código de usuario" requiredMessage="El código es obligatorio"
-                                             maxlength="20"/>
+                                             maxlength="20" disabled="#{usuarioBean.soloLectura}"/>
                             </div>
                             <div class="campo">
                                 <label>Perfil *</label>
-                                <p:selectOneMenu value="#{usuarioBean.seleccionado.perfil}" required="true" label="Perfil">
+                                <p:selectOneMenu value="#{usuarioBean.seleccionado.perfil}" required="true" label="Perfil" disabled="#{usuarioBean.soloLectura}">
                                     <f:selectItem itemLabel="Usuario (permisos explícitos)" itemValue="USUARIO"/>
                                     <f:selectItem itemLabel="Administrador (todo)" itemValue="ADMINISTRADOR"/>
                                 </p:selectOneMenu>
@@ -115,12 +115,12 @@
                             <div class="campo">
                                 <label>Email (avisos y validación en dos pasos)</label>
                                 <p:inputText value="#{usuarioBean.seleccionado.email}" label="Email"
-                                             maxlength="180" type="email"/>
+                                             maxlength="180" type="email" disabled="#{usuarioBean.soloLectura}"/>
                             </div>
                             <div class="campo">
                                 <label>Teléfono</label>
                                 <p:inputText value="#{usuarioBean.seleccionado.telefono}" label="Teléfono"
-                                             maxlength="30"/>
+                                             maxlength="30" disabled="#{usuarioBean.soloLectura}"/>
                             </div>
                         </div>
                         <div class="campo">
@@ -130,7 +130,7 @@
                                   : 'Nueva contraseña (mínimo 8; vacío = no cambiar; si se carga, se fuerza el cambio al ingresar)'}
                             </label>
                             <p:password value="#{usuarioBean.passwordInicial}" label="Contraseña" feedback="false"
-                                        toggleMask="true" maxlength="60" style="width:100%;"/>
+                                        toggleMask="true" maxlength="60" style="width:100%;" disabled="#{usuarioBean.soloLectura}"/>
                         </div>
                     </p:tab>
 
@@ -141,12 +141,12 @@
                             <div class="campo">
                                 <label>Grupo (suma sus permisos a los del usuario)</label>
                                 <div style="display:flex; gap:.5rem;">
-                                    <p:selectOneMenu id="cboGrupo" value="#{usuarioBean.nuevoGrupo}" label="Grupo" style="flex:1;">
+                                    <p:selectOneMenu id="cboGrupo" value="#{usuarioBean.nuevoGrupo}" label="Grupo" style="flex:1;" disabled="#{usuarioBean.soloLectura}">
                                         <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                         <f:selectItems value="#{usuarioBean.gruposActivos}" var="gr"
                                                        itemLabel="#{gr.descripcion} (#{gr.codigo})" itemValue="#{gr.id}"/>
                                     </p:selectOneMenu>
-                                    <p:commandButton icon="pi pi-plus" title="Agregar al grupo"
+                                    <p:commandButton icon="pi pi-plus" title="Agregar al grupo" rendered="#{!usuarioBean.soloLectura}"
                                                      actionListener="#{usuarioBean.agregarGrupo()}"
                                                      process="@this cboGrupo"
                                                      update="tblGrupos cboGrupo :frmEdicion:msjEdicion"/>
@@ -159,7 +159,7 @@
                                 <h:outputText value="#{usuarioBean.nombreGrupo(ug.grupo)}"/>
                             </p:column>
                             <p:column style="width:4rem; text-align:center;">
-                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar del grupo"
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar del grupo" rendered="#{!usuarioBean.soloLectura}"
                                                  actionListener="#{usuarioBean.quitarGrupo(ug.id)}"
                                                  process="@this"
                                                  update="tblGrupos :frmEdicion:msjEdicion"/>
@@ -179,7 +179,7 @@
                         <div class="fila-2" style="align-items:end;">
                             <div class="campo">
                                 <label>Pantalla</label>
-                                <p:selectOneMenu id="cboPantalla" value="#{usuarioBean.nuevoPermisoPantalla}" label="Pantalla">
+                                <p:selectOneMenu id="cboPantalla" value="#{usuarioBean.nuevoPermisoPantalla}" label="Pantalla" disabled="#{usuarioBean.soloLectura}">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{usuarioBean.pantallas}" var="pt"
                                                    itemLabel="#{pt.descripcion}" itemValue="#{pt.codigo}"/>
@@ -188,13 +188,13 @@
                             <div class="campo">
                                 <label>Acción</label>
                                 <div style="display:flex; gap:.5rem;">
-                                    <p:selectOneMenu id="cboAccion" value="#{usuarioBean.nuevoPermisoAccion}" label="Acción" style="flex:1;">
+                                    <p:selectOneMenu id="cboAccion" value="#{usuarioBean.nuevoPermisoAccion}" label="Acción" style="flex:1;" disabled="#{usuarioBean.soloLectura}">
                                         <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                                         <f:selectItems value="#{usuarioBean.acciones}" var="ac"
                                                        itemLabel="#{ac eq 'OPERAR' ? 'OPERAR (ABM completo, sin auditoría)' : ac}"
                                                        itemValue="#{ac}"/>
                                     </p:selectOneMenu>
-                                    <p:commandButton icon="pi pi-plus" title="Otorgar permiso"
+                                    <p:commandButton icon="pi pi-plus" title="Otorgar permiso" rendered="#{!usuarioBean.soloLectura}"
                                                      actionListener="#{usuarioBean.agregarPermiso()}"
                                                      process="@this cboPantalla cboAccion"
                                                      update="tblPermisos cboPantalla cboAccion :frmEdicion:msjEdicion"/>
@@ -210,7 +210,7 @@
                                 <h:outputText value="#{perm.accion}"/>
                             </p:column>
                             <p:column style="width:4rem; text-align:center;">
-                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
+                                <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar" rendered="#{!usuarioBean.soloLectura}"
                                                  actionListener="#{usuarioBean.eliminarPermiso(perm.id)}"
                                                  process="@this"
                                                  update="tblPermisos :frmEdicion:msjEdicion"/>
@@ -222,7 +222,7 @@
                 <div class="pie-dialogo">
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgUsuario').hide()"
                                      styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
-                    <p:commandButton value="Guardar" icon="pi pi-save"
+                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!usuarioBean.soloLectura}"
                                      actionListener="#{usuarioBean.guardar()}"
                                      update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
                 </div>

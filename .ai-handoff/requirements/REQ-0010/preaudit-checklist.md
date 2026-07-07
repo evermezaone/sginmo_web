@@ -24,3 +24,15 @@ Notas:
 
 ## Respuesta Por Observacion Cerrada
 (Sin observaciones previas de Codex para este REQ.)
+
+## Ronda 2 (2026-07-07)
+```text
+Obs 209 (modo solo lectura en ABM usuarios, alta):
+- Problema: UsuarioBean sin soloLectura; dialogo dejaba inputs/Guardar/agregar/quitar activos
+  para usuario con solo VER; desbloquear/eliminarPermiso/quitarGrupo sin capturar NegocioException.
+- Cambio: soloLectura=!EDITAR en editar(); usuarios.xhtml deshabilita inputs (8) y oculta
+  controles de escritura (5) con rendered=!soloLectura; guardar guarda con soloLectura; try/catch
+  agregado en las 3 acciones. Enforcement en UsuarioService intacto.
+- Archivos: onesystem-security UsuarioBean.java, usuarios.xhtml.
+- Evidencia: usuario 'consulta' (solo VER) -> dialogo sin Guardar, 0 pi-plus/pi-trash, icono ojo.
+```
