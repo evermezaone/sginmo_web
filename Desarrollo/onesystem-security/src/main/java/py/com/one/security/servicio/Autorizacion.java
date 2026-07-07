@@ -33,4 +33,22 @@ public class Autorizacion {
                     + " en la pantalla '" + pantalla + "'");
         }
     }
+
+    /**
+     * Exige que el usuario de la sesion sea ADMINISTRADOR. Para procesos correctivos
+     * sensibles (p.ej. regenerar el cronograma) que la doc restringe a administrador,
+     * mas alla del permiso de edicion de la pantalla. Sin sesion web (job/ETL) no bloquea.
+     */
+    public void exigirAdministrador() {
+        SesionUsuario sesion;
+        try {
+            sesion = CDI.current().select(SesionUsuario.class).get();
+            sesion.isLogueado();
+        } catch (RuntimeException sinContextoWeb) {
+            return;   // proceso de sistema (job/ETL/test)
+        }
+        if (!sesion.isAdministrador()) {
+            throw new NegocioException("Solo un ADMINISTRADOR puede ejecutar esta acción");
+        }
+    }
 }

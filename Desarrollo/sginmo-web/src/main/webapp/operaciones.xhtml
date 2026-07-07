@@ -162,7 +162,7 @@
                         <p:commandButton value="Renovar contrato" icon="pi pi-refresh"
                                          actionListener="#{operacionBean.renovar()}" update="frmDetalle"/>
                     </p:tab>
-                    <p:tab title="Regenerar cuotas" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
+                    <p:tab title="Regenerar cuotas" rendered="#{sesionUsuario.administrador}">
                         <p style="color:#6c757d; font-size:.8rem;">Solo si la operación aún no tiene cobros.</p>
                         <div class="fila-2">
                             <div class="campo"><label>Cantidad de cuotas</label>

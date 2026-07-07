@@ -252,7 +252,8 @@ public class OperacionService {
 
     @Transactional
     public void regenerarCuotas(Long operacionId, int cuotas, java.time.LocalDate primeraFecha) {
-        autorizacion.exigir("operaciones", "EDITAR");
+        // Proceso correctivo sensible: la doc (backlog + reglas de negocio) lo restringe a ADMINISTRADOR.
+        autorizacion.exigirAdministrador();
         Operacion op = em.find(Operacion.class, operacionId);
         if (op == null) throw new NegocioException("La operación no existe");
         if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("La operación no está vigente");
@@ -264,6 +265,13 @@ public class OperacionService {
                 .setParameter("dia", op.getDiaPago()).setParameter("mon", op.getMoneda())
                 .setParameter("usr", usuarioAuditoria()).getSingleResult();
             op.setPlazo(cuotas);
+            // Al cambiar el plazo se recalcula la fecha fin de contrato coherente con el nuevo
+            // cronograma (ultima cuota = primeraFecha + (cuotas-1) meses, en el dia de pago).
+            java.time.LocalDate fin = primeraFecha.plusMonths(cuotas - 1L);
+            if (op.getDiaPago() != null && op.getDiaPago() >= 1 && op.getDiaPago() <= 28) {
+                fin = fin.withDayOfMonth(op.getDiaPago());
+            }
+            op.setFechaFinContrato(fin);
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);   // "ya tiene cuotas con cobros" viene de la BD
         }
