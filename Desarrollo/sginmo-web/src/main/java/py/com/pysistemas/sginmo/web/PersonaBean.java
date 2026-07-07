@@ -172,8 +172,12 @@ public class PersonaBean implements Serializable {
     }
 
     public void quitarRol(Long personaRolId) {
-        personaService.quitarRol(personaRolId);
-        rolesPersona = personaService.rolesDe(seleccionado.getId());
+        try {
+            personaService.quitarRol(personaRolId);
+            rolesPersona = personaService.rolesDe(seleccionado.getId());
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el rol", e.getMessage());
+        }
     }
 
     public String descripcionRol(String codigo) {

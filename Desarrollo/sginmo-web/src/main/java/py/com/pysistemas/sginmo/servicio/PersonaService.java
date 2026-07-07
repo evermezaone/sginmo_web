@@ -72,8 +72,9 @@ public class PersonaService {
     public PersonaFisica fisicaDe(Long id) { return em.find(PersonaFisica.class, id); }
     public PersonaJuridica juridicaDe(Long id) { return em.find(PersonaJuridica.class, id); }
 
+    /** Roles ACTIVOS de la persona (los INACTIVOS quedan como historial, no se listan). */
     public List<PersonaRol> rolesDe(Long personaId) {
-        return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p ORDER BY r.rolCodigo", PersonaRol.class)
+        return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.estado = 'ACTIVO' ORDER BY r.rolCodigo", PersonaRol.class)
             .setParameter("p", personaId).getResultList();
     }
 
@@ -162,9 +163,17 @@ public class PersonaService {
     public void agregarRol(Long personaId, String rolCodigo) {
         autorizacion.exigir("personas", "EDITAR");
         if (rolCodigo == null || rolCodigo.isBlank()) throw new NegocioException("Elija el rol");
-        Long rep = em.createQuery("SELECT COUNT(r) FROM PersonaRol r WHERE r.persona = :p AND r.rolCodigo = :r", Long.class)
-            .setParameter("p", personaId).setParameter("r", rolCodigo).getSingleResult();
-        if (rep > 0) throw new NegocioException("La persona ya tiene ese rol");
+        // Si ya existe (activo o inactivo) NO se duplica: activo -> error; inactivo -> se reactiva.
+        var existentes = em.createQuery(
+                "SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.rolCodigo = :r", PersonaRol.class)
+            .setParameter("p", personaId).setParameter("r", rolCodigo).getResultList();
+        for (var r : existentes) {
+            if ("ACTIVO".equals(r.getEstado())) throw new NegocioException("La persona ya tiene ese rol");
+        }
+        if (!existentes.isEmpty()) {
+            existentes.get(0).setEstado("ACTIVO");   // reactiva preservando el historial
+            return;
+        }
         var rol = new PersonaRol();
         rol.setPersona(personaId);
         rol.setRolCodigo(rolCodigo);
@@ -175,6 +184,9 @@ public class PersonaService {
     public void quitarRol(Long personaRolId) {
         autorizacion.exigir("personas", "EDITAR");
         var r = em.find(PersonaRol.class, personaRolId);
-        if (r != null) em.remove(r);
+        if (r == null) throw new NegocioException("El rol no existe");
+        // Baja LOGICA: preserva la trazabilidad historica del rol (operaciones, cobros,
+        // activos y reportes que ya lo referencian). Se puede reactivar con agregarRol.
+        r.setEstado("INACTIVO");
     }
 }
