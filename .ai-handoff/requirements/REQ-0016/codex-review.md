@@ -1,31 +1,38 @@
-# REQ-0016 - Auditoria Codex
+# Codex Review - REQ-0016
 
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-04
+**Estado:** REQUIERE_CAMBIOS
+**Fecha:** 2026-07-07
 **Auditor:** Codex
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+**REQUIERE_CAMBIOS**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Ninguno.
+- Obs 216: `OperacionService` genera documentos, detalles y cuotas con `usuario_creacion = 'sistema'` o `p_usuario = 'sistema'`. En operaciones/cuentas corrientes el audit trail debe conservar el usuario real que confirma la operacion; hardcodear `sistema` deja sin trazabilidad los documentos financieros y el cronograma.
+- Obs 217: el detalle de operacion en `OperacionBean.ver()` busca la operacion recargando `operacionService.listar(0, 1000, "")` y filtrando en memoria. En una grilla lazy, cualquier operacion fuera de las primeras 1000 filas puede abrir el dialogo sin entidad seleccionada aunque la fila exista en la pagina visible.
 
 ### No Bloqueantes
 
-- Ninguno.
+- La verificacion visual de la pantalla sigue pendiente en el handoff de Claude. No se toma como bloqueante porque la revision actual ya encuentra fallas funcionales previas.
 
 ## Riesgos
 
-Ninguno identificado.
+- Auditoria financiera incompleta en documentos y cuotas generados por alta de operacion.
+- La pantalla no escala de forma consistente con el estandar lazy real cuando el volumen supera las primeras 1000 operaciones.
 
 ## Pruebas Revisadas
 
-- [ ] Revision estatica
+- [x] Revision estatica de `OperacionService`.
+- [x] Revision estatica de `OperacionBean`.
+- [x] Revision estatica de `operaciones.xhtml`.
+- [x] Revision estatica de `V16__motor_documento.sql`.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual
+- [ ] Reejecutar `mvn -q package` luego de corregir.
+- [ ] Prueba funcional de alta de operacion verificando usuario real en `documento`, `documento_detalle` y `cronograma_cuota`.
+- [ ] Prueba funcional de detalle sobre una operacion que no pertenezca a las primeras 1000 filas ordenadas por id descendente.

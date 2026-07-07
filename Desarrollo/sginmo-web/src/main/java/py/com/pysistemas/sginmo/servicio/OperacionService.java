@@ -30,6 +30,20 @@ public class OperacionService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    @jakarta.inject.Inject
+    private py.com.one.core.UsuarioActual usuarioActual;
+
+    /** Usuario autenticado para auditar las escrituras nativas (documentos, cuotas, cronograma,
+     *  rescision). Fallback 'sistema' solo sin sesion (batch/tests), igual que AuditoriaListener. */
+    private String usuarioAuditoria() {
+        try {
+            String u = usuarioActual.codigoUsuario();
+            return (u == null || u.isBlank()) ? py.com.one.core.UsuarioActual.SISTEMA : u;
+        } catch (RuntimeException sinContexto) {
+            return py.com.one.core.UsuarioActual.SISTEMA;
+        }
+    }
+
     // ── Consultas ──
 
     public long contar(String filtro) {
@@ -55,6 +69,9 @@ public class OperacionService {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         q.setParameter("f", f).setParameter("like", "%" + f + "%");
     }
+
+    /** Resuelve una operacion por su id (no depende de las primeras N filas de la grilla). */
+    public Operacion porId(Long id) { return id == null ? null : em.find(Operacion.class, id); }
 
     public List<CronogramaCuota> cuotasDe(Long operacionId) {
         return em.createQuery(
@@ -115,7 +132,7 @@ public class OperacionService {
                     .setParameter("desde", java.sql.Date.valueOf(op.getFechaInicioContrato().plusMonths(1)))
                     .setParameter("dia", op.getDiaPago())
                     .setParameter("mon", op.getMoneda())
-                    .setParameter("usr", "sistema")
+                    .setParameter("usr", usuarioAuditoria())
                     .getSingleResult();
                 em.createNativeQuery("UPDATE cronograma_cuota SET documento = :doc WHERE operacion = :op")
                     .setParameter("doc", doc).setParameter("op", op.getId()).executeUpdate();
@@ -147,16 +164,18 @@ public class OperacionService {
 
     /** Documento interno (DINT) ENTRADA: numerado por f_siguiente_numero, detalle unico. */
     private Long crearDocumentoInterno(Operacion op, BigDecimal monto, String concepto) {
+        String usr = usuarioAuditoria();
         Object num = em.createNativeQuery("SELECT f_siguiente_numero(:emp, 'DINT', 'OP')")
             .setParameter("emp", op.getEmpresa()).getSingleResult();
         em.createNativeQuery(
             "INSERT INTO documento (empresa, tipo_codigo, serie, numero, fecha, persona, sucursal,"
             + " moneda, direccion_dinero, observacion, usuario_creacion, fecha_creacion)"
-            + " VALUES (:emp, 'DINT', 'OP', :num, :fec, :per, :suc, :mon, 'ENTRADA', :obs, 'sistema', now())")
+            + " VALUES (:emp, 'DINT', 'OP', :num, :fec, :per, :suc, :mon, 'ENTRADA', :obs, :usr, now())")
             .setParameter("emp", op.getEmpresa()).setParameter("num", ((Number) num).longValue())
             .setParameter("fec", java.sql.Date.valueOf(op.getFechaOperacion()))
             .setParameter("per", op.getCliente()).setParameter("suc", op.getSucursal())
             .setParameter("mon", op.getMoneda()).setParameter("obs", concepto)
+            .setParameter("usr", usr)
             .executeUpdate();
         Object doc = em.createNativeQuery(
             "SELECT documento FROM documento WHERE empresa = :emp AND tipo_codigo = 'DINT' AND serie = 'OP' AND numero = :num")
@@ -166,8 +185,9 @@ public class OperacionService {
         em.createNativeQuery(
             "INSERT INTO documento_detalle (documento, numero_item, concepto, cantidad, precio_unitario,"
             + " monto, saldo, usuario_creacion, fecha_creacion)"
-            + " VALUES (:doc, 1, :con, 1, :monto, :monto, :monto, 'sistema', now())")
+            + " VALUES (:doc, 1, :con, 1, :monto, :monto, :monto, :usr, now())")
             .setParameter("doc", docId).setParameter("con", concepto).setParameter("monto", monto)
+            .setParameter("usr", usr)
             .executeUpdate();
         return docId;
     }
@@ -201,7 +221,7 @@ public class OperacionService {
                 .setParameter("total", op.getMontoTotalOperacion())
                 .setParameter("desde", java.sql.Date.valueOf(primeraFecha))
                 .setParameter("dia", op.getDiaPago()).setParameter("mon", op.getMoneda())
-                .setParameter("usr", "sistema").getSingleResult();
+                .setParameter("usr", usuarioAuditoria()).getSingleResult();
             op.setPlazo(cuotas);
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);   // "ya tiene cuotas con cobros" viene de la BD
@@ -230,10 +250,11 @@ public class OperacionService {
             em.createNativeQuery(
                 "INSERT INTO cronograma_cuota (operacion, numero_cuota, fecha_vencimiento, monto, saldo,"
                 + " estado, moneda, usuario_creacion, fecha_creacion)"
-                + " VALUES (:op, :n, :venc, :monto, :monto, 'PENDIENTE', :mon, 'sistema', now())")
+                + " VALUES (:op, :n, :venc, :monto, :monto, 'PENDIENTE', :mon, :usr, now())")
                 .setParameter("op", operacionId).setParameter("n", ultima + i)
                 .setParameter("venc", java.sql.Date.valueOf(venc))
                 .setParameter("monto", precio).setParameter("mon", op.getMoneda())
+                .setParameter("usr", usuarioAuditoria())
                 .executeUpdate();
         }
         op.setPrecio(precio);
@@ -261,8 +282,9 @@ public class OperacionService {
         if (motivoRescision != null && !motivoRescision.isBlank()) {
             em.createNativeQuery(
                 "INSERT INTO rescision (operacion, fecha, tipo, observacion, usuario_creacion, fecha_creacion)"
-                + " VALUES (:op, current_date, 'RESCISION', :mot, 'sistema', now())")
+                + " VALUES (:op, current_date, 'RESCISION', :mot, :usr, now())")
                 .setParameter("op", operacionId).setParameter("mot", motivoRescision)
+                .setParameter("usr", usuarioAuditoria())
                 .executeUpdate();
         }
     }

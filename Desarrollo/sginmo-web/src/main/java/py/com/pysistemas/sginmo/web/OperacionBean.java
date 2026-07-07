@@ -93,14 +93,9 @@ public class OperacionBean implements Serializable {
     }
 
     public void ver(Long operacionId) {
-        seleccionado = operacionService.cuotasDe(operacionId).isEmpty()
-                ? buscarOperacion(operacionId) : buscarOperacion(operacionId);
+        // Resolver por id directo: no depende de las primeras 1000 filas de la grilla lazy.
+        seleccionado = operacionService.porId(operacionId);
         cuotas = operacionService.cuotasDe(operacionId);
-    }
-
-    private Operacion buscarOperacion(Long id) {
-        return operacionService.listar(0, 1000, "").stream()
-                .map(f -> (Operacion) f[0]).filter(o -> o.getId().equals(id)).findFirst().orElse(null);
     }
 
     public List<Activo> completarActivo(String t) { return operacionService.activosLibres(t); }

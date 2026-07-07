@@ -2,57 +2,45 @@
 
 Fecha: 2026-07-07
 Auditor: codex
-Resultado: REQUIERE_CAMBIOS
+Resultado: APROBADO
 
-## Verificacion
+## Ronda 2
 
-- Leidos `req.md`, `claude-implementation.md`, `test-plan.md` y `preaudit-checklist.md`.
-- Revisados:
-  - `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/ActivoService.java`
-  - `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/web/ActivoBean.java`
-  - `Desarrollo/sginmo-web/src/main/webapp/activos.xhtml`
+Se reauditaron las correcciones de Obs 214 y Obs 215 sobre generacion masiva de lotes.
 
-Confirmado correcto:
+Verificado correcto:
 
-- `ActivoService.generarLotes()` es `@Transactional`.
-- Exige permiso backend `CREAR`.
-- Valida contenedor no nulo y cantidad entre 1 y 500.
-- Crea lotes hijos de `contenedorId`.
-- Hereda `empresa` y `ubicacion` del contenedor.
-- Setea `tipoCodigo = LOTE`, `numeroLote`, `numeroManzana`, precio y comision.
-- La UI expone dialogo con contenedor, manzana, desde, cantidad, precio y comision.
+- `ActivoService.buscarLoteamiento()` filtra el autocomplete a tipos contenedores permitidos.
+- `ActivoBean.completarLoteamiento()` usa `buscarLoteamiento()` en vez del buscador generico de activos.
+- `ActivoService.generarLotes()` valida en backend que el contenedor sea `LOTEAMIENTO` o `BARRIO_CERRADO`.
+- `ActivoService.generarLotes()` normaliza `manzana` una sola vez (`null`/vacia = sin manzana).
+- La deteccion de duplicados compara mismo padre + mismo numero + misma manzana semantica.
+- El lote creado guarda la manzana normalizada, evitando diferencias entre `null` y `''`.
+- Se mantiene transaccion unica, enforcement `CREAR`, limite 1..500, omision de duplicados y herencia de empresa/ubicacion.
 
-## Hallazgos Bloqueantes
+Archivos revisados:
 
-### Obs 214 - La generacion acepta cualquier activo como contenedor, no solo loteamientos
+- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/ActivoService.java`
+- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/web/ActivoBean.java`
+- `Desarrollo/sginmo-web/src/main/webapp/activos.xhtml`
 
-Problema: El REQ define "crear N lotes hijos de un loteamiento contenedor", pero `ActivoService.generarLotes()` solo valida que el contenedor exista. `ActivoBean.completarLoteamiento()` llama a `activoService.buscarContenedor(texto, null)`, que busca cualquier activo por nombre, sin filtrar tipo `LOTEAMIENTO` ni tipos equivalentes aprobados.
+## Observaciones
 
-Impacto: Un usuario puede generar lotes debajo de una casa, departamento, oficina u otro activo no contenedor. Eso contamina la jerarquia `activo`, afecta operaciones/reportes por contenedor y contradice la regla funcional de loteamiento > lotes.
+Sin hallazgos bloqueantes pendientes.
 
-Solucion esperada: Filtrar el autocomplete de loteamientos y validar en backend que `contenedorId` corresponda a un tipo permitido como loteamiento/contenedor de lotes. Si se permite mas de un tipo contenedor, dejar la lista explicita y parametrizable.
+Obs 214 queda corregida: el contenedor de lotes se filtra y valida por tipo permitido.
 
-Evidencia:
-
-- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/ActivoService.java:219`
-- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/web/ActivoBean.java:156`
-- `Desarrollo/sginmo-web/src/main/webapp/activos.xhtml:64`
-
-### Obs 215 - La deteccion de duplicados omite lotes validos cuando la manzana esta vacia
-
-Problema: Para detectar duplicados se usa `AND (:m IS NULL OR a.numeroManzana = :m)`. Cuando `manzana` esta vacia, el parametro `:m` se envia como `null`, y la condicion queda verdadera para cualquier manzana. Asi, si ya existe el lote 1 en manzana A, una generacion sin manzana omite el lote 1 aunque no exista un lote 1 sin manzana.
-
-Impacto: La regla del REQ dice omitir duplicados por mismo contenedor/manzana. La implementacion actual omite de mas en generaciones sin manzana y puede crear resultados incompletos sin avisar claramente al usuario.
-
-Solucion esperada: Normalizar `manzana` una vez y comparar por igualdad semantica de manzana, distinguiendo null/vacia de manzanas reales. Ejemplo: `((:m IS NULL AND a.numeroManzana IS NULL) OR a.numeroManzana = :m)`, o normalizar a string vacio de forma consistente en guardado y consulta.
-
-Evidencia:
-
-- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/ActivoService.java:227`
-- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/ActivoService.java:231`
-- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/ActivoService.java:242`
+Obs 215 queda corregida: los duplicados respetan la misma manzana y no omiten lotes validos cuando la manzana esta vacia.
 
 ## Pruebas
 
 - Revision estatica de service, bean y XHTML.
-- No se ejecuto build de cierre porque el REQ queda bloqueado por inspeccion funcional.
+- Build multi-modulo ejecutado desde `Desarrollo`:
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Java\jdk-23'
+$env:Path="$env:JAVA_HOME\bin;$env:Path"
+& ..\herramientas\apache-maven-3.9.9\bin\mvn.cmd -q clean package
+```
+
+Resultado: EXIT 0.
