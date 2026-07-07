@@ -42,6 +42,9 @@ public class ArticuloBean implements Serializable {
     @Inject
     private transient py.com.one.security.servicio.PreferenciaService preferenciaService;
 
+    @Inject
+    private transient py.com.pysistemas.sginmo.servicio.PersonaService personaService;
+
     /** Id de pantalla para permisos por accion (REQ-0004). */
     public static final String PANTALLA = "articulos";
 
@@ -52,6 +55,15 @@ public class ArticuloBean implements Serializable {
     private List<Entidad> categorias;
     private List<Entidad> unidadesMedida;
     private List<Impuesto> impuestos;
+    // Clasificacion extendida (listas configurables) + proveedores
+    private List<Entidad> presentaciones;
+    private List<Entidad> marcas;
+    private List<Entidad> modelos;
+    private List<Entidad> familias;
+    private List<Entidad> grupos;
+    private List<Entidad> subgrupos;
+    private List<Entidad> procedencias;
+    private List<py.com.pysistemas.sginmo.dominio.persona.Persona> proveedores;
 
     // Propiedades parametrizables (tab habilitado solo con articulo guardado)
     private List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> propiedades = java.util.List.of();
@@ -80,6 +92,14 @@ public class ArticuloBean implements Serializable {
         unidadesMedida = catalogoService.opciones("UNIDADES_MEDIDA");
         impuestos = catalogoService.impuestosActivos();
         propiedadesDisponibles = catalogoService.opciones("PROPIEDADES_ARTICULO");
+        presentaciones = catalogoService.opciones("PRESENTACIONES");
+        marcas = catalogoService.opciones("MARCAS");
+        modelos = catalogoService.opciones("MODELOS");
+        familias = catalogoService.opciones("FAMILIAS_ARTICULO");
+        grupos = catalogoService.opciones("GRUPOS_ARTICULO");
+        subgrupos = catalogoService.opciones("SUBGRUPOS_ARTICULO");
+        procedencias = catalogoService.opciones("PROCEDENCIAS");
+        proveedores = personaService.porRol("PROVEEDOR");
 
         modelo = new LazyDataModel<>() {
             @Override
@@ -365,6 +385,14 @@ public class ArticuloBean implements Serializable {
     public List<Entidad> getCategorias() { return categorias; }
     public List<Entidad> getUnidadesMedida() { return unidadesMedida; }
     public List<Impuesto> getImpuestos() { return impuestos; }
+    public List<Entidad> getPresentaciones() { return presentaciones; }
+    public List<Entidad> getMarcas() { return marcas; }
+    public List<Entidad> getModelos() { return modelos; }
+    public List<Entidad> getFamilias() { return familias; }
+    public List<Entidad> getGrupos() { return grupos; }
+    public List<Entidad> getSubgrupos() { return subgrupos; }
+    public List<Entidad> getProcedencias() { return procedencias; }
+    public List<py.com.pysistemas.sginmo.dominio.persona.Persona> getProveedores() { return proveedores; }
 
     public List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> getPropiedades() { return propiedades; }
     public List<Entidad> getPropiedadesDisponibles() { return propiedadesDisponibles; }

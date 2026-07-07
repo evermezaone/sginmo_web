@@ -256,6 +256,87 @@
                                 </p:selectOneMenu>
                             </div>
                         </div>
+                        <!-- Clasificacion extendida (listas configurables en Listas del sistema) -->
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>Presentación</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.presentacionCodigo}" label="Presentación" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.presentaciones}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Marca</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.marcaCodigo}" label="Marca" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.marcas}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Modelo</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.modeloCodigo}" label="Modelo" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.modelos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>Familia</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.familiaCodigo}" label="Familia" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.familias}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Grupo</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.grupoCodigo}" label="Grupo" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.grupos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Subgrupo</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.subgrupoCodigo}" label="Subgrupo" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.subgrupos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>Procedencia</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.procedenciaCodigo}" label="Procedencia" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.procedencias}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Clasificación (texto libre)</label>
+                                <p:inputText value="#{articuloBean.seleccionado.clasificacion}" label="Clasificación" maxlength="20" disabled="#{articuloBean.soloLectura}"/>
+                            </div>
+                            <div class="campo">
+                                <label>Proveedor</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.proveedor}" label="Proveedor" filter="true" filterMatchMode="contains" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="Sin proveedor" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.proveedores}" var="pr" itemLabel="#{pr.nombre}" itemValue="#{pr.id}"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>Código de barra</label>
+                                <p:inputText value="#{articuloBean.seleccionado.codigoBarra}" label="Código de barra" maxlength="50" disabled="#{articuloBean.soloLectura}"/>
+                            </div>
+                            <div class="campo">
+                                <label>Código interno</label>
+                                <p:inputText value="#{articuloBean.seleccionado.codigoInterno}" label="Código interno" maxlength="25" disabled="#{articuloBean.soloLectura}"/>
+                            </div>
+                            <div class="campo">
+                                <label>Cuenta contable</label>
+                                <p:inputText value="#{articuloBean.seleccionado.cuenta}" label="Cuenta" maxlength="50" disabled="#{articuloBean.soloLectura}"/>
+                            </div>
+                        </div>
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Movimiento de dinero</label>
@@ -304,6 +385,35 @@
                                 <p:inputNumber value="#{articuloBean.seleccionado.stockMaximo}" label="Stock máximo"
                                                disabled="#{articuloBean.soloLectura}"
                                                decimalPlaces="0" thousandSeparator="."/>
+                            </div>
+                        </div>
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>% stock mínimo</label>
+                                <p:inputNumber value="#{articuloBean.seleccionado.porcentajeStockMinimo}" label="% stock mínimo"
+                                               disabled="#{articuloBean.soloLectura}" decimalPlaces="2" minValue="0" maxValue="100"/>
+                            </div>
+                            <div class="campo">
+                                <label>Último costo (Gs.)</label>
+                                <p:inputNumber value="#{articuloBean.seleccionado.ultimoCosto}" label="Último costo"
+                                               disabled="#{articuloBean.soloLectura}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/>
+                            </div>
+                            <div class="campo">
+                                <label>Próximo vencimiento</label>
+                                <p:datePicker value="#{articuloBean.seleccionado.proximoVencimiento}" pattern="dd/MM/yyyy"
+                                              disabled="#{articuloBean.soloLectura}"/>
+                            </div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Precio en moneda ext.</label>
+                                <p:inputNumber value="#{articuloBean.seleccionado.precioUnitarioExt}" label="Precio ext."
+                                               disabled="#{articuloBean.soloLectura}" decimalPlaces="2" thousandSeparator="." decimalSeparator=","/>
+                            </div>
+                            <div class="campo">
+                                <label>Costo en moneda ext.</label>
+                                <p:inputNumber value="#{articuloBean.seleccionado.costoMonedaExt}" label="Costo ext."
+                                               disabled="#{articuloBean.soloLectura}" decimalPlaces="2" thousandSeparator="." decimalSeparator=","/>
                             </div>
                         </div>
                         <div class="campo">

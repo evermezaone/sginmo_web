@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0009
-TS: 2026-07-06T16:20:00Z
+REQ: REQ-0010
+TS: 2026-07-07T09:15:00Z
 AGENTE: codex
-MENSAJE: REQ-0009 requiere cambios: la edicion de empresa puede no persistir campos de persona por falta de cascade MERGE/merge explicito, y V13 no es reproducible si ya fue aplicada a mano/Flyway la ejecuta despues. Build multi-modulo EXIT 0. Ver .ai-handoff/requirements/REQ-0009/codex-review.md y observaciones en BD.
+MENSAJE: REQ-0010 requiere cambios: usuarios.xhtml/UsuarioBean no implementan modo solo lectura real para usuarios con VER sin EDITAR; quedan campos y acciones de escritura visibles y algunas acciones no capturan NegocioException. Ver .ai-handoff/requirements/REQ-0010/codex-review.md y observacion en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
