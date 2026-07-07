@@ -37,6 +37,9 @@ public class OperacionBean implements Serializable {
     private transient PersonaService personaService;
 
     @Inject
+    private transient py.com.pysistemas.sginmo.servicio.CatalogoService catalogoService;
+
+    @Inject
     private ContextoEmpresa contexto;
 
     @Inject
@@ -50,6 +53,8 @@ public class OperacionBean implements Serializable {
 
     private List<Persona> clientes;
     private List<Persona> vendedores;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> tiposContrato;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> tiposFinanciacion;
 
     // renovacion / rescision / regeneracion
     private int renovMeses = 12;
@@ -62,6 +67,8 @@ public class OperacionBean implements Serializable {
     public void iniciar() {
         clientes = personaService.porRol("CLIENTE");
         vendedores = personaService.porRol("VENDEDOR");
+        tiposContrato = catalogoService.opciones("TIPOS_CONTRATOS");
+        tiposFinanciacion = catalogoService.opciones("TIPOS_FINANCIACIONES");
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> f) { return (int) operacionService.contar(filtroGlobal); }
@@ -155,6 +162,8 @@ public class OperacionBean implements Serializable {
     public List<CronogramaCuota> getCuotas() { return cuotas; }
     public List<Persona> getClientes() { return clientes; }
     public List<Persona> getVendedores() { return vendedores; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getTiposContrato() { return tiposContrato; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getTiposFinanciacion() { return tiposFinanciacion; }
     public int getRenovMeses() { return renovMeses; }
     public void setRenovMeses(int v) { this.renovMeses = v; }
     public BigDecimal getRenovPrecio() { return renovPrecio; }

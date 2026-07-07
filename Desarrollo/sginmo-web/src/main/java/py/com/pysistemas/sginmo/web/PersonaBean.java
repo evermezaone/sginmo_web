@@ -37,6 +37,9 @@ public class PersonaBean implements Serializable {
     private transient CatalogoService catalogoService;
 
     @Inject
+    private transient py.com.pysistemas.sginmo.servicio.GeografiaService geografiaService;
+
+    @Inject
     private SesionUsuario sesion;
 
     private LazyDataModel<Persona> modelo;
@@ -50,6 +53,10 @@ public class PersonaBean implements Serializable {
 
     private List<Entidad> roles;
     private List<Entidad> estadosCiviles;
+    private List<Entidad> tiposDocumento;
+    private List<Entidad> actividades;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> ubicaciones;
+    private List<Persona> representantes;
     private List<PersonaRol> rolesPersona = java.util.List.of();
     private String nuevoRol;
 
@@ -57,6 +64,13 @@ public class PersonaBean implements Serializable {
     public void iniciar() {
         roles = catalogoService.opciones("ROLES_PERSONA");
         estadosCiviles = catalogoService.opciones("ESTADOS_CIVILES");
+        tiposDocumento = catalogoService.opciones("TIPOS_DOCUMENTOS_IDENTIDAD");
+        actividades = catalogoService.opciones("ACTIVIDADES_ECONOMICAS");
+        ubicaciones = geografiaService.listar(0, 1000, "", null, true);
+        // representante legal: personas fisicas activas
+        representantes = personaService.listar(0, 1000, "", null, true).stream()
+                .filter(p -> "FISICA".equals(p.getTipoPersoneria()))
+                .toList();
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> filterBy) {
@@ -183,6 +197,10 @@ public class PersonaBean implements Serializable {
     public void setTabActivo(int tabActivo) { this.tabActivo = tabActivo; }
     public List<Entidad> getRoles() { return roles; }
     public List<Entidad> getEstadosCiviles() { return estadosCiviles; }
+    public List<Entidad> getTiposDocumento() { return tiposDocumento; }
+    public List<Entidad> getActividades() { return actividades; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> getUbicaciones() { return ubicaciones; }
+    public List<Persona> getRepresentantes() { return representantes; }
     public List<PersonaRol> getRolesPersona() { return rolesPersona; }
     public String getNuevoRol() { return nuevoRol; }
     public void setNuevoRol(String nuevoRol) { this.nuevoRol = nuevoRol; }

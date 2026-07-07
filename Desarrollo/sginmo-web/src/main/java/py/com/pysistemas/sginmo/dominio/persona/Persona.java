@@ -47,6 +47,26 @@ public class Persona extends Auditable implements Serializable {
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
 
+    // ── Datos fiscales / ubicacion (columnas de la tabla que faltaban en el ABM) ──
+    @Column(name = "tipo_documento_lista", length = 40)
+    private String tipoDocumentoLista = "TIPOS_DOCUMENTOS_IDENTIDAD";
+
+    @Column(name = "tipo_documento_codigo", length = 40)
+    private String tipoDocumentoCodigo;
+
+    @Column(name = "clasificacion_fiscal", length = 60)
+    private String clasificacionFiscal;
+
+    /** FK a ubicacion_geografica (ciudad/barrio). */
+    @Column(name = "ubicacion")
+    private Long ubicacion;
+
+    @Column(name = "ubicacion_url", length = 250)
+    private String ubicacionUrl;
+
+    @Column(name = "observacion")
+    private String observacion;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getTipoPersoneria() { return tipoPersoneria; }
@@ -67,6 +87,18 @@ public class Persona extends Auditable implements Serializable {
     public void setEmail(String email) { this.email = email; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+    public String getTipoDocumentoLista() { return tipoDocumentoLista; }
+    public void setTipoDocumentoLista(String v) { this.tipoDocumentoLista = v; }
+    public String getTipoDocumentoCodigo() { return tipoDocumentoCodigo; }
+    public void setTipoDocumentoCodigo(String v) { this.tipoDocumentoCodigo = v; }
+    public String getClasificacionFiscal() { return clasificacionFiscal; }
+    public void setClasificacionFiscal(String v) { this.clasificacionFiscal = v; }
+    public Long getUbicacion() { return ubicacion; }
+    public void setUbicacion(Long v) { this.ubicacion = v; }
+    public String getUbicacionUrl() { return ubicacionUrl; }
+    public void setUbicacionUrl(String v) { this.ubicacionUrl = v; }
+    public String getObservacion() { return observacion; }
+    public void setObservacion(String v) { this.observacion = v; }
 
     @Override
     public boolean equals(Object o) {

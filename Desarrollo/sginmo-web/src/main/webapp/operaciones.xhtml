@@ -104,6 +104,20 @@
                     <div class="campo"><label>Días de gracia</label>
                         <p:inputNumber value="#{operacionBean.seleccionado.diasGracia}" decimalPlaces="0" minValue="0"/></div>
                 </div>
+                <div class="fila-3">
+                    <div class="campo"><label>Tipo de contrato</label>
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoContratoCodigo}" label="Tipo de contrato">
+                            <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{operacionBean.tiposContrato}" var="tc" itemLabel="#{tc.descripcion}" itemValue="#{tc.codigo}"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Tipo de financiación</label>
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoFinanciacionCodigo}" label="Tipo de financiación">
+                            <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{operacionBean.tiposFinanciacion}" var="tf" itemLabel="#{tf.descripcion}" itemValue="#{tf.codigo}"/>
+                        </p:selectOneMenu></div>
+                    <div class="campo"><label>Avisar renovación</label>
+                        <p:toggleSwitch value="#{operacionBean.seleccionado.avisoRenovacion}"/></div>
+                </div>
                 <p style="color:#6c757d; font-size:.8rem;">
                     A crédito se genera el cronograma automáticamente. En alquiler se crean los documentos de
                     garantía y comisión según el % del activo.

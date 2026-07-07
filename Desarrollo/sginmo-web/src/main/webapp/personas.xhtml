@@ -135,9 +135,38 @@
                                                  disabled="#{personaBean.soloLectura}" maxlength="120"/>
                                 </div>
                             </div>
+                            <div class="fila-3">
+                                <div class="campo">
+                                    <label>Fecha de constitución</label>
+                                    <p:datePicker value="#{personaBean.juridica.fechaConstitucion}" pattern="dd/MM/yyyy"
+                                                  disabled="#{personaBean.soloLectura}"/>
+                                </div>
+                                <div class="campo">
+                                    <label>Actividad económica</label>
+                                    <p:selectOneMenu value="#{personaBean.juridica.actividadCodigo}" label="Actividad" disabled="#{personaBean.soloLectura}">
+                                        <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaBean.actividades}" var="ac" itemLabel="#{ac.descripcion}" itemValue="#{ac.codigo}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo">
+                                    <label>Representante legal</label>
+                                    <p:selectOneMenu value="#{personaBean.juridica.representanteLegal}" label="Representante legal"
+                                                     filter="true" filterMatchMode="contains" disabled="#{personaBean.soloLectura}">
+                                        <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaBean.representantes}" var="rep" itemLabel="#{rep.nombre}" itemValue="#{rep.id}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                            </div>
                         </ui:fragment>
                         <!-- Comun -->
                         <div class="fila-3">
+                            <div class="campo">
+                                <label>Tipo de documento</label>
+                                <p:selectOneMenu value="#{personaBean.seleccionado.tipoDocumentoCodigo}" label="Tipo de documento" disabled="#{personaBean.soloLectura}">
+                                    <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{personaBean.tiposDocumento}" var="td" itemLabel="#{td.descripcion}" itemValue="#{td.codigo}"/>
+                                </p:selectOneMenu>
+                            </div>
                             <div class="campo">
                                 <label>#{personaBean.fisica != null ? 'Documento (CI/RUC) *' : 'RUC *'}</label>
                                 <p:inputText value="#{personaBean.seleccionado.numeroDocumento}" required="true" label="Documento"
@@ -147,6 +176,13 @@
                                 <label>DV</label>
                                 <p:inputText value="#{personaBean.seleccionado.digitoVerificador}" label="DV"
                                              disabled="#{personaBean.soloLectura}" maxlength="1" style="width:4rem;"/>
+                            </div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Clasificación fiscal</label>
+                                <p:inputText value="#{personaBean.seleccionado.clasificacionFiscal}" label="Clasificación fiscal"
+                                             disabled="#{personaBean.soloLectura}" maxlength="60"/>
                             </div>
                             <div class="campo">
                                 <label>Contribuyente</label>
@@ -169,6 +205,26 @@
                             <label>Dirección</label>
                             <p:inputText value="#{personaBean.seleccionado.direccion}" label="Dirección"
                                          disabled="#{personaBean.soloLectura}" maxlength="180" style="width:100%;"/>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Ubicación (ciudad/barrio)</label>
+                                <p:selectOneMenu value="#{personaBean.seleccionado.ubicacion}" label="Ubicación"
+                                                 filter="true" filterMatchMode="contains" disabled="#{personaBean.soloLectura}">
+                                    <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{personaBean.ubicaciones}" var="ub" itemLabel="#{ub.nombre}" itemValue="#{ub.id}"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>URL de ubicación (mapa)</label>
+                                <p:inputText value="#{personaBean.seleccionado.ubicacionUrl}" label="URL de ubicación"
+                                             disabled="#{personaBean.soloLectura}" maxlength="250"/>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Observación</label>
+                            <p:inputTextarea value="#{personaBean.seleccionado.observacion}" rows="2" autoResize="false"
+                                             disabled="#{personaBean.soloLectura}" style="width:100%;"/>
                         </div>
                     </p:tab>
 

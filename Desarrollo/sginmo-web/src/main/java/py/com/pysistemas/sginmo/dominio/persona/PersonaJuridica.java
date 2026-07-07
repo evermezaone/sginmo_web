@@ -32,6 +32,20 @@ public class PersonaJuridica extends Auditable implements Serializable {
     @Column(name = "nombre_fantasia", length = 120)
     private String nombreFantasia;
 
+    // ── Columnas de la tabla que faltaban en el ABM ──
+    @Column(name = "fecha_constitucion")
+    private java.time.LocalDate fechaConstitucion;
+
+    /** FK a persona (persona fisica que representa a la empresa). */
+    @Column(name = "representante_legal")
+    private Long representanteLegal;
+
+    @Column(name = "actividad_lista", length = 40)
+    private String actividadLista = "ACTIVIDADES_ECONOMICAS";
+
+    @Column(name = "actividad_codigo", length = 40)
+    private String actividadCodigo;
+
     public Long getId() { return id; }
     public Persona getPersona() { return persona; }
     public void setPersona(Persona persona) { this.persona = persona; }
@@ -39,6 +53,14 @@ public class PersonaJuridica extends Auditable implements Serializable {
     public void setRazonSocial(String razonSocial) { this.razonSocial = razonSocial; }
     public String getNombreFantasia() { return nombreFantasia; }
     public void setNombreFantasia(String nombreFantasia) { this.nombreFantasia = nombreFantasia; }
+    public java.time.LocalDate getFechaConstitucion() { return fechaConstitucion; }
+    public void setFechaConstitucion(java.time.LocalDate v) { this.fechaConstitucion = v; }
+    public Long getRepresentanteLegal() { return representanteLegal; }
+    public void setRepresentanteLegal(Long v) { this.representanteLegal = v; }
+    public String getActividadLista() { return actividadLista; }
+    public void setActividadLista(String v) { this.actividadLista = v; }
+    public String getActividadCodigo() { return actividadCodigo; }
+    public void setActividadCodigo(String v) { this.actividadCodigo = v; }
 
     @Override
     public boolean equals(Object o) {

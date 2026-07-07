@@ -114,12 +114,17 @@ public class PersonaService {
 
     private Persona persistirSubtipo(Persona persona, PersonaFisica fisica, PersonaJuridica juridica) {
         try {
+            // El subtipo debe apuntar a la MISMA instancia de persona que trae los datos
+            // comunes editados. Si no, el cascade MERGE del subtipo re-mergea una persona
+            // distinta (cargada aparte) y pisa los campos comunes recien editados.
+            if (fisica != null) fisica.setPersona(persona);
+            if (juridica != null) juridica.setPersona(persona);
             boolean esNueva = persona.getId() == null;
             if (esNueva) {
                 em.persist(persona);
                 em.flush();
-                if (fisica != null) { fisica.setPersona(persona); em.persist(fisica); }
-                if (juridica != null) { juridica.setPersona(persona); em.persist(juridica); }
+                if (fisica != null) em.persist(fisica);
+                if (juridica != null) em.persist(juridica);
             } else {
                 em.merge(persona);
                 if (fisica != null) em.merge(fisica);

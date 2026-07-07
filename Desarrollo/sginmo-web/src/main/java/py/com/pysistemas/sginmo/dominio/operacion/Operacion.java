@@ -84,6 +84,22 @@ public class Operacion extends Auditable implements Serializable {
     @Column(name = "dias_gracia")
     private Integer diasGracia;
 
+    // ── Columnas de la tabla que faltaban en el ABM ──
+    @Column(name = "tipo_contrato_lista", length = 40)
+    private String tipoContratoLista = "TIPOS_CONTRATOS";
+
+    @Column(name = "tipo_contrato_codigo", length = 40)
+    private String tipoContratoCodigo;
+
+    @Column(name = "tipo_financiacion_lista", length = 40)
+    private String tipoFinanciacionLista = "TIPOS_FINANCIACIONES";
+
+    @Column(name = "tipo_financiacion_codigo", length = 40)
+    private String tipoFinanciacionCodigo;
+
+    @Column(name = "aviso_renovacion", nullable = false)
+    private boolean avisoRenovacion = false;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public LocalDate getFechaOperacion() { return fechaOperacion; }
@@ -128,6 +144,16 @@ public class Operacion extends Auditable implements Serializable {
     public void setMontoMora(BigDecimal v) { this.montoMora = v; }
     public Integer getDiasGracia() { return diasGracia; }
     public void setDiasGracia(Integer v) { this.diasGracia = v; }
+    public String getTipoContratoLista() { return tipoContratoLista; }
+    public void setTipoContratoLista(String v) { this.tipoContratoLista = v; }
+    public String getTipoContratoCodigo() { return tipoContratoCodigo; }
+    public void setTipoContratoCodigo(String v) { this.tipoContratoCodigo = v; }
+    public String getTipoFinanciacionLista() { return tipoFinanciacionLista; }
+    public void setTipoFinanciacionLista(String v) { this.tipoFinanciacionLista = v; }
+    public String getTipoFinanciacionCodigo() { return tipoFinanciacionCodigo; }
+    public void setTipoFinanciacionCodigo(String v) { this.tipoFinanciacionCodigo = v; }
+    public boolean isAvisoRenovacion() { return avisoRenovacion; }
+    public void setAvisoRenovacion(boolean v) { this.avisoRenovacion = v; }
 
     @Override
     public boolean equals(Object o) {
