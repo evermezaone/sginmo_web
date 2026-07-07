@@ -7,7 +7,9 @@ import jakarta.transaction.Transactional;
 import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.activo.Activo;
+import py.com.pysistemas.sginmo.dominio.activo.ActivoAtributo;
 import py.com.pysistemas.sginmo.dominio.activo.ActivoAtributoValor;
+import py.com.pysistemas.sginmo.dominio.activo.ActivoPropietario;
 import py.com.pysistemas.sginmo.dominio.persona.Persona;
 
 import java.util.ArrayList;
@@ -56,17 +58,36 @@ public class ActivoService {
         q.setParameter("f", f).setParameter("like", "%" + f + "%");
     }
 
-    /** Autocomplete lazy de padre (contenedor): activos distintos del propio. */
+    /** Autocomplete lazy de padre (contenedor): excluye el propio activo Y sus descendientes
+     *  (asignar un descendiente como contenedor crearia un ciclo en la jerarquia). */
     public List<Activo> buscarContenedor(String texto, Long exceptoId) {
         String f = texto == null ? "" : texto.trim().toLowerCase();
+        java.util.Set<Long> excluir = new java.util.HashSet<>();
+        if (exceptoId != null) { excluir.add(exceptoId); excluir.addAll(descendientes(exceptoId)); }
+        if (excluir.isEmpty()) excluir.add(-1L);   // JPQL NOT IN no admite coleccion vacia
         return em.createQuery(
-                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND (:id IS NULL OR a.id <> :id) ORDER BY a.nombre",
+                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND a.id NOT IN :excl ORDER BY a.nombre",
                 Activo.class)
-            .setParameter("like", f + "%").setParameter("id", exceptoId)
+            .setParameter("like", f + "%").setParameter("excl", excluir)
             .setMaxResults(15).getResultList();
     }
 
     public Activo buscar(Long id) { return id == null ? null : em.find(Activo.class, id); }
+
+    /** Ids de todos los descendientes (subarbol) de un activo, via CTE recursiva. */
+    private java.util.Set<Long> descendientes(Long rootId) {
+        if (rootId == null) return java.util.Set.of();
+        var filas = em.createNativeQuery(
+                "WITH RECURSIVE sub AS ("
+                + "  SELECT activo FROM activo WHERE padre = :root "
+                + "  UNION ALL "
+                + "  SELECT a.activo FROM activo a JOIN sub s ON a.padre = s.activo) "
+                + "SELECT activo FROM sub")
+            .setParameter("root", rootId).getResultList();
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (Object o : filas) ids.add(((Number) o).longValue());
+        return ids;
+    }
 
     // ── Atributos por tipo (definicion + valor) ──
 
@@ -100,7 +121,7 @@ public class ActivoService {
     public List<Persona> propietariosDe(Long activoId) {
         return em.createQuery(
                 "SELECT p FROM Persona p WHERE p.id IN "
-                + "(SELECT ap.propietario FROM ActivoPropietario ap WHERE ap.activo = :act) ORDER BY p.nombre",
+                + "(SELECT ap.propietario FROM ActivoPropietario ap WHERE ap.activo = :act AND ap.estado = 'ACTIVO') ORDER BY p.nombre",
                 Persona.class)
             .setParameter("act", activoId).getResultList();
     }
@@ -108,7 +129,7 @@ public class ActivoService {
     public List<Object[]> propietariosConId(Long activoId) {
         return em.createQuery(
                 "SELECT ap.id, p.nombre FROM ActivoPropietario ap, Persona p "
-                + "WHERE ap.activo = :act AND p.id = ap.propietario ORDER BY p.nombre", Object[].class)
+                + "WHERE ap.activo = :act AND p.id = ap.propietario AND ap.estado = 'ACTIVO' ORDER BY p.nombre", Object[].class)
             .setParameter("act", activoId).getResultList();
     }
 
@@ -124,8 +145,14 @@ public class ActivoService {
         if (activo.getTipoCodigo() == null || activo.getTipoCodigo().isBlank()) {
             throw new NegocioException("El tipo de activo es obligatorio");
         }
-        if (activo.getPadre() != null && activo.getPadre().equals(activo.getId())) {
-            throw new NegocioException("Un activo no puede ser su propio contenedor");
+        if (activo.getPadre() != null) {
+            if (activo.getPadre().equals(activo.getId())) {
+                throw new NegocioException("Un activo no puede ser su propio contenedor");
+            }
+            // No permitir asignar como contenedor a un descendiente (crearia un ciclo)
+            if (activo.getId() != null && descendientes(activo.getId()).contains(activo.getPadre())) {
+                throw new NegocioException("El contenedor no puede ser un activo contenido por este (crearía un ciclo)");
+            }
         }
         // Obligatoriedad de atributos por tipo (regla del diseno)
         if (atributos != null) {
@@ -157,19 +184,19 @@ public class ActivoService {
     private void guardarValorAtributo(Long activoId, ActivoAtributoValor a) {
         boolean vacio = a.getValor() == null || a.getValor().isBlank();
         if (a.getActivoAtributoId() != null) {
+            var ent = em.find(ActivoAtributo.class, a.getActivoAtributoId());
+            if (ent == null) return;
             if (vacio) {
-                em.createNativeQuery("DELETE FROM activo_atributo WHERE activo_atributo = :id")
-                    .setParameter("id", a.getActivoAtributoId()).executeUpdate();
+                em.remove(ent);
             } else {
-                em.createNativeQuery("UPDATE activo_atributo SET valor = :v, "
-                        + "usuario_modificacion = 'sistema', fecha_modificacion = now() WHERE activo_atributo = :id")
-                    .setParameter("v", a.getValor()).setParameter("id", a.getActivoAtributoId()).executeUpdate();
+                ent.setValor(a.getValor());   // @PreUpdate de Auditable fija el usuario real
             }
         } else if (!vacio) {
-            em.createNativeQuery("INSERT INTO activo_atributo (activo, atributo, valor, usuario_creacion, fecha_creacion) "
-                    + "VALUES (:act, :atr, :v, 'sistema', now())")
-                .setParameter("act", activoId).setParameter("atr", a.getAtributoId())
-                .setParameter("v", a.getValor()).executeUpdate();
+            var ent = new ActivoAtributo();
+            ent.setActivo(activoId);
+            ent.setAtributo(a.getAtributoId());
+            ent.setValor(a.getValor());
+            em.persist(ent);                  // @PrePersist de Auditable fija el usuario real
         }
     }
 
@@ -237,19 +264,29 @@ public class ActivoService {
     public void agregarPropietario(Long activoId, Long propietarioId) {
         autorizacion.exigir("activos", "EDITAR");
         if (propietarioId == null) throw new NegocioException("Elija el propietario");
-        Long rep = em.createQuery(
-                "SELECT COUNT(ap) FROM ActivoPropietario ap WHERE ap.activo = :act AND ap.propietario = :pro", Long.class)
-            .setParameter("act", activoId).setParameter("pro", propietarioId).getSingleResult();
-        if (rep > 0) throw new NegocioException("Esa persona ya figura como propietaria");
-        em.createNativeQuery("INSERT INTO activo_propietario (activo, propietario, usuario_creacion, fecha_creacion) "
-                + "VALUES (:act, :pro, 'sistema', now())")
-            .setParameter("act", activoId).setParameter("pro", propietarioId).executeUpdate();
+        // Si ya existe (activo o inactivo) NO se duplica: activo -> error; inactivo -> se reactiva.
+        var existentes = em.createQuery(
+                "SELECT ap FROM ActivoPropietario ap WHERE ap.activo = :act AND ap.propietario = :pro", ActivoPropietario.class)
+            .setParameter("act", activoId).setParameter("pro", propietarioId).getResultList();
+        for (var ap : existentes) {
+            if ("ACTIVO".equals(ap.getEstado())) throw new NegocioException("Esa persona ya figura como propietaria");
+        }
+        if (!existentes.isEmpty()) {
+            existentes.get(0).setEstado("ACTIVO");   // reactiva preservando el historial
+            return;
+        }
+        var ap = new ActivoPropietario();            // JPA -> Auditable fija el usuario real
+        ap.setActivo(activoId);
+        ap.setPropietario(propietarioId);
+        em.persist(ap);
     }
 
     @Transactional
     public void quitarPropietario(Long activoPropietarioId) {
         autorizacion.exigir("activos", "EDITAR");
-        em.createNativeQuery("DELETE FROM activo_propietario WHERE activo_propietario = :id")
-            .setParameter("id", activoPropietarioId).executeUpdate();
+        var ap = em.find(ActivoPropietario.class, activoPropietarioId);
+        if (ap == null) throw new NegocioException("El propietario no existe");
+        // Baja LOGICA: preserva la trazabilidad historica (operaciones, liquidaciones, reportes).
+        ap.setEstado("INACTIVO");
     }
 }

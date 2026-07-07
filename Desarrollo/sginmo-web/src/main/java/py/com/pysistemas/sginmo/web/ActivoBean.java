@@ -145,8 +145,12 @@ public class ActivoBean implements Serializable {
     }
 
     public void quitarPropietario(Long activoPropietarioId) {
-        activoService.quitarPropietario(activoPropietarioId);
-        propietarios = activoService.propietariosConId(seleccionado.getId());
+        try {
+            activoService.quitarPropietario(activoPropietarioId);
+            propietarios = activoService.propietariosConId(seleccionado.getId());
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el propietario", e.getMessage());
+        }
     }
 
     public List<Activo> completarLoteamiento(String texto) {
