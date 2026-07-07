@@ -8,6 +8,7 @@ import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.activo.Activo;
 import py.com.pysistemas.sginmo.dominio.operacion.CronogramaCuota;
+import py.com.pysistemas.sginmo.dominio.operacion.IngresoEgreso;
 import py.com.pysistemas.sginmo.dominio.operacion.Operacion;
 
 import java.math.BigDecimal;
@@ -138,18 +139,24 @@ public class OperacionService {
                     .setParameter("doc", doc).setParameter("op", op.getId()).executeUpdate();
             }
 
-            // REQ-0018: movimientos automaticos
-            if ("ALQUILER".equals(op.getTipoOperacion()) && op.getGarantia() != null
-                    && op.getGarantia().signum() > 0) {
-                crearDocumentoInterno(op, op.getGarantia(),
+            // REQ-0018: movimientos automaticos en ingreso_egreso, clasificados y CANCELADOS
+            boolean esAlquiler = "ALQUILER".equals(op.getTipoOperacion());
+
+            // Deposito de garantia (solo alquiler): INGRESO, item DEPOSITO_GARANTIA (RN-OPE-013)
+            if (esAlquiler && op.getGarantia() != null && op.getGarantia().signum() > 0) {
+                crearMovimiento("INGRESO", "DEPOSITO_GARANTIA", op.getGarantia(), op, op.getCliente(),
                         "Depósito de garantía - Operación " + op.getId());
             }
-            BigDecimal pctComision = "ALQUILER".equals(op.getTipoOperacion())
-                    ? activo.getComisionAlquiler() : activo.getComisionVenta();
-            if (pctComision != null && pctComision.signum() > 0) {
-                BigDecimal comision = op.getPrecio().multiply(pctComision)
+
+            // Comision: EGRESO, item COMISION_ALQUILER/COMISION_VENTA (RN-OPE-002/012).
+            // Base RN-OPE-002: ALQUILER = garantia * %, VENTA = precio * %.
+            BigDecimal pctComision = esAlquiler ? activo.getComisionAlquiler() : activo.getComisionVenta();
+            BigDecimal baseComision = esAlquiler ? op.getGarantia() : op.getPrecio();
+            if (pctComision != null && pctComision.signum() > 0 && baseComision != null && baseComision.signum() > 0) {
+                BigDecimal comision = baseComision.multiply(pctComision)
                         .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-                crearDocumentoInterno(op, comision,
+                crearMovimiento("EGRESO", esAlquiler ? "COMISION_ALQUILER" : "COMISION_VENTA", comision,
+                        op, op.getVendedor(),
                         "Comisión " + pctComision + "% - Operación " + op.getId());
             }
 
@@ -160,6 +167,40 @@ public class OperacionService {
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);
         }
+    }
+
+    /** Id del articulo/concepto cuya aplicacion funcional coincide (COMISION_*, DEPOSITO_GARANTIA...). */
+    private Long articuloPorAplicacion(String aplicacion) {
+        var l = em.createQuery(
+                "SELECT a.id FROM Articulo a WHERE a.aplicacion = :apl AND a.estado = 'ACTIVO' ORDER BY a.id",
+                Long.class)
+            .setParameter("apl", aplicacion).setMaxResults(1).getResultList();
+        return l.isEmpty() ? null : l.get(0);
+    }
+
+    /**
+     * Movimiento automatico de caja (REQ-0018) en ingreso_egreso, clasificado por articulo/aplicacion,
+     * estado CANCELADO (contado), con trazabilidad a operacion/activo/persona. Auditable fija el usuario real.
+     */
+    private void crearMovimiento(String tipo, String aplicacion, BigDecimal monto,
+                                 Operacion op, Long persona, String observacion) {
+        Long articulo = articuloPorAplicacion(aplicacion);
+        if (articulo == null) {
+            throw new NegocioException("Falta el artículo con aplicación '" + aplicacion + "' en el catálogo");
+        }
+        var ie = new IngresoEgreso();
+        ie.setFecha(op.getFechaOperacion());
+        ie.setTipo(tipo);
+        ie.setMonto(monto);
+        ie.setSaldo(BigDecimal.ZERO);      // CANCELADO: sin saldo pendiente
+        ie.setEstado("CANCELADO");
+        ie.setArticulo(articulo);
+        ie.setPersona(persona);
+        ie.setActivo(op.getActivo());
+        ie.setOperacion(op.getId());
+        ie.setEmpresa(op.getEmpresa());
+        ie.setObservacion(observacion);
+        em.persist(ie);
     }
 
     /** Documento interno (DINT) ENTRADA: numerado por f_siguiente_numero, detalle unico. */
