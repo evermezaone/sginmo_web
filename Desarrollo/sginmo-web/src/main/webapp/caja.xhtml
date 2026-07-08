@@ -33,6 +33,10 @@
                     <span>Apertura: <strong><h:outputText value="#{cajaBean.planilla.montoApertura}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong></span>
                     <span>Cobrado: <strong style="color:#2a9d8f;"><h:outputText value="#{cajaBean.planilla.montoCobro}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong></span>
                     <span style="flex:1"></span>
+                    <p:commandButton value="Recaudación (PDF)" icon="pi pi-file-pdf" ajax="false"
+                                     styleClass="ui-button-outlined"
+                                     rendered="#{sesionUsuario.puede('caja','EXPORTAR')}"
+                                     actionListener="#{descargaBean.recaudacion(cajaBean.planilla.id)}"/>
                     <p:commandButton value="Cerrar caja" icon="pi pi-lock" styleClass="ui-button-danger ui-button-outlined"
                                      rendered="#{sesionUsuario.puede('caja','EDITAR')}"
                                      actionListener="#{cajaBean.cerrarCaja()}" update="frm">
