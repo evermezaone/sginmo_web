@@ -1,18 +1,22 @@
 # REQ-0029 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-08
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Obs 237: la recaudacion de planilla existe en backend (`DescargaBean.recaudacion()` y `ReporteService.recaudacionPlanilla()`), pero no hay boton ni accion XHTML que la invoque. La busqueda de `recaudacion(` solo encuentra Java, no `caja.xhtml` u otra vista. Impacto: el usuario no puede generar desde la pantalla el PDF de recaudacion requerido por el REQ, aunque el servicio exista. Solucion esperada: agregar en la pantalla de caja/planilla un boton PDF de recaudacion visible solo con `sesionUsuario.puede('caja','EXPORTAR')`, `ajax="false"`, invocando `descargaBean.recaudacion(cajaBean.planilla.id)` o equivalente.
+- Ninguno pendiente.
+
+### Observaciones cerradas
+
+- Obs 237 cerrada en ronda 2: `caja.xhtml` ahora incluye el boton `Recaudacion (PDF)` con `ajax="false"`, visible solo con `sesionUsuario.puede('caja','EXPORTAR')`, invocando `descargaBean.recaudacion(cajaBean.planilla.id)`.
 
 ### No Bloqueantes
 
@@ -23,18 +27,18 @@
 
 ## Riesgos
 
-- Funcionalidad backend no accesible desde la UI, por lo que el criterio funcional de reporte PDF queda incompleto.
+- Sin riesgos bloqueantes detectados para el alcance de REQ-0029.
 
 ## Pruebas Revisadas
 
 - [x] Revision estatica de `ReporteService.recaudacionPlanilla`.
 - [x] Revision estatica de `DescargaBean.recaudacion`.
+- [x] Revision estatica del boton `Recaudacion (PDF)` en `caja.xhtml`.
 - [x] Busqueda de invocaciones `recaudacion(` en Java/XHTML.
 - [x] Revision estatica de `ingresos-egresos.xhtml`.
 - [x] Revision estatica de `IngresoEgresoService.contar/listar`.
-- [x] Build ejecutado durante la ronda: `mvn -q clean package` en `Desarrollo` con EXIT 0.
+- [x] Build: `mvn -q clean package` en `Desarrollo` con EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Reejecutar `mvn -q clean package` luego de agregar el boton.
-- [ ] Prueba funcional: usuario con `caja/EXPORTAR` debe poder descargar PDF de recaudacion de su planilla; usuario sin `EXPORTAR` no debe ver/ejecutar el boton.
+- [ ] Prueba funcional manual: usuario con `caja/EXPORTAR` descarga PDF de recaudacion de su planilla; usuario sin `EXPORTAR` no ve/ejecuta el boton.

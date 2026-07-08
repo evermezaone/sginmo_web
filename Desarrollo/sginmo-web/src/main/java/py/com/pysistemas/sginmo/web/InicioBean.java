@@ -25,6 +25,9 @@ public class InicioBean implements Serializable {
     @Inject
     private SesionUsuario sesion;
 
+    @Inject
+    private ContextoEmpresa contexto;
+
     private long activosLibres, activosOcupados, activosVendidos;
     private long operacionesVigentes, cuotasVencidas;
     private BigDecimal recaudadoHoy = BigDecimal.ZERO;
@@ -44,27 +47,36 @@ public class InicioBean implements Serializable {
         if (sesion == null || !sesion.isLogueado()) {
             return;
         }
-        activosLibres = num("SELECT COUNT(*) FROM activo WHERE estado = 'LIBRE'");
-        activosOcupados = num("SELECT COUNT(*) FROM activo WHERE estado = 'OCUPADA'");
-        activosVendidos = num("SELECT COUNT(*) FROM activo WHERE estado = 'VENDIDA'");
-        operacionesVigentes = num("SELECT COUNT(*) FROM operacion WHERE estado = 'VIGENTE'");
-        cuotasVencidas = num("SELECT COUNT(*) FROM cronograma_cuota WHERE estado = 'PENDIENTE' AND fecha_vencimiento < current_date");
-        recaudadoHoy = dec("SELECT COALESCE(SUM(monto),0) FROM cobro WHERE estado = 'ACTIVO' AND fecha = current_date");
-        saldoPorCobrar = dec("SELECT COALESCE(SUM(saldo_pendiente),0) FROM v_operacion_saldo");
+        // Aislamiento multiempresa (obs 238): TODOS los KPIs se filtran por la empresa
+        // del contexto. Sin empresa seleccionada, el tablero queda en cero.
+        Long emp = contexto == null || contexto.getEmpresa() == null ? null : contexto.getEmpresa().getId();
+        if (emp == null) {
+            return;
+        }
+        // activos sin empresa asignada son globales (mismo criterio que listadoActivos, obs 236)
+        activosLibres = num("SELECT COUNT(*) FROM activo WHERE estado = 'LIBRE' AND (empresa = :emp OR empresa IS NULL)", emp);
+        activosOcupados = num("SELECT COUNT(*) FROM activo WHERE estado = 'OCUPADA' AND (empresa = :emp OR empresa IS NULL)", emp);
+        activosVendidos = num("SELECT COUNT(*) FROM activo WHERE estado = 'VENDIDA' AND (empresa = :emp OR empresa IS NULL)", emp);
+        operacionesVigentes = num("SELECT COUNT(*) FROM operacion WHERE estado = 'VIGENTE' AND empresa = :emp", emp);
+        cuotasVencidas = num("SELECT COUNT(*) FROM cronograma_cuota cc JOIN operacion o ON o.operacion = cc.operacion"
+                + " WHERE cc.estado = 'PENDIENTE' AND cc.fecha_vencimiento < current_date AND o.empresa = :emp", emp);
+        recaudadoHoy = dec("SELECT COALESCE(SUM(monto),0) FROM cobro WHERE estado = 'ACTIVO' AND fecha = current_date AND empresa = :emp", emp);
+        saldoPorCobrar = dec("SELECT COALESCE(SUM(s.saldo_pendiente),0) FROM v_operacion_saldo s"
+                + " JOIN operacion o ON o.operacion = s.operacion WHERE o.empresa = :emp", emp);
     }
 
-    private long num(String sql) {
+    private long num(String sql, Long emp) {
         try {
-            Object r = em.createNativeQuery(sql).getSingleResult();
+            Object r = em.createNativeQuery(sql).setParameter("emp", emp).getSingleResult();
             return r == null ? 0 : ((Number) r).longValue();
         } catch (RuntimeException e) {
             return 0;
         }
     }
 
-    private BigDecimal dec(String sql) {
+    private BigDecimal dec(String sql, Long emp) {
         try {
-            Object r = em.createNativeQuery(sql).getSingleResult();
+            Object r = em.createNativeQuery(sql).setParameter("emp", emp).getSingleResult();
             return r == null ? BigDecimal.ZERO : new BigDecimal(r.toString());
         } catch (RuntimeException e) {
             return BigDecimal.ZERO;

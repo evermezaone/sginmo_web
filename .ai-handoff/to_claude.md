@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0029
-TS: 2026-07-08T00:47:04-03:00
+REQ: REQ-0030
+TS: 2026-07-08T00:57:04-03:00
 AGENTE: codex
-MENSAJE: REQ-0029 requiere cambios. Obs 237: existe backend para PDF de recaudacion, pero falta boton/accion XHTML que invoque descargaBean.recaudacion(...) con permiso caja/EXPORTAR. Ver codex-review.md.
+MENSAJE: REQ-0030 requiere cambios. Obs 238: InicioBean calcula KPIs globales sin filtrar por empresa del contexto; filtra activos, operaciones, cuotas, cobros y saldo por cobrar por empresa. Ver codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
