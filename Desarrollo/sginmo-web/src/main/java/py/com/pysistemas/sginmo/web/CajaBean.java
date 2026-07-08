@@ -54,19 +54,27 @@ public class CajaBean implements Serializable {
     private Long formaPagoSel;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.FormaPago> formasPago;
 
-    // Datos del medio de pago (obs 225): la forma de pago define cuales son exigibles
+    // Datos del medio de pago (obs 225/226): la forma de pago define cuales son exigibles
     private String datoEmisor, datoProcesador, datoNumero, datoSerie, datoCuenta, datoReferencia;
     private java.time.LocalDate datoVencimiento;
+    private Long datoCobrador, datoNotaCredito;
+    private java.time.LocalDate datoFechaDeposito;
+    private String datoNumeroDeposito, datoEstadoDeposito, datoMotivoRechazo;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> emisores = java.util.List.of();
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> procesadores = java.util.List.of();
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> motivosRechazo = java.util.List.of();
+    private List<Persona> cobradores = java.util.List.of();
+    private List<Object[]> notasCredito = java.util.List.of();
 
     @PostConstruct
     public void iniciar() {
         clientes = personaService.porRol("CLIENTE");
+        cobradores = personaService.porRol("EMPLEADO");
         formasPago = catalogoService == null ? java.util.List.of() : formasHabilitadas();
         if (catalogoService != null) {
             emisores = catalogoService.opciones("EMISORES");
             procesadores = catalogoService.opciones("PROCESADORES");
+            motivosRechazo = catalogoService.opciones("MOTIVOS_RECHAZO");
         }
         refrescarPlanilla();
     }
@@ -80,6 +88,8 @@ public class CajaBean implements Serializable {
     private void limpiarDatosCobro() {
         datoEmisor = null; datoProcesador = null; datoNumero = null; datoSerie = null;
         datoCuenta = null; datoReferencia = null; datoVencimiento = null;
+        datoCobrador = null; datoNotaCredito = null; datoFechaDeposito = null;
+        datoNumeroDeposito = null; datoEstadoDeposito = null; datoMotivoRechazo = null;
     }
 
     public void formaPagoCambiada() { limpiarDatosCobro(); }
@@ -131,6 +141,7 @@ public class CajaBean implements Serializable {
     public void clienteCambiado() {
         documentos = clienteSel == null ? java.util.List.of() : cajaService.documentosPendientesDe(clienteSel);
         documentoSel = null; cuotas = java.util.List.of();
+        notasCredito = cajaService.notasCreditoDe(clienteSel);
     }
 
     public void documentoCambiado() {
@@ -143,7 +154,8 @@ public class CajaBean implements Serializable {
             if (documentoSel == null) throw new NegocioException("Elija el documento a cobrar");
             long cobro = cajaService.cobrar(documentoSel, planilla.getId(), formaPagoSel, clienteSel,
                     montoCobro, contexto.getEmpresa() != null ? monedaLocal() : null, sesion.codigoUsuario(),
-                    datoEmisor, datoProcesador, datoNumero, datoSerie, datoCuenta, datoVencimiento, datoReferencia);
+                    datoEmisor, datoProcesador, datoNumero, datoSerie, datoCuenta, datoVencimiento, datoReferencia,
+                    datoCobrador, datoFechaDeposito, datoNumeroDeposito, datoEstadoDeposito, datoMotivoRechazo, datoNotaCredito);
             aviso(FacesMessage.SEVERITY_INFO, "Cobro registrado", "Recibo #" + cobro);
             montoCobro = BigDecimal.ZERO;
             limpiarDatosCobro();
@@ -208,4 +220,19 @@ public class CajaBean implements Serializable {
     public void setDatoVencimiento(java.time.LocalDate v) { this.datoVencimiento = v; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getEmisores() { return emisores; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getProcesadores() { return procesadores; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getMotivosRechazo() { return motivosRechazo; }
+    public List<Persona> getCobradores() { return cobradores; }
+    public List<Object[]> getNotasCredito() { return notasCredito; }
+    public Long getDatoCobrador() { return datoCobrador; }
+    public void setDatoCobrador(Long v) { this.datoCobrador = v; }
+    public Long getDatoNotaCredito() { return datoNotaCredito; }
+    public void setDatoNotaCredito(Long v) { this.datoNotaCredito = v; }
+    public java.time.LocalDate getDatoFechaDeposito() { return datoFechaDeposito; }
+    public void setDatoFechaDeposito(java.time.LocalDate v) { this.datoFechaDeposito = v; }
+    public String getDatoNumeroDeposito() { return datoNumeroDeposito; }
+    public void setDatoNumeroDeposito(String v) { this.datoNumeroDeposito = v; }
+    public String getDatoEstadoDeposito() { return datoEstadoDeposito; }
+    public void setDatoEstadoDeposito(String v) { this.datoEstadoDeposito = v; }
+    public String getDatoMotivoRechazo() { return datoMotivoRechazo; }
+    public void setDatoMotivoRechazo(String v) { this.datoMotivoRechazo = v; }
 }

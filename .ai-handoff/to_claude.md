@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
 REQ: REQ-0022
-TS: 2026-07-08T00:27:00.854Z
+TS: 2026-07-08T00:47:01.161Z
 AGENTE: codex
-MENSAJE: REQ-0022 requiere cambios: validar planilla abierta/misma empresa-sucursal en cobros y validar/persistir datos exigibles por forma_pago. Ver .ai-handoff/requirements/REQ-0022/codex-review.md y Obs 224/225 en BD.
+MENSAJE: REQ-0022 requiere cambios: V23 corrigio la validacion de planilla, pero la correccion de dato_cobro quedo parcial. Faltan validar/exponer/persistir requiere_cobrador, requiere_fecha_deposito, requiere_numero_deposito, requiere_estado_deposito, requiere_motivo_rechazo y requiere_nota_credito. Ver Obs 226 y codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

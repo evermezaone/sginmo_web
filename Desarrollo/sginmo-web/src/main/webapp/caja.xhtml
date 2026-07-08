@@ -115,6 +115,45 @@
                                     <label>Referencia *</label>
                                     <p:inputText value="#{cajaBean.datoReferencia}" maxlength="50"/>
                                 </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereCobrador ? '' : 'display:none;'}">
+                                    <label>Cobrador *</label>
+                                    <p:selectOneMenu value="#{cajaBean.datoCobrador}" label="Cobrador" filter="true" filterMatchMode="contains">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{cajaBean.cobradores}" var="cbr" itemLabel="#{cbr.nombre}" itemValue="#{cbr.id}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereFechaDeposito ? '' : 'display:none;'}">
+                                    <label>Fecha de depósito *</label>
+                                    <p:datePicker value="#{cajaBean.datoFechaDeposito}" pattern="dd/MM/yyyy"/>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereNumeroDeposito ? '' : 'display:none;'}">
+                                    <label>Número de depósito *</label>
+                                    <p:inputText value="#{cajaBean.datoNumeroDeposito}" maxlength="25"/>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereEstadoDeposito ? '' : 'display:none;'}">
+                                    <label>Estado del depósito *</label>
+                                    <p:selectOneMenu value="#{cajaBean.datoEstadoDeposito}" label="Estado del depósito">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItem itemLabel="Pendiente"  itemValue="PENDIENTE"/>
+                                        <f:selectItem itemLabel="Depositado" itemValue="DEPOSITADO"/>
+                                        <f:selectItem itemLabel="Acreditado" itemValue="ACREDITADO"/>
+                                        <f:selectItem itemLabel="Rechazado"  itemValue="RECHAZADO"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereMotivoRechazo ? '' : 'display:none;'}">
+                                    <label>Motivo de rechazo *</label>
+                                    <p:selectOneMenu value="#{cajaBean.datoMotivoRechazo}" label="Motivo de rechazo">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{cajaBean.motivosRechazo}" var="mr" itemLabel="#{mr.descripcion}" itemValue="#{mr.codigo}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereNotaCredito ? '' : 'display:none;'}">
+                                    <label>Nota de crédito *</label>
+                                    <p:selectOneMenu value="#{cajaBean.datoNotaCredito}" label="Nota de crédito">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{cajaBean.notasCredito}" var="nc" itemLabel="NTCR #{nc[1]} (saldo #{nc[2]})" itemValue="#{nc[0]}"/>
+                                    </p:selectOneMenu>
+                                </div>
                             </div>
                         </ui:fragment>
                     </h:panelGroup>

@@ -96,24 +96,29 @@ public class CajaService {
     public long cobrar(Long documentoId, Long planillaId, Long formaPagoId, Long personaId,
                        BigDecimal monto, Long monedaId, String usuario) {
         return cobrar(documentoId, planillaId, formaPagoId, personaId, monto, monedaId, usuario,
-                null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null,
+                null, null, null, null, null, null);
     }
 
     /**
-     * Cobro con los datos del medio de pago (obs 225): la forma de pago parametriza los
-     * exigibles (flags requiere_*) y el SP los valida y persiste dato_cobro junto al cobro.
+     * Cobro con los datos del medio de pago (obs 225/226): la forma de pago parametriza
+     * los 13 exigibles (flags requiere_*) y el SP los valida y persiste dato_cobro
+     * junto al cobro (incluye cobrador, deposito, motivo de rechazo y nota de credito).
      */
     @Transactional
     public long cobrar(Long documentoId, Long planillaId, Long formaPagoId, Long personaId,
                        BigDecimal monto, Long monedaId, String usuario,
                        String emisor, String procesador, String numero, String serie,
-                       String cuenta, java.time.LocalDate vencimiento, String referencia) {
+                       String cuenta, java.time.LocalDate vencimiento, String referencia,
+                       Long cobrador, java.time.LocalDate fechaDeposito, String numeroDeposito,
+                       String estadoDeposito, String motivoRechazo, Long notaCredito) {
         autorizacion.exigir("caja", "CREAR");
         if (planillaId == null) throw new NegocioException("No hay planilla de caja abierta");
         try {
             Object r = em.createNativeQuery(
                 "SELECT f_cobrar_documento(:doc, :pla, :fp, :per, :monto, :mon, current_date, :usr,"
-                + " :emisor, :proc, :num, :serie, :cuenta, :venc, :ref)")
+                + " :emisor, :proc, :num, :serie, :cuenta, :venc, :ref,"
+                + " :cobrador, :fdep, :ndep, :edep, :mrech, :ntcr)")
                 .setParameter("doc", documentoId).setParameter("pla", planillaId)
                 .setParameter("fp", formaPagoId).setParameter("per", personaId)
                 .setParameter("monto", monto).setParameter("mon", monedaId)
@@ -123,11 +128,29 @@ public class CajaService {
                 .setParameter("cuenta", cuenta)
                 .setParameter("venc", vencimiento == null ? null : java.sql.Date.valueOf(vencimiento))
                 .setParameter("ref", referencia)
+                .setParameter("cobrador", cobrador)
+                .setParameter("fdep", fechaDeposito == null ? null : java.sql.Date.valueOf(fechaDeposito))
+                .setParameter("ndep", numeroDeposito).setParameter("edep", estadoDeposito)
+                .setParameter("mrech", motivoRechazo).setParameter("ntcr", notaCredito)
                 .getSingleResult();
             return ((Number) r).longValue();
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(traducirSp(e));
         }
+    }
+
+    /** Notas de credito (NTCR) no anuladas del cliente, para asociar al cobro (obs 226). */
+    @SuppressWarnings("unchecked")
+    public List<Object[]> notasCreditoDe(Long personaId) {
+        if (personaId == null) return java.util.List.of();
+        List<Object[]> filas = em.createNativeQuery(
+                "SELECT documento, serie || '-' || numero AS etiqueta, saldo FROM documento"
+                + " WHERE persona = :p AND tipo_codigo = 'NTCR' AND estado <> 'ANULADO'"
+                + " ORDER BY documento DESC")
+            .setParameter("p", personaId).getResultList();
+        return filas.stream()
+            .map(f -> new Object[]{((Number) f[0]).longValue(), f[1], f[2]})
+            .toList();
     }
 
     @Transactional
