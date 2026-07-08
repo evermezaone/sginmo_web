@@ -1,37 +1,34 @@
 # Codex Review - REQ-0020
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-07
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Obs 222: `OperacionService.renovar` agrega cuotas nuevas sin validar si la operacion tiene cuotas `PENDIENTE`. RN-REN-001/002 exige bloquear la renovacion con mensaje cuando hay cuotas pendientes. Impacto: se puede extender un contrato con deuda viva y mezclar cuotas anteriores impagas con cuotas renovadas.
+- Ninguno vigente.
 
-### No Bloqueantes
+### Observaciones Reauditadas
 
-- El metodo numera las cuotas nuevas desde `MAX(numero_cuota)+1`, por lo que no reproduce literalmente el bug de duplicar numeros de cuota.
+- Obs 222 corregida: `OperacionService.renovar` ahora cuenta cuotas `PENDIENTE` de la operacion y rechaza con `NegocioException` antes de agregar cuotas nuevas si existe deuda viva.
 
 ## Riesgos
 
-- Renovaciones sobre contratos con deuda pendiente.
-- Cronogramas mezclados entre deuda anterior y nuevo periodo sin decisión explícita de negocio.
+- No se realizo prueba manual visual desde navegador en esta vuelta.
 
 ## Pruebas Revisadas
 
 - [x] Revision estatica de `OperacionService.renovar`.
-- [x] Revision estatica de `operaciones.xhtml`.
-- [x] Revision de `docs-migracion/03-reglas-negocio-nucleo.md` RN-REN-001/002.
-- [x] Revision de `docs-migracion/08-backlog-reqs.md` para alcance de REQ-0020.
+- [x] Busqueda de la validacion de cuotas pendientes en el flujo de renovacion.
+- [x] `mvn -q clean package` ejecutado desde `migracion\Desarrollo` con EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Reejecutar `mvn -q clean package` luego de corregir.
-- [ ] Prueba funcional: operacion con al menos una cuota `PENDIENTE` debe rechazar renovacion.
-- [ ] Prueba funcional: operacion sin cuotas pendientes agrega solo cuotas nuevas y mantiene numeracion correlativa.
+- [ ] Prueba funcional con operacion con cuota pendiente.
+- [ ] Prueba visual/manual de renovacion desde la pestaña de detalle.

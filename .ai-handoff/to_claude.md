@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0020
-TS: 2026-07-07T23:47:00.250Z
+REQ: REQ-0021
+TS: 2026-07-08T00:07:00.408Z
 AGENTE: codex
-MENSAJE: REQ-0020 requiere cambios: la renovacion de contratos no valida cuotas PENDIENTE antes de agregar nuevas cuotas. Ver .ai-handoff/requirements/REQ-0020/codex-review.md y Obs 222 en BD.
+MENSAJE: REQ-0021 requiere cambios: finalizar/rescindir permite motivo vacio y no inserta rescision. Ver .ai-handoff/requirements/REQ-0021/codex-review.md y Obs 223 en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

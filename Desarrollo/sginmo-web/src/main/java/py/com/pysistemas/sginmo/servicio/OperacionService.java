@@ -327,6 +327,10 @@ public class OperacionService {
     @Transactional
     public void finalizar(Long operacionId, String motivoRescision) {
         autorizacion.exigir("operaciones", "EDITAR");
+        // El motivo es obligatorio: la finalizacion/rescision debe quedar auditable siempre.
+        if (motivoRescision == null || motivoRescision.isBlank()) {
+            throw new NegocioException("El motivo de la finalización/rescisión es obligatorio");
+        }
         Operacion op = em.find(Operacion.class, operacionId);
         if (op == null) throw new NegocioException("La operación no existe");
         if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("La operación ya está finalizada");
@@ -337,13 +341,18 @@ public class OperacionService {
         if (a != null && !"VENDIDA".equals(a.getEstado())) {
             a.setEstado("LIBRE");
         }
-        if (motivoRescision != null && !motivoRescision.isBlank()) {
-            em.createNativeQuery(
-                "INSERT INTO rescision (operacion, fecha, tipo, observacion, usuario_creacion, fecha_creacion)"
-                + " VALUES (:op, current_date, 'RESCISION', :mot, :usr, now())")
-                .setParameter("op", operacionId).setParameter("mot", motivoRescision)
-                .setParameter("usr", usuarioAuditoria())
-                .executeUpdate();
-        }
+        // SIEMPRE se inserta la fila de rescision (trazabilidad). Tipo segun el momento
+        // (codigos del legado): antes de la fecha fin de contrato = RESCISION anticipada;
+        // en/tras la fecha fin (o sin fecha) = FIN_CONTRATO.
+        boolean anticipada = op.getFechaFinContrato() != null
+                && java.time.LocalDate.now().isBefore(op.getFechaFinContrato());
+        em.createNativeQuery(
+            "INSERT INTO rescision (operacion, fecha, tipo, observacion, usuario_creacion, fecha_creacion)"
+            + " VALUES (:op, current_date, :tipo, :mot, :usr, now())")
+            .setParameter("op", operacionId)
+            .setParameter("tipo", anticipada ? "RESCISION" : "FIN_CONTRATO")
+            .setParameter("mot", motivoRescision)
+            .setParameter("usr", usuarioAuditoria())
+            .executeUpdate();
     }
 }

@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0019, REQ-0020, REQ-0021, REQ-0022, REQ-0023, REQ-0024, REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
-TS: 2026-07-07T23:39:41Z
+REQ: REQ-0020, REQ-0021, REQ-0022, REQ-0023, REQ-0024, REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
+TS: 2026-07-07T23:57:39Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0019, REQ-0020, REQ-0021, REQ-0022, REQ-0023, REQ-0024, REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0019: regenerar cuotas: restringido a ADMINISTRADOR (Autorizacion.exigirAdministrador + pestana rendered=administrador) y recalcula fechaFinContrato = primeraFecha+(cuotas-1) meses en dia de pago; verificado contra VPS
+MENSAJE: [SGI] Cola de auditoria: REQ-0020, REQ-0021, REQ-0022, REQ-0023, REQ-0024, REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0020: renovar bloquea con cuotas PENDIENTE (RN-REN-001/002): valida deuda viva antes de extender, mensaje de negocio claro, cubre pago parcial; verificado contra VPS
 
 ---
 # Estados validos (Claude escribe, Codex lee):

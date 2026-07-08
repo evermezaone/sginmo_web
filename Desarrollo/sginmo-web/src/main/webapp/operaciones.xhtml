@@ -155,28 +155,33 @@
                     <p:tab title="Renovar" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
                         <div class="fila-2">
                             <div class="campo"><label>Meses adicionales</label>
-                                <p:inputNumber value="#{operacionBean.renovMeses}" decimalPlaces="0" minValue="1"/></div>
+                                <p:inputNumber id="inpRenovMeses" value="#{operacionBean.renovMeses}" decimalPlaces="0" minValue="1"/></div>
                             <div class="campo"><label>Nuevo precio (opcional)</label>
-                                <p:inputNumber value="#{operacionBean.renovPrecio}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                                <p:inputNumber id="inpRenovPrecio" value="#{operacionBean.renovPrecio}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
                         </div>
                         <p:commandButton value="Renovar contrato" icon="pi pi-refresh"
+                                         process="@this inpRenovMeses inpRenovPrecio"
                                          actionListener="#{operacionBean.renovar()}" update="frmDetalle"/>
                     </p:tab>
                     <p:tab title="Regenerar cuotas" rendered="#{sesionUsuario.administrador}">
                         <p style="color:#6c757d; font-size:.8rem;">Solo si la operación aún no tiene cobros.</p>
                         <div class="fila-2">
                             <div class="campo"><label>Cantidad de cuotas</label>
-                                <p:inputNumber value="#{operacionBean.regenCuotas}" decimalPlaces="0" minValue="1"/></div>
+                                <p:inputNumber id="inpRegenCuotas" value="#{operacionBean.regenCuotas}" decimalPlaces="0" minValue="1"/></div>
                             <div class="campo"><label>Primera cuota</label>
-                                <p:datePicker value="#{operacionBean.regenDesde}" pattern="dd/MM/yyyy"/></div>
+                                <p:datePicker id="inpRegenDesde" value="#{operacionBean.regenDesde}" pattern="dd/MM/yyyy"/></div>
                         </div>
                         <p:commandButton value="Regenerar cronograma" icon="pi pi-sync"
+                                         process="@this inpRegenCuotas inpRegenDesde"
                                          actionListener="#{operacionBean.regenerar()}" update="frmDetalle"/>
                     </p:tab>
                     <p:tab title="Finalizar / Rescindir" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
-                        <div class="campo"><label>Motivo</label>
-                            <p:inputTextarea value="#{operacionBean.rescisionMotivo}" rows="2" style="width:100%;" maxlength="500"/></div>
+                        <div class="campo"><label>Motivo *</label>
+                            <p:inputTextarea id="txtMotivoResc" value="#{operacionBean.rescisionMotivo}" rows="2" style="width:100%;" maxlength="500"
+                                             required="true" label="Motivo"
+                                             requiredMessage="El motivo de la finalización/rescisión es obligatorio"/></div>
                         <p:commandButton value="Finalizar operación" icon="pi pi-flag" styleClass="ui-button-danger"
+                                         process="@this txtMotivoResc"
                                          actionListener="#{operacionBean.finalizar()}"
                                          update="msjDetalle :frmLista:tabla :frmLista:mensajes">
                             <p:confirm header="Confirmar" message="¿Finalizar la operación y liberar el activo?" icon="pi pi-exclamation-triangle"/>
