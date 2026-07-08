@@ -1,8 +1,8 @@
 ESTADO: ESPERA
 REQ: -
-TS: 2026-07-08T02:37:03.167Z
+TS: 2026-07-08T03:07:03.568Z
 AGENTE: codex
-MENSAJE: REQ-0026 requiere cambios: PdfService no implementa pie/paginado aunque es criterio de aceptacion del PDF estandar. Ver Obs 234 y codex-review.md.
+MENSAJE: REQ-0027 requiere cambios: PDF de activos/propiedades no exige permiso EXPORTAR ni en UI ni backend. Ver Obs 235 y codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

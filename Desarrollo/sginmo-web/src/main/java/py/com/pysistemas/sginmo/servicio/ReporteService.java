@@ -24,6 +24,9 @@ public class ReporteService {
     @Inject
     private PdfService pdf;
 
+    @Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+
     private static final DecimalFormat GS;
     static {
         var s = new DecimalFormatSymbols(Locale.forLanguageTag("es-PY"));
@@ -47,6 +50,7 @@ public class ReporteService {
     // ── Recibo de cobro (REQ-0028) ──
     @SuppressWarnings("unchecked")
     public byte[] reciboCobro(Long cobroId, String usuario) {
+        autorizacion.exigir("caja", "EXPORTAR");
         List<Object[]> cab = em.createNativeQuery(
             "SELECT c.cobro, c.fecha, c.monto, COALESCE(p.nombre,'-'), COALESCE(fp.descripcion,'Efectivo'), c.estado"
             + " FROM cobro c LEFT JOIN persona p ON p.persona=c.persona"
@@ -77,6 +81,7 @@ public class ReporteService {
     // ── Estado de cuenta / cronograma de una operacion (REQ-0028) ──
     @SuppressWarnings("unchecked")
     public byte[] estadoCuenta(Long operacionId, String usuario) {
+        autorizacion.exigir("operaciones", "EXPORTAR");
         List<Object[]> cab = em.createNativeQuery(
             "SELECT o.operacion, p.nombre, a.nombre, o.monto_total_operacion, o.empresa,"
             + " s.saldo_pendiente, s.total_cancelado"
@@ -109,6 +114,7 @@ public class ReporteService {
     // ── Recaudacion de una planilla de caja (REQ-0029) ──
     @SuppressWarnings("unchecked")
     public byte[] recaudacionPlanilla(Long planillaId, String usuario) {
+        autorizacion.exigir("caja", "EXPORTAR");
         List<Object[]> cab = em.createNativeQuery(
             "SELECT pl.planilla, pl.fecha_apertura, pl.monto_apertura, pl.monto_cobro, pl.estado, pl.empresa"
             + " FROM planilla pl WHERE pl.planilla=:p").setParameter("p", planillaId).getResultList();
@@ -136,6 +142,7 @@ public class ReporteService {
     // ── Listado de activos/propiedades (REQ-0027) ──
     @SuppressWarnings("unchecked")
     public byte[] listadoActivos(String usuario) {
+        autorizacion.exigir("activos", "EXPORTAR");
         var r = pdf.iniciar("SGInmo", "LISTADO DE ACTIVOS / PROPIEDADES", usuario, null);
         List<Object[]> activos = em.createNativeQuery(
             "SELECT a.nombre, a.tipo_codigo, a.precio_venta, a.precio_alquiler, a.estado"

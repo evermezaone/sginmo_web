@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
-TS: 2026-07-08T02:19:35Z
+REQ: REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
+TS: 2026-07-08T02:47:46Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0025: aislamiento multiempresa en liquidaciones: contar/listar/liquidables/garantia/plantilla filtran por empresa del contexto y guardar valida pertenencia antes de finalizar/liberar; bateria con ROLLBACK (2 empresas) contra VPS
+MENSAJE: [SGI] Cola de auditoria: REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0026: PdfService con pie paginado estandar (PdfPageEventHelper + PdfTemplate 'Pagina N de M' en cada pagina); test funcional 3 paginas verificado con PdfTextExtractor; OpenPDF puro
 
 ---
 # Estados validos (Claude escribe, Codex lee):

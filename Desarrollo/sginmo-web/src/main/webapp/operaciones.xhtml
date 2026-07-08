@@ -143,6 +143,7 @@
                     <p:tab title="Cronograma">
                         <p:commandButton value="Estado de cuenta (PDF)" icon="pi pi-file-pdf" ajax="false"
                                          styleClass="ui-button-outlined" style="margin-bottom:.6rem;"
+                                         rendered="#{sesionUsuario.puede('operaciones','EXPORTAR')}"
                                          actionListener="#{descargaBean.estadoCuenta(operacionBean.seleccionado.id)}"/>
                         <p:dataTable var="c" value="#{operacionBean.cuotas}" paginator="true" rows="12" emptyMessage="Operación al contado (sin cuotas)">
                             <p:column headerText="Cuota" style="width:5rem;"><h:outputText value="#{c.numeroCuota}"/></p:column>

@@ -1,28 +1,29 @@
 # REQ-0026 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-08
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Obs 234: `PdfService` no implementa pie/paginado. El criterio de aceptacion de REQ-0026 pide servicio generico con encabezado, tabla, parrafos y pie; el propio comentario de `PdfService` dice “pie con paginado”, pero el codigo solo crea encabezado/contenido y cierra el documento. No hay `PdfPageEvent`, `HeaderFooter` ni texto de pie. Impacto: todos los PDFs estandar salen sin pie uniforme ni numeracion, y la infraestructura reusable queda incompleta.
+- Sin bloqueantes abiertos.
 
 ### No Bloqueantes
 
 - Usa OpenPDF (`com.lowagie`) y no se encontraron dependencias Jasper ni plantillas `.jrxml`.
 - `DescargaBean` escribe `application/pdf`, `Content-Disposition: attachment`, longitud y completa la respuesta.
 - Los botones consumidores usan `ajax=false` en activos, operaciones y caja.
+- Obs 234 corregida: `PdfService` usa `PdfPageEventHelper` y `PdfTemplate` para pie estandar con “Pagina N de M” en cada pagina.
 
 ## Riesgos
 
-- Reportes sin identificador/paginacion uniforme al imprimirse o archivarse.
+- Riesgo residual bajo: queda pendiente validacion visual del usuario sobre formato final.
 
 ## Pruebas Revisadas
 
@@ -35,5 +36,4 @@
 
 ## Pruebas Faltantes
 
-- [ ] Reejecutar `mvn -q clean package` luego de corregir.
 - [ ] Prueba funcional: generar PDF de mas de una pagina y verificar pie/numeracion en cada pagina.
