@@ -1,38 +1,39 @@
 # REQ-0023 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-08
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Obs 227: `f_anular_cobro(p_cobro, p_usuario)` anula el cobro y sus detalles, repone saldo/cuotas y descuenta caja, pero no exige motivo ni inserta registro en `anulacion`. `docs-migracion/10-auditoria-gestion-oracle.md` define que `P_ANULARCOBRO` registra `ANULACIONES` con motivo obligatorio, y `docs-migracion/09-borrador-esquema.md` confirma que las anulaciones tienen motivo obligatorio; el esquema ya tiene tabla `anulacion` y catálogo `MOTIVOS_ANULACION`. Impacto: una reversa contable sensible queda sin trazabilidad de motivo, incumpliendo el patrón legado y la auditoría requerida.
+- Sin bloqueantes abiertos.
 
 ### No Bloqueantes
 
+- Obs 227 corregida en V25: `f_anular_cobro` exige motivo, valida por FK contra `MOTIVOS_ANULACION` e inserta `anulacion(empresa, cobro, motivo_codigo, fecha, usuario_creacion, fecha_creacion)` en la misma transaccion que la reversa.
 - `CajaService.anularCobro` invoca el SP y no recalcula saldos en Java.
 - La UI muestra el botón sólo para cobros `ACTIVO` y con permiso `caja/INACTIVAR`.
 - El build Maven ejecutado durante esta ronda pasó con EXIT 0.
 
 ## Riesgos
 
-- Anulaciones de cobro sin motivo auditable.
-- Trazabilidad incompleta para reversas que afectan documento, cuotas y caja.
+- Riesgo residual bajo: la trazabilidad de motivo queda centralizada en BD; queda pendiente validacion manual de UX.
 
 ## Pruebas Revisadas
 
 - [x] Revision estatica de `V19__reconciliacion_cobro_gestion.sql`.
 - [x] Revision estatica de `CajaService.anularCobro`.
 - [x] Revision estatica de `CajaBean.anular` y `caja.xhtml`.
+- [x] Revision estatica de `V25__anulacion_cobro_motivo.sql`.
 - [x] Revision de docs `03`, `09` y `10` sobre anulación de cobros.
 - [x] `mvn -q clean package` en `Desarrollo` con JDK 23: EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba funcional: anular cobro debe exigir motivo y persistir fila en `anulacion`.
+- [ ] Prueba funcional manual en navegador: anular cobro eligiendo motivo y verificar fila en `anulacion`.
