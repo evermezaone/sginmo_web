@@ -66,6 +66,10 @@ public class CajaBean implements Serializable {
     private List<Persona> cobradores = java.util.List.of();
     private List<Object[]> notasCredito = java.util.List.of();
 
+    // Anulacion de cobro con motivo obligatorio (obs 227, fiel a P_ANULARCOBRO)
+    private String motivoAnulacion;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> motivosAnulacion = java.util.List.of();
+
     @PostConstruct
     public void iniciar() {
         clientes = personaService.porRol("CLIENTE");
@@ -75,6 +79,7 @@ public class CajaBean implements Serializable {
             emisores = catalogoService.opciones("EMISORES");
             procesadores = catalogoService.opciones("PROCESADORES");
             motivosRechazo = catalogoService.opciones("MOTIVOS_RECHAZO");
+            motivosAnulacion = catalogoService.opciones("MOTIVOS_ANULACION");
         }
         refrescarPlanilla();
     }
@@ -170,8 +175,9 @@ public class CajaBean implements Serializable {
 
     public void anular(Long cobroId) {
         try {
-            cajaService.anularCobro(cobroId, sesion.codigoUsuario());
+            cajaService.anularCobro(cobroId, sesion.codigoUsuario(), motivoAnulacion);
             aviso(FacesMessage.SEVERITY_INFO, "Cobro anulado", "Se repuso el saldo y las cuotas");
+            motivoAnulacion = null;
             planilla = cajaService.planillaAbierta(contexto.getEmpresa().getId(), contexto.sucursal().getId());
             cobros = cajaService.cobrosDePlanilla(planilla.getId());
             if (clienteSel != null) documentos = cajaService.documentosPendientesDe(clienteSel);
@@ -221,6 +227,9 @@ public class CajaBean implements Serializable {
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getEmisores() { return emisores; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getProcesadores() { return procesadores; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getMotivosRechazo() { return motivosRechazo; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getMotivosAnulacion() { return motivosAnulacion; }
+    public String getMotivoAnulacion() { return motivoAnulacion; }
+    public void setMotivoAnulacion(String v) { this.motivoAnulacion = v; }
     public List<Persona> getCobradores() { return cobradores; }
     public List<Object[]> getNotasCredito() { return notasCredito; }
     public Long getDatoCobrador() { return datoCobrador; }

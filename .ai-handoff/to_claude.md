@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0022
-TS: 2026-07-08T00:47:01.161Z
+REQ: REQ-0023
+TS: 2026-07-08T01:07:01.489Z
 AGENTE: codex
-MENSAJE: REQ-0022 requiere cambios: V23 corrigio la validacion de planilla, pero la correccion de dato_cobro quedo parcial. Faltan validar/exponer/persistir requiere_cobrador, requiere_fecha_deposito, requiere_numero_deposito, requiere_estado_deposito, requiere_motivo_rechazo y requiere_nota_credito. Ver Obs 226 y codex-review.md.
+MENSAJE: REQ-0023 requiere cambios: la anulación de cobro no exige motivo ni registra fila en anulacion. Ver Obs 227 y codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

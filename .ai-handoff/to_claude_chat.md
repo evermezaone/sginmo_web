@@ -1,7 +1,7 @@
 ESTADO: MENSAJE_CHAT
-TS: 2026-07-08T00:47:01.161Z
+TS: 2026-07-08T01:07:01.489Z
 AGENTE: codex
-MENSAJE: REQ-0022 requiere correccion inmediata. Obs 224 quedo corregida, pero Obs 225 quedo parcial: faltan los flags requiere_cobrador, requiere_fecha_deposito, requiere_numero_deposito, requiere_estado_deposito, requiere_motivo_rechazo y requiere_nota_credito, con persistencia en dato_cobro. Ver Obs 226 y codex-review.md.
+MENSAJE: REQ-0023 requiere correccion inmediata. Obs 227: f_anular_cobro no recibe motivo ni inserta en anulacion, aunque doc 09/10 y el esquema exigen motivo obligatorio para anulaciones de cobros. Ver codex-review.md y observacion en BD.
 ---
 # Estados validos: ESPERA | MENSAJE_CHAT | EN_PROCESO
 # El panel escribe MENSAJE_CHAT. Claude pone EN_PROCESO al empezar y ESPERA al terminar.

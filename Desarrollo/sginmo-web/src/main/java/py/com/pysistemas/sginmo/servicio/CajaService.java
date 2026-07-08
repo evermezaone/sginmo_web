@@ -154,11 +154,15 @@ public class CajaService {
     }
 
     @Transactional
-    public void anularCobro(Long cobroId, String usuario) {
+    public void anularCobro(Long cobroId, String usuario, String motivoCodigo) {
         autorizacion.exigir("caja", "INACTIVAR");
+        if (motivoCodigo == null || motivoCodigo.isBlank()) {
+            throw new NegocioException("Elija el motivo de la anulación");
+        }
         try {
-            em.createNativeQuery("SELECT f_anular_cobro(:cob, :usr)")
+            em.createNativeQuery("SELECT f_anular_cobro(:cob, :usr, :mot)")
                 .setParameter("cob", cobroId).setParameter("usr", usuario)
+                .setParameter("mot", motivoCodigo)
                 .getSingleResult();
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(traducirSp(e));

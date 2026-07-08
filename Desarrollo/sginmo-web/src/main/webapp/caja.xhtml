@@ -163,6 +163,13 @@
 
                 <!-- Cobros de la planilla -->
                 <p:panel header="Cobros de la planilla">
+                    <div class="campo" style="max-width:22rem; margin-bottom:.5rem;">
+                        <label>Motivo de anulación (obligatorio para anular)</label>
+                        <p:selectOneMenu value="#{cajaBean.motivoAnulacion}" label="Motivo de anulación">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{cajaBean.motivosAnulacion}" var="ma" itemLabel="#{ma.descripcion}" itemValue="#{ma.codigo}"/>
+                        </p:selectOneMenu>
+                    </div>
                     <p:dataTable var="cb" value="#{cajaBean.cobros}" paginator="true" rows="10" emptyMessage="Aún no hay cobros">
                         <p:column headerText="#" style="width:4rem;"><h:outputText value="#{cb[0]}"/></p:column>
                         <p:column headerText="Cliente"><h:outputText value="#{cb[2]}"/></p:column>
