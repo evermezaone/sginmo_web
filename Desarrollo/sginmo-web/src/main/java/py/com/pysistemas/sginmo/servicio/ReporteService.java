@@ -49,13 +49,15 @@ public class ReporteService {
 
     // ── Recibo de cobro (REQ-0028) ──
     @SuppressWarnings("unchecked")
-    public byte[] reciboCobro(Long cobroId, String usuario) {
+    public byte[] reciboCobro(Long cobroId, String usuario, Long empresaContexto) {
         autorizacion.exigir("caja", "EXPORTAR");
+        if (empresaContexto == null) throw new py.com.one.core.NegocioException("Falta el contexto de empresa");
+        // aislamiento (obs 236): el cobro debe ser de la empresa del contexto
         List<Object[]> cab = em.createNativeQuery(
             "SELECT c.cobro, c.fecha, c.monto, COALESCE(p.nombre,'-'), COALESCE(fp.descripcion,'Efectivo'), c.estado"
             + " FROM cobro c LEFT JOIN persona p ON p.persona=c.persona"
-            + " LEFT JOIN forma_pago fp ON fp.forma_pago=c.forma_pago WHERE c.cobro=:c")
-            .setParameter("c", cobroId).getResultList();
+            + " LEFT JOIN forma_pago fp ON fp.forma_pago=c.forma_pago WHERE c.cobro=:c AND c.empresa=:emp")
+            .setParameter("c", cobroId).setParameter("emp", empresaContexto).getResultList();
         if (cab.isEmpty()) throw new py.com.one.core.NegocioException("El cobro no existe");
         Object[] c = cab.get(0);
         var r = pdf.iniciar(empresaDe(cobroId, false), "RECIBO DE COBRO N° " + txt(c[0]), usuario, null);
@@ -80,14 +82,16 @@ public class ReporteService {
 
     // ── Estado de cuenta / cronograma de una operacion (REQ-0028) ──
     @SuppressWarnings("unchecked")
-    public byte[] estadoCuenta(Long operacionId, String usuario) {
+    public byte[] estadoCuenta(Long operacionId, String usuario, Long empresaContexto) {
         autorizacion.exigir("operaciones", "EXPORTAR");
+        if (empresaContexto == null) throw new py.com.one.core.NegocioException("Falta el contexto de empresa");
+        // aislamiento (obs 236): la operacion debe ser de la empresa del contexto
         List<Object[]> cab = em.createNativeQuery(
             "SELECT o.operacion, p.nombre, a.nombre, o.monto_total_operacion, o.empresa,"
             + " s.saldo_pendiente, s.total_cancelado"
             + " FROM operacion o JOIN persona p ON p.persona=o.cliente JOIN activo a ON a.activo=o.activo"
-            + " JOIN v_operacion_saldo s ON s.operacion=o.operacion WHERE o.operacion=:o")
-            .setParameter("o", operacionId).getResultList();
+            + " JOIN v_operacion_saldo s ON s.operacion=o.operacion WHERE o.operacion=:o AND o.empresa=:emp")
+            .setParameter("o", operacionId).setParameter("emp", empresaContexto).getResultList();
         if (cab.isEmpty()) throw new py.com.one.core.NegocioException("La operación no existe");
         Object[] o = cab.get(0);
         var r = pdf.iniciar(empresaDe(((Number) o[4]).longValue(), true),
@@ -113,11 +117,14 @@ public class ReporteService {
 
     // ── Recaudacion de una planilla de caja (REQ-0029) ──
     @SuppressWarnings("unchecked")
-    public byte[] recaudacionPlanilla(Long planillaId, String usuario) {
+    public byte[] recaudacionPlanilla(Long planillaId, String usuario, Long empresaContexto) {
         autorizacion.exigir("caja", "EXPORTAR");
+        if (empresaContexto == null) throw new py.com.one.core.NegocioException("Falta el contexto de empresa");
+        // aislamiento (obs 236): la planilla debe ser de la empresa del contexto
         List<Object[]> cab = em.createNativeQuery(
             "SELECT pl.planilla, pl.fecha_apertura, pl.monto_apertura, pl.monto_cobro, pl.estado, pl.empresa"
-            + " FROM planilla pl WHERE pl.planilla=:p").setParameter("p", planillaId).getResultList();
+            + " FROM planilla pl WHERE pl.planilla=:p AND pl.empresa=:emp")
+            .setParameter("p", planillaId).setParameter("emp", empresaContexto).getResultList();
         if (cab.isEmpty()) throw new py.com.one.core.NegocioException("La planilla no existe");
         Object[] pl = cab.get(0);
         var r = pdf.iniciar(empresaDe(((Number) pl[5]).longValue(), true),
@@ -141,12 +148,15 @@ public class ReporteService {
 
     // ── Listado de activos/propiedades (REQ-0027) ──
     @SuppressWarnings("unchecked")
-    public byte[] listadoActivos(String usuario) {
+    public byte[] listadoActivos(String usuario, Long empresaContexto) {
         autorizacion.exigir("activos", "EXPORTAR");
-        var r = pdf.iniciar("SGInmo", "LISTADO DE ACTIVOS / PROPIEDADES", usuario, null);
+        if (empresaContexto == null) throw new py.com.one.core.NegocioException("Falta el contexto de empresa");
+        // aislamiento (obs 236): activos de la empresa del contexto (los sin empresa son globales)
+        var r = pdf.iniciar(empresaDe(empresaContexto, true), "LISTADO DE ACTIVOS / PROPIEDADES", usuario, null);
         List<Object[]> activos = em.createNativeQuery(
             "SELECT a.nombre, a.tipo_codigo, a.precio_venta, a.precio_alquiler, a.estado"
-            + " FROM activo a ORDER BY a.nombre").getResultList();
+            + " FROM activo a WHERE a.empresa = :emp OR a.empresa IS NULL ORDER BY a.nombre")
+            .setParameter("emp", empresaContexto).getResultList();
         var filas = new ArrayList<String[]>();
         for (Object[] a : activos) {
             filas.add(new String[]{txt(a[0]), txt(a[1]), gs(a[2]), gs(a[3]), txt(a[4])});

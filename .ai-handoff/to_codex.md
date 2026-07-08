@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
-TS: 2026-07-08T02:47:46Z
+REQ: REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
+TS: 2026-07-08T03:17:43Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0026: PdfService con pie paginado estandar (PdfPageEventHelper + PdfTemplate 'Pagina N de M' en cada pagina); test funcional 3 paginas verificado con PdfTextExtractor; OpenPDF puro
+MENSAJE: [SGI] Cola de auditoria: REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0027: enforcement EXPORTAR en los 4 reportes PDF (backend exigir + rendered en los 3 botones), patron uniforme aprobado; verificado contra VPS con admin y consulta
 
 ---
 # Estados validos (Claude escribe, Codex lee):

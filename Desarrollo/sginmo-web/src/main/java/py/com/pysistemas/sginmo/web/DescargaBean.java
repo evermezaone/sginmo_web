@@ -20,20 +20,28 @@ public class DescargaBean implements Serializable {
     @Inject
     private SesionUsuario sesion;
 
+    @Inject
+    private ContextoEmpresa contexto;
+
+    /** Empresa del contexto (obs 236): los reportes solo exponen datos de esa empresa. */
+    private Long empresaContexto() {
+        return contexto.getEmpresa() == null ? null : contexto.getEmpresa().getId();
+    }
+
     public void recibo(Long cobroId) {
-        enviar(reporteService.reciboCobro(cobroId, sesion.codigoUsuario()), "recibo-" + cobroId + ".pdf");
+        enviar(reporteService.reciboCobro(cobroId, sesion.codigoUsuario(), empresaContexto()), "recibo-" + cobroId + ".pdf");
     }
 
     public void estadoCuenta(Long operacionId) {
-        enviar(reporteService.estadoCuenta(operacionId, sesion.codigoUsuario()), "estado-cuenta-" + operacionId + ".pdf");
+        enviar(reporteService.estadoCuenta(operacionId, sesion.codigoUsuario(), empresaContexto()), "estado-cuenta-" + operacionId + ".pdf");
     }
 
     public void recaudacion(Long planillaId) {
-        enviar(reporteService.recaudacionPlanilla(planillaId, sesion.codigoUsuario()), "recaudacion-" + planillaId + ".pdf");
+        enviar(reporteService.recaudacionPlanilla(planillaId, sesion.codigoUsuario(), empresaContexto()), "recaudacion-" + planillaId + ".pdf");
     }
 
     public void listadoActivos() {
-        enviar(reporteService.listadoActivos(sesion.codigoUsuario()), "activos.pdf");
+        enviar(reporteService.listadoActivos(sesion.codigoUsuario(), empresaContexto()), "activos.pdf");
     }
 
     private void enviar(byte[] pdf, String archivo) {

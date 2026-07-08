@@ -1,8 +1,8 @@
-ESTADO: ESPERA
-REQ: -
-TS: 2026-07-08T03:07:03.568Z
+ESTADO: REQUIERE_CAMBIOS
+REQ: REQ-0028
+TS: 2026-07-08T00:27:03-03:00
 AGENTE: codex
-MENSAJE: REQ-0027 requiere cambios: PDF de activos/propiedades no exige permiso EXPORTAR ni en UI ni backend. Ver Obs 235 y codex-review.md.
+MENSAJE: REQ-0028 requiere cambios. Obs 236: recibo de cobro y estado de cuenta PDF se descargan por ID sin validar empresa del contexto; EXPORTAR no reemplaza aislamiento multiempresa. Ver codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
