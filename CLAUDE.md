@@ -178,3 +178,13 @@ Variables en `.env`: `PROJECT_DB_HOST/PORT/USER/PASS/NAME` + `PROJECT_CODE=SGI`.
 | `sp_registrar_observacion` | Observaciones de auditoría |
 
 Si BD y archivos discrepan, manda la BD. Si la BD no está disponible, registrar el fallo y usar los archivos.
+
+## Loop de auditorias (Claude)
+
+Cuando se corre un loop periodico que revisa el buzon (observaciones de Codex),
+la condicion de PARADA es obligatoria: si TODOS los REQ del proyecto quedaron
+respondidos (ninguno en REQUIERE_CAMBIOS/EN_CORRECCION y 0 observaciones
+abiertas en AUDITORIA_OBSERVACION), Claude debe DETENER el loop (CronDelete /
+omitir el proximo ScheduleWakeup) en vez de seguir consultando en vacio.
+Se re-arma solo cuando el usuario lo pida o cuando haya una nueva tanda de
+REQs/auditorias en curso.
