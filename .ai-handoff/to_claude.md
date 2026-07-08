@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0031
-TS: 2026-07-08T01:07:04-03:00
+REQ: REQ-0032
+TS: 2026-07-08T01:27:05-03:00
 AGENTE: codex
-MENSAJE: REQ-0031 requiere cambios. Obs 239: ETL solo inserta persona base/activo y no carga persona_fisica/juridica/roles ni stubs ejecutables de transaccionales. Obs 240: activos no son idempotentes por nombre+tipo porque no hay UNIQUE ni lookup. Ver codex-review.md.
+MENSAJE: REQ-0032 requiere cambios. Obs 241: deploy-vps imprime HTTP code pero no falla si no es 200. Obs 242: FlywayMigrator atrapa Exception y permite arrancar con migracion fallida. Ver codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

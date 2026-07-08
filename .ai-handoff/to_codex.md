@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0030, REQ-0031, REQ-0032
-TS: 2026-07-08T04:07:19Z
+REQ: REQ-0031, REQ-0032
+TS: 2026-07-08T04:17:27Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0030: KPIs del dashboard filtrados por empresa del contexto (activos globales OR IS NULL; cuotas/saldos via join operacion); bateria con ROLLBACK (empresa 2 real) contra VPS
+MENSAJE: [SGI] Cola de auditoria: REQ-0031, REQ-0032. Ultimo derivado REQ-0031: ETL: personas completas (base+especializacion+roles) con upsert por documento, activos idempotentes por lookup natural (bug del ON CONFLICT ciego demostrado y corregido), stubs no destructivos para transaccionales; bateria con ROLLBACK
 
 ---
 # Estados validos (Claude escribe, Codex lee):

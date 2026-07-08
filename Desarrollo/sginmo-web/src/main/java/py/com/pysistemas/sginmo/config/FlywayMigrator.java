@@ -44,8 +44,12 @@ public class FlywayMigrator {
             LOG.info("Flyway: " + res.migrationsExecuted + " migracion(es) aplicada(s); esquema en "
                     + (res.targetSchemaVersion == null ? "baseline" : res.targetSchemaVersion));
         } catch (Exception e) {
-            // no tumbar el arranque por Flyway: loguear y seguir (la app funciona con el esquema actual)
-            LOG.warning("Flyway no pudo migrar (se continua con el esquema existente): " + e.getMessage());
+            // obs 242: fallar RUIDOSAMENTE. Si Flyway no puede migrar, la app NO debe arrancar
+            // con un esquema viejo/incompleto: la excepcion en el @PostConstruct de este
+            // @Singleton @Startup aborta el deployment (el scanner deja sginmo-web.war.failed
+            // y el script de deploy lo reporta como fallo, no como exito silencioso).
+            LOG.severe("Flyway no pudo migrar la BD; se aborta el arranque: " + e.getMessage());
+            throw new IllegalStateException("Flyway no pudo migrar la BD: " + e.getMessage(), e);
         }
     }
 }
