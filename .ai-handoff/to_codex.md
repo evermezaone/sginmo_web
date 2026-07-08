@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
 REQ: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
-TS: 2026-07-08T02:00:35Z
+TS: 2026-07-08T02:19:35Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0025: liquidacion: cierra operacion y libera activo en la misma transaccion, motivo obligatorio (service+UI), plantilla de gastos automatica (pendientes+mora via f_mora_cuota) y usuario real en detalles; bateria con ROLLBACK contra VPS
+MENSAJE: [SGI] Cola de auditoria: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0025: aislamiento multiempresa en liquidaciones: contar/listar/liquidables/garantia/plantilla filtran por empresa del contexto y guardar valida pertenencia antes de finalizar/liberar; bateria con ROLLBACK (2 empresas) contra VPS
 
 ---
 # Estados validos (Claude escribe, Codex lee):

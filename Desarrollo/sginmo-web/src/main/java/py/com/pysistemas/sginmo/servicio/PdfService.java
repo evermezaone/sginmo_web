@@ -35,6 +35,58 @@ public class PdfService {
     private static final Color AZUL = Color.decode("#457b9d");
     private static final DateTimeFormatter FCHT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
+    /**
+     * Pie estandar en CADA pagina (obs 234): texto identificatorio a la izquierda y
+     * "Página N de M" a la derecha. El total de paginas se resuelve con la tecnica del
+     * PdfTemplate: se estampa al cerrar el documento.
+     */
+    private static class PiePagina extends com.lowagie.text.pdf.PdfPageEventHelper {
+        private final String texto;
+        private com.lowagie.text.pdf.PdfTemplate total;
+        private com.lowagie.text.pdf.BaseFont bf;
+        PiePagina(String texto) { this.texto = texto == null ? "" : texto; }
+
+        @Override
+        public void onOpenDocument(PdfWriter w, Document d) {
+            try {
+                bf = com.lowagie.text.pdf.BaseFont.createFont(
+                        com.lowagie.text.pdf.BaseFont.HELVETICA, com.lowagie.text.pdf.BaseFont.WINANSI, false);
+                total = w.getDirectContent().createTemplate(30, 12);
+            } catch (Exception e) {
+                throw new com.lowagie.text.ExceptionConverter(e);
+            }
+        }
+
+        @Override
+        public void onEndPage(PdfWriter w, Document d) {
+            var cb = w.getDirectContent();
+            float y = d.bottom() - 18;
+            String pag = "Página " + w.getPageNumber() + " de ";
+            float len = bf.getWidthPoint(pag, 8);
+            cb.saveState();
+            cb.beginText();
+            cb.setFontAndSize(bf, 8);
+            cb.setColorFill(Color.GRAY);
+            cb.setTextMatrix(d.left(), y);
+            cb.showText(texto);
+            cb.setTextMatrix(d.right() - len - 20, y);
+            cb.showText(pag);
+            cb.endText();
+            cb.addTemplate(total, d.right() - 20, y);
+            cb.restoreState();
+        }
+
+        @Override
+        public void onCloseDocument(PdfWriter w, Document d) {
+            total.beginText();
+            total.setFontAndSize(bf, 8);
+            total.setColorFill(Color.GRAY);
+            total.setTextMatrix(0, 0);
+            total.showText(String.valueOf(w.getPageNumber() - 1));
+            total.endText();
+        }
+    }
+
     /** Documento base con encabezado; el llamador agrega contenido y llama a cerrar(). */
     public static class Reporte {
         final Document doc;
@@ -45,8 +97,10 @@ public class PdfService {
 
     public Reporte iniciar(String empresa, String titulo, String usuario, String subtitulo) {
         var salida = new ByteArrayOutputStream();
-        var doc = new Document(PageSize.A4, 36, 36, 42, 42);
-        PdfWriter.getInstance(doc, salida);
+        var doc = new Document(PageSize.A4, 36, 36, 42, 52);
+        PdfWriter writer = PdfWriter.getInstance(doc, salida);
+        // pie con paginado en todas las paginas (obs 234)
+        writer.setPageEvent(new PiePagina((empresa == null ? "SGInmo" : empresa) + " — " + titulo));
         doc.open();
         var enc = new PdfPTable(new float[]{3, 2});
         enc.setWidthPercentage(100);

@@ -1,8 +1,8 @@
-ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0025
-TS: 2026-07-08T02:07:02.570Z
+ESTADO: ESPERA
+REQ: -
+TS: 2026-07-08T02:37:03.167Z
 AGENTE: codex
-MENSAJE: REQ-0025 requiere cambios: Obs 229-232 corregidas, pero falta aislamiento por empresa del contexto en liquidaciones. Ver Obs 233 y codex-review.md.
+MENSAJE: REQ-0026 requiere cambios: PdfService no implementa pie/paginado aunque es criterio de aceptacion del PDF estandar. Ver Obs 234 y codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

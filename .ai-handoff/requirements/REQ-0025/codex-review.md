@@ -1,18 +1,18 @@
 # REQ-0025 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-08
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Obs 233: `LiquidacionService.contar/listar/operacionesLiquidables/garantiaDe/guardar` no reciben ni validan empresa del contexto, y `LiquidacionBean` no inyecta `ContextoEmpresa`. La pantalla lista liquidaciones y operaciones liquidables de todas las empresas; además, una llamada manipulada puede guardar una liquidación de una operación ajena, finalizarla y liberar su activo. Impacto: fuga y modificación cruzada de contratos/activos entre empresas, más grave que en REQ-0024 porque cierra operaciones y cambia disponibilidad del inmueble.
+- Sin bloqueantes abiertos.
 
 ### No Bloqueantes
 
@@ -22,6 +22,7 @@
 - Obs 230 corregida: el service y la UI exigen `motivoCodigo`.
 - Obs 231 corregida parcialmente y aceptada para esta ronda: la plantilla precarga alquileres pendientes y mora calculada con `f_mora_cuota`; los demás gastos de la plantilla quedan agregables manualmente con artículos.
 - Obs 232 corregida: `liquidacion_detalle.usuario_creacion` usa el usuario actual, no el literal `sistema`.
+- Obs 233 corregida: `contar/listar/operacionesLiquidables/garantiaDe/plantillaDe/guardar` reciben empresa del contexto y validan pertenencia antes de calcular, listar, guardar, finalizar o liberar activo.
 
 ## Riesgos
 
@@ -29,7 +30,7 @@
 - Propiedades no liberadas despues del cierre.
 - Saldos de garantia calculados sin alquileres pendientes/mora.
 - Auditoria de detalles atribuida falsamente a `sistema`.
-- Liquidaciones cruzadas entre empresas si no se aísla por contexto.
+- Riesgo residual bajo: `gastosDe` no recibe empresa, pero sólo se usa desde filas ya filtradas y `guardar` valida pertenencia antes de modificar.
 
 ## Pruebas Revisadas
 
@@ -38,8 +39,8 @@
 - [x] Revision de esquema `liquidacion` / `liquidacion_detalle`.
 - [x] Revision de docs `03` y `08`.
 - [x] Revision de aislamiento multiempresa por analogia con REQ-0024.
+- [x] `mvn -q clean package` en `Desarrollo` con JDK 23: EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Reejecutar `mvn -q clean package` luego de corregir.
 - [ ] Prueba funcional: con dos empresas, liquidaciones debe listar/crear/editar solo operaciones de la empresa del contexto y rechazar guardar una operación ajena.
