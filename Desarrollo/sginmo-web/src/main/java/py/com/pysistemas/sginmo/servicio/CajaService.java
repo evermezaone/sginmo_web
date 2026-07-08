@@ -95,15 +95,34 @@ public class CajaService {
     @Transactional
     public long cobrar(Long documentoId, Long planillaId, Long formaPagoId, Long personaId,
                        BigDecimal monto, Long monedaId, String usuario) {
+        return cobrar(documentoId, planillaId, formaPagoId, personaId, monto, monedaId, usuario,
+                null, null, null, null, null, null, null);
+    }
+
+    /**
+     * Cobro con los datos del medio de pago (obs 225): la forma de pago parametriza los
+     * exigibles (flags requiere_*) y el SP los valida y persiste dato_cobro junto al cobro.
+     */
+    @Transactional
+    public long cobrar(Long documentoId, Long planillaId, Long formaPagoId, Long personaId,
+                       BigDecimal monto, Long monedaId, String usuario,
+                       String emisor, String procesador, String numero, String serie,
+                       String cuenta, java.time.LocalDate vencimiento, String referencia) {
         autorizacion.exigir("caja", "CREAR");
         if (planillaId == null) throw new NegocioException("No hay planilla de caja abierta");
         try {
             Object r = em.createNativeQuery(
-                "SELECT f_cobrar_documento(:doc, :pla, :fp, :per, :monto, :mon, current_date, :usr)")
+                "SELECT f_cobrar_documento(:doc, :pla, :fp, :per, :monto, :mon, current_date, :usr,"
+                + " :emisor, :proc, :num, :serie, :cuenta, :venc, :ref)")
                 .setParameter("doc", documentoId).setParameter("pla", planillaId)
                 .setParameter("fp", formaPagoId).setParameter("per", personaId)
                 .setParameter("monto", monto).setParameter("mon", monedaId)
                 .setParameter("usr", usuario)
+                .setParameter("emisor", emisor).setParameter("proc", procesador)
+                .setParameter("num", numero).setParameter("serie", serie)
+                .setParameter("cuenta", cuenta)
+                .setParameter("venc", vencimiento == null ? null : java.sql.Date.valueOf(vencimiento))
+                .setParameter("ref", referencia)
                 .getSingleResult();
             return ((Number) r).longValue();
         } catch (jakarta.persistence.PersistenceException e) {

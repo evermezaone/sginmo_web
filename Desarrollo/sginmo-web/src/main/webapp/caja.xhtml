@@ -72,10 +72,52 @@
                             <p:selectOneMenu value="#{cajaBean.formaPagoSel}" label="Forma de pago">
                                 <f:selectItem itemLabel="Efectivo / sin especificar" itemValue="#{null}" noSelectionOption="true"/>
                                 <f:selectItems value="#{cajaBean.formasPago}" var="fp" itemLabel="#{fp.descripcion}" itemValue="#{fp.id}"/>
+                                <p:ajax listener="#{cajaBean.formaPagoCambiada()}" update="pnlDatosCobro"/>
                             </p:selectOneMenu></div>
                         <div class="campo"><label>Monto a cobrar</label>
                             <p:inputNumber value="#{cajaBean.montoCobro}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
                     </div>
+                    <!-- Datos del medio de pago: la forma de pago parametriza los exigibles (obs 225) -->
+                    <h:panelGroup id="pnlDatosCobro" layout="block">
+                        <ui:fragment rendered="#{cajaBean.formaPagoObj != null}">
+                            <div class="fila-3">
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereEmisor ? '' : 'display:none;'}">
+                                    <label>Emisor *</label>
+                                    <p:selectOneMenu value="#{cajaBean.datoEmisor}" label="Emisor">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{cajaBean.emisores}" var="em" itemLabel="#{em.descripcion}" itemValue="#{em.codigo}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereProcesador ? '' : 'display:none;'}">
+                                    <label>Procesador *</label>
+                                    <p:selectOneMenu value="#{cajaBean.datoProcesador}" label="Procesador">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{cajaBean.procesadores}" var="pr" itemLabel="#{pr.descripcion}" itemValue="#{pr.codigo}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereNumero ? '' : 'display:none;'}">
+                                    <label>Número *</label>
+                                    <p:inputText value="#{cajaBean.datoNumero}" maxlength="25"/>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereSerie ? '' : 'display:none;'}">
+                                    <label>Serie *</label>
+                                    <p:inputText value="#{cajaBean.datoSerie}" maxlength="20"/>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereVencimiento ? '' : 'display:none;'}">
+                                    <label>Vencimiento *</label>
+                                    <p:datePicker value="#{cajaBean.datoVencimiento}" pattern="dd/MM/yyyy"/>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereCuenta ? '' : 'display:none;'}">
+                                    <label>Cuenta *</label>
+                                    <p:inputText value="#{cajaBean.datoCuenta}" maxlength="50"/>
+                                </div>
+                                <div class="campo" style="#{cajaBean.formaPagoObj.requiereReferencia ? '' : 'display:none;'}">
+                                    <label>Referencia *</label>
+                                    <p:inputText value="#{cajaBean.datoReferencia}" maxlength="50"/>
+                                </div>
+                            </div>
+                        </ui:fragment>
+                    </h:panelGroup>
                     <p:commandButton value="Registrar cobro" icon="pi pi-money-bill" rendered="#{sesionUsuario.puede('caja','CREAR')}"
                                      actionListener="#{cajaBean.cobrar()}" update="frm"/>
                 </p:panel>

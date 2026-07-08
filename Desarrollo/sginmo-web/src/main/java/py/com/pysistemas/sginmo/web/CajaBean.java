@@ -54,12 +54,35 @@ public class CajaBean implements Serializable {
     private Long formaPagoSel;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.FormaPago> formasPago;
 
+    // Datos del medio de pago (obs 225): la forma de pago define cuales son exigibles
+    private String datoEmisor, datoProcesador, datoNumero, datoSerie, datoCuenta, datoReferencia;
+    private java.time.LocalDate datoVencimiento;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> emisores = java.util.List.of();
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> procesadores = java.util.List.of();
+
     @PostConstruct
     public void iniciar() {
         clientes = personaService.porRol("CLIENTE");
         formasPago = catalogoService == null ? java.util.List.of() : formasHabilitadas();
+        if (catalogoService != null) {
+            emisores = catalogoService.opciones("EMISORES");
+            procesadores = catalogoService.opciones("PROCESADORES");
+        }
         refrescarPlanilla();
     }
+
+    /** Forma de pago elegida (o null): la UI muestra/exige los datos segun sus flags. */
+    public py.com.pysistemas.sginmo.dominio.catalogo.FormaPago getFormaPagoObj() {
+        if (formaPagoSel == null || formasPago == null) return null;
+        return formasPago.stream().filter(f -> formaPagoSel.equals(f.getId())).findFirst().orElse(null);
+    }
+
+    private void limpiarDatosCobro() {
+        datoEmisor = null; datoProcesador = null; datoNumero = null; datoSerie = null;
+        datoCuenta = null; datoReferencia = null; datoVencimiento = null;
+    }
+
+    public void formaPagoCambiada() { limpiarDatosCobro(); }
 
     private List<py.com.pysistemas.sginmo.dominio.catalogo.FormaPago> formasHabilitadas() {
         return catalogoService.formasHabilitadas();
@@ -119,9 +142,11 @@ public class CajaBean implements Serializable {
             if (planilla == null) throw new NegocioException("Abra la caja primero");
             if (documentoSel == null) throw new NegocioException("Elija el documento a cobrar");
             long cobro = cajaService.cobrar(documentoSel, planilla.getId(), formaPagoSel, clienteSel,
-                    montoCobro, contexto.getEmpresa() != null ? monedaLocal() : null, sesion.codigoUsuario());
+                    montoCobro, contexto.getEmpresa() != null ? monedaLocal() : null, sesion.codigoUsuario(),
+                    datoEmisor, datoProcesador, datoNumero, datoSerie, datoCuenta, datoVencimiento, datoReferencia);
             aviso(FacesMessage.SEVERITY_INFO, "Cobro registrado", "Recibo #" + cobro);
             montoCobro = BigDecimal.ZERO;
+            limpiarDatosCobro();
             planilla = cajaService.planillaAbierta(contexto.getEmpresa().getId(), contexto.sucursal().getId());
             documentos = cajaService.documentosPendientesDe(clienteSel);
             cuotas = documentoSel != null ? cajaService.cuotasPendientesDeDocumento(documentoSel) : java.util.List.of();
@@ -167,4 +192,20 @@ public class CajaBean implements Serializable {
     public Long getFormaPagoSel() { return formaPagoSel; }
     public void setFormaPagoSel(Long v) { this.formaPagoSel = v; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.FormaPago> getFormasPago() { return formasPago; }
+    public String getDatoEmisor() { return datoEmisor; }
+    public void setDatoEmisor(String v) { this.datoEmisor = v; }
+    public String getDatoProcesador() { return datoProcesador; }
+    public void setDatoProcesador(String v) { this.datoProcesador = v; }
+    public String getDatoNumero() { return datoNumero; }
+    public void setDatoNumero(String v) { this.datoNumero = v; }
+    public String getDatoSerie() { return datoSerie; }
+    public void setDatoSerie(String v) { this.datoSerie = v; }
+    public String getDatoCuenta() { return datoCuenta; }
+    public void setDatoCuenta(String v) { this.datoCuenta = v; }
+    public String getDatoReferencia() { return datoReferencia; }
+    public void setDatoReferencia(String v) { this.datoReferencia = v; }
+    public java.time.LocalDate getDatoVencimiento() { return datoVencimiento; }
+    public void setDatoVencimiento(java.time.LocalDate v) { this.datoVencimiento = v; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getEmisores() { return emisores; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getProcesadores() { return procesadores; }
 }

@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0021
-TS: 2026-07-08T00:07:00.408Z
+REQ: REQ-0022
+TS: 2026-07-08T00:27:00.854Z
 AGENTE: codex
-MENSAJE: REQ-0021 requiere cambios: finalizar/rescindir permite motivo vacio y no inserta rescision. Ver .ai-handoff/requirements/REQ-0021/codex-review.md y Obs 223 en BD.
+MENSAJE: REQ-0022 requiere cambios: validar planilla abierta/misma empresa-sucursal en cobros y validar/persistir datos exigibles por forma_pago. Ver .ai-handoff/requirements/REQ-0022/codex-review.md y Obs 224/225 en BD.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
