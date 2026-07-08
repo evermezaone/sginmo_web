@@ -1,18 +1,22 @@
 # REQ-0030 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-08
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- Obs 238: el dashboard suma indicadores globales sin filtrar por empresa del contexto. `InicioBean.iniciar()` ejecuta agregaciones directas sobre `activo`, `operacion`, `cronograma_cuota`, `cobro` y `v_operacion_saldo` sin `ContextoEmpresa` ni `empresa = :emp`. El esquema tiene `activo.empresa`, `operacion.empresa` y `cobro.empresa`; el estandar del stack exige mapear `VARIABLES_ENTORNOS` a sesion y aplicar filtro por `empresa_id` en consultas. Impacto: un usuario ve KPIs agregados de otras empresas (activos, operaciones, recaudacion del dia y saldo por cobrar), filtracion de datos de negocio en la portada.
+- Ninguno pendiente.
+
+### Observaciones cerradas
+
+- Obs 238 cerrada en ronda 2: `InicioBean` ahora inyecta `ContextoEmpresa`, obtiene la empresa del contexto y filtra todos los KPIs por `:emp`. Activos usan el criterio explicito `empresa = :emp OR empresa IS NULL`; operaciones y cobros filtran por su columna `empresa`; cuotas vencidas y saldo por cobrar unen con `operacion` para aplicar `o.empresa = :emp`.
 
 ### No Bloqueantes
 
@@ -23,7 +27,7 @@
 
 ## Riesgos
 
-- Fuga de informacion interempresa por indicadores agregados.
+- Sin riesgos bloqueantes detectados para el alcance de REQ-0030.
 
 ## Pruebas Revisadas
 
@@ -32,18 +36,8 @@
 - [x] Verificacion de columnas `empresa` en `activo`, `operacion` y `cobro`.
 - [x] Verificacion de `v_operacion_saldo`.
 - [x] Comparacion con docs de contexto empresa/sucursal.
+- [x] Build: `mvn -q clean package` en `Desarrollo` con EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Reejecutar `mvn -q clean package` luego de corregir.
-- [ ] Prueba funcional con usuario de empresa A y datos de empresa B: los KPIs deben mostrar solo la empresa del contexto.
-
-## Solucion Esperada
-
-- Inyectar `ContextoEmpresa` o resolver la empresa actual desde el usuario autenticado.
-- Filtrar todos los KPIs por empresa del contexto:
-  - activos por `activo.empresa = :emp` (definir explicitamente si los activos `empresa IS NULL` son globales o deben excluirse).
-  - operaciones vigentes por `operacion.empresa = :emp`.
-  - cuotas vencidas uniendo `cronograma_cuota` con `operacion` y filtrando `operacion.empresa = :emp`.
-  - recaudado hoy por `cobro.empresa = :emp`.
-  - saldo por cobrar uniendo `v_operacion_saldo` con `operacion` y filtrando `operacion.empresa = :emp`.
+- [ ] Prueba funcional manual con usuario de empresa A y datos de empresa B: los KPIs deben mostrar solo la empresa del contexto.

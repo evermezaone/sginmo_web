@@ -48,15 +48,18 @@ def cargar_env():
 # Cada funcion recibe una fila legada (dict) y devuelve un dict para el INSERT nuevo,
 # o None para omitir. Se completan al conocer el esquema real del .fdb de produccion.
 
-def map_persona(fila):
-    """CLIENTES/PROVEEDORES del legado -> persona. Clave natural: numero_documento."""
+def map_persona(fila, origen=None):
+    """CLIENTES/PROVEEDORES del legado -> persona COMPLETA (obs 239):
+    base + especializacion (persona_fisica/persona_juridica) + roles.
+    Clave natural: numero_documento."""
     doc = str(fila.get("RUC") or fila.get("CEDULA") or fila.get("NRO_DOCUMENTO") or "").strip()
     if not doc:
         return None
     es_juridica = bool(fila.get("RAZON_SOCIAL"))
-    return {
+    nombre = (fila.get("RAZON_SOCIAL") or fila.get("NOMBRE") or "").strip()
+    base = {
         "tipo_personeria": "JURIDICA" if es_juridica else "FISICA",
-        "nombre": (fila.get("RAZON_SOCIAL") or fila.get("NOMBRE") or "").strip(),
+        "nombre": nombre,
         "numero_documento": doc,
         "es_contribuyente": bool(fila.get("RUC")),
         "direccion": fila.get("DIRECCION"),
@@ -64,6 +67,23 @@ def map_persona(fila):
         "email": fila.get("EMAIL"),
         "estado": "ACTIVO",
     }
+    if es_juridica:
+        espec = {"tabla": "persona_juridica",
+                 "datos": {"razon_social": nombre,
+                           "nombre_fantasia": (fila.get("NOMBRE_FANTASIA") or None)}}
+    else:
+        partes = nombre.split(" ", 1)
+        espec = {"tabla": "persona_fisica",
+                 "datos": {"nombres": (fila.get("NOMBRES") or partes[0] or nombre),
+                           "apellidos": (fila.get("APELLIDOS") or (partes[1] if len(partes) > 1 else "-"))}}
+    # rol segun la tabla legada de origen
+    roles = []
+    o = (origen or "").upper()
+    if o.startswith("CLIENTE"):
+        roles.append("CLIENTE")
+    elif o.startswith("PROVEEDOR"):
+        roles.append("PROVEEDOR")
+    return {"persona": base, "especializacion": espec, "roles": roles}
 
 def map_activo(fila):
     """INMUEBLES/PROPIEDADES del legado -> activo. Clave natural: nombre + tipo."""
@@ -90,9 +110,25 @@ def _estado_activo(e):
     return m.get(str(e or "").upper(), "LIBRE")
 
 TABLAS = {
-    "personas": {"origen": ["CLIENTES", "PROVEEDORES", "PERSONAS"], "destino": "persona", "fn": map_persona},
-    "activos":  {"origen": ["INMUEBLES", "PROPIEDADES", "ENTIDADES_INMOBILIARIAS"], "destino": "activo", "fn": map_activo},
-    # operaciones/cuotas/cobros/gastos: se completan con el esquema real del .fdb de produccion.
+    "personas": {"origen": ["CLIENTES", "PROVEEDORES", "PERSONAS"], "destino": "persona (+fisica/juridica/rol)",
+                 "fn": map_persona, "cargador": "personas"},
+    "activos":  {"origen": ["INMUEBLES", "PROPIEDADES", "ENTIDADES_INMOBILIARIAS"], "destino": "activo",
+                 "fn": map_activo, "cargador": "activos"},
+    # ── Familias transaccionales (obs 239): pasos declarativos EXPLICITAMENTE NO
+    # destructivos. Se registran en el pipeline y reportan que haria cada uno, pero
+    # NUNCA escriben hasta que el .fdb de produccion revele el esquema real y se
+    # complete su fn. El orden respeta las dependencias del mapeo del docstring.
+    "operaciones": {"origen": ["CONTRATOS", "OPERACIONES"], "destino": "operacion (+documento cta cte)",
+                    "stub": "requiere esquema real del .fdb: mapear cliente/activo por clave natural y"
+                            " crear via SQL (persona/activo ya migrados)"},
+    "cuotas":      {"origen": ["CUOTAS", "CRONOGRAMA"], "destino": "cronograma_cuota",
+                    "stub": "requiere esquema real: preferir regenerar con f_generar_cronograma para"
+                            " garantizar el cuadre del motor"},
+    "cobros":      {"origen": ["RECIBOS", "COBROS"], "destino": "cobro + cobro_detalle",
+                    "stub": "requiere esquema real: cargar VIA f_cobrar_documento para que los triggers"
+                            " cuadren saldos y cuotas (jamas INSERT directo)"},
+    "gastos":      {"origen": ["GASTOS", "INGRESOS_EGRESOS"], "destino": "ingreso_egreso",
+                    "stub": "requiere esquema real: mapear articulo por aplicacion y persona por documento"},
 }
 
 def leer_firebird(env, tablas_origen):
@@ -135,32 +171,101 @@ def main():
     print(f"=== ETL Firebird -> PostgreSQL ({'DRY-RUN' if args.dry_run else 'APPLY'}) ===")
     origen = leer_firebird(env, [t for g in grupos.values() for t in g["origen"]])
     total = 0
-    for nombre, g in grupos.items():
-        filas = []
-        for ot in g["origen"]:
-            filas += origen.get(ot, [])
-        mapeadas = [m for m in (g["fn"](f) for f in filas) if m is not None]
-        total += len(mapeadas)
-        print(f"  {nombre}: {len(filas)} legadas -> {len(mapeadas)} a cargar en {g['destino']}")
-        if args.apply and mapeadas:
-            _insertar(env, g["destino"], mapeadas)
+    con = None
+    try:
+        for nombre, g in grupos.items():
+            if "stub" in g:
+                filas = sum(len(origen.get(ot, [])) for ot in g["origen"])
+                print(f"  {nombre}: STUB NO DESTRUCTIVO ({filas} filas legadas detectadas; no escribe)."
+                      f" Destino {g['destino']}. Pendiente: {g['stub']}")
+                continue
+            # mapear conservando la tabla de origen (define el rol de la persona)
+            mapeadas = []
+            for ot in g["origen"]:
+                for f in origen.get(ot, []):
+                    m = g["fn"](f, ot) if g["cargador"] == "personas" else g["fn"](f)
+                    if m is not None:
+                        mapeadas.append(m)
+            total += len(mapeadas)
+            print(f"  {nombre}: {len(mapeadas)} a cargar en {g['destino']}")
+            if args.apply and mapeadas:
+                if con is None:
+                    con = _conectar_pg(env)
+                cur = con.cursor()
+                nuevos, existentes = (_cargar_personas(cur, mapeadas) if g["cargador"] == "personas"
+                                      else _cargar_activos(cur, mapeadas))
+                con.commit()
+                print(f"    -> insertados {nuevos}, ya existian {existentes} (idempotente por clave natural)")
+    finally:
+        if con is not None:
+            con.close()
     print(f"=== {'Simulacion' if args.dry_run else 'Carga'} completada: {total} filas ===")
     if total == 0:
         print("  (0 filas: el .fdb legado esta vacio o LEGACY_FDB_PATH sin configurar — esperado hoy)")
 
-def _insertar(env, tabla, filas):
+def _conectar_pg(env):
     import psycopg2
-    con = psycopg2.connect(host=env["APP_DB_HOST"], port=env.get("APP_DB_PORT", 5432),
-                           user=env["APP_DB_USER"], password=env["APP_DB_PASS"], dbname=env["APP_DB_NAME"])
-    cur = con.cursor()
-    for f in filas:
-        cols = list(f.keys()) + ["usuario_creacion", "fecha_creacion"]
-        vals = list(f.values()) + ["etl", "now()"]
-        ph = ", ".join(["%s"] * (len(cols) - 1)) + ", now()"
-        cur.execute(f"INSERT INTO {tabla} ({', '.join(cols)}) VALUES ({ph}) ON CONFLICT DO NOTHING",
-                    vals[:-1])
-    con.commit()
-    con.close()
+    return psycopg2.connect(host=env["APP_DB_HOST"], port=env.get("APP_DB_PORT", 5432),
+                            user=env["APP_DB_USER"], password=env["APP_DB_PASS"], dbname=env["APP_DB_NAME"])
+
+def _cargar_personas(cur, items):
+    """persona base + especializacion + roles (obs 239). Idempotente por numero_documento:
+    el lookup en Python decide insertar o reutilizar el id (obs 240: nada de ON CONFLICT
+    ciego sobre claves que no son UNIQUE)."""
+    nuevos = existentes = 0
+    for it in items:
+        p, espec, roles = it["persona"], it["especializacion"], it["roles"]
+        cur.execute("SELECT persona FROM persona WHERE numero_documento = %s", (p["numero_documento"],))
+        r = cur.fetchone()
+        if r:
+            pid = r[0]
+            existentes += 1
+        else:
+            cols = list(p.keys())
+            cur.execute(
+                f"INSERT INTO persona ({', '.join(cols)}, usuario_creacion, fecha_creacion)"
+                f" VALUES ({', '.join(['%s'] * len(cols))}, 'etl', now()) RETURNING persona",
+                list(p.values()))
+            pid = cur.fetchone()[0]
+            nuevos += 1
+        # especializacion: PK compartida (persona) => upsert seguro por PK real
+        e_cols = ["persona"] + list(espec["datos"].keys())
+        e_vals = [pid] + list(espec["datos"].values())
+        cur.execute(
+            f"INSERT INTO {espec['tabla']} ({', '.join(e_cols)}, usuario_creacion, fecha_creacion)"
+            f" VALUES ({', '.join(['%s'] * len(e_cols))}, 'etl', now())"
+            f" ON CONFLICT (persona) DO NOTHING", e_vals)
+        # roles: lookup explicito (persona, rol_codigo) — reactiva si quedo INACTIVO
+        for rol in roles:
+            cur.execute("SELECT persona_rol, estado FROM persona_rol WHERE persona = %s AND rol_codigo = %s",
+                        (pid, rol))
+            pr = cur.fetchone()
+            if pr is None:
+                cur.execute(
+                    "INSERT INTO persona_rol (persona, rol_codigo, estado, usuario_creacion, fecha_creacion)"
+                    " VALUES (%s, %s, 'ACTIVO', 'etl', now())", (pid, rol))
+            elif pr[1] != "ACTIVO":
+                cur.execute("UPDATE persona_rol SET estado = 'ACTIVO', usuario_modificacion = 'etl',"
+                            " fecha_modificacion = now() WHERE persona_rol = %s", (pr[0],))
+    return nuevos, existentes
+
+def _cargar_activos(cur, items):
+    """activo idempotente por clave natural nombre+tipo_codigo VIA LOOKUP en Python
+    (obs 240: la tabla no tiene UNIQUE(nombre, tipo_codigo), asi que ON CONFLICT
+    DO NOTHING jamas dispararia y re-correr duplicaria)."""
+    nuevos = existentes = 0
+    for a in items:
+        cur.execute("SELECT activo FROM activo WHERE nombre = %s AND tipo_codigo = %s",
+                    (a["nombre"], a["tipo_codigo"]))
+        if cur.fetchone():
+            existentes += 1
+            continue
+        cols = list(a.keys())
+        cur.execute(
+            f"INSERT INTO activo ({', '.join(cols)}, usuario_creacion, fecha_creacion)"
+            f" VALUES ({', '.join(['%s'] * len(cols))}, 'etl', now())", list(a.values()))
+        nuevos += 1
+    return nuevos, existentes
 
 if __name__ == "__main__":
     sys.exit(main())

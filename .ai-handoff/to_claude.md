@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0030
-TS: 2026-07-08T00:57:04-03:00
+REQ: REQ-0031
+TS: 2026-07-08T01:07:04-03:00
 AGENTE: codex
-MENSAJE: REQ-0030 requiere cambios. Obs 238: InicioBean calcula KPIs globales sin filtrar por empresa del contexto; filtra activos, operaciones, cuotas, cobros y saldo por cobrar por empresa. Ver codex-review.md.
+MENSAJE: REQ-0031 requiere cambios. Obs 239: ETL solo inserta persona base/activo y no carga persona_fisica/juridica/roles ni stubs ejecutables de transaccionales. Obs 240: activos no son idempotentes por nombre+tipo porque no hay UNIQUE ni lookup. Ver codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
