@@ -39,21 +39,26 @@ public class LiquidacionService {
         }
     }
 
-    public long contar(String filtro) {
+    /** Aislamiento multiempresa (obs 233): la pantalla SOLO ve liquidaciones de la empresa del contexto. */
+    public long contar(Long empresa, String filtro) {
+        if (empresa == null) return 0;
         var q = em.createQuery(
             "SELECT COUNT(l) FROM Liquidacion l, Operacion o, Persona p"
-            + " WHERE o.id = l.operacion AND p.id = o.cliente"
+            + " WHERE o.id = l.operacion AND p.id = o.cliente AND o.empresa = :emp"
             + " AND (:f = '' OR lower(p.nombre) LIKE :like)", Long.class);
+        q.setParameter("emp", empresa);
         aplicar(q, filtro);
         return q.getSingleResult();
     }
 
     /** Filas: [liquidacion, nombreCliente, operacionId]. */
-    public List<Object[]> listar(int primero, int cantidad, String filtro) {
+    public List<Object[]> listar(Long empresa, int primero, int cantidad, String filtro) {
+        if (empresa == null) return java.util.List.of();
         var q = em.createQuery(
             "SELECT l, p.nombre, o.id FROM Liquidacion l, Operacion o, Persona p"
-            + " WHERE o.id = l.operacion AND p.id = o.cliente"
+            + " WHERE o.id = l.operacion AND p.id = o.cliente AND o.empresa = :emp"
             + " AND (:f = '' OR lower(p.nombre) LIKE :like) ORDER BY l.id DESC", Object[].class);
+        q.setParameter("emp", empresa);
         aplicar(q, filtro);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
     }
@@ -63,18 +68,23 @@ public class LiquidacionService {
         q.setParameter("f", f).setParameter("like", "%" + f + "%");
     }
 
-    /** Operaciones de alquiler que aun no fueron liquidadas (para el combo de alta). */
-    public List<Object[]> operacionesLiquidables() {
+    /** Operaciones de alquiler de la empresa del contexto que aun no fueron liquidadas. */
+    public List<Object[]> operacionesLiquidables(Long empresa) {
+        if (empresa == null) return java.util.List.of();
         return em.createQuery(
             "SELECT o.id, p.nombre, o.garantia FROM Operacion o, Persona p"
-            + " WHERE p.id = o.cliente AND o.tipoOperacion = 'ALQUILER'"
+            + " WHERE p.id = o.cliente AND o.tipoOperacion = 'ALQUILER' AND o.empresa = :emp"
             + " AND NOT EXISTS (SELECT 1 FROM Liquidacion l WHERE l.operacion = o.id)"
-            + " ORDER BY o.id DESC", Object[].class).getResultList();
+            + " ORDER BY o.id DESC", Object[].class)
+            .setParameter("emp", empresa).getResultList();
     }
 
-    public BigDecimal garantiaDe(Long operacionId) {
-        var r = em.createQuery("SELECT o.garantia FROM Operacion o WHERE o.id = :o", BigDecimal.class)
-            .setParameter("o", operacionId).getResultList();
+    /** Garantia de la operacion SOLO si pertenece a la empresa del contexto (obs 233). */
+    public BigDecimal garantiaDe(Long operacionId, Long empresa) {
+        if (empresa == null) return BigDecimal.ZERO;
+        var r = em.createQuery(
+                "SELECT o.garantia FROM Operacion o WHERE o.id = :o AND o.empresa = :emp", BigDecimal.class)
+            .setParameter("o", operacionId).setParameter("emp", empresa).getResultList();
         return r.isEmpty() ? BigDecimal.ZERO : r.get(0);
     }
 
@@ -92,9 +102,14 @@ public class LiquidacionService {
      * operacion, con calculo automatico de alquileres pendientes (saldo de cuotas
      * PENDIENTE) y mora acumulada (f_mora_cuota a hoy). Solo filas con monto > 0.
      */
-    public List<LiquidacionGasto> plantillaDe(Long operacionId) {
+    public List<LiquidacionGasto> plantillaDe(Long operacionId, Long empresa) {
         List<LiquidacionGasto> plantilla = new java.util.ArrayList<>();
-        if (operacionId == null) return plantilla;
+        if (operacionId == null || empresa == null) return plantilla;
+        // aislamiento (obs 233): no se calcula plantilla de operaciones de otra empresa
+        Long ok = em.createQuery(
+                "SELECT COUNT(o) FROM Operacion o WHERE o.id = :o AND o.empresa = :emp", Long.class)
+            .setParameter("o", operacionId).setParameter("emp", empresa).getSingleResult();
+        if (ok == 0) return plantilla;
         Object pend = em.createNativeQuery(
                 "SELECT COALESCE(SUM(saldo),0) FROM cronograma_cuota WHERE operacion = :op AND estado = 'PENDIENTE'")
             .setParameter("op", operacionId).getSingleResult();
@@ -122,10 +137,11 @@ public class LiquidacionService {
     }
 
     @Transactional
-    public Liquidacion guardar(Liquidacion liq, List<LiquidacionGasto> gastos) {
+    public Liquidacion guardar(Liquidacion liq, List<LiquidacionGasto> gastos, Long empresaContexto) {
         boolean esNueva = liq.getId() == null;
         autorizacion.exigir("liquidaciones", esNueva ? "CREAR" : "EDITAR");
         if (liq.getOperacion() == null) throw new NegocioException("La operación es obligatoria");
+        if (empresaContexto == null) throw new NegocioException("Falta el contexto de empresa");
         // RN-LIQ-003/004 (obs 230): el motivo de la liquidacion es obligatorio
         if (liq.getMotivoCodigo() == null || liq.getMotivoCodigo().isBlank()) {
             throw new NegocioException("El motivo de la liquidación es obligatorio");
@@ -150,6 +166,10 @@ public class LiquidacionService {
             var op = em.find(py.com.pysistemas.sginmo.dominio.operacion.Operacion.class,
                     liq.getOperacion(), jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
             if (op == null) throw new NegocioException("La operación no existe");
+            // aislamiento (obs 233): no se liquida/finaliza una operacion de OTRA empresa
+            if (!empresaContexto.equals(op.getEmpresa())) {
+                throw new NegocioException("La operación pertenece a otra empresa");
+            }
             if (esNueva && "VIGENTE".equals(op.getEstado())) {
                 op.setEstado("FINALIZADO");
                 op.setFechaFinalizacion(java.time.LocalDate.now());

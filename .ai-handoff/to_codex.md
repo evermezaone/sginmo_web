@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0024, REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
-TS: 2026-07-08T01:38:28Z
+REQ: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032
+TS: 2026-07-08T02:00:35Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0024, REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0024: aislamiento multiempresa: contar/listar filtran por empresa del contexto; guardar/anular validan pertenencia (incluida la fila en BD al editar); verificado contra VPS
+MENSAJE: [SGI] Cola de auditoria: REQ-0025, REQ-0026, REQ-0027, REQ-0028, REQ-0029, REQ-0030, REQ-0031, REQ-0032. Ultimo derivado REQ-0025: liquidacion: cierra operacion y libera activo en la misma transaccion, motivo obligatorio (service+UI), plantilla de gastos automatica (pendientes+mora via f_mora_cuota) y usuario real en detalles; bateria con ROLLBACK contra VPS
 
 ---
 # Estados validos (Claude escribe, Codex lee):

@@ -36,6 +36,8 @@ public class LiquidacionBean implements Serializable {
     @Inject
     private transient CatalogoService catalogoService;
     @Inject
+    private ContextoEmpresa contexto;
+    @Inject
     private SesionUsuario sesion;
 
     private LazyDataModel<Object[]> modelo;
@@ -53,15 +55,20 @@ public class LiquidacionBean implements Serializable {
     public void iniciar() {
         articulos = catalogoService.articulosActivos();
         motivos = catalogoService.opciones("MOTIVOS_LIQUIDACION");
-        operacionesLiquidables = service.operacionesLiquidables();
+        operacionesLiquidables = service.operacionesLiquidables(empresaContexto());
         modelo = new LazyDataModel<>() {
             @Override
-            public int count(Map<String, FilterMeta> f) { return (int) service.contar(filtroGlobal); }
+            public int count(Map<String, FilterMeta> f) { return (int) service.contar(empresaContexto(), filtroGlobal); }
             @Override
             public List<Object[]> load(int first, int size, Map<String, SortMeta> s, Map<String, FilterMeta> f) {
-                return service.listar(first, size, filtroGlobal);
+                return service.listar(empresaContexto(), first, size, filtroGlobal);
             }
         };
+    }
+
+    /** Empresa del contexto (obs 233): la pantalla solo opera sobre sus liquidaciones/operaciones. */
+    private Long empresaContexto() {
+        return contexto.getEmpresa() == null ? null : contexto.getEmpresa().getId();
     }
 
     public String verificarAcceso() {
@@ -73,17 +80,17 @@ public class LiquidacionBean implements Serializable {
         seleccionado = new Liquidacion();
         operacionSel = null;
         gastos = new ArrayList<>();
-        operacionesLiquidables = service.operacionesLiquidables();
+        operacionesLiquidables = service.operacionesLiquidables(empresaContexto());
         soloLectura = false;
     }
 
     public void operacionElegida() {
         if (operacionSel != null) {
             seleccionado.setOperacion(operacionSel);
-            seleccionado.setTotalGarantia(service.garantiaDe(operacionSel));
+            seleccionado.setTotalGarantia(service.garantiaDe(operacionSel, empresaContexto()));
             // Plantilla de gastos (obs 231, RN-PLANT-001/002): alquileres pendientes y
             // mora calculados desde las cuotas de la operacion; el usuario ajusta/agrega.
-            gastos = new ArrayList<>(service.plantillaDe(operacionSel));
+            gastos = new ArrayList<>(service.plantillaDe(operacionSel, empresaContexto()));
         }
     }
 
@@ -125,7 +132,7 @@ public class LiquidacionBean implements Serializable {
         try {
             boolean esNueva = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
-            service.guardar(seleccionado, gastos);
+            service.guardar(seleccionado, gastos, empresaContexto());
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Liquidación registrada" : "Liquidación actualizada",
                     "Saldo: " + getSaldoCalculado());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgLiq').hide()");

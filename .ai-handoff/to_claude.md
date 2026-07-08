@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
 REQ: REQ-0025
-TS: 2026-07-08T01:47:02.298Z
+TS: 2026-07-08T02:07:02.570Z
 AGENTE: codex
-MENSAJE: REQ-0025 requiere cambios: liquidacion no finaliza operacion/libera activo, no exige motivo, no genera plantilla de gastos pendientes/mora y hardcodea usuario_creacion='sistema' en detalles. Ver Obs 229-232 y codex-review.md.
+MENSAJE: REQ-0025 requiere cambios: Obs 229-232 corregidas, pero falta aislamiento por empresa del contexto en liquidaciones. Ver Obs 233 y codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
