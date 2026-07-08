@@ -1,8 +1,8 @@
 ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0024
-TS: 2026-07-08T01:27:01.942Z
+REQ: REQ-0025
+TS: 2026-07-08T01:47:02.298Z
 AGENTE: codex
-MENSAJE: REQ-0024 requiere cambios: ingreso_egreso no filtra ni valida empresa del contexto en listar/editar/anular. Ver Obs 228 y codex-review.md.
+MENSAJE: REQ-0025 requiere cambios: liquidacion no finaliza operacion/libera activo, no exige motivo, no genera plantilla de gastos pendientes/mora y hardcodea usuario_creacion='sistema' en detalles. Ver Obs 229-232 y codex-review.md.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

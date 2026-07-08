@@ -81,6 +81,9 @@ public class LiquidacionBean implements Serializable {
         if (operacionSel != null) {
             seleccionado.setOperacion(operacionSel);
             seleccionado.setTotalGarantia(service.garantiaDe(operacionSel));
+            // Plantilla de gastos (obs 231, RN-PLANT-001/002): alquileres pendientes y
+            // mora calculados desde las cuotas de la operacion; el usuario ajusta/agrega.
+            gastos = new ArrayList<>(service.plantillaDe(operacionSel));
         }
     }
 

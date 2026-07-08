@@ -26,6 +26,19 @@ public class LiquidacionService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    @jakarta.inject.Inject
+    private py.com.one.core.UsuarioActual usuarioActual;
+
+    /** Usuario autenticado para las escrituras nativas (obs 232); fallback 'sistema' solo sin sesion. */
+    private String usuarioAuditoria() {
+        try {
+            String u = usuarioActual.codigoUsuario();
+            return (u == null || u.isBlank()) ? py.com.one.core.UsuarioActual.SISTEMA : u;
+        } catch (RuntimeException sinContexto) {
+            return py.com.one.core.UsuarioActual.SISTEMA;
+        }
+    }
+
     public long contar(String filtro) {
         var q = em.createQuery(
             "SELECT COUNT(l) FROM Liquidacion l, Operacion o, Persona p"
@@ -74,11 +87,49 @@ public class LiquidacionService {
             .setParameter("l", liquidacionId).getResultList();
     }
 
+    /**
+     * Plantilla de gastos (obs 231, RN-PLANT-001/002): categorias precargadas desde la
+     * operacion, con calculo automatico de alquileres pendientes (saldo de cuotas
+     * PENDIENTE) y mora acumulada (f_mora_cuota a hoy). Solo filas con monto > 0.
+     */
+    public List<LiquidacionGasto> plantillaDe(Long operacionId) {
+        List<LiquidacionGasto> plantilla = new java.util.ArrayList<>();
+        if (operacionId == null) return plantilla;
+        Object pend = em.createNativeQuery(
+                "SELECT COALESCE(SUM(saldo),0) FROM cronograma_cuota WHERE operacion = :op AND estado = 'PENDIENTE'")
+            .setParameter("op", operacionId).getSingleResult();
+        Object mora = em.createNativeQuery(
+                "SELECT COALESCE(SUM(f_mora_cuota(cronograma_cuota, current_date)),0)"
+                + " FROM cronograma_cuota WHERE operacion = :op AND estado = 'PENDIENTE'")
+            .setParameter("op", operacionId).getSingleResult();
+        agregarItemPlantilla(plantilla, "ALQUILERES_PENDIENTES", new BigDecimal(pend.toString()));
+        agregarItemPlantilla(plantilla, "MORA", new BigDecimal(mora.toString()));
+        return plantilla;
+    }
+
+    private void agregarItemPlantilla(List<LiquidacionGasto> plantilla, String aplicacion, BigDecimal monto) {
+        if (monto == null || monto.signum() <= 0) return;
+        var art = em.createQuery(
+                "SELECT a.id, a.descripcion FROM Articulo a WHERE a.aplicacion = :apl AND a.estado = 'ACTIVO' ORDER BY a.id",
+                Object[].class)
+            .setParameter("apl", aplicacion).setMaxResults(1).getResultList();
+        if (art.isEmpty()) return;   // sin articulo configurado no se puede precargar la categoria
+        var g = new LiquidacionGasto();
+        g.setArticulo((Long) art.get(0)[0]);
+        g.setConcepto((String) art.get(0)[1]);
+        g.setMonto(monto);
+        plantilla.add(g);
+    }
+
     @Transactional
     public Liquidacion guardar(Liquidacion liq, List<LiquidacionGasto> gastos) {
         boolean esNueva = liq.getId() == null;
         autorizacion.exigir("liquidaciones", esNueva ? "CREAR" : "EDITAR");
         if (liq.getOperacion() == null) throw new NegocioException("La operación es obligatoria");
+        // RN-LIQ-003/004 (obs 230): el motivo de la liquidacion es obligatorio
+        if (liq.getMotivoCodigo() == null || liq.getMotivoCodigo().isBlank()) {
+            throw new NegocioException("El motivo de la liquidación es obligatorio");
+        }
         BigDecimal totalGastos = BigDecimal.ZERO;
         if (gastos != null) {
             for (var g : gastos) {
@@ -91,7 +142,23 @@ public class LiquidacionService {
         }
         liq.setTotalGastos(totalGastos);
         liq.setSaldo(liq.getTotalGarantia().subtract(totalGastos));
+        String usr = usuarioAuditoria();
         try {
+            // Cierre transaccional (obs 229): al liquidar, la operacion pasa a FINALIZADO
+            // (con fecha) y el activo vuelve a LIBRE salvo venta consumada. Misma transaccion
+            // que la liquidacion: o se hace todo, o nada.
+            var op = em.find(py.com.pysistemas.sginmo.dominio.operacion.Operacion.class,
+                    liq.getOperacion(), jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+            if (op == null) throw new NegocioException("La operación no existe");
+            if (esNueva && "VIGENTE".equals(op.getEstado())) {
+                op.setEstado("FINALIZADO");
+                op.setFechaFinalizacion(java.time.LocalDate.now());
+            }
+            var activo = em.find(py.com.pysistemas.sginmo.dominio.activo.Activo.class, op.getActivo());
+            if (activo != null && !"VENDIDA".equals(activo.getEstado())) {
+                activo.setEstado("LIBRE");
+            }
+
             Liquidacion r = esNueva ? persistir(liq) : em.merge(liq);
             em.flush();
             // reescribe los detalles (borra y reinserta: simple y correcto)
@@ -102,9 +169,10 @@ public class LiquidacionService {
                 for (var g : gastos) {
                     em.createNativeQuery(
                         "INSERT INTO liquidacion_detalle (liquidacion, numero_item, articulo, monto, usuario_creacion, fecha_creacion)"
-                        + " VALUES (:l, :n, :art, :monto, 'sistema', now())")
+                        + " VALUES (:l, :n, :art, :monto, :usr, now())")
                         .setParameter("l", r.getId()).setParameter("n", item++)
                         .setParameter("art", g.getArticulo()).setParameter("monto", g.getMonto())
+                        .setParameter("usr", usr)
                         .executeUpdate();
                 }
             }

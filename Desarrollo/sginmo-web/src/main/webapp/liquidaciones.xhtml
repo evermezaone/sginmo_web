@@ -62,9 +62,10 @@
                         <p:datePicker value="#{liquidacionBean.seleccionado.fecha}" pattern="dd/MM/yyyy" disabled="#{liquidacionBean.soloLectura}"/></div>
                 </div>
                 <div class="fila-2">
-                    <div class="campo"><label>Motivo</label>
-                        <p:selectOneMenu value="#{liquidacionBean.seleccionado.motivoCodigo}" label="Motivo" disabled="#{liquidacionBean.soloLectura}">
-                            <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                    <div class="campo"><label>Motivo *</label>
+                        <p:selectOneMenu value="#{liquidacionBean.seleccionado.motivoCodigo}" label="Motivo" disabled="#{liquidacionBean.soloLectura}"
+                                         required="true" requiredMessage="El motivo de la liquidación es obligatorio">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                             <f:selectItems value="#{liquidacionBean.motivos}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.codigo}"/>
                         </p:selectOneMenu></div>
                     <div class="campo"><label>Entregó llaves</label>
