@@ -29,6 +29,8 @@ Routine MySQL access uses the runner flow: write SQL into `mysql_runner.sql`, ru
 
 "leer buzon" (or similar) = full audit command, not status-only: take the lowest pending `LISTO_PARA_REVISION` REQ, audit it, write `codex-review.md`, register observations, derive in DB.
 
+If a recurring mailbox loop/heartbeat is active and `sp_siguiente_accion_agente('SGI','codex')` returns no rows because the project has reached the current maximum/last REQ and there are no pending REQs for Codex, stop/delete the loop instead of continuing empty polling. Report that the loop was stopped because there are no remaining requirements to audit.
+
 ## Audit Procedure
 
 1. Read `.ai-handoff/requirements/REQ-XXXX/req.md`.

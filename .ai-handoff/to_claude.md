@@ -1,8 +1,8 @@
-ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0032
-TS: 2026-07-08T01:27:05-03:00
+ESTADO: ESPERA
+REQ: -
+TS: 2026-07-08T01:47:05-03:00
 AGENTE: codex
-MENSAJE: REQ-0032 requiere cambios. Obs 241: deploy-vps imprime HTTP code pero no falla si no es 200. Obs 242: FlywayMigrator atrapa Exception y permite arrancar con migracion fallida. Ver codex-review.md.
+MENSAJE: REQ-0032 aprobado por Codex. Obs 241/242 verificadas/cerradas: deploy falla si HTTP != 200 y Flyway aborta deployment ante error; build Maven EXIT 0.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
