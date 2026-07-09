@@ -16,7 +16,7 @@ import java.util.Map;
 public class GeografiaService {
 
     private static final Map<String, String> ORDEN = Map.of(
-        "nombre", "u.nombre", "nivelCodigo", "u.nivelCodigo", "codigoOficial", "u.codigoOficial", "estado", "u.estado");
+        "nombre", "u.nombre", "nivel", "u.nivel", "codigoOficial", "u.codigoOficial", "estado", "u.estado");
 
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
@@ -65,7 +65,7 @@ public class GeografiaService {
         if (u.getNombre() == null || u.getNombre().isBlank()) {
             throw new NegocioException("El nombre es obligatorio");
         }
-        if (u.getNivelCodigo() == null || u.getNivelCodigo().isBlank()) {
+        if (u.getNivel() == null) {
             throw new NegocioException("El nivel es obligatorio");
         }
         if (u.getPadre() != null && u.getId() != null && u.getId().equals(u.getPadre().getId())) {

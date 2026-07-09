@@ -30,8 +30,8 @@
             <p:column headerText="Nombre" sortBy="#{ubi.nombre}" toggleable="false">
                 <h:outputText value="#{ubi.nombre}"/>
             </p:column>
-            <p:column headerText="Nivel" sortBy="#{ubi.nivelCodigo}" style="width:9rem;">
-                <h:outputText value="#{ubi.nivelCodigo}"/>
+            <p:column headerText="Nivel" sortBy="#{ubi.nivel}" style="width:9rem;">
+                <h:outputText value="#{geografiaBean.descripcionNivel(ubi.nivel)}"/>
             </p:column>
             <p:column headerText="Pertenece a" style="width:14rem;">
                 <h:outputText value="#{ubi.padre.nombre}"/>
@@ -76,12 +76,12 @@
                 <div class="fila-2">
                     <div class="campo">
                         <label>Nivel *</label>
-                        <p:selectOneMenu value="#{geografiaBean.seleccionado.nivelCodigo}" required="true" label="Nivel"
+                        <p:selectOneMenu value="#{geografiaBean.seleccionado.nivel}" required="true" label="Nivel"
                                          disabled="#{geografiaBean.soloLectura}"
                                          requiredMessage="El nivel es obligatorio">
                             <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
                             <f:selectItems value="#{geografiaBean.niveles}" var="niv"
-                                           itemLabel="#{niv.descripcion}" itemValue="#{niv.codigo}"/>
+                                           itemLabel="#{niv.descripcion}" itemValue="#{niv.id}"/>
                         </p:selectOneMenu>
                     </div>
                     <div class="campo">

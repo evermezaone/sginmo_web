@@ -118,4 +118,7 @@ public class GeografiaBean implements Serializable {
     public void setFiltroGlobal(String filtroGlobal) { this.filtroGlobal = filtroGlobal; }
     public boolean isSoloLectura() { return soloLectura; }
     public List<Entidad> getNiveles() { return niveles; }
+
+    /** Descripcion del nivel (id -> texto) para la grilla (V26: nivel es id). */
+    public String descripcionNivel(Long id) { return catalogoService.descripcionOpcion(id); }
 }

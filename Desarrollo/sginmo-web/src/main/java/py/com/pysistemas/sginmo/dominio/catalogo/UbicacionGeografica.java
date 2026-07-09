@@ -29,8 +29,8 @@ public class UbicacionGeografica extends Auditable implements Serializable {
     @Column(name = "nombre", length = 150, nullable = false)
     private String nombre;
 
-    @Column(name = "nivel_codigo", length = 40, nullable = false)
-    private String nivelCodigo;
+    @Column(name = "nivel", nullable = false)
+    private Long nivel;              // FK bigint a entidad (lista NIVELES_UBICACION)
 
     @Column(name = "codigo_oficial", length = 10)
     private String codigoOficial;
@@ -49,8 +49,8 @@ public class UbicacionGeografica extends Auditable implements Serializable {
     public void setPadre(UbicacionGeografica padre) { this.padre = padre; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
-    public String getNivelCodigo() { return nivelCodigo; }
-    public void setNivelCodigo(String nivelCodigo) { this.nivelCodigo = nivelCodigo; }
+    public Long getNivel() { return nivel; }
+    public void setNivel(Long nivel) { this.nivel = nivel; }
     public String getCodigoOficial() { return codigoOficial; }
     public void setCodigoOficial(String codigoOficial) { this.codigoOficial = codigoOficial; }
     public String getEstado() { return estado; }
