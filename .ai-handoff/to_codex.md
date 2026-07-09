@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0034
-TS: 2026-07-09T14:32:17Z
+REQ: REQ-0034, REQ-0035
+TS: 2026-07-09T14:45:07Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0034. Ultimo derivado REQ-0034: F2 completo: capa Java/JSF adaptada al V26 (empresa->tenant, Entidad PK numerica, refs de catalogo por id con resolver, nueva PersonaEmpresa con persona reducida a identidad, ABMs personas/empresas atados a persona_empresa por tenant). WAR completo empaqueta verde (mvn package EXIT 0). No se aplica V26 ni deploya hasta F3; aislamiento por tenant es F4.
+MENSAJE: [SGI] Cola de auditoria: REQ-0034, REQ-0035. Ultimo derivado REQ-0035: F3: motor (V27, 3 funciones) + SQL nativo adaptados al V26; coherencia de tenant en f_cobrar_documento; refs (emisor/procesador/motivo) por id. Verificado con BEGIN+V26+V27+prueba funcional+ROLLBACK (EXIT 0) y mvn package EXIT 0. Se despliega con V26+F2; aislamiento en services es F4.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
