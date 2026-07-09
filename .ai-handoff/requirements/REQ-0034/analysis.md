@@ -88,3 +88,12 @@ NOTA: no deployar hasta que F3 (native SQL + SP) también esté hecho — V26+F2
   carga/upsert por (persona, tenant) en PersonaService/EmpresaService. estado_civil y
   actividad pasan a combos por id. Es la 'cartera por tenant' = F4; al cerrarlo, los ABMs
   quedan funcionales y F2 se puede derivar.
+
+## Gaps de F2 detectados durante F4 (2026-07-09)
+- CATALOGOS SIN tenant mapeado: Articulo/Moneda/Impuesto/FormaPago/UbicacionGeografica
+  recibieron `tenant` en V26 pero la entidad JPA no lo mapeaba. CORREGIDO en F4b (commit
+  75e6c10): se agrego el campo `tenant` + accesores. Si Codex lo observa en REQ-0034, ya esta.
+- PENDIENTE (F4/F6): ParametroSistema.PK paso a (tenant,clave) en V26 pero la entidad mapea
+  @Id solo `clave`; hay que revisar el mapeo (IdClass/EmbeddedId) cuando se filtren parametros
+  por tenant. Atributo/AtributoPorTipo/Grupo/Sucursal ganaron tenant (Atributo sin entidad JPA;
+  Sucursal/Grupo a revisar al aislar sus ABMs).
