@@ -172,10 +172,30 @@ public class ArticuloService {
         a.setEstado(estadoNuevo);
     }
 
+    /** Visible al tenant: propio o global -1 (para leer/copiar). SUPERADMIN todo. */
+    private boolean articuloVisible(Long id) {
+        if (id == null) return false;
+        if (tenant.esSuperadmin()) return true;
+        Articulo a = em.find(Articulo.class, id);
+        return a != null && (tenant.actual().equals(a.getTenant())
+                || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(a.getTenant()));
+    }
+
+    /** Editable por el tenant: propio, o global -1 SOLO por SUPERADMIN (obs 251). Aborta si no. */
+    private void exigirArticuloEditable(Long id) {
+        Articulo a = id == null ? null : em.find(Articulo.class, id);
+        if (a == null) throw new NegocioException("El artículo no existe");
+        Long t = a.getTenant();
+        boolean editable = t != null && (t.equals(tenant.actual())
+                || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(t) && tenant.esSuperadmin()));
+        if (!editable) throw new NegocioException("El artículo pertenece a otra empresa");
+    }
+
     /** Copia las propiedades de un articulo a otro (clonado, regla 3); omite las ya cargadas. */
     @Transactional
     public void copiarPropiedades(Long origenId, Long destinoId) {
         autorizacion.exigir("articulos", "CREAR");
+        exigirArticuloEditable(destinoId);   // obs 251: solo se cargan propiedades en un articulo del tenant
         var origen = listarPropiedades(origenId);
         for (var p : origen) {
             Long repetidas = em.createQuery(
@@ -197,6 +217,8 @@ public class ArticuloService {
     // ── Propiedades parametrizables del articulo (solo con articulo ya guardado) ──
 
     public List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> listarPropiedades(Long articuloId) {
+        // Aislamiento (obs 251): solo propiedades de un articulo visible al tenant (propio o global).
+        if (!articuloVisible(articuloId)) throw new NegocioException("El artículo pertenece a otra empresa");
         return em.createQuery(
                 "SELECT p FROM ArticuloPropiedad p WHERE p.articulo = :art ORDER BY p.propiedad",
                 py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad.class)
@@ -210,6 +232,7 @@ public class ArticuloService {
         if (articuloId == null) {
             throw new NegocioException("Guarde el artículo antes de cargar propiedades");
         }
+        exigirArticuloEditable(articuloId);   // obs 251
         if (codigo == null || codigo.isBlank()) {
             throw new NegocioException("Debe elegir la propiedad");
         }
@@ -238,6 +261,7 @@ public class ArticuloService {
         autorizacion.exigir("articulos", "EDITAR");
         var p = em.find(py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad.class, propiedadId);
         if (p != null) {
+            exigirArticuloEditable(p.getArticulo());   // obs 251: la propiedad debe ser de un articulo del tenant
             em.remove(p);
         }
     }

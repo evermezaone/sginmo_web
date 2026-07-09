@@ -97,9 +97,11 @@ public class OperacionService {
     /** Activos disponibles para operar (LIBRES) por autocomplete. */
     public List<Activo> activosLibres(String texto) {
         String f = texto == null ? "" : texto.trim().toLowerCase();
+        // Aislamiento (obs 249): solo activos LIBRES del tenant del contexto.
         return em.createQuery(
-                "SELECT a FROM Activo a WHERE a.estado = 'LIBRE' AND lower(a.nombre) LIKE :like ORDER BY a.nombre",
+                "SELECT a FROM Activo a WHERE a.estado = 'LIBRE' AND a.tenant = :t AND lower(a.nombre) LIKE :like ORDER BY a.nombre",
                 Activo.class)
+            .setParameter("t", tenant.actual())
             .setParameter("like", "%" + f + "%").setMaxResults(15).getResultList();
     }
 
@@ -108,9 +110,20 @@ public class OperacionService {
     @Transactional
     public Operacion crear(Operacion op) {
         autorizacion.exigir("operaciones", "CREAR");
+        // El tenant lo fija el contexto, NUNCA el payload (obs 249): evita crear operaciones
+        // con tenant alterado y documentos/movimientos bajo una empresa que no corresponde.
+        op.setTenant(tenant.actual());
         validar(op);
         Activo activo = em.find(Activo.class, op.getActivo());
         if (activo == null) throw new NegocioException("El activo no existe");
+        if (tenant.actual() == null || !tenant.actual().equals(activo.getTenant())) {
+            throw new NegocioException("El activo pertenece a otra empresa");
+        }
+        // La sucursal del contexto debe ser del mismo tenant (obs 249).
+        Long sucOk = em.createQuery(
+                "SELECT COUNT(s) FROM Sucursal s WHERE s.id = :s AND s.tenant = :t", Long.class)
+            .setParameter("s", op.getSucursal()).setParameter("t", tenant.actual()).getSingleResult();
+        if (sucOk == 0) throw new NegocioException("La sucursal pertenece a otra empresa");
         if (!"LIBRE".equals(activo.getEstado())) {
             throw new NegocioException("El activo '" + activo.getNombre() + "' no está LIBRE (está " + activo.getEstado() + ")");
         }

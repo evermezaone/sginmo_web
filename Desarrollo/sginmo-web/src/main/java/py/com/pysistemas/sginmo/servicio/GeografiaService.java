@@ -108,6 +108,11 @@ public class GeografiaService {
         autorizacion.exigir("geografia", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         UbicacionGeografica u = em.find(UbicacionGeografica.class, id);
         if (u == null) throw new NegocioException("La ubicación no existe");
+        // Pertenencia (obs 251): propio del tenant, o global -1 solo por SUPERADMIN.
+        Long tOrig = u.getTenant();
+        boolean editable = tOrig != null && (tOrig.equals(tenant.actual())
+                || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(tOrig) && tenant.esSuperadmin()));
+        if (!editable) throw new NegocioException("La ubicación pertenece a otra empresa");
         u.setEstado(estadoNuevo);
     }
 }

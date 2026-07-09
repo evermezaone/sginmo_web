@@ -98,6 +98,18 @@ public class ActivoService {
 
     public Activo buscar(Long id) { return id == null ? null : em.find(Activo.class, id); }
 
+    /** Exige que el activo sea del tenant actual (SUPERADMIN sin restriccion). Guarda comun de
+     *  las acciones por id (obs 251): aunque la grilla filtre, una llamada manipulada no debe tocar
+     *  un activo de otra empresa. */
+    private void exigirActivoDelTenant(Long activoId) {
+        if (tenant.esSuperadmin()) return;
+        Activo a = activoId == null ? null : em.find(Activo.class, activoId);
+        if (a == null) throw new NegocioException("El activo no existe");
+        if (!tenant.actual().equals(a.getTenant())) {
+            throw new NegocioException("El activo pertenece a otra empresa");
+        }
+    }
+
     /** Autocomplete de contenedores validos para generar lotes: solo tipos contenedor de lote. */
     public List<Activo> buscarLoteamiento(String texto) {
         String f = texto == null ? "" : texto.trim().toLowerCase();
@@ -266,6 +278,10 @@ public class ActivoService {
         if (padre == null) {
             throw new NegocioException("El contenedor no existe");
         }
+        // Pertenencia (obs 251): no se generan lotes bajo un contenedor de otra empresa.
+        if (!tenant.esSuperadmin() && !tenant.actual().equals(padre.getTenant())) {
+            throw new NegocioException("El contenedor pertenece a otra empresa");
+        }
         if (!TIPOS_CONTENEDOR_LOTE.contains(catalogoService.codigoOpcion(padre.getTipo()))) {
             throw new NegocioException("El contenedor debe ser un LOTEAMIENTO o BARRIO_CERRADO; '"
                     + padre.getNombre() + "' no puede contener lotes");
@@ -319,6 +335,7 @@ public class ActivoService {
     public void agregarPropietario(Long activoId, Long propietarioId) {
         autorizacion.exigir("activos", "EDITAR");
         if (propietarioId == null) throw new NegocioException("Elija el propietario");
+        exigirActivoDelTenant(activoId);   // obs 251: no se tocan propietarios de un activo ajeno
         // Si ya existe (activo o inactivo) NO se duplica: activo -> error; inactivo -> se reactiva.
         var existentes = em.createQuery(
                 "SELECT ap FROM ActivoPropietario ap WHERE ap.activo = :act AND ap.propietario = :pro", ActivoPropietario.class)
@@ -341,6 +358,7 @@ public class ActivoService {
         autorizacion.exigir("activos", "EDITAR");
         var ap = em.find(ActivoPropietario.class, activoPropietarioId);
         if (ap == null) throw new NegocioException("El propietario no existe");
+        exigirActivoDelTenant(ap.getActivo());   // obs 251: la relacion debe ser de un activo del tenant
         // Baja LOGICA: preserva la trazabilidad historica (operaciones, liquidaciones, reportes).
         ap.setEstado("INACTIVO");
     }

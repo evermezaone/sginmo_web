@@ -80,12 +80,23 @@ public class PersonaService {
     public List<Persona> porRol(String rolCodigo) {
         Long rolId = catalogoService.idOpcion("ROLES_PERSONA", rolCodigo);
         if (rolId == null) return java.util.List.of();
+        // Aislamiento (obs 250): el combo solo expone personas con ese rol EN EL TENANT actual.
         return em.createQuery(
                 "SELECT p FROM Persona p WHERE p.estado = 'ACTIVO' AND EXISTS "
-                + "(SELECT 1 FROM PersonaRol r WHERE r.persona = p.id AND r.rol = :rol AND r.estado = 'ACTIVO')"
+                + "(SELECT 1 FROM PersonaRol r WHERE r.persona = p.id AND r.rol = :rol AND r.estado = 'ACTIVO' AND r.tenant = :t)"
                 + " ORDER BY p.nombre", Persona.class)
-            .setParameter("rol", rolId)
+            .setParameter("rol", rolId).setParameter("t", tenant.actual())
             .getResultList();
+    }
+
+    /** La persona pertenece a la cartera del tenant actual (rol o datos comerciales en el);
+     *  el SUPERADMIN no tiene restriccion. Centraliza la guarda de las operaciones por id (obs 250). */
+    private boolean perteneceAlTenant(Long personaId) {
+        if (personaId == null) return false;
+        if (tenant.esSuperadmin()) return true;
+        Long n = em.createQuery("SELECT COUNT(p) FROM Persona p WHERE p.id = :id AND" + CARTERA, Long.class)
+            .setParameter("id", personaId).setParameter("t", tenant.actual()).getSingleResult();
+        return n > 0;
     }
 
     public Persona buscar(Long id) { return id == null ? null : em.find(Persona.class, id); }
@@ -93,10 +104,13 @@ public class PersonaService {
     public PersonaFisica fisicaDe(Long id) { return em.find(PersonaFisica.class, id); }
     public PersonaJuridica juridicaDe(Long id) { return em.find(PersonaJuridica.class, id); }
 
-    /** Roles ACTIVOS de la persona (los INACTIVOS quedan como historial, no se listan). */
+    /** Roles ACTIVOS de la persona EN EL TENANT actual (obs 250); los INACTIVOS son historial. */
     public List<PersonaRol> rolesDe(Long personaId) {
-        return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.estado = 'ACTIVO' ORDER BY r.rol", PersonaRol.class)
-            .setParameter("p", personaId).getResultList();
+        return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.estado = 'ACTIVO'"
+                + " AND (:sa = TRUE OR r.tenant = :t) ORDER BY r.rol", PersonaRol.class)
+            .setParameter("p", personaId)
+            .setParameter("sa", tenant.esSuperadmin()).setParameter("t", tenant.actual())
+            .getResultList();
     }
 
     public boolean existeDocumento(String doc, Long exceptoId) {
@@ -196,6 +210,8 @@ public class PersonaService {
         autorizacion.exigir("personas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Persona p = em.find(Persona.class, id);
         if (p == null) throw new NegocioException("La persona no existe");
+        // Pertenencia (obs 250): solo se opera sobre personas de la cartera del tenant.
+        if (!perteneceAlTenant(id)) throw new NegocioException("La persona pertenece a otra empresa");
         p.setEstado(estadoNuevo);
     }
 
@@ -207,10 +223,11 @@ public class PersonaService {
         if (rolCodigo == null || rolCodigo.isBlank()) throw new NegocioException("Elija el rol");
         Long rolId = catalogoService.idOpcion("ROLES_PERSONA", rolCodigo);
         if (rolId == null) throw new NegocioException("El rol '" + rolCodigo + "' no existe en el catalogo");
-        // Si ya existe (activo o inactivo) NO se duplica: activo -> error; inactivo -> se reactiva.
+        // Si ya existe (activo o inactivo) EN ESTE TENANT no se duplica (obs 250: el rol es por
+        // tenant; una misma persona puede tener el rol en otra empresa): activo -> error; inactivo -> reactiva.
         var existentes = em.createQuery(
-                "SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.rol = :r", PersonaRol.class)
-            .setParameter("p", personaId).setParameter("r", rolId).getResultList();
+                "SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.rol = :r AND r.tenant = :t", PersonaRol.class)
+            .setParameter("p", personaId).setParameter("r", rolId).setParameter("t", tenant.actual()).getResultList();
         for (var r : existentes) {
             if ("ACTIVO".equals(r.getEstado())) throw new NegocioException("La persona ya tiene ese rol");
         }
@@ -230,6 +247,10 @@ public class PersonaService {
         autorizacion.exigir("personas", "EDITAR");
         var r = em.find(PersonaRol.class, personaRolId);
         if (r == null) throw new NegocioException("El rol no existe");
+        // Pertenencia (obs 250): no se baja por id un rol de otra empresa.
+        if (!tenant.esSuperadmin() && !tenant.actual().equals(r.getTenant())) {
+            throw new NegocioException("El rol pertenece a otra empresa");
+        }
         // Baja LOGICA: preserva la trazabilidad historica del rol (operaciones, cobros,
         // activos y reportes que ya lo referencian). Se puede reactivar con agregarRol.
         r.setEstado("INACTIVO");
