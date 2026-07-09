@@ -46,56 +46,36 @@ public class Articulo extends Auditable {
     @JoinColumn(name = "impuesto", nullable = false)
     private Impuesto impuesto;
 
-    @Column(name = "categoria_lista", length = 40)
-    private String categoriaLista = "TIPOS_ARTICULO";
+    // ── Referencias de catalogo por id (V26): FK bigint a entidad ──
+    @Column(name = "categoria")
+    private Long categoria;              // lista TIPOS_ARTICULO
 
-    @Column(name = "categoria_codigo", length = 40)
-    private String categoriaCodigo;
+    @Column(name = "unidad_medida")
+    private Long unidadMedida;           // lista UNIDADES_MEDIDA
 
-    @Column(name = "unidad_medida_lista", length = 40)
-    private String unidadMedidaLista = "UNIDADES_MEDIDA";
-
-    @Column(name = "unidad_medida_codigo", length = 40)
-    private String unidadMedidaCodigo;
-
-    // ── Clasificacion extendida (listas configurables de `entidad`) ──
-    @Column(name = "presentacion_lista", length = 40)
-    private String presentacionLista = "PRESENTACIONES";
-    @Column(name = "presentacion_codigo", length = 40)
-    private String presentacionCodigo;
+    @Column(name = "presentacion")
+    private Long presentacion;           // lista PRESENTACIONES
 
     @Column(name = "clasificacion", length = 20)
     private String clasificacion;
 
-    @Column(name = "marca_lista", length = 40)
-    private String marcaLista = "MARCAS";
-    @Column(name = "marca_codigo", length = 40)
-    private String marcaCodigo;
+    @Column(name = "marca")
+    private Long marca;                  // lista MARCAS
 
-    @Column(name = "modelo_lista", length = 40)
-    private String modeloLista = "MODELOS";
-    @Column(name = "modelo_codigo", length = 40)
-    private String modeloCodigo;
+    @Column(name = "modelo")
+    private Long modelo;                 // lista MODELOS
 
-    @Column(name = "familia_lista", length = 40)
-    private String familiaLista = "FAMILIAS_ARTICULO";
-    @Column(name = "familia_codigo", length = 40)
-    private String familiaCodigo;
+    @Column(name = "familia")
+    private Long familia;                // lista FAMILIAS_ARTICULO
 
-    @Column(name = "grupo_lista", length = 40)
-    private String grupoLista = "GRUPOS_ARTICULO";
-    @Column(name = "grupo_codigo", length = 40)
-    private String grupoCodigo;
+    @Column(name = "grupo")
+    private Long grupo;                  // lista GRUPOS_ARTICULO
 
-    @Column(name = "subgrupo_lista", length = 40)
-    private String subgrupoLista = "SUBGRUPOS_ARTICULO";
-    @Column(name = "subgrupo_codigo", length = 40)
-    private String subgrupoCodigo;
+    @Column(name = "subgrupo")
+    private Long subgrupo;               // lista SUBGRUPOS_ARTICULO
 
-    @Column(name = "procedencia_lista", length = 40)
-    private String procedenciaLista = "PROCEDENCIAS";
-    @Column(name = "procedencia_codigo", length = 40)
-    private String procedenciaCodigo;
+    @Column(name = "procedencia")
+    private Long procedencia;            // lista PROCEDENCIAS
 
     @Column(name = "codigo_barra", length = 50)
     private String codigoBarra;
@@ -167,48 +147,26 @@ public class Articulo extends Auditable {
     public Impuesto getImpuesto() { return impuesto; }
     public void setImpuesto(Impuesto impuesto) { this.impuesto = impuesto; }
 
-    public String getCategoriaLista() { return categoriaLista; }
-    public void setCategoriaLista(String categoriaLista) { this.categoriaLista = categoriaLista; }
-
-    public String getCategoriaCodigo() { return categoriaCodigo; }
-    public void setCategoriaCodigo(String categoriaCodigo) { this.categoriaCodigo = categoriaCodigo; }
-
-    public String getUnidadMedidaLista() { return unidadMedidaLista; }
-    public void setUnidadMedidaLista(String unidadMedidaLista) { this.unidadMedidaLista = unidadMedidaLista; }
-
-    public String getUnidadMedidaCodigo() { return unidadMedidaCodigo; }
-    public void setUnidadMedidaCodigo(String unidadMedidaCodigo) { this.unidadMedidaCodigo = unidadMedidaCodigo; }
-
-    public String getPresentacionLista() { return presentacionLista; }
-    public void setPresentacionLista(String v) { this.presentacionLista = v; }
-    public String getPresentacionCodigo() { return presentacionCodigo; }
-    public void setPresentacionCodigo(String v) { this.presentacionCodigo = v; }
+    public Long getCategoria() { return categoria; }
+    public void setCategoria(Long v) { this.categoria = v; }
+    public Long getUnidadMedida() { return unidadMedida; }
+    public void setUnidadMedida(Long v) { this.unidadMedida = v; }
+    public Long getPresentacion() { return presentacion; }
+    public void setPresentacion(Long v) { this.presentacion = v; }
     public String getClasificacion() { return clasificacion; }
     public void setClasificacion(String v) { this.clasificacion = v; }
-    public String getMarcaLista() { return marcaLista; }
-    public void setMarcaLista(String v) { this.marcaLista = v; }
-    public String getMarcaCodigo() { return marcaCodigo; }
-    public void setMarcaCodigo(String v) { this.marcaCodigo = v; }
-    public String getModeloLista() { return modeloLista; }
-    public void setModeloLista(String v) { this.modeloLista = v; }
-    public String getModeloCodigo() { return modeloCodigo; }
-    public void setModeloCodigo(String v) { this.modeloCodigo = v; }
-    public String getFamiliaLista() { return familiaLista; }
-    public void setFamiliaLista(String v) { this.familiaLista = v; }
-    public String getFamiliaCodigo() { return familiaCodigo; }
-    public void setFamiliaCodigo(String v) { this.familiaCodigo = v; }
-    public String getGrupoLista() { return grupoLista; }
-    public void setGrupoLista(String v) { this.grupoLista = v; }
-    public String getGrupoCodigo() { return grupoCodigo; }
-    public void setGrupoCodigo(String v) { this.grupoCodigo = v; }
-    public String getSubgrupoLista() { return subgrupoLista; }
-    public void setSubgrupoLista(String v) { this.subgrupoLista = v; }
-    public String getSubgrupoCodigo() { return subgrupoCodigo; }
-    public void setSubgrupoCodigo(String v) { this.subgrupoCodigo = v; }
-    public String getProcedenciaLista() { return procedenciaLista; }
-    public void setProcedenciaLista(String v) { this.procedenciaLista = v; }
-    public String getProcedenciaCodigo() { return procedenciaCodigo; }
-    public void setProcedenciaCodigo(String v) { this.procedenciaCodigo = v; }
+    public Long getMarca() { return marca; }
+    public void setMarca(Long v) { this.marca = v; }
+    public Long getModelo() { return modelo; }
+    public void setModelo(Long v) { this.modelo = v; }
+    public Long getFamilia() { return familia; }
+    public void setFamilia(Long v) { this.familia = v; }
+    public Long getGrupo() { return grupo; }
+    public void setGrupo(Long v) { this.grupo = v; }
+    public Long getSubgrupo() { return subgrupo; }
+    public void setSubgrupo(Long v) { this.subgrupo = v; }
+    public Long getProcedencia() { return procedencia; }
+    public void setProcedencia(Long v) { this.procedencia = v; }
     public String getCodigoBarra() { return codigoBarra; }
     public void setCodigoBarra(String v) { this.codigoBarra = v; }
     public String getCodigoInterno() { return codigoInterno; }

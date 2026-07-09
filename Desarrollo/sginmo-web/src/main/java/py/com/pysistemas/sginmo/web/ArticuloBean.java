@@ -272,8 +272,8 @@ public class ArticuloBean implements Serializable {
         copia.setTipo(origen.getTipo());
         copia.setImpuesto(origen.getImpuesto());
         copia.setPrecioUnitario(origen.getPrecioUnitario());
-        copia.setCategoriaCodigo(origen.getCategoriaCodigo());
-        copia.setUnidadMedidaCodigo(origen.getUnidadMedidaCodigo());
+        copia.setCategoria(origen.getCategoria());
+        copia.setUnidadMedida(origen.getUnidadMedida());
         copia.setTipoMovimiento(origen.getTipoMovimiento());
         copia.setModificaEstado(origen.isModificaEstado());
         copia.setStockMinimo(origen.getStockMinimo());

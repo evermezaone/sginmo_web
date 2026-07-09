@@ -247,16 +247,23 @@ public class ArticuloService {
         }
         // Regla 11 del estandar: los dominios se re-validan en el Service aunque el combo
         // "no deberia" mandar otra cosa (anti-manipulacion de request / pantalla vieja)
-        if (a.getCategoriaCodigo() != null && !a.getCategoriaCodigo().isBlank()
-                && !existeEntidadActiva("TIPOS_ARTICULO", a.getCategoriaCodigo())) {
+        if (a.getCategoria() != null && !existeOpcionActiva(a.getCategoria())) {
             throw new NegocioException("La categoría elegida no existe o está inactiva");
         }
-        if (a.getUnidadMedidaCodigo() != null && !a.getUnidadMedidaCodigo().isBlank()
-                && !existeEntidadActiva("UNIDADES_MEDIDA", a.getUnidadMedidaCodigo())) {
+        if (a.getUnidadMedida() != null && !existeOpcionActiva(a.getUnidadMedida())) {
             throw new NegocioException("La unidad de medida elegida no existe o está inactiva");
         }
     }
 
+    /** V26: las referencias son id de entidad; se re-valida que el id exista y este ACTIVO. */
+    private boolean existeOpcionActiva(Long id) {
+        return em.createQuery(
+                "SELECT COUNT(e) FROM Entidad e WHERE e.id = :id AND e.estado = 'ACTIVO'", Long.class)
+            .setParameter("id", id)
+            .getSingleResult() > 0;
+    }
+
+    /** Validacion por (lista,codigo) — aun usada por ArticuloPropiedad (pendiente refs->id). */
     private boolean existeEntidadActiva(String lista, String codigo) {
         return em.createQuery(
                 "SELECT COUNT(e) FROM Entidad e WHERE e.lista = :lista AND e.codigo = :codigo AND e.estado = 'ACTIVO'",

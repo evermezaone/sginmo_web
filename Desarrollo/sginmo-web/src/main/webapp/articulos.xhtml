@@ -239,20 +239,20 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Categoría</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.categoriaCodigo}" label="Categoría"
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.categoria}" label="Categoría"
                                                  disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="Sin categoría" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.categorias}" var="cat"
-                                                   itemLabel="#{cat.descripcion}" itemValue="#{cat.codigo}"/>
+                                                   itemLabel="#{cat.descripcion}" itemValue="#{cat.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
                                 <label>Unidad de medida</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedidaCodigo}" label="Unidad de medida"
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.unidadMedida}" label="Unidad de medida"
                                                  disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="Sin unidad" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{articuloBean.unidadesMedida}" var="um"
-                                                   itemLabel="#{um.descripcion}" itemValue="#{um.codigo}"/>
+                                                   itemLabel="#{um.descripcion}" itemValue="#{um.id}"/>
                                 </p:selectOneMenu>
                             </div>
                         </div>
@@ -260,55 +260,55 @@
                         <div class="fila-3">
                             <div class="campo">
                                 <label>Presentación</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.presentacionCodigo}" label="Presentación" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.presentacion}" label="Presentación" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.presentaciones}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.presentaciones}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
                                 <label>Marca</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.marcaCodigo}" label="Marca" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.marca}" label="Marca" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.marcas}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.marcas}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
                                 <label>Modelo</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.modeloCodigo}" label="Modelo" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.modelo}" label="Modelo" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.modelos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.modelos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                         </div>
                         <div class="fila-3">
                             <div class="campo">
                                 <label>Familia</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.familiaCodigo}" label="Familia" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.familia}" label="Familia" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.familias}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.familias}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
                                 <label>Grupo</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.grupoCodigo}" label="Grupo" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.grupo}" label="Grupo" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.grupos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.grupos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
                                 <label>Subgrupo</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.subgrupoCodigo}" label="Subgrupo" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.subgrupo}" label="Subgrupo" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.subgrupos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.subgrupos}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                         </div>
                         <div class="fila-3">
                             <div class="campo">
                                 <label>Procedencia</label>
-                                <p:selectOneMenu value="#{articuloBean.seleccionado.procedenciaCodigo}" label="Procedencia" disabled="#{articuloBean.soloLectura}">
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.procedencia}" label="Procedencia" disabled="#{articuloBean.soloLectura}">
                                     <f:selectItem itemLabel="—" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{articuloBean.procedencias}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.codigo}"/>
+                                    <f:selectItems value="#{articuloBean.procedencias}" var="p" itemLabel="#{p.descripcion}" itemValue="#{p.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
