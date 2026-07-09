@@ -38,11 +38,22 @@ public class PersonaService {
     @jakarta.inject.Inject
     private CatalogoService catalogoService;
 
+    /** Aislamiento por tenant (F4): la cartera de personas es por tenant (persona_rol/persona_empresa). */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
     // ── Consultas ──
+
+    /** Cartera del tenant: la identidad es global, pero una persona "pertenece" a un tenant si
+     *  tiene algun rol o datos comerciales (persona_empresa) en el; excluye el sentinel -1. */
+    private static final String CARTERA =
+        " p.id <> -1 AND (EXISTS (SELECT 1 FROM PersonaRol r WHERE r.persona = p.id AND r.tenant = :t)"
+        + " OR EXISTS (SELECT 1 FROM PersonaEmpresa pe WHERE pe.persona = p.id AND pe.tenant = :t))";
 
     public long contar(String filtro) {
         var q = em.createQuery(
-            "SELECT COUNT(p) FROM Persona p WHERE (:f = '' OR lower(p.nombre) LIKE :like OR p.numeroDocumento LIKE :like)",
+            "SELECT COUNT(p) FROM Persona p WHERE" + CARTERA
+            + " AND (:f = '' OR lower(p.nombre) LIKE :like OR p.numeroDocumento LIKE :like)",
             Long.class);
         filtroGlobal(q, filtro);
         return q.getSingleResult();
@@ -51,7 +62,8 @@ public class PersonaService {
     public List<Persona> listar(int primero, int cantidad, String filtro, String ordenarPor, boolean asc) {
         String ruta = ordenarPor == null ? null : ORDEN.get(ordenarPor);
         var q = em.createQuery(
-            "SELECT p FROM Persona p WHERE (:f = '' OR lower(p.nombre) LIKE :like OR p.numeroDocumento LIKE :like) ORDER BY "
+            "SELECT p FROM Persona p WHERE" + CARTERA
+            + " AND (:f = '' OR lower(p.nombre) LIKE :like OR p.numeroDocumento LIKE :like) ORDER BY "
             + (ruta == null ? "p.nombre" : ruta) + (asc ? " ASC" : " DESC"), Persona.class);
         filtroGlobal(q, filtro);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
@@ -59,7 +71,7 @@ public class PersonaService {
 
     private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
-        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+        q.setParameter("f", f).setParameter("like", "%" + f + "%").setParameter("t", tenant.actual());
     }
 
     /** Personas activas con un rol dado (para combos de clientes, proveedores, propietarios...). */

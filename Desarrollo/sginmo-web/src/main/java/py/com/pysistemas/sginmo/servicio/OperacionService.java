@@ -34,6 +34,10 @@ public class OperacionService {
     @jakarta.inject.Inject
     private py.com.one.core.UsuarioActual usuarioActual;
 
+    /** Aislamiento por tenant (F4): las operaciones son transaccionales, tenant = actual. */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
     /** Usuario autenticado para auditar las escrituras nativas (documentos, cuotas, cronograma,
      *  rescision). Fallback 'sistema' solo sin sesion (batch/tests), igual que AuditoriaListener. */
     private String usuarioAuditoria() {
@@ -49,7 +53,7 @@ public class OperacionService {
 
     public long contar(String filtro) {
         var q = em.createQuery(
-            "SELECT COUNT(o) FROM Operacion o, Persona p WHERE p.id = o.cliente"
+            "SELECT COUNT(o) FROM Operacion o, Persona p WHERE o.tenant = :t AND p.id = o.cliente"
             + " AND (:f = '' OR lower(p.nombre) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
         return q.getSingleResult();
@@ -59,7 +63,7 @@ public class OperacionService {
     public List<Object[]> listar(int primero, int cantidad, String filtro) {
         var q = em.createQuery(
             "SELECT o, p.nombre, a.nombre FROM Operacion o, Persona p, Activo a"
-            + " WHERE p.id = o.cliente AND a.id = o.activo"
+            + " WHERE o.tenant = :t AND p.id = o.cliente AND a.id = o.activo"
             + " AND (:f = '' OR lower(p.nombre) LIKE :like)"
             + " ORDER BY o.id DESC", Object[].class);
         filtroGlobal(q, filtro);
@@ -68,7 +72,7 @@ public class OperacionService {
 
     private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
-        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+        q.setParameter("f", f).setParameter("like", "%" + f + "%").setParameter("t", tenant.actual());
     }
 
     /** Resuelve una operacion por su id (no depende de las primeras N filas de la grilla). */
