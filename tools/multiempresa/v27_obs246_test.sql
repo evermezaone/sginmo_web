@@ -29,6 +29,10 @@ INSERT INTO forma_pago (forma_pago, descripcion, codigo, por_defecto,
 INSERT INTO entidad (entidad, lista, codigo, descripcion, tenant, estado, usuario_creacion, fecha_creacion) VALUES
   (-9701, 'EMISORES', 'VISA', 'Visa global', -1,    'ACTIVO', 't', now()),
   (-9702, 'EMISORES', 'VISA', 'Visa tenant', -9001, 'ACTIVO', 't', now());
+-- MOTIVOS_ANULACION: mismo codigo 'ERROR' en global (-1) y en el tenant -> debe preferir el del tenant (obs 248).
+INSERT INTO entidad (entidad, lista, codigo, descripcion, tenant, estado, usuario_creacion, fecha_creacion) VALUES
+  (-9801, 'MOTIVOS_ANULACION', 'ERROR', 'Error global', -1,    'ACTIVO', 't', now()),
+  (-9802, 'MOTIVOS_ANULACION', 'ERROR', 'Error tenant', -9001, 'ACTIVO', 't', now());
 
 -- documento con saldo y planilla ABIERTA, ambos del tenant/sucursal -9001/-9101.
 -- documento conserva 'empresa' (V26) y ademas gana 'tenant'.
@@ -80,4 +84,14 @@ DO $$ BEGIN
   END;
 END $$;
 
-SELECT 'obs246+247 OK — codigo invalido aborta; prefiere opcion del tenant; NTCR de otro tenant rechazada' AS resultado;
+-- ── TEST 4 (obs 248): f_anular_cobro prefiere el motivo del TENANT sobre el global (mismo codigo) ──
+DO $$ DECLARE v_cobro bigint; v_motivo bigint; BEGIN
+  v_cobro := f_cobrar_documento(-9600, -9800, -9400, -9500, 1000, -9300, current_date, 't');
+  PERFORM f_anular_cobro(v_cobro, 't', 'ERROR');
+  SELECT motivo INTO v_motivo FROM anulacion WHERE cobro = v_cobro;
+  IF v_motivo IS DISTINCT FROM -9802 THEN
+    RAISE EXCEPTION 'T4 FALLA: motivo de anulacion = % (esperado -9802, la opcion del tenant)', v_motivo;
+  END IF;
+END $$;
+
+SELECT 'obs246+247+248 OK — codigo invalido aborta; prefiere opcion del tenant (cobro y anulacion); NTCR de otro tenant rechazada' AS resultado;

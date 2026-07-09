@@ -180,9 +180,12 @@ BEGIN
     RAISE EXCEPTION 'El cobro no existe o ya esta anulado';
   END IF;
 
-  -- motivo por id: debe existir en MOTIVOS_ANULACION visible al tenant (-1 o propio).
+  -- motivo por id: debe existir en MOTIVOS_ANULACION visible al tenant (-1 o propio),
+  -- PREFIRIENDO la opcion propia del tenant sobre la global (obs 248: sin ORDER BY el
+  -- mismo codigo en -1 y en el tenant resolvia de forma no deterministica).
   SELECT e.entidad INTO v_motivo FROM entidad e
-    WHERE e.lista = 'MOTIVOS_ANULACION' AND e.codigo = p_motivo AND e.tenant IN (-1, v_tenant) LIMIT 1;
+    WHERE e.lista = 'MOTIVOS_ANULACION' AND e.codigo = p_motivo AND e.tenant IN (-1, v_tenant)
+    ORDER BY (e.tenant = v_tenant) DESC LIMIT 1;
   IF v_motivo IS NULL THEN
     RAISE EXCEPTION 'El motivo de anulación % no existe en MOTIVOS_ANULACION', p_motivo;
   END IF;
