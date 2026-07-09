@@ -221,6 +221,12 @@ public class PersonaService {
     public void agregarRol(Long personaId, String rolCodigo) {
         autorizacion.exigir("personas", "EDITAR");
         if (rolCodigo == null || rolCodigo.isBlank()) throw new NegocioException("Elija el rol");
+        // Pertenencia (obs 252): no se vincula por id una identidad ajena al tenant; la persona
+        // ya debe estar en la cartera (el alta crea persona_empresa). Vincular una identidad
+        // global no asociada seria un flujo explicito aparte, no un agregar-rol por id.
+        if (!perteneceAlTenant(personaId)) {
+            throw new NegocioException("La persona no pertenece a la cartera de la empresa");
+        }
         Long rolId = catalogoService.idOpcion("ROLES_PERSONA", rolCodigo);
         if (rolId == null) throw new NegocioException("El rol '" + rolCodigo + "' no existe en el catalogo");
         // Si ya existe (activo o inactivo) EN ESTE TENANT no se duplica (obs 250: el rol es por

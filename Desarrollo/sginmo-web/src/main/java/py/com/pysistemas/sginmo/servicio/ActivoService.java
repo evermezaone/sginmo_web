@@ -336,6 +336,18 @@ public class ActivoService {
         autorizacion.exigir("activos", "EDITAR");
         if (propietarioId == null) throw new NegocioException("Elija el propietario");
         exigirActivoDelTenant(activoId);   // obs 251: no se tocan propietarios de un activo ajeno
+        // Pertenencia de la contraparte (obs 253): el propietario debe estar en la cartera del
+        // tenant con rol PROPIETARIO ACTIVO; asi no se asocia una identidad de otra empresa.
+        Long rolPropietario = catalogoService.idOpcion("ROLES_PERSONA", "PROPIETARIO");
+        Long enCartera = em.createQuery(
+                "SELECT COUNT(r) FROM PersonaRol r WHERE r.persona = :p AND r.rol = :rol"
+                + " AND r.estado = 'ACTIVO' AND (:sa = TRUE OR r.tenant = :t)", Long.class)
+            .setParameter("p", propietarioId).setParameter("rol", rolPropietario)
+            .setParameter("sa", tenant.esSuperadmin()).setParameter("t", tenant.actual())
+            .getSingleResult();
+        if (enCartera == 0) {
+            throw new NegocioException("El propietario debe tener el rol PROPIETARIO activo en esta empresa");
+        }
         // Si ya existe (activo o inactivo) NO se duplica: activo -> error; inactivo -> se reactiva.
         var existentes = em.createQuery(
                 "SELECT ap FROM ActivoPropietario ap WHERE ap.activo = :act AND ap.propietario = :pro", ActivoPropietario.class)
