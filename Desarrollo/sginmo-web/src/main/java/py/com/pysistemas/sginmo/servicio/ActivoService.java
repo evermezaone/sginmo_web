@@ -52,11 +52,15 @@ public class ActivoService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    /** Aislamiento por tenant (F4): activo es transaccional, se filtra tenant = actual. */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
     // ── Consultas ──
 
     public long contar(String filtro) {
         var q = em.createQuery(
-            "SELECT COUNT(a) FROM Activo a WHERE (:f = '' OR lower(a.nombre) LIKE :like OR lower(a.direccion) LIKE :like)",
+            "SELECT COUNT(a) FROM Activo a WHERE a.tenant = :t AND (:f = '' OR lower(a.nombre) LIKE :like OR lower(a.direccion) LIKE :like)",
             Long.class);
         filtroGlobal(q, filtro);
         return q.getSingleResult();
@@ -65,7 +69,7 @@ public class ActivoService {
     public List<Activo> listar(int primero, int cantidad, String filtro, String ordenarPor, boolean asc) {
         String ruta = ordenarPor == null ? null : ORDEN.get(ordenarPor);
         var q = em.createQuery(
-            "SELECT a FROM Activo a WHERE (:f = '' OR lower(a.nombre) LIKE :like OR lower(a.direccion) LIKE :like) ORDER BY "
+            "SELECT a FROM Activo a WHERE a.tenant = :t AND (:f = '' OR lower(a.nombre) LIKE :like OR lower(a.direccion) LIKE :like) ORDER BY "
             + (ruta == null ? "a.nombre" : ruta) + (asc ? " ASC" : " DESC"), Activo.class);
         filtroGlobal(q, filtro);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
@@ -73,7 +77,7 @@ public class ActivoService {
 
     private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
-        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+        q.setParameter("f", f).setParameter("like", "%" + f + "%").setParameter("t", tenant.actual());
     }
 
     /** Autocomplete lazy de padre (contenedor): excluye el propio activo Y sus descendientes
@@ -84,9 +88,9 @@ public class ActivoService {
         if (exceptoId != null) { excluir.add(exceptoId); excluir.addAll(descendientes(exceptoId)); }
         if (excluir.isEmpty()) excluir.add(-1L);   // JPQL NOT IN no admite coleccion vacia
         return em.createQuery(
-                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND a.id NOT IN :excl ORDER BY a.nombre",
+                "SELECT a FROM Activo a WHERE a.tenant = :t AND lower(a.nombre) LIKE :like AND a.id NOT IN :excl ORDER BY a.nombre",
                 Activo.class)
-            .setParameter("like", f + "%").setParameter("excl", excluir)
+            .setParameter("t", tenant.actual()).setParameter("like", f + "%").setParameter("excl", excluir)
             .setMaxResults(15).getResultList();
     }
 
@@ -96,9 +100,9 @@ public class ActivoService {
     public List<Activo> buscarLoteamiento(String texto) {
         String f = texto == null ? "" : texto.trim().toLowerCase();
         return em.createQuery(
-                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND a.tipo IN :tipos ORDER BY a.nombre",
+                "SELECT a FROM Activo a WHERE a.tenant = :t AND lower(a.nombre) LIKE :like AND a.tipo IN :tipos ORDER BY a.nombre",
                 Activo.class)
-            .setParameter("like", f + "%").setParameter("tipos", tiposContenedorLoteIds())
+            .setParameter("t", tenant.actual()).setParameter("like", f + "%").setParameter("tipos", tiposContenedorLoteIds())
             .setMaxResults(15).getResultList();
     }
 
@@ -189,6 +193,18 @@ public class ActivoService {
                     throw new NegocioException("El atributo '" + a.getDescripcion() + "' es obligatorio para este tipo");
                 }
             }
+        }
+        // Pertenencia por tenant (F4): el alta toma el tenant del usuario; en edicion el
+        // activo debe ser del tenant del contexto y su tenant no se cambia.
+        if (esNuevo) {
+            activo.setTenant(tenant.actual());
+        } else {
+            Activo enBd = em.find(Activo.class, activo.getId());
+            if (enBd == null) throw new NegocioException("El activo no existe");
+            if (enBd.getTenant() == null || !enBd.getTenant().equals(tenant.actual())) {
+                throw new NegocioException("El activo pertenece a otra empresa");
+            }
+            activo.setTenant(enBd.getTenant());
         }
         try {
             Activo r = esNuevo ? persistir(activo) : em.merge(activo);

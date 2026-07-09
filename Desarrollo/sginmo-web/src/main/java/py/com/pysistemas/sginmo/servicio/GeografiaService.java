@@ -25,15 +25,19 @@ public class GeografiaService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    /** Aislamiento por tenant (F4): geografia = arbol INE global (-1) + ubicaciones del tenant. */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
     public long contar(String filtro) {
-        var q = em.createQuery("SELECT COUNT(u) FROM UbicacionGeografica u WHERE (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like)", Long.class);
+        var q = em.createQuery("SELECT COUNT(u) FROM UbicacionGeografica u WHERE (u.tenant = -1 OR u.tenant = :t) AND (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
         return q.getSingleResult();
     }
 
     public List<UbicacionGeografica> listar(int primero, int cantidad, String filtro, String ordenarPor, boolean asc) {
         String ruta = ordenarPor == null ? null : ORDEN.get(ordenarPor);
-        var q = em.createQuery("SELECT u FROM UbicacionGeografica u LEFT JOIN FETCH u.padre WHERE (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like) ORDER BY "
+        var q = em.createQuery("SELECT u FROM UbicacionGeografica u LEFT JOIN FETCH u.padre WHERE (u.tenant = -1 OR u.tenant = :t) AND (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like) ORDER BY "
                 + (ruta == null ? "u.nombre" : ruta) + (asc ? " ASC" : " DESC"), UbicacionGeografica.class);
         filtroGlobal(q, filtro);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
@@ -41,16 +45,16 @@ public class GeografiaService {
 
     private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
-        q.setParameter("f", f).setParameter("like", "%" + f + "%");
+        q.setParameter("f", f).setParameter("like", "%" + f + "%").setParameter("t", tenant.actual());
     }
 
     /** Autocomplete lazy para elegir padre (regla: combos grandes jamas cargan todo). */
     public List<UbicacionGeografica> buscar(String texto) {
         String f = texto == null ? "" : texto.trim().toLowerCase();
         return em.createQuery(
-                "SELECT u FROM UbicacionGeografica u LEFT JOIN FETCH u.padre WHERE u.estado = 'ACTIVO' AND lower(u.nombre) LIKE :like ORDER BY u.nombre",
+                "SELECT u FROM UbicacionGeografica u LEFT JOIN FETCH u.padre WHERE u.estado = 'ACTIVO' AND (u.tenant = -1 OR u.tenant = :t) AND lower(u.nombre) LIKE :like ORDER BY u.nombre",
                 UbicacionGeografica.class)
-            .setParameter("like", f + "%")
+            .setParameter("t", tenant.actual()).setParameter("like", f + "%")
             .setMaxResults(15)
             .getResultList();
     }
@@ -70,6 +74,19 @@ public class GeografiaService {
         }
         if (u.getPadre() != null && u.getId() != null && u.getId().equals(u.getPadre().getId())) {
             throw new NegocioException("Una ubicación no puede ser su propio padre");
+        }
+        // Pertenencia por tenant (F4): el alta toma el tenant del usuario; el arbol INE (-1) solo
+        // lo edita SUPERADMIN; una ubicacion del tenant no cambia de tenant.
+        if (u.getId() == null) {
+            u.setTenant(tenant.actual());
+        } else {
+            UbicacionGeografica enBd = em.find(UbicacionGeografica.class, u.getId());
+            if (enBd == null) throw new NegocioException("La ubicación no existe");
+            Long tOrig = enBd.getTenant();
+            boolean editable = tOrig != null && (tOrig.equals(tenant.actual())
+                    || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(tOrig) && tenant.esSuperadmin()));
+            if (!editable) throw new NegocioException("La ubicación pertenece a otra empresa");
+            u.setTenant(tOrig);
         }
         try {
             UbicacionGeografica r = u.getId() == null ? persistir(u) : em.merge(u);
