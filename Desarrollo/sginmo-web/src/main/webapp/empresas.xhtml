@@ -111,6 +111,42 @@
                         </div>
                     </p:tab>
 
+                    <p:tab title="Administrador inicial" rendered="#{empresaBean.altaUnidad}">
+                        <p style="margin:.2rem 0 .8rem; color:#555;">
+                            Al crear la empresa se provisiona su primer usuario ADMINISTRADOR y la
+                            sucursal por defecto, todo en una sola operación.
+                        </p>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Usuario administrador *</label>
+                                <p:inputText value="#{empresaBean.adminInicial.codigoUsuario}" label="Usuario administrador"
+                                             maxlength="20"/>
+                            </div>
+                            <div class="campo">
+                                <label>Contraseña inicial *</label>
+                                <p:password value="#{empresaBean.passwordAdmin}" label="Contraseña inicial"
+                                            feedback="false" maxlength="60"/>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Email del administrador</label>
+                            <p:inputText value="#{empresaBean.adminInicial.email}" label="Email" type="email"
+                                         maxlength="180" style="width:100%;"/>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Sucursal por defecto — descripción *</label>
+                                <p:inputText value="#{empresaBean.sucursalInicial.descripcion}" label="Descripción sucursal"
+                                             maxlength="180"/>
+                            </div>
+                            <div class="campo">
+                                <label>Dirección de la sucursal *</label>
+                                <p:inputText value="#{empresaBean.sucursalInicial.direccion}" label="Dirección sucursal"
+                                             maxlength="180"/>
+                            </div>
+                        </div>
+                    </p:tab>
+
                     <p:tab title="Sucursales"
                            disabled="#{empresaBean.seleccionado.id == null}"
                            titletip="#{empresaBean.seleccionado.id == null ? 'Guarde la empresa para cargar sucursales' : ''}">

@@ -37,6 +37,9 @@ public class EmpresaBean implements Serializable {
     @Inject
     private ContextoEmpresa contexto;
 
+    @Inject
+    private TenantContext tenant;
+
     private LazyDataModel<PersonaJuridica> modelo;
     private PersonaJuridica seleccionado;
     /** Datos comerciales propios de la empresa (persona_empresa, tenant = ella misma). */
@@ -48,6 +51,11 @@ public class EmpresaBean implements Serializable {
 
     private List<Sucursal> sucursales = java.util.List.of();
     private Sucursal sucursalNueva = new Sucursal();
+
+    /** Alta de empresa como unidad (F6, SUPERADMIN): admin inicial + sucursal por defecto. */
+    private py.com.one.security.dominio.Usuario adminInicial = new py.com.one.security.dominio.Usuario();
+    private String passwordAdmin;
+    private Sucursal sucursalInicial = new Sucursal();
 
     @PostConstruct
     public void iniciar() {
@@ -76,8 +84,17 @@ public class EmpresaBean implements Serializable {
         datosEmpresa = new PersonaEmpresa();
         sucursales = java.util.List.of();
         sucursalNueva = new Sucursal();
+        adminInicial = new py.com.one.security.dominio.Usuario();
+        passwordAdmin = null;
+        sucursalInicial = new Sucursal();
         soloLectura = false;
         tabActivo = 0;
+    }
+
+    /** Alta como UNIDAD: solo cuando el SUPERADMIN crea una empresa nueva (provisiona
+     *  ademas el usuario ADMINISTRADOR inicial y la sucursal por defecto en una sola tx). */
+    public boolean isAltaUnidad() {
+        return seleccionado != null && seleccionado.getId() == null && tenant.esSuperadmin();
     }
 
     public void editar(PersonaJuridica empresa) {
@@ -94,7 +111,12 @@ public class EmpresaBean implements Serializable {
         try {
             boolean esNueva = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
-            empresaService.guardar(seleccionado, datosEmpresa);
+            if (isAltaUnidad()) {
+                // SUPERADMIN provisiona la empresa completa (pj+rol+sucursal por defecto+admin) en una tx.
+                empresaService.altaEmpresa(seleccionado, datosEmpresa, sucursalInicial, adminInicial, passwordAdmin);
+            } else {
+                empresaService.guardar(seleccionado, datosEmpresa);
+            }
             contexto.refrescar();
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Empresa creada" : "Empresa actualizada", seleccionado.getRazonSocial());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgEmpresa').hide()");
@@ -157,4 +179,10 @@ public class EmpresaBean implements Serializable {
     public void setTabActivo(int tabActivo) { this.tabActivo = tabActivo; }
     public List<Sucursal> getSucursales() { return sucursales; }
     public Sucursal getSucursalNueva() { return sucursalNueva; }
+    public py.com.one.security.dominio.Usuario getAdminInicial() { return adminInicial; }
+    public void setAdminInicial(py.com.one.security.dominio.Usuario adminInicial) { this.adminInicial = adminInicial; }
+    public String getPasswordAdmin() { return passwordAdmin; }
+    public void setPasswordAdmin(String passwordAdmin) { this.passwordAdmin = passwordAdmin; }
+    public Sucursal getSucursalInicial() { return sucursalInicial; }
+    public void setSucursalInicial(Sucursal sucursalInicial) { this.sucursalInicial = sucursalInicial; }
 }
