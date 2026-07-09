@@ -78,3 +78,13 @@ NOTA: no deployar hasta que F3 (native SQL + SP) también esté hecho — V26+F2
   (persona, tenant); ContextoEmpresa.getNombreEmpresa usa persona_empresa. Es un cambio grande
   y acoplado a F4 (carga por tenant); se hace como unidad enfocada. Al terminar, F2 compila
   completo -> derivar REQ-0034 a Codex.
+
+- 4/4b-i HECHO: Persona/PersonaFisica/PersonaJuridica REDUCIDAS a identidad (removidos los
+  campos comerciales); ContextoEmpresa.getNombreEmpresa usa razon social (el fantasia por
+  tenant queda para F6). La capa Java COMPILA verde. Solo ContextoEmpresa referenciaba los
+  getters removidos (el resto de los campos comerciales se enlazaban solo en xhtml).
+- 4/4b-ii PENDIENTE: rebinding de personas.xhtml (13 refs) y empresas.xhtml (~4) a un
+  PersonaEmpresa 'datosEmpresa' del tenant del contexto en PersonaBean/EmpresaBean, con
+  carga/upsert por (persona, tenant) en PersonaService/EmpresaService. estado_civil y
+  actividad pasan a combos por id. Es la 'cartera por tenant' = F4; al cerrarlo, los ABMs
+  quedan funcionales y F2 se puede derivar.

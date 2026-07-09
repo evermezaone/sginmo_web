@@ -9,7 +9,11 @@ import py.com.one.core.Auditable;
 
 import java.io.Serializable;
 
-/** Persona base (V1): subconjunto que usan empresas (REQ-0009); socios completos en REQ-0012. */
+/**
+ * Persona base — SOLO identidad GLOBAL (V26, doc 14 §2). Se comparte entre empresas
+ * por numero_documento; los datos comerciales/contextuales (direccion, telefono, email,
+ * es_contribuyente, etc.) viven en persona_empresa POR TENANT.
+ */
 @jakarta.persistence.Entity
 @Table(name = "persona")
 public class Persona extends Auditable implements Serializable {
@@ -32,37 +36,12 @@ public class Persona extends Auditable implements Serializable {
     @Column(name = "digito_verificador", length = 1)
     private String digitoVerificador;
 
-    @Column(name = "es_contribuyente", nullable = false)
-    private boolean esContribuyente = true;
-
-    @Column(name = "direccion", length = 180)
-    private String direccion;
-
-    @Column(name = "telefono", length = 20)
-    private String telefono;
-
-    @Column(name = "email", length = 180)
-    private String email;
-
-    @Column(name = "estado", length = 10, nullable = false)
-    private String estado = "ACTIVO";
-
-    // ── Tipo de documento por id (V26): FK bigint a entidad (lista TIPOS_DOCUMENTOS_IDENTIDAD) ──
+    /** Tipo de documento por id (V26): FK bigint a entidad (lista TIPOS_DOCUMENTOS_IDENTIDAD). */
     @Column(name = "tipo_documento")
     private Long tipoDocumento;
 
-    @Column(name = "clasificacion_fiscal", length = 60)
-    private String clasificacionFiscal;
-
-    /** FK a ubicacion_geografica (ciudad/barrio). */
-    @Column(name = "ubicacion")
-    private Long ubicacion;
-
-    @Column(name = "ubicacion_url", length = 250)
-    private String ubicacionUrl;
-
-    @Column(name = "observacion")
-    private String observacion;
+    @Column(name = "estado", length = 10, nullable = false)
+    private String estado = "ACTIVO";
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -74,26 +53,10 @@ public class Persona extends Auditable implements Serializable {
     public void setNumeroDocumento(String numeroDocumento) { this.numeroDocumento = numeroDocumento; }
     public String getDigitoVerificador() { return digitoVerificador; }
     public void setDigitoVerificador(String digitoVerificador) { this.digitoVerificador = digitoVerificador; }
-    public boolean isEsContribuyente() { return esContribuyente; }
-    public void setEsContribuyente(boolean esContribuyente) { this.esContribuyente = esContribuyente; }
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
     public Long getTipoDocumento() { return tipoDocumento; }
     public void setTipoDocumento(Long v) { this.tipoDocumento = v; }
-    public String getClasificacionFiscal() { return clasificacionFiscal; }
-    public void setClasificacionFiscal(String v) { this.clasificacionFiscal = v; }
-    public Long getUbicacion() { return ubicacion; }
-    public void setUbicacion(Long v) { this.ubicacion = v; }
-    public String getUbicacionUrl() { return ubicacionUrl; }
-    public void setUbicacionUrl(String v) { this.ubicacionUrl = v; }
-    public String getObservacion() { return observacion; }
-    public void setObservacion(String v) { this.observacion = v; }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 
     @Override
     public boolean equals(Object o) {

@@ -39,12 +39,6 @@ public class PersonaFisica extends Auditable implements Serializable {
     @Column(name = "fecha_nacimiento")
     private LocalDate fechaNacimiento;
 
-    @Column(name = "estado_civil_codigo", length = 40)
-    private String estadoCivilCodigo;
-
-    @Column(name = "nacionalidad", length = 80)
-    private String nacionalidad;
-
     public Long getId() { return id; }
     public Persona getPersona() { return persona; }
     public void setPersona(Persona persona) { this.persona = persona; }
@@ -56,10 +50,6 @@ public class PersonaFisica extends Auditable implements Serializable {
     public void setSexo(String sexo) { this.sexo = sexo; }
     public LocalDate getFechaNacimiento() { return fechaNacimiento; }
     public void setFechaNacimiento(LocalDate fechaNacimiento) { this.fechaNacimiento = fechaNacimiento; }
-    public String getEstadoCivilCodigo() { return estadoCivilCodigo; }
-    public void setEstadoCivilCodigo(String estadoCivilCodigo) { this.estadoCivilCodigo = estadoCivilCodigo; }
-    public String getNacionalidad() { return nacionalidad; }
-    public void setNacionalidad(String nacionalidad) { this.nacionalidad = nacionalidad; }
 
     @Override
     public boolean equals(Object o) {

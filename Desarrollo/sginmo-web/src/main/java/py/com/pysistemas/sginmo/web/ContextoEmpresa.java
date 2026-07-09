@@ -77,8 +77,9 @@ public class ContextoEmpresa implements Serializable {
 
     public String getNombreEmpresa() {
         cargar();
-        return empresa == null ? "" : (empresa.getNombreFantasia() != null && !empresa.getNombreFantasia().isBlank()
-                ? empresa.getNombreFantasia() : empresa.getRazonSocial());
+        // V26: el nombre de fantasia vive en persona_empresa POR TENANT; la barra usa la razon
+        // social (identidad). El fantasia por tenant se expondra en F6 (gestion de empresa).
+        return empresa == null ? "" : empresa.getRazonSocial();
     }
 
     public boolean isTieneSucursales() {
