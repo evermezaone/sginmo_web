@@ -96,7 +96,14 @@ public class ActivoService {
             .setMaxResults(15).getResultList();
     }
 
-    public Activo buscar(Long id) { return id == null ? null : em.find(Activo.class, id); }
+    /** Detalle por id SOLO si el activo es del tenant (obs 254); si no, null (invisible). */
+    public Activo buscar(Long id) {
+        if (id == null) return null;
+        Activo a = em.find(Activo.class, id);
+        if (a == null) return null;
+        if (!tenant.esSuperadmin() && !tenant.actual().equals(a.getTenant())) return null;
+        return a;
+    }
 
     /** Exige que el activo sea del tenant actual (SUPERADMIN sin restriccion). Guarda comun de
      *  las acciones por id (obs 251): aunque la grilla filtre, una llamada manipulada no debe tocar
@@ -165,6 +172,7 @@ public class ActivoService {
     }
 
     public List<Persona> propietariosDe(Long activoId) {
+        if (buscar(activoId) == null) return java.util.List.of();   // solo activos del tenant (obs 254)
         return em.createQuery(
                 "SELECT p FROM Persona p WHERE p.id IN "
                 + "(SELECT ap.propietario FROM ActivoPropietario ap WHERE ap.activo = :act AND ap.estado = 'ACTIVO') ORDER BY p.nombre",
@@ -173,6 +181,7 @@ public class ActivoService {
     }
 
     public List<Object[]> propietariosConId(Long activoId) {
+        if (buscar(activoId) == null) return java.util.List.of();   // solo activos del tenant (obs 254)
         return em.createQuery(
                 "SELECT ap.id, p.nombre FROM ActivoPropietario ap, Persona p "
                 + "WHERE ap.activo = :act AND p.id = ap.propietario AND ap.estado = 'ACTIVO' ORDER BY p.nombre", Object[].class)

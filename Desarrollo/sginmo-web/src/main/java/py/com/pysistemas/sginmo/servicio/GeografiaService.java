@@ -62,7 +62,14 @@ public class GeografiaService {
     }
 
     public UbicacionGeografica buscarPorId(Long id) {
-        return em.find(UbicacionGeografica.class, id);
+        if (id == null) return null;
+        UbicacionGeografica u = em.find(UbicacionGeografica.class, id);
+        if (u == null) return null;
+        // Visible (obs 254): global -1, propia del tenant, o cualquiera para SUPERADMIN.
+        Long t = u.getTenant();
+        boolean visible = tenant.esSuperadmin() || (t != null
+                && (t.equals(tenant.actual()) || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(t)));
+        return visible ? u : null;
     }
 
     @Transactional

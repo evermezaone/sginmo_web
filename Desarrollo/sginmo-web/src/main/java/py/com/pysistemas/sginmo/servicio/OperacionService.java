@@ -78,9 +78,18 @@ public class OperacionService {
     }
 
     /** Resuelve una operacion por su id (no depende de las primeras N filas de la grilla). */
-    public Operacion porId(Long id) { return id == null ? null : em.find(Operacion.class, id); }
+    /** Detalle por id SOLO si la operacion es del tenant (obs 254); si no, null (invisible). */
+    public Operacion porId(Long id) {
+        if (id == null) return null;
+        Operacion o = em.find(Operacion.class, id);
+        if (o == null) return null;
+        if (!tenant.esSuperadmin() && !tenant.actual().equals(o.getTenant())) return null;
+        return o;
+    }
 
     public List<CronogramaCuota> cuotasDe(Long operacionId) {
+        // Solo si la operacion es visible al tenant (obs 254); reutiliza la guarda de porId.
+        if (porId(operacionId) == null) return java.util.List.of();
         return em.createQuery(
                 "SELECT c FROM CronogramaCuota c WHERE c.operacion = :op ORDER BY c.numeroCuota",
                 CronogramaCuota.class)
@@ -89,6 +98,10 @@ public class OperacionService {
 
     /** Mora de una cuota a hoy, calculada por la BD (f_mora_cuota). */
     public BigDecimal moraDe(Long cuotaId) {
+        // La cuota debe pertenecer a una operacion del tenant (obs 254) antes de calcular su mora.
+        Long opId = em.createQuery("SELECT c.operacion FROM CronogramaCuota c WHERE c.id = :c", Long.class)
+            .setParameter("c", cuotaId).getResultList().stream().findFirst().orElse(null);
+        if (opId == null || porId(opId) == null) return BigDecimal.ZERO;
         Object r = em.createNativeQuery("SELECT f_mora_cuota(:c, current_date)")
             .setParameter("c", cuotaId).getSingleResult();
         return r == null ? BigDecimal.ZERO : new BigDecimal(r.toString());

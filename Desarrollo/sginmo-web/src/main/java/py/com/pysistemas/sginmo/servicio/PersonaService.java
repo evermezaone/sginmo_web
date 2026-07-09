@@ -99,10 +99,17 @@ public class PersonaService {
         return n > 0;
     }
 
-    public Persona buscar(Long id) { return id == null ? null : em.find(Persona.class, id); }
+    // Detalle por id SOLO si la persona esta en la cartera del tenant (obs 254); si no, null.
+    public Persona buscar(Long id) {
+        return (id == null || !perteneceAlTenant(id)) ? null : em.find(Persona.class, id);
+    }
 
-    public PersonaFisica fisicaDe(Long id) { return em.find(PersonaFisica.class, id); }
-    public PersonaJuridica juridicaDe(Long id) { return em.find(PersonaJuridica.class, id); }
+    public PersonaFisica fisicaDe(Long id) {
+        return (id == null || !perteneceAlTenant(id)) ? null : em.find(PersonaFisica.class, id);
+    }
+    public PersonaJuridica juridicaDe(Long id) {
+        return (id == null || !perteneceAlTenant(id)) ? null : em.find(PersonaJuridica.class, id);
+    }
 
     /** Roles ACTIVOS de la persona EN EL TENANT actual (obs 250); los INACTIVOS son historial. */
     public List<PersonaRol> rolesDe(Long personaId) {
