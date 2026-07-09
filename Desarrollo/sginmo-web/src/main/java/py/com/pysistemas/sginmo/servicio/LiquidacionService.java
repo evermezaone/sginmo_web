@@ -143,7 +143,7 @@ public class LiquidacionService {
         if (liq.getOperacion() == null) throw new NegocioException("La operación es obligatoria");
         if (empresaContexto == null) throw new NegocioException("Falta el contexto de empresa");
         // RN-LIQ-003/004 (obs 230): el motivo de la liquidacion es obligatorio
-        if (liq.getMotivoCodigo() == null || liq.getMotivoCodigo().isBlank()) {
+        if (liq.getMotivo() == null) {
             throw new NegocioException("El motivo de la liquidación es obligatorio");
         }
         BigDecimal totalGastos = BigDecimal.ZERO;

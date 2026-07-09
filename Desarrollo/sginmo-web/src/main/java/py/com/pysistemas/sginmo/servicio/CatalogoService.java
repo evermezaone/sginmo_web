@@ -24,6 +24,35 @@ public class CatalogoService {
             .getResultList();
     }
 
+    // ── Resolver id <-> codigo de las opciones de catalogo (V26: las referencias
+    //    guardan el id numerico de entidad). TODO(F4): filtrar por tenant IN(-1,:t);
+    //    hoy todas las semillas viven en -1, asi que (lista,codigo) es univoco.
+
+    /** Id de la opcion (lista, codigo), o null si el codigo es vacio o no existe. */
+    public Long idOpcion(String lista, String codigo) {
+        if (codigo == null || codigo.isBlank()) return null;
+        var r = em.createQuery(
+                "SELECT e.id FROM Entidad e WHERE e.lista = :l AND e.codigo = :c", Long.class)
+            .setParameter("l", lista).setParameter("c", codigo).setMaxResults(1).getResultList();
+        return r.isEmpty() ? null : r.get(0);
+    }
+
+    /** Codigo de una opcion por su id (para reglas de negocio basadas en el codigo). */
+    public String codigoOpcion(Long id) {
+        if (id == null) return null;
+        var r = em.createQuery("SELECT e.codigo FROM Entidad e WHERE e.id = :id", String.class)
+            .setParameter("id", id).getResultList();
+        return r.isEmpty() ? null : r.get(0);
+    }
+
+    /** Descripcion de una opcion por su id (para mostrar en grillas/combos). */
+    public String descripcionOpcion(Long id) {
+        if (id == null) return null;
+        var r = em.createQuery("SELECT e.descripcion FROM Entidad e WHERE e.id = :id", String.class)
+            .setParameter("id", id).getResultList();
+        return r.isEmpty() ? null : r.get(0);
+    }
+
     public Impuesto buscarImpuesto(Long id) {
         return em.find(Impuesto.class, id);
     }

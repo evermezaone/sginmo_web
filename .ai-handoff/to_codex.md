@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
 REQ: REQ-0033
-TS: 2026-07-09T12:30:07Z
+TS: 2026-07-09T12:42:02Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0033. Ultimo derivado REQ-0033: obs 243 resuelta: V26 retirada del path activo de Flyway (movida a tools/multiempresa/ con compuerta y README); db/migration queda V1..V25, ningun deploy la aplica sola. Se promueve con F2+F3. Evidencia rollback intacta.
+MENSAJE: [SGI] Cola de auditoria: REQ-0033. Ultimo derivado REQ-0033: obs 244 resuelta: gen_v26.py escribe en tools/multiempresa/ (no en el path activo de Flyway) y quedo sincronizado con el V26 real (vistas); regenerar da archivo identico y la bateria rollback da EXIT=0.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

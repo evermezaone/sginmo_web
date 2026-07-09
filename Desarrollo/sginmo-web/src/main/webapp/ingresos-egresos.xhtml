@@ -79,9 +79,9 @@
                     <div class="campo"><label>Monto *</label>
                         <p:inputNumber value="#{ingresoEgresoBean.seleccionado.monto}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," disabled="#{ingresoEgresoBean.soloLectura}"/></div>
                     <div class="campo"><label>Imputación</label>
-                        <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.tipoImputacionCodigo}" label="Imputación" disabled="#{ingresoEgresoBean.soloLectura}">
+                        <p:selectOneMenu value="#{ingresoEgresoBean.seleccionado.tipoImputacion}" label="Imputación" disabled="#{ingresoEgresoBean.soloLectura}">
                             <f:selectItem itemLabel="Sin imputar" itemValue="#{null}" noSelectionOption="true"/>
-                            <f:selectItems value="#{ingresoEgresoBean.imputaciones}" var="im" itemLabel="#{im.descripcion}" itemValue="#{im.codigo}"/>
+                            <f:selectItems value="#{ingresoEgresoBean.imputaciones}" var="im" itemLabel="#{im.descripcion}" itemValue="#{im.id}"/>
                         </p:selectOneMenu></div>
                 </div>
                 <div class="fila-2">

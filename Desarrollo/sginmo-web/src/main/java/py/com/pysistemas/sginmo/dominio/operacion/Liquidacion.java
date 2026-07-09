@@ -45,8 +45,8 @@ public class Liquidacion extends Auditable implements Serializable {
     @Column(name = "saldo", nullable = false, precision = 15, scale = 2)
     private BigDecimal saldo = BigDecimal.ZERO;
 
-    @Column(name = "motivo_codigo", length = 40)
-    private String motivoCodigo;
+    @Column(name = "motivo")
+    private Long motivo;
 
     @Column(name = "observacion", length = 180)
     private String observacion;
@@ -69,8 +69,8 @@ public class Liquidacion extends Auditable implements Serializable {
     public void setTotalGastos(BigDecimal v) { this.totalGastos = v; }
     public BigDecimal getSaldo() { return saldo; }
     public void setSaldo(BigDecimal v) { this.saldo = v; }
-    public String getMotivoCodigo() { return motivoCodigo; }
-    public void setMotivoCodigo(String v) { this.motivoCodigo = v; }
+    public Long getMotivo() { return motivo; }
+    public void setMotivo(Long v) { this.motivo = v; }
     public String getObservacion() { return observacion; }
     public void setObservacion(String v) { this.observacion = v; }
 

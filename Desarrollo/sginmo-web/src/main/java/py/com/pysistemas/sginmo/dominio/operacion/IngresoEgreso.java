@@ -48,8 +48,8 @@ public class IngresoEgreso extends Auditable implements Serializable {
     @Column(name = "operacion")
     private Long operacion;
 
-    @Column(name = "tipo_imputacion_codigo", length = 40)
-    private String tipoImputacionCodigo;
+    @Column(name = "tipo_imputacion")
+    private Long tipoImputacion;
 
     @Column(name = "forma_pago")
     private Long formaPago;
@@ -80,8 +80,8 @@ public class IngresoEgreso extends Auditable implements Serializable {
     public void setActivo(Long v) { this.activo = v; }
     public Long getOperacion() { return operacion; }
     public void setOperacion(Long v) { this.operacion = v; }
-    public String getTipoImputacionCodigo() { return tipoImputacionCodigo; }
-    public void setTipoImputacionCodigo(String v) { this.tipoImputacionCodigo = v; }
+    public Long getTipoImputacion() { return tipoImputacion; }
+    public void setTipoImputacion(Long v) { this.tipoImputacion = v; }
     public Long getFormaPago() { return formaPago; }
     public void setFormaPago(Long v) { this.formaPago = v; }
     public Long getTenant() { return tenant; }
