@@ -29,28 +29,26 @@ public class TenantContext implements Serializable {
     @Inject
     private SesionUsuario sesion;
 
-    /** Soporte: tenant que el SUPERADMIN eligio operar; null = opera como global (-1). */
-    private Long override;
+    private boolean sinSesion() {
+        return sesion == null || !sesion.isLogueado() || sesion.getUsuario() == null;
+    }
 
     /** Tenant REAL del usuario logueado (sin override); null si no hay sesion. SUPERADMIN = -1. */
     public Long tenantUsuario() {
-        if (sesion == null || !sesion.isLogueado() || sesion.getUsuario() == null) {
-            return null;
-        }
-        return sesion.getUsuario().getTenant();
+        return sinSesion() ? null : sesion.tenantUsuario();
     }
 
     /** true si el USUARIO es SUPERADMIN, independientemente del override de soporte. */
     public boolean esSuperadminReal() {
-        return GLOBAL.equals(tenantUsuario());
+        return !sinSesion() && sesion.esSuperadminReal();
     }
 
-    /** Tenant EFECTIVO: el override de soporte (solo si el usuario es SUPERADMIN) o el propio. */
+    /**
+     * Tenant EFECTIVO. El override de soporte vive en SesionUsuario (unica fuente, obs 260): asi
+     * los services (via el interceptor @AislarTenant) Y los ABM de seguridad usan el MISMO valor.
+     */
     public Long actual() {
-        if (override != null && esSuperadminReal()) {
-            return override;
-        }
-        return tenantUsuario();
+        return sinSesion() ? null : sesion.tenantActual();
     }
 
     /** true si el contexto EFECTIVO es global -1 (SUPERADMIN sin override): ve/edita registros -1. */
@@ -60,19 +58,16 @@ public class TenantContext implements Serializable {
 
     /** El SUPERADMIN elige operar como un tenant (soporte); null o -1 vuelve a global. */
     public void operarComo(Long tenant) {
-        if (!esSuperadminReal()) {
-            throw new py.com.one.core.NegocioException("Solo el superadministrador puede cambiar de empresa");
-        }
-        override = (tenant == null || GLOBAL.equals(tenant)) ? null : tenant;
+        sesion.operarComo(tenant);
     }
 
     /** Vuelve al contexto global (-1). */
     public void volverAGlobal() {
-        override = null;
+        sesion.volverAGlobal();
     }
 
     /** Tenant que el SUPERADMIN esta operando por soporte, o null si esta en global. */
     public Long getOverride() {
-        return override;
+        return sinSesion() ? null : sesion.getOverrideTenant();
     }
 }

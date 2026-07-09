@@ -203,9 +203,14 @@ public class GrupoService {
 
     public List<UsuarioGrupo> listarIntegrantes(Long grupoId, Long actorTenant) {
         exigirGrupoVisible(grupoId, actorTenant);   // obs 257
+        // Aun en un grupo plantilla -1 visible, el ADMINISTRADOR solo ve integrantes de SU tenant
+        // (usuario_grupo esta fuera de RLS); el SUPERADMIN los ve todos (obs 259).
         return em.createQuery(
-                "SELECT ug FROM UsuarioGrupo ug WHERE ug.grupo = :g ORDER BY ug.id", UsuarioGrupo.class)
+                "SELECT ug FROM UsuarioGrupo ug WHERE ug.grupo = :g"
+                + " AND (:sa = TRUE OR EXISTS (SELECT 1 FROM Usuario u WHERE u.id = ug.usuario AND u.tenant = :t))"
+                + " ORDER BY ug.id", UsuarioGrupo.class)
             .setParameter("g", grupoId)
+            .setParameter("sa", superadmin(actorTenant)).setParameter("t", actorTenant)
             .getResultList();
     }
 }

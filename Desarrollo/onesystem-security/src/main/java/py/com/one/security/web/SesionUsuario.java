@@ -17,7 +17,15 @@ import java.io.Serializable;
 @SessionScoped
 public class SesionUsuario implements UsuarioActual, Serializable {
 
+    /** Tenant global -1 = SUPERADMIN. */
+    public static final Long GLOBAL = -1L;
+
     private Usuario usuario;
+
+    /** Soporte (F6, obs 260): tenant que el SUPERADMIN eligio "operar como"; null = global. Es la
+     *  UNICA fuente del override; TenantContext (SGInmo) delega aca, de modo que services (via el
+     *  interceptor) Y los ABM de seguridad comparten el MISMO tenant efectivo. */
+    private Long overrideTenant;
 
     /** Permisos explicitos "pantalla:accion" cargados al iniciar sesion (perfil USUARIO). */
     private java.util.Set<String> permisos = java.util.Set.of();
@@ -25,6 +33,7 @@ public class SesionUsuario implements UsuarioActual, Serializable {
     public void iniciar(Usuario usuario, java.util.Set<String> permisos) {
         this.usuario = usuario;
         this.permisos = permisos == null ? java.util.Set.of() : permisos;
+        this.overrideTenant = null;
     }
 
     /**
@@ -57,10 +66,37 @@ public class SesionUsuario implements UsuarioActual, Serializable {
         return usuario != null && "ADMINISTRADOR".equals(usuario.getPerfil());
     }
 
-    /** Tenant (empresa) del usuario logueado; -1 = SUPERADMIN global. null si no hay sesion. */
-    public Long tenantActual() {
+    /** Tenant REAL del usuario logueado (sin override); -1 = SUPERADMIN. null si no hay sesion. */
+    public Long tenantUsuario() {
         return usuario != null ? usuario.getTenant() : null;
     }
+
+    /** true si el USUARIO es SUPERADMIN (independiente del override de soporte). */
+    public boolean esSuperadminReal() {
+        return GLOBAL.equals(tenantUsuario());
+    }
+
+    /** Tenant EFECTIVO: el override de soporte (solo si el usuario es SUPERADMIN) o el propio.
+     *  Los ABM de seguridad y los services deben usar ESTE valor (obs 260). */
+    public Long tenantActual() {
+        if (overrideTenant != null && esSuperadminReal()) {
+            return overrideTenant;
+        }
+        return tenantUsuario();
+    }
+
+    /** El SUPERADMIN elige operar como un tenant (soporte); null o -1 vuelve a global. */
+    public void operarComo(Long tenant) {
+        if (!esSuperadminReal()) {
+            throw new py.com.one.core.NegocioException("Solo el superadministrador puede cambiar de empresa");
+        }
+        overrideTenant = (tenant == null || GLOBAL.equals(tenant)) ? null : tenant;
+    }
+
+    public void volverAGlobal() { overrideTenant = null; }
+
+    /** Tenant que el SUPERADMIN esta operando por soporte, o null si esta en global. */
+    public Long getOverrideTenant() { return overrideTenant; }
 
     @Override
     public String codigoUsuario() {
