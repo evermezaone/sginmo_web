@@ -20,6 +20,10 @@ w("  VALUES (-1, 'JURIDICA', 'GLOBAL', 'GLOBAL', 'ACTIVO', 'SISTEMA', now());")
 w("INSERT INTO persona_juridica (persona, razon_social, usuario_creacion, fecha_creacion)")
 w("  VALUES (-1, 'GLOBAL', 'SISTEMA', now());")
 w()
+w("-- v_persona depende de columnas que se dropean/mueven; se suelta ahora y se")
+w("-- recrea al final (doc 14 §7, ya tenant-aware sobre persona_empresa).")
+w("DROP VIEW IF EXISTS v_persona;")
+w()
 w("-- ── FASE B: rediseno de 'entidad' (PK numerica + tenant) ─────────────────────")
 w("-- B1: soltar dinamicamente TODAS las FK que referencian entidad(entidad,codigo).")
 w("DO $$ DECLARE r record; BEGIN")
@@ -229,11 +233,42 @@ w("CREATE INDEX ix_cobro_tenant          ON cobro (tenant, fecha);")
 w("CREATE INDEX ix_ingreso_egreso_tenant ON ingreso_egreso (tenant, fecha);")
 w("CREATE INDEX ix_documento_tenant      ON documento (tenant, estado);")
 w()
-w("-- RLS (ENABLE + POLICIES) y ajuste de vistas: fase F5/F3.5 (REQ-0037), no aqui.")
+w("-- ── FASE L: vistas recreadas exponiendo tenant (doc 14 §7) ──────────────────")
+w("-- v_persona: identidad + datos comerciales por tenant (persona_empresa).")
+w("""CREATE VIEW v_persona AS
+SELECT p.persona, p.tipo_personeria, p.nombre, p.numero_documento, p.digito_verificador,
+       p.tipo_documento, p.estado,
+       pe.tenant, pe.es_contribuyente, pe.clasificacion_fiscal, pe.direccion, pe.telefono,
+       pe.email, pe.ubicacion, pe.ubicacion_url, pe.observacion, pe.estado_civil,
+       pe.nacionalidad, pe.nombre_fantasia, pe.representante_legal, pe.actividad,
+       pf.nombres, pf.apellidos, pf.sexo, pf.fecha_nacimiento,
+       pj.razon_social, pj.fecha_constitucion
+  FROM persona p
+  LEFT JOIN persona_fisica   pf ON pf.persona = p.persona
+  LEFT JOIN persona_juridica pj ON pj.persona = p.persona
+  LEFT JOIN persona_empresa  pe ON pe.persona = p.persona;""")
+w()
+w("-- v_operacion_saldo: + tenant (desde operacion).")
+w("""CREATE OR REPLACE VIEW v_operacion_saldo AS
+SELECT o.operacion, o.cliente, o.monto_total_operacion,
+       COALESCE(sum(c.monto), 0) AS total_cuotas,
+       COALESCE(sum(c.saldo), 0) AS saldo_pendiente,
+       COALESCE(sum(CASE WHEN c.estado = 'CANCELADO' THEN c.monto ELSE 0 END), 0) AS total_cancelado,
+       count(c.cronograma_cuota) FILTER (WHERE c.estado = 'PENDIENTE') AS cuotas_pendientes,
+       o.tenant
+  FROM operacion o
+  LEFT JOIN cronograma_cuota c ON c.operacion = o.operacion
+  GROUP BY o.operacion, o.cliente, o.monto_total_operacion, o.tenant;""")
+w()
+w("-- RLS (ENABLE + POLICIES): fase F5/F3.5 (REQ-0037), no aqui.")
 
 out = "\n".join(L) + "\n"
-path = r"C:\Users\everm\OneDrive\Documents\Datos\Sistemas\2R\Desarrollo\SGInmo\codigo fuente\inmobiliaria\Pysistemas\migracion\Desarrollo\sginmo-web\src\main\resources\db\migration\V26__multiempresa_esquema.sql"
+# Escribe en STAGING (junto a este script), NO en el path activo de Flyway (obs 244):
+# db/migration lo ejecuta FlywayMigrator al arranque. La promocion a db/migration es
+# manual (git mv), solo cuando F2+F3 formen la unidad desplegable. Ver README.md.
+import os
+path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "V26__multiempresa_esquema.sql")
 with io.open(path, "w", encoding="utf-8", newline="\n") as f:
     f.write(out)
-print("escrito:", path)
+print("escrito (staging, fuera de Flyway):", path)
 print("lineas:", out.count(chr(10)))

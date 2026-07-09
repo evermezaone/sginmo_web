@@ -41,3 +41,11 @@ que `FlywayMigrator` ejecuta al arranque). Asi ningun deploy puede aplicar V26 a
 F2/F3. `db/migration/` queda con V1..V25. V26 se promueve a esa carpeta (git mv, ver
 `tools/multiempresa/README.md`) recien cuando F2+F3 esten listos como unidad desplegable.
 La evidencia reproducible (gen_v26.py + v26_checks.sql + rollback battery) sigue en staging.
+
+## obs 244 — el generador ya no escribe en el path de Flyway (RESUELTA)
+`gen_v26.py` escribia por defecto en `Desarrollo/sginmo-web/src/main/resources/db/migration/`,
+asi que regenerar la evidencia re-plantaba V26 en el classpath activo de Flyway. Corregido: ahora
+escribe junto al propio script (`os.path.dirname(__file__)` -> `tools/multiempresa/V26__*.sql`), con
+comentario que remite a la compuerta. Ademas se sincronizo el generador con el V26 real (le faltaban
+el DROP/recreate de vistas): regenerar produce un archivo IDENTICO al staged (diff vacio) y la bateria
+BEGIN..ROLLBACK sobre el regenerado da EXIT=0 con todos los asserts en verde. Reproducibilidad real.
