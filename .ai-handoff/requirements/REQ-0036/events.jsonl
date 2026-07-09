@@ -1,2 +1,4 @@
 {"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F4: aislamiento por tenant en services"}
 {"ts":"2026-07-09T00:00:02.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"TenantContext + filtros IN(-1,:t)/=:t + pertenencia en escrituras; cartera de personas por tenant; mvn package EXIT 0"}
+{"ts":"2026-07-09T00:00:40.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs249/250/251: acciones por id sin guarda de pertenencia (Operacion/Persona/Activo/Geografia/Articulo)"}
+{"ts":"2026-07-09T00:00:42.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"Guardas de pertenencia por id en los 5 services; mvn package EXIT 0"}
