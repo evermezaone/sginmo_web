@@ -22,6 +22,12 @@ public class UbicacionGeografica extends Auditable implements Serializable {
     @Column(name = "ubicacion_geografica")
     private Long id;
 
+    /** Discriminador multiempresa (V26); -1 = catalogo GLOBAL (arbol INE). */
+    @Column(name = "tenant")
+    private Long tenant;
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "padre")
     private UbicacionGeografica padre;

@@ -30,6 +30,10 @@ public class ArticuloService {
     @jakarta.inject.Inject
     private CatalogoService catalogoService;
 
+    /** Aislamiento por tenant (F4): la grilla ve globales (-1) + del tenant; se escribe el propio. */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
     // ── Consultas (paginacion lazy para p:dataTable) ──
 
     /** Rutas JPQL permitidas para ordenar (clave = field de la columna en la vista). */
@@ -69,7 +73,8 @@ public class ArticuloService {
     private String jpql(String select, Map<String, Object> filtros, String ordenarPor, boolean ascendente) {
         var sb = new StringBuilder(select)
             .append(" FROM Articulo a LEFT JOIN a.impuesto i")
-            .append(" WHERE (:f = '' OR lower(a.codigo) LIKE :like OR lower(a.descripcion) LIKE :like")
+            .append(" WHERE (a.tenant = -1 OR a.tenant = :tenant)")
+            .append(" AND (:f = '' OR lower(a.codigo) LIKE :like OR lower(a.descripcion) LIKE :like")
             .append(" OR lower(a.tipo) LIKE :like OR lower(coalesce(i.descripcion, '')) LIKE :like)");
         int n = 0;
         for (String campo : filtros.keySet()) {
@@ -93,6 +98,7 @@ public class ArticuloService {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         q.setParameter("f", f);
         q.setParameter("like", "%" + f + "%");
+        q.setParameter("tenant", tenant.actual());
         int n = 0;
         for (var e : filtros.entrySet()) {
             if (CAMPOS_FILTRO_IGUAL.containsKey(e.getKey())) {
@@ -105,9 +111,27 @@ public class ArticuloService {
 
     // ── Escrituras ──
 
+    /** Pertenencia por tenant (F4): el alta pertenece al tenant del usuario; en edicion el
+     *  articulo debe ser editable (propio, o -1 si SUPERADMIN) y su tenant no se cambia. */
+    private void aplicarPertenencia(Articulo a) {
+        Long actual = tenant.actual();
+        if (a.getId() == null) {
+            a.setTenant(actual);
+            return;
+        }
+        Articulo enBd = em.find(Articulo.class, a.getId());
+        if (enBd == null) throw new NegocioException("El artículo no existe");
+        Long tOrig = enBd.getTenant();
+        boolean editable = tOrig != null
+                && (tOrig.equals(actual) || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(tOrig) && tenant.esSuperadmin()));
+        if (!editable) throw new NegocioException("El artículo pertenece a otra empresa");
+        a.setTenant(tOrig);
+    }
+
     @Transactional
     public Articulo guardar(Articulo articulo) {
         autorizacion.exigir("articulos", articulo.getId() == null ? "CREAR" : "EDITAR");
+        aplicarPertenencia(articulo);
         validar(articulo);
         try {
             Articulo resultado;
@@ -134,6 +158,11 @@ public class ArticuloService {
         Articulo a = em.find(Articulo.class, id);
         if (a == null) {
             throw new NegocioException("El artículo no existe");
+        }
+        Long tOrig = a.getTenant();
+        if (!(tOrig != null && (tOrig.equals(tenant.actual())
+                || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(tOrig) && tenant.esSuperadmin())))) {
+            throw new NegocioException("El artículo pertenece a otra empresa");
         }
         if ("ACTIVO".equals(estadoNuevo)) {
             validar(a);   // reactivacion segura (regla 7): re-valida unicidades y reglas vigentes

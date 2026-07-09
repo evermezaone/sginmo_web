@@ -19,6 +19,12 @@ public class Impuesto extends Auditable {
     @Column(name = "impuesto")
     private Long id;
 
+    /** Discriminador multiempresa (V26); -1 = catalogo GLOBAL. */
+    @Column(name = "tenant")
+    private Long tenant;
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
+
     @Column(name = "descripcion", length = 120, nullable = false)
     private String descripcion;
 

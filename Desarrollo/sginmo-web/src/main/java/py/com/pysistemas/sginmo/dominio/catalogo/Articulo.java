@@ -29,6 +29,12 @@ public class Articulo extends Auditable {
     @Column(name = "articulo")
     private Long id;
 
+    /** Discriminador multiempresa (V26); -1 = catalogo GLOBAL. */
+    @Column(name = "tenant")
+    private Long tenant;
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
+
     @NotBlank(message = "El código es obligatorio")
     @Column(name = "codigo", length = 25, nullable = false, unique = true)
     private String codigo;
