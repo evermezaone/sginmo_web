@@ -63,9 +63,13 @@ public class GrupoService {
         if (grupo.getCodigo() == null || grupo.getCodigo().isBlank()) {
             throw new NegocioException("El código del grupo es obligatorio");
         }
+        // V26: unicidad por (tenant, codigo). Default -1 = grupo plantilla global; el modulo
+        // consumidor (SGInmo, F6) puede asignar el tenant del contexto antes de guardar.
+        if (grupo.getTenant() == null) grupo.setTenant(-1L);
         Long repetidos = em.createQuery(
-                "SELECT COUNT(g) FROM Grupo g WHERE lower(g.codigo) = :codigo AND (:id IS NULL OR g.id <> :id)",
+                "SELECT COUNT(g) FROM Grupo g WHERE g.tenant = :t AND lower(g.codigo) = :codigo AND (:id IS NULL OR g.id <> :id)",
                 Long.class)
+            .setParameter("t", grupo.getTenant())
             .setParameter("codigo", grupo.getCodigo().trim().toLowerCase())
             .setParameter("id", grupo.getId())
             .getSingleResult();

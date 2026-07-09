@@ -19,6 +19,10 @@ public class Sucursal extends Auditable implements Serializable {
     @Column(name = "sucursal")
     private Long id;
 
+    /** Discriminador multiempresa (V26); = la empresa (persona_juridica) dueña. */
+    @Column(name = "tenant")
+    private Long tenant;
+
     @Column(name = "persona_juridica", nullable = false)
     private Long personaJuridica;
 
@@ -39,6 +43,8 @@ public class Sucursal extends Auditable implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
     public Long getPersonaJuridica() { return personaJuridica; }
     public void setPersonaJuridica(Long personaJuridica) { this.personaJuridica = personaJuridica; }
     public String getDescripcion() { return descripcion; }

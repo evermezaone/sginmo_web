@@ -19,7 +19,11 @@ public class Grupo extends Auditable implements Serializable {
     @Column(name = "grupo")
     private Long id;
 
-    @Column(name = "codigo", length = 30, nullable = false, unique = true)
+    /** Discriminador multiempresa (V26); -1 = grupo plantilla global. UNIQUE(tenant, codigo). */
+    @Column(name = "tenant")
+    private Long tenant;
+
+    @Column(name = "codigo", length = 30, nullable = false)
     private String codigo;
 
     @Column(name = "descripcion", length = 120, nullable = false)
@@ -30,6 +34,9 @@ public class Grupo extends Auditable implements Serializable {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
 
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }

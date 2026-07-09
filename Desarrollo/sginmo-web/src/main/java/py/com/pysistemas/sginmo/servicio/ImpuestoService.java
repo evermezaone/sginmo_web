@@ -52,7 +52,7 @@ public class ImpuestoService {
     }
 
     public boolean modoAvanzado() {
-        var filas = em.createNativeQuery("SELECT valor FROM parametro_sistema WHERE clave = 'IMPUESTOS_MODO_AVANZADO'").getResultList();
+        var filas = em.createNativeQuery("SELECT valor FROM parametro_sistema WHERE clave = 'IMPUESTOS_MODO_AVANZADO' AND tenant = -1").getResultList();
         return !filas.isEmpty() && "SI".equalsIgnoreCase(String.valueOf(filas.get(0)));
     }
 

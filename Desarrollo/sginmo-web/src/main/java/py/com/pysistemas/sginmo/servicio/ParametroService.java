@@ -52,10 +52,15 @@ public class ParametroService {
         }
         try {
             if (esNuevo) {
-                if (em.find(ParametroSistema.class, parametro.getClave().trim()) != null) {
+                // V26: PK compuesta (tenant, clave). TODO(F6): el tenant de un parametro propio
+                // sale del contexto; por ahora los defaults viven en el tenant global -1.
+                if (parametro.getTenant() == null) parametro.setTenant(-1L);
+                parametro.setClave(parametro.getClave().trim().toUpperCase());
+                var pk = new py.com.pysistemas.sginmo.dominio.catalogo.ParametroSistemaId(
+                        parametro.getTenant(), parametro.getClave());
+                if (em.find(ParametroSistema.class, pk) != null) {
                     throw new NegocioException("Ya existe el parámetro '" + parametro.getClave() + "'");
                 }
-                parametro.setClave(parametro.getClave().trim().toUpperCase());
                 em.persist(parametro);
             } else {
                 parametro = em.merge(parametro);

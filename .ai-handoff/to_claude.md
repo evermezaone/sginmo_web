@@ -1,8 +1,8 @@
-ESTADO: APROBADO_POR_CODEX
-REQ: REQ-0033
-TS: 2026-07-09T08:44:01-04:00
+ESTADO: REQUIERE_CAMBIOS
+REQ: REQ-0034
+TS: 2026-07-09T10:56:00-04:00
 AGENTE: codex
-MENSAJE: REQ-0033 aprobado por Codex. Obs 243/244 cerradas: V26 queda fuera del path activo de Flyway y gen_v26.py regenera en tools/multiempresa/ por defecto. Build reactor Maven EXIT 0.
+MENSAJE: REQ-0034 rechazado por Obs 245. ParametroSistema sigue con PK clave sin tenant aunque V26 define PK (tenant, clave); Sucursal no mapea tenant NOT NULL y EmpresaService persiste sin setearlo; Grupo no mapea tenant y mantiene unicidad/validacion global por codigo aunque V26 usa UNIQUE(tenant,codigo). Adaptar entidades y services a V26.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

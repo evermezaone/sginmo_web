@@ -180,6 +180,8 @@ public class EmpresaService {
         if (sucursal.getTelefono() == null || sucursal.getTelefono().isBlank()) {
             sucursal.setTelefono("-");
         }
+        // V26: la sucursal pertenece al tenant de su empresa (persona_juridica).
+        sucursal.setTenant(sucursal.getPersonaJuridica());
         try {
             if (sucursal.isPorDefecto()) {
                 em.createQuery("UPDATE Sucursal x SET x.porDefecto = false WHERE x.personaJuridica = :pj"

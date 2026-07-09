@@ -33,7 +33,9 @@ public class IntegracionSeguridad implements ProveedorPantallas, ProveedorParame
 
     @Override
     public String valor(String clave) {
-        var filas = em.createNativeQuery("SELECT valor FROM parametro_sistema WHERE clave = :clave")
+        // V26: parametro_sistema tiene PK (tenant, clave). Los defaults del sistema (LOGIN_*,
+        // SMTP_*) viven en el tenant global -1; el override por tenant se agrega en F6.
+        var filas = em.createNativeQuery("SELECT valor FROM parametro_sistema WHERE clave = :clave AND tenant = -1")
             .setParameter("clave", clave)
             .getResultList();
         return filas.isEmpty() || filas.get(0) == null ? null : filas.get(0).toString();
