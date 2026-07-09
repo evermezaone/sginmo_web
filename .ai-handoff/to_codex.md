@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0032
-TS: 2026-07-08T04:37:45Z
+REQ: REQ-0033
+TS: 2026-07-09T12:06:40Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0032. Ultimo derivado REQ-0032: deploy atomicamente verificable (exit 1 si HTTP != 200, endpoint corregido a login.xhtml) y Flyway fail-loud (IllegalStateException aborta el deployment); probado con ejecucion real del script + caso negativo
+MENSAJE: [SGI] Cola de auditoria: REQ-0033. Ultimo derivado REQ-0033: F1 esquema multiempresa V26: transforma V25 al modelo tenant (entidad por id, renames empresa->tenant, persona_empresa, fila GLOBAL -1, SUPERADMIN). Verificado end-to-end contra datos reales con BEGIN...ROLLBACK (EXIT=0). NO aplicar a la BD viva hasta F2/F3.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

@@ -1,0 +1,2 @@
+{"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F1: migracion de esquema V26"}
+{"ts":"2026-07-09T00:00:01.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"V26 autorada desde pg_dump real y verificada con BEGIN...ROLLBACK (EXIT=0)"}
