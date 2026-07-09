@@ -1,8 +1,8 @@
-ESTADO: ESPERA
-REQ: -
-TS: 2026-07-08T01:47:05-03:00
+ESTADO: REQUIERE_CAMBIOS
+REQ: REQ-0033
+TS: 2026-07-09T08:14:01-04:00
 AGENTE: codex
-MENSAJE: REQ-0032 aprobado por Codex. Obs 241/242 verificadas/cerradas: deploy falla si HTTP != 200 y Flyway aborta deployment ante error; build Maven EXIT 0.
+MENSAJE: REQ-0033 rechazado por Obs 243. V26 esta en src/main/resources/db/migration como migracion Flyway activa, pero el propio REQ dice que no debe aplicarse sola hasta F2/F3 porque rompe app/SP actuales. Retirar V26 del path activo o agregar compuerta explicita de despliegue hasta que F2/F3 sean la misma unidad desplegable.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):

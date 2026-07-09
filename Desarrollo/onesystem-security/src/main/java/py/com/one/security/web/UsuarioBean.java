@@ -113,7 +113,7 @@ public class UsuarioBean implements Serializable {
             if (soloLectura || !sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) {
                 return;
             }
-            usuarioService.guardar(seleccionado, passwordInicial, sesion.getUsuario().getEmpresa());
+            usuarioService.guardar(seleccionado, passwordInicial, sesion.getUsuario().getTenant());
             aviso(FacesMessage.SEVERITY_INFO, esNuevo ? "Usuario creado" : "Usuario actualizado",
                     seleccionado.getCodigoUsuario()
                     + (passwordInicial != null && !passwordInicial.isBlank()

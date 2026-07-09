@@ -86,8 +86,8 @@ public class UsuarioService {
             seguridadService.validarNueva(passwordPlano, passwordPlano);
             usuario.setPasswordHash(seguridadService.hash(passwordPlano));
             usuario.setDebeCambiarPassword(true);
-            if (usuario.getEmpresa() == null) {
-                usuario.setEmpresa(empresaDefecto);
+            if (usuario.getTenant() == null) {
+                usuario.setTenant(empresaDefecto);
             }
             em.persist(usuario);
             return usuario;

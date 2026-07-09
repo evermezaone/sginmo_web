@@ -34,8 +34,8 @@ public class Activo extends Auditable implements Serializable {
     @Column(name = "tipo_codigo", length = 40, nullable = false)
     private String tipoCodigo;
 
-    @Column(name = "empresa")
-    private Long empresa;
+    @Column(name = "tenant", nullable = false)
+    private Long tenant;
 
     @Column(name = "ubicacion")
     private Long ubicacion;
@@ -82,8 +82,8 @@ public class Activo extends Auditable implements Serializable {
     public void setNombre(String nombre) { this.nombre = nombre; }
     public String getTipoCodigo() { return tipoCodigo; }
     public void setTipoCodigo(String tipoCodigo) { this.tipoCodigo = tipoCodigo; }
-    public Long getEmpresa() { return empresa; }
-    public void setEmpresa(Long empresa) { this.empresa = empresa; }
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
     public Long getUbicacion() { return ubicacion; }
     public void setUbicacion(Long ubicacion) { this.ubicacion = ubicacion; }
     public String getDireccion() { return direccion; }

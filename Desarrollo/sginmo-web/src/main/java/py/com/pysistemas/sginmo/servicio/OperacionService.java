@@ -198,7 +198,7 @@ public class OperacionService {
         ie.setPersona(persona);
         ie.setActivo(op.getActivo());
         ie.setOperacion(op.getId());
-        ie.setEmpresa(op.getEmpresa());
+        ie.setTenant(op.getTenant());
         ie.setObservacion(observacion);
         em.persist(ie);
     }
@@ -207,12 +207,12 @@ public class OperacionService {
     private Long crearDocumentoInterno(Operacion op, BigDecimal monto, String concepto) {
         String usr = usuarioAuditoria();
         Object num = em.createNativeQuery("SELECT f_siguiente_numero(:emp, 'DINT', 'OP')")
-            .setParameter("emp", op.getEmpresa()).getSingleResult();
+            .setParameter("emp", op.getTenant()).getSingleResult();
         em.createNativeQuery(
             "INSERT INTO documento (empresa, tipo_codigo, serie, numero, fecha, persona, sucursal,"
             + " moneda, direccion_dinero, observacion, usuario_creacion, fecha_creacion)"
             + " VALUES (:emp, 'DINT', 'OP', :num, :fec, :per, :suc, :mon, 'ENTRADA', :obs, :usr, now())")
-            .setParameter("emp", op.getEmpresa()).setParameter("num", ((Number) num).longValue())
+            .setParameter("emp", op.getTenant()).setParameter("num", ((Number) num).longValue())
             .setParameter("fec", java.sql.Date.valueOf(op.getFechaOperacion()))
             .setParameter("per", op.getCliente()).setParameter("suc", op.getSucursal())
             .setParameter("mon", op.getMoneda()).setParameter("obs", concepto)
@@ -220,7 +220,7 @@ public class OperacionService {
             .executeUpdate();
         Object doc = em.createNativeQuery(
             "SELECT documento FROM documento WHERE empresa = :emp AND tipo_codigo = 'DINT' AND serie = 'OP' AND numero = :num")
-            .setParameter("emp", op.getEmpresa()).setParameter("num", ((Number) num).longValue())
+            .setParameter("emp", op.getTenant()).setParameter("num", ((Number) num).longValue())
             .getSingleResult();
         Long docId = ((Number) doc).longValue();
         em.createNativeQuery(
@@ -243,7 +243,7 @@ public class OperacionService {
                 && (op.getPlazo() == null || op.getPlazo() < 1)) {
             throw new NegocioException("A crédito el plazo (cuotas) es obligatorio");
         }
-        if (op.getEmpresa() == null || op.getSucursal() == null) {
+        if (op.getTenant() == null || op.getSucursal() == null) {
             throw new NegocioException("Falta el contexto de empresa/sucursal (selector de la barra superior)");
         }
     }

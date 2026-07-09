@@ -22,8 +22,8 @@ public class Planilla extends Auditable implements Serializable {
     @Column(name = "planilla")
     private Long id;
 
-    @Column(name = "empresa", nullable = false)
-    private Long empresa;
+    @Column(name = "tenant", nullable = false)
+    private Long tenant;
 
     @Column(name = "sucursal", nullable = false)
     private Long sucursal;
@@ -56,8 +56,8 @@ public class Planilla extends Auditable implements Serializable {
     private String estado = "ABIERTA";
 
     public Long getId() { return id; }
-    public Long getEmpresa() { return empresa; }
-    public void setEmpresa(Long v) { this.empresa = v; }
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long v) { this.tenant = v; }
     public Long getSucursal() { return sucursal; }
     public void setSucursal(Long v) { this.sucursal = v; }
     public String getUsuarioApertura() { return usuarioApertura; }

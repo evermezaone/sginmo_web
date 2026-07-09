@@ -63,8 +63,8 @@ public class Operacion extends Auditable implements Serializable {
     @Column(name = "estado", length = 20, nullable = false)
     private String estado = "VIGENTE";             // VIGENTE | FINALIZADO
 
-    @Column(name = "empresa", nullable = false)
-    private Long empresa;
+    @Column(name = "tenant", nullable = false)
+    private Long tenant;
 
     @Column(name = "sucursal", nullable = false)
     private Long sucursal;
@@ -130,8 +130,8 @@ public class Operacion extends Auditable implements Serializable {
     public void setGarantia(BigDecimal v) { this.garantia = v; }
     public String getEstado() { return estado; }
     public void setEstado(String v) { this.estado = v; }
-    public Long getEmpresa() { return empresa; }
-    public void setEmpresa(Long v) { this.empresa = v; }
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long v) { this.tenant = v; }
     public Long getSucursal() { return sucursal; }
     public void setSucursal(Long v) { this.sucursal = v; }
     public Long getMoneda() { return moneda; }

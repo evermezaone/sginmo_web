@@ -30,7 +30,7 @@ public class CajaService {
 
     public Planilla planillaAbierta(Long empresa, Long sucursal) {
         return em.createQuery(
-                "SELECT p FROM Planilla p WHERE p.empresa = :emp AND p.sucursal = :suc AND p.estado = 'ABIERTA'"
+                "SELECT p FROM Planilla p WHERE p.tenant = :emp AND p.sucursal = :suc AND p.estado = 'ABIERTA'"
                 + " ORDER BY p.id DESC", Planilla.class)
             .setParameter("emp", empresa).setParameter("suc", sucursal)
             .setMaxResults(1).getResultStream().findFirst().orElse(null);
@@ -43,7 +43,7 @@ public class CajaService {
             throw new NegocioException("Ya hay una planilla ABIERTA para esta sucursal; ciérrela primero");
         }
         var p = new Planilla();
-        p.setEmpresa(empresa);
+        p.setTenant(empresa);
         p.setSucursal(sucursal);
         p.setUsuarioApertura(usuario);
         p.setFechaApertura(LocalDate.now());

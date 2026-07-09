@@ -87,7 +87,7 @@ public class OperacionBean implements Serializable {
     public void nuevo() {
         if (!sesion.puede(PANTALLA, "CREAR")) return;
         seleccionado = new Operacion();
-        if (contexto.getEmpresa() != null) seleccionado.setEmpresa(contexto.getEmpresa().getId());
+        if (contexto.getEmpresa() != null) seleccionado.setTenant(contexto.getEmpresa().getId());
         if (contexto.sucursal() != null) seleccionado.setSucursal(contexto.sucursal().getId());
         cuotas = java.util.List.of();
     }

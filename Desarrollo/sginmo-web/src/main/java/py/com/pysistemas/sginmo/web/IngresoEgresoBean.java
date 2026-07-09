@@ -81,7 +81,7 @@ public class IngresoEgresoBean implements Serializable {
     public void nuevo() {
         if (!sesion.puede(PANTALLA, "CREAR")) return;
         seleccionado = new IngresoEgreso();
-        if (contexto.getEmpresa() != null) seleccionado.setEmpresa(contexto.getEmpresa().getId());
+        if (contexto.getEmpresa() != null) seleccionado.setTenant(contexto.getEmpresa().getId());
         soloLectura = false;
     }
 

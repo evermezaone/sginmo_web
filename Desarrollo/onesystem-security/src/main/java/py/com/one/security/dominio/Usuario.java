@@ -31,13 +31,14 @@ public class Usuario extends Auditable implements Serializable {
     private String passwordHash;
 
     @Column(name = "perfil", length = 20, nullable = false)
-    private String perfil;                   // ADMINISTRADOR | USUARIO
+    private String perfil;                   // SUPERADMIN | ADMINISTRADOR | USUARIO
 
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
 
-    @Column(name = "empresa", nullable = false)
-    private Long empresa;
+    /** Discriminador multiempresa (ex 'empresa'); -1 = SUPERADMIN global. */
+    @Column(name = "tenant", nullable = false)
+    private Long tenant;
 
     @Column(name = "persona")
     private Long persona;
@@ -74,8 +75,8 @@ public class Usuario extends Auditable implements Serializable {
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 
-    public Long getEmpresa() { return empresa; }
-    public void setEmpresa(Long empresa) { this.empresa = empresa; }
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
 
     public Long getPersona() { return persona; }
     public void setPersona(Long persona) { this.persona = persona; }

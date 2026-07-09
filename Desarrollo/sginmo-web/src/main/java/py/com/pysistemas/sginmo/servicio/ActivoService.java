@@ -263,7 +263,7 @@ public class ActivoService {
                     + (mz == null ? "" : " Mz " + mz));
             lote.setNumeroLote(numero);
             lote.setNumeroManzana(mz);
-            lote.setEmpresa(padre.getEmpresa());
+            lote.setTenant(padre.getTenant());
             lote.setUbicacion(padre.getUbicacion());
             lote.setPrecioVenta(precioVenta == null ? java.math.BigDecimal.ZERO : precioVenta);
             lote.setComisionVenta(comisionVenta == null ? java.math.BigDecimal.ZERO : comisionVenta);

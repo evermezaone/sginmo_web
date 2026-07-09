@@ -25,7 +25,7 @@ public class IngresoEgresoService {
     public long contar(Long empresa, String filtro, String tipo) {
         if (empresa == null) return 0;
         var q = em.createQuery(
-            "SELECT COUNT(ie) FROM IngresoEgreso ie WHERE ie.empresa = :emp AND (:t = '' OR ie.tipo = :t)"
+            "SELECT COUNT(ie) FROM IngresoEgreso ie WHERE ie.tenant = :emp AND (:t = '' OR ie.tipo = :t)"
             + " AND (:f = '' OR lower(ie.observacion) LIKE :like)", Long.class);
         q.setParameter("emp", empresa).setParameter("t", tipo == null ? "" : tipo);
         aplicar(q, filtro);
@@ -35,7 +35,7 @@ public class IngresoEgresoService {
     public List<IngresoEgreso> listar(Long empresa, int primero, int cantidad, String filtro, String tipo) {
         if (empresa == null) return java.util.List.of();
         var q = em.createQuery(
-            "SELECT ie FROM IngresoEgreso ie WHERE ie.empresa = :emp AND (:t = '' OR ie.tipo = :t)"
+            "SELECT ie FROM IngresoEgreso ie WHERE ie.tenant = :emp AND (:t = '' OR ie.tipo = :t)"
             + " AND (:f = '' OR lower(ie.observacion) LIKE :like) ORDER BY ie.id DESC", IngresoEgreso.class);
         q.setParameter("emp", empresa).setParameter("t", tipo == null ? "" : tipo);
         aplicar(q, filtro);
@@ -62,16 +62,16 @@ public class IngresoEgresoService {
         if (ie.getMonto() == null || ie.getMonto().signum() <= 0) {
             throw new NegocioException("El monto debe ser mayor a cero");
         }
-        if (ie.getEmpresa() == null) throw new NegocioException("Falta el contexto de empresa");
+        if (ie.getTenant() == null) throw new NegocioException("Falta el contexto de empresa");
         // Aislamiento (obs 228): el movimiento debe ser de la empresa del contexto; en edicion,
         // ademas, la fila existente en BD debe pertenecerle (no se editan movimientos ajenos).
-        if (empresaContexto == null || !empresaContexto.equals(ie.getEmpresa())) {
+        if (empresaContexto == null || !empresaContexto.equals(ie.getTenant())) {
             throw new NegocioException("El movimiento no pertenece a la empresa del contexto");
         }
         if (!esNuevo) {
             IngresoEgreso enBd = em.find(IngresoEgreso.class, ie.getId());
             if (enBd == null) throw new NegocioException("El movimiento no existe");
-            if (!empresaContexto.equals(enBd.getEmpresa())) {
+            if (!empresaContexto.equals(enBd.getTenant())) {
                 throw new NegocioException("El movimiento pertenece a otra empresa");
             }
         }
@@ -97,7 +97,7 @@ public class IngresoEgresoService {
         IngresoEgreso ie = em.find(IngresoEgreso.class, id);
         if (ie == null) throw new NegocioException("El movimiento no existe");
         // Aislamiento (obs 228): no se anulan movimientos de otra empresa
-        if (empresaContexto == null || !empresaContexto.equals(ie.getEmpresa())) {
+        if (empresaContexto == null || !empresaContexto.equals(ie.getTenant())) {
             throw new NegocioException("El movimiento pertenece a otra empresa");
         }
         if ("ANULADO".equals(ie.getEstado())) throw new NegocioException("Ya está anulado");

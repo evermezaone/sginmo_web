@@ -42,7 +42,7 @@ public class ContextoEmpresa implements Serializable {
         if (cargado || !sesion.isLogueado()) {
             return;
         }
-        empresa = empresaService.buscar(sesion.getUsuario().getEmpresa());
+        empresa = empresaService.buscar(sesion.getUsuario().getTenant());
         if (empresa != null) {
             sucursales = empresaService.sucursalesActivasDe(empresa.getId());
             String guardada = preferencias.leer(sesion.getUsuario().getId(), PANTALLA, CLAVE);

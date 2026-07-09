@@ -44,7 +44,7 @@ public class LiquidacionService {
         if (empresa == null) return 0;
         var q = em.createQuery(
             "SELECT COUNT(l) FROM Liquidacion l, Operacion o, Persona p"
-            + " WHERE o.id = l.operacion AND p.id = o.cliente AND o.empresa = :emp"
+            + " WHERE o.id = l.operacion AND p.id = o.cliente AND o.tenant = :emp"
             + " AND (:f = '' OR lower(p.nombre) LIKE :like)", Long.class);
         q.setParameter("emp", empresa);
         aplicar(q, filtro);
@@ -56,7 +56,7 @@ public class LiquidacionService {
         if (empresa == null) return java.util.List.of();
         var q = em.createQuery(
             "SELECT l, p.nombre, o.id FROM Liquidacion l, Operacion o, Persona p"
-            + " WHERE o.id = l.operacion AND p.id = o.cliente AND o.empresa = :emp"
+            + " WHERE o.id = l.operacion AND p.id = o.cliente AND o.tenant = :emp"
             + " AND (:f = '' OR lower(p.nombre) LIKE :like) ORDER BY l.id DESC", Object[].class);
         q.setParameter("emp", empresa);
         aplicar(q, filtro);
@@ -73,7 +73,7 @@ public class LiquidacionService {
         if (empresa == null) return java.util.List.of();
         return em.createQuery(
             "SELECT o.id, p.nombre, o.garantia FROM Operacion o, Persona p"
-            + " WHERE p.id = o.cliente AND o.tipoOperacion = 'ALQUILER' AND o.empresa = :emp"
+            + " WHERE p.id = o.cliente AND o.tipoOperacion = 'ALQUILER' AND o.tenant = :emp"
             + " AND NOT EXISTS (SELECT 1 FROM Liquidacion l WHERE l.operacion = o.id)"
             + " ORDER BY o.id DESC", Object[].class)
             .setParameter("emp", empresa).getResultList();
@@ -83,7 +83,7 @@ public class LiquidacionService {
     public BigDecimal garantiaDe(Long operacionId, Long empresa) {
         if (empresa == null) return BigDecimal.ZERO;
         var r = em.createQuery(
-                "SELECT o.garantia FROM Operacion o WHERE o.id = :o AND o.empresa = :emp", BigDecimal.class)
+                "SELECT o.garantia FROM Operacion o WHERE o.id = :o AND o.tenant = :emp", BigDecimal.class)
             .setParameter("o", operacionId).setParameter("emp", empresa).getResultList();
         return r.isEmpty() ? BigDecimal.ZERO : r.get(0);
     }
@@ -107,7 +107,7 @@ public class LiquidacionService {
         if (operacionId == null || empresa == null) return plantilla;
         // aislamiento (obs 233): no se calcula plantilla de operaciones de otra empresa
         Long ok = em.createQuery(
-                "SELECT COUNT(o) FROM Operacion o WHERE o.id = :o AND o.empresa = :emp", Long.class)
+                "SELECT COUNT(o) FROM Operacion o WHERE o.id = :o AND o.tenant = :emp", Long.class)
             .setParameter("o", operacionId).setParameter("emp", empresa).getSingleResult();
         if (ok == 0) return plantilla;
         Object pend = em.createNativeQuery(
@@ -167,7 +167,7 @@ public class LiquidacionService {
                     liq.getOperacion(), jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
             if (op == null) throw new NegocioException("La operación no existe");
             // aislamiento (obs 233): no se liquida/finaliza una operacion de OTRA empresa
-            if (!empresaContexto.equals(op.getEmpresa())) {
+            if (!empresaContexto.equals(op.getTenant())) {
                 throw new NegocioException("La operación pertenece a otra empresa");
             }
             if (esNueva && "VIGENTE".equals(op.getEstado())) {
