@@ -47,3 +47,25 @@ Eso contradice la compuerta corregida en `req.md` y `tools/multiempresa/README.m
 Correccion requerida: cambiar el generador para escribir por defecto en `tools/multiempresa/V26__multiempresa_esquema.sql` (staging) o exigir un argumento explicito de salida para promocion. La ruta activa `Desarrollo/sginmo-web/src/main/resources/db/migration/V26__multiempresa_esquema.sql` no debe ser el destino por defecto mientras V26 este bloqueada por secuencia.
 
 No se ejecuta `mvn package` porque el REQ vuelve a quedar rechazado por la compuerta incompleta.
+
+---
+
+## Reauditoria - 2026-07-09T08:44:01-04:00
+
+Estado: APROBADO_POR_CODEX
+
+### Obs 243 - Cerrada
+
+Verificado: `Desarrollo/sginmo-web/src/main/resources/db/migration/` contiene V1..V25 y no contiene `V26__multiempresa_esquema.sql`. La migracion V26 vive en `tools/multiempresa/V26__multiempresa_esquema.sql`, fuera del classpath activo de Flyway, con README de promocion manual cuando F2+F3 formen la unidad desplegable.
+
+### Obs 244 - Cerrada
+
+Verificado: `tools/multiempresa/gen_v26.py` ya escribe por defecto junto al propio script mediante `os.path.dirname(os.path.abspath(__file__))`, no en `db/migration`. La promocion a Flyway queda manual/documentada.
+
+## Verificacion final
+
+- `Test-Path Desarrollo/sginmo-web/src/main/resources/db/migration/V26__multiempresa_esquema.sql` -> `False`.
+- `Test-Path tools/multiempresa/V26__multiempresa_esquema.sql` -> `True`.
+- Build reactor desde `Desarrollo`: `mvn -q clean package` -> EXIT 0.
+
+Sin riesgos bloqueantes restantes para el alcance F1: migracion V26 queda verificada como artefacto staging y no se aplica sola en deploy.

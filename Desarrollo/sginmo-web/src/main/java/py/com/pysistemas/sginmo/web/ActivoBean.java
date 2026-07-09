@@ -101,7 +101,7 @@ public class ActivoBean implements Serializable {
 
     public void editar(Activo activo) {
         seleccionado = activo;
-        atributos = activoService.atributosDe(activo.getId(), activo.getTipoCodigo());
+        atributos = activoService.atributosDe(activo.getId(), activo.getTipo());
         propietarios = activoService.propietariosConId(activo.getId());
         nuevoPropietario = null;
         soloLectura = !sesion.puede(PANTALLA, "EDITAR");
@@ -111,7 +111,7 @@ public class ActivoBean implements Serializable {
     /** Al cambiar el tipo se recargan los atributos parametrizados de ese tipo. */
     public void tipoCambiado() {
         atributos = activoService.atributosDe(seleccionado == null ? null : seleccionado.getId(),
-                seleccionado == null ? null : seleccionado.getTipoCodigo());
+                seleccionado == null ? null : seleccionado.getTipo());
     }
 
     public List<Activo> completarContenedor(String texto) {
@@ -124,7 +124,7 @@ public class ActivoBean implements Serializable {
             if (soloLectura || !sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) return;
             activoService.guardar(seleccionado, atributos);
             if (esNuevo) {
-                atributos = activoService.atributosDe(seleccionado.getId(), seleccionado.getTipoCodigo());
+                atributos = activoService.atributosDe(seleccionado.getId(), seleccionado.getTipo());
             }
             aviso(FacesMessage.SEVERITY_INFO, esNuevo ? "Activo creado" : "Activo actualizado", seleccionado.getNombre());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgActivo').hide()");
@@ -172,8 +172,10 @@ public class ActivoBean implements Serializable {
         }
     }
 
-    public String descripcionTipo(String codigo) {
-        return tipos.stream().filter(t -> t.getCodigo().equals(codigo)).map(Entidad::getDescripcion).findFirst().orElse(codigo);
+    public String descripcionTipo(Long id) {
+        if (id == null) return "";
+        return tipos.stream().filter(t -> t.getId().equals(id)).map(Entidad::getDescripcion)
+                .findFirst().orElse(String.valueOf(id));
     }
 
     private void aviso(FacesMessage.Severity s, String t, String d) {

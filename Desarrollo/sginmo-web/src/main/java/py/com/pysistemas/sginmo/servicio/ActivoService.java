@@ -25,7 +25,7 @@ import java.util.Map;
 public class ActivoService {
 
     private static final Map<String, String> ORDEN = Map.of(
-        "nombre", "a.nombre", "tipoCodigo", "a.tipoCodigo", "estado", "a.estado",
+        "nombre", "a.nombre", "tipo", "a.tipo", "estado", "a.estado",
         "precioVenta", "a.precioVenta", "precioAlquiler", "a.precioAlquiler");
 
     /** Tipos de activo que pueden contener lotes (generacion masiva, REQ-0015). */
@@ -34,6 +34,20 @@ public class ActivoService {
 
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
+
+    /** Resuelve id de opciones de catalogo (V26: Activo.tipo es id de entidad). */
+    @jakarta.inject.Inject
+    private CatalogoService catalogoService;
+
+    /** Ids de las opciones TIPOS_ACTIVO que son contenedores de lote. */
+    private java.util.Set<Long> tiposContenedorLoteIds() {
+        java.util.Set<Long> ids = new java.util.HashSet<>();
+        for (String cod : TIPOS_CONTENEDOR_LOTE) {
+            Long id = catalogoService.idOpcion("TIPOS_ACTIVO", cod);
+            if (id != null) ids.add(id);
+        }
+        return ids;
+    }
 
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
@@ -82,9 +96,9 @@ public class ActivoService {
     public List<Activo> buscarLoteamiento(String texto) {
         String f = texto == null ? "" : texto.trim().toLowerCase();
         return em.createQuery(
-                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND a.tipoCodigo IN :tipos ORDER BY a.nombre",
+                "SELECT a FROM Activo a WHERE lower(a.nombre) LIKE :like AND a.tipo IN :tipos ORDER BY a.nombre",
                 Activo.class)
-            .setParameter("like", f + "%").setParameter("tipos", TIPOS_CONTENEDOR_LOTE)
+            .setParameter("like", f + "%").setParameter("tipos", tiposContenedorLoteIds())
             .setMaxResults(15).getResultList();
     }
 
@@ -106,16 +120,16 @@ public class ActivoService {
     // ── Atributos por tipo (definicion + valor) ──
 
     @SuppressWarnings("unchecked")
-    public List<ActivoAtributoValor> atributosDe(Long activoId, String tipoCodigo) {
+    public List<ActivoAtributoValor> atributosDe(Long activoId, Long tipoId) {
         var filas = em.createNativeQuery(
             "SELECT at.atributo, at.descripcion, at.tipo_dato, apt.obligatorio, "
             + "  aa.activo_atributo, aa.valor "
             + "FROM atributo_por_tipo apt "
             + "JOIN atributo at ON at.atributo = apt.atributo AND at.estado = 'ACTIVO' "
             + "LEFT JOIN activo_atributo aa ON aa.atributo = at.atributo AND aa.activo = :act "
-            + "WHERE apt.tipo_codigo = :tipo ORDER BY at.descripcion")
+            + "WHERE apt.tipo = :tipo ORDER BY at.descripcion")
             .setParameter("act", activoId == null ? -1L : activoId)
-            .setParameter("tipo", tipoCodigo == null ? "" : tipoCodigo)
+            .setParameter("tipo", tipoId == null ? -1L : tipoId)
             .getResultList();
         List<ActivoAtributoValor> res = new ArrayList<>();
         for (Object fo : filas) {
@@ -156,7 +170,7 @@ public class ActivoService {
         if (activo.getNombre() == null || activo.getNombre().isBlank()) {
             throw new NegocioException("El nombre es obligatorio");
         }
-        if (activo.getTipoCodigo() == null || activo.getTipoCodigo().isBlank()) {
+        if (activo.getTipo() == null) {
             throw new NegocioException("El tipo de activo es obligatorio");
         }
         if (activo.getPadre() != null) {
@@ -234,7 +248,7 @@ public class ActivoService {
         if (padre == null) {
             throw new NegocioException("El contenedor no existe");
         }
-        if (!TIPOS_CONTENEDOR_LOTE.contains(padre.getTipoCodigo())) {
+        if (!TIPOS_CONTENEDOR_LOTE.contains(catalogoService.codigoOpcion(padre.getTipo()))) {
             throw new NegocioException("El contenedor debe ser un LOTEAMIENTO o BARRIO_CERRADO; '"
                     + padre.getNombre() + "' no puede contener lotes");
         }
@@ -258,7 +272,7 @@ public class ActivoService {
             }
             var lote = new Activo();
             lote.setPadre(contenedorId);
-            lote.setTipoCodigo(tipo);
+            lote.setTipo(catalogoService.idOpcion("TIPOS_ACTIVO", tipo));
             lote.setNombre(padre.getNombre() + " - Lote " + numero
                     + (mz == null ? "" : " Mz " + mz));
             lote.setNumeroLote(numero);

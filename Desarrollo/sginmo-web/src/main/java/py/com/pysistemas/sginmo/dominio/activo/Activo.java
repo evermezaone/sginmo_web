@@ -31,8 +31,8 @@ public class Activo extends Auditable implements Serializable {
     @Column(name = "nombre", length = 180, nullable = false)
     private String nombre;
 
-    @Column(name = "tipo_codigo", length = 40, nullable = false)
-    private String tipoCodigo;
+    @Column(name = "tipo", nullable = false)
+    private Long tipo;                   // FK bigint a entidad (lista TIPOS_ACTIVO)
 
     @Column(name = "tenant", nullable = false)
     private Long tenant;
@@ -80,8 +80,8 @@ public class Activo extends Auditable implements Serializable {
     public void setPadre(Long padre) { this.padre = padre; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
-    public String getTipoCodigo() { return tipoCodigo; }
-    public void setTipoCodigo(String tipoCodigo) { this.tipoCodigo = tipoCodigo; }
+    public Long getTipo() { return tipo; }
+    public void setTipo(Long tipo) { this.tipo = tipo; }
     public Long getTenant() { return tenant; }
     public void setTenant(Long tenant) { this.tenant = tenant; }
     public Long getUbicacion() { return ubicacion; }

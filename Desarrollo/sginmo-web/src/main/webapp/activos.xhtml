@@ -36,8 +36,8 @@
             <p:column headerText="Nombre" sortBy="#{act.nombre}" toggleable="false">
                 <h:outputText value="#{act.nombre}"/>
             </p:column>
-            <p:column headerText="Tipo" sortBy="#{act.tipoCodigo}" style="width:10rem;">
-                <h:outputText value="#{activoBean.descripcionTipo(act.tipoCodigo)}"/>
+            <p:column headerText="Tipo" sortBy="#{act.tipo}" style="width:10rem;">
+                <h:outputText value="#{activoBean.descripcionTipo(act.tipo)}"/>
             </p:column>
             <p:column headerText="Precio venta" sortBy="#{act.precioVenta}" style="width:9rem; text-align:right;">
                 <h:outputText value="#{act.precioVenta}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
@@ -111,10 +111,10 @@
                             </div>
                             <div class="campo">
                                 <label>Tipo *</label>
-                                <p:selectOneMenu value="#{activoBean.seleccionado.tipoCodigo}" required="true" label="Tipo"
+                                <p:selectOneMenu value="#{activoBean.seleccionado.tipo}" required="true" label="Tipo"
                                                  disabled="#{activoBean.soloLectura}" requiredMessage="El tipo es obligatorio">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{activoBean.tipos}" var="tp" itemLabel="#{tp.descripcion}" itemValue="#{tp.codigo}"/>
+                                    <f:selectItems value="#{activoBean.tipos}" var="tp" itemLabel="#{tp.descripcion}" itemValue="#{tp.id}"/>
                                     <p:ajax listener="#{activoBean.tipoCambiado()}" update="tabs:tblAtributos"/>
                                 </p:selectOneMenu>
                             </div>

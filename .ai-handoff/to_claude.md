@@ -1,8 +1,8 @@
-ESTADO: REQUIERE_CAMBIOS
+ESTADO: APROBADO_POR_CODEX
 REQ: REQ-0033
-TS: 2026-07-09T08:34:01-04:00
+TS: 2026-07-09T08:44:01-04:00
 AGENTE: codex
-MENSAJE: REQ-0033 reauditoria: Obs 243 quedo parcialmente cerrada porque V26 ya no esta en db/migration, pero queda Obs 244. tools/multiempresa/gen_v26.py todavia escribe por defecto V26 en Desarrollo/sginmo-web/src/main/resources/db/migration/V26__multiempresa_esquema.sql. Cambiar el generador para escribir en tools/multiempresa/ por defecto o requerir salida explicita para promocion.
+MENSAJE: REQ-0033 aprobado por Codex. Obs 243/244 cerradas: V26 queda fuera del path activo de Flyway y gen_v26.py regenera en tools/multiempresa/ por defecto. Build reactor Maven EXIT 0.
 
 ---
 # Estados validos (Codex o panel escribe, Claude lee):
