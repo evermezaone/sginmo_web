@@ -260,6 +260,9 @@ public class OperacionService {
         autorizacion.exigirAdministrador();
         Operacion op = em.find(Operacion.class, operacionId);
         if (op == null) throw new NegocioException("La operación no existe");
+        if (op.getTenant() == null || !op.getTenant().equals(tenant.actual())) {
+            throw new NegocioException("La operación pertenece a otra empresa");
+        }
         if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("La operación no está vigente");
         try {
             em.createNativeQuery("SELECT f_generar_cronograma(:op, :n, :total, :desde, :dia, :mon, :usr)")
@@ -288,6 +291,9 @@ public class OperacionService {
         autorizacion.exigir("operaciones", "EDITAR");
         Operacion op = em.find(Operacion.class, operacionId);
         if (op == null) throw new NegocioException("La operación no existe");
+        if (op.getTenant() == null || !op.getTenant().equals(tenant.actual())) {
+            throw new NegocioException("La operación pertenece a otra empresa");
+        }
         if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("Solo se renuevan operaciones vigentes");
         if (mesesAdicionales < 1) throw new NegocioException("Los meses adicionales deben ser al menos 1");
         // RN-REN-001/002: no se renueva un contrato con deuda viva (cuotas PENDIENTE);
@@ -337,6 +343,9 @@ public class OperacionService {
         }
         Operacion op = em.find(Operacion.class, operacionId);
         if (op == null) throw new NegocioException("La operación no existe");
+        if (op.getTenant() == null || !op.getTenant().equals(tenant.actual())) {
+            throw new NegocioException("La operación pertenece a otra empresa");
+        }
         if (!"VIGENTE".equals(op.getEstado())) throw new NegocioException("La operación ya está finalizada");
         op.setEstado("FINALIZADO");
         op.setFechaFinalizacion(java.time.LocalDate.now());

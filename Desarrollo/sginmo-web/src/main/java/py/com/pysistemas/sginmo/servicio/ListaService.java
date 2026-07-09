@@ -25,18 +25,31 @@ public class ListaService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
-    /** Nombres de listas existentes (para el combo selector de la pantalla). */
+    /** Aislamiento por tenant (F4): opciones visibles = globales (-1) + del tenant; se edita lo propio. */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
+    /** Editable: el propio tenant, o -1 solo por SUPERADMIN. */
+    private boolean editable(Long t) {
+        return t != null && (t.equals(tenant.actual())
+                || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(t) && tenant.esSuperadmin()));
+    }
+
+    /** Nombres de listas existentes visibles al tenant (para el combo selector). */
     public List<String> listas() {
-        return em.createQuery("SELECT DISTINCT e.lista FROM Entidad e ORDER BY e.lista", String.class)
-            .getResultList();
+        return em.createQuery(
+                "SELECT DISTINCT e.lista FROM Entidad e WHERE e.tenant = -1 OR e.tenant = :t ORDER BY e.lista", String.class)
+            .setParameter("t", tenant.actual()).getResultList();
     }
 
     public List<Entidad> opcionesDe(String lista, String filtro) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         return em.createQuery(
-                "SELECT e FROM Entidad e WHERE e.lista = :lista AND (:f = '' OR lower(e.codigo) LIKE :like OR lower(e.descripcion) LIKE :like) ORDER BY e.descripcion",
+                "SELECT e FROM Entidad e WHERE e.lista = :lista AND (e.tenant = -1 OR e.tenant = :t)"
+                + " AND (:f = '' OR lower(e.codigo) LIKE :like OR lower(e.descripcion) LIKE :like) ORDER BY e.descripcion",
                 Entidad.class)
-            .setParameter("lista", lista).setParameter("f", f).setParameter("like", "%" + f + "%")
+            .setParameter("lista", lista).setParameter("t", tenant.actual())
+            .setParameter("f", f).setParameter("like", "%" + f + "%")
             .getResultList();
     }
 
@@ -54,8 +67,8 @@ public class ListaService {
             if (esNueva) {
                 opcion.setLista(opcion.getLista().trim().toUpperCase());
                 opcion.setCodigo(opcion.getCodigo().trim());
-                // TODO(F6): el tenant sale del contexto (SUPERADMIN edita -1; ADMIN su tenant).
-                if (opcion.getTenant() == null) opcion.setTenant(-1L);
+                // El alta pertenece al tenant del usuario (SUPERADMIN crea -1 globales).
+                opcion.setTenant(tenant.actual());
                 Long dup = em.createQuery(
                         "SELECT COUNT(e) FROM Entidad e WHERE e.lista = :l AND e.codigo = :c AND e.tenant = :t", Long.class)
                     .setParameter("l", opcion.getLista()).setParameter("c", opcion.getCodigo())
@@ -65,6 +78,10 @@ public class ListaService {
                 }
                 em.persist(opcion);
             } else {
+                Entidad enBd = em.find(Entidad.class, opcion.getId());
+                if (enBd == null) throw new NegocioException("La opción no existe");
+                if (!editable(enBd.getTenant())) throw new NegocioException("La opción pertenece a otra empresa");
+                opcion.setTenant(enBd.getTenant());   // el tenant no se cambia por edicion
                 opcion = em.merge(opcion);
             }
             em.flush();
@@ -81,6 +98,7 @@ public class ListaService {
         autorizacion.exigir("listas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Entidad e = em.find(Entidad.class, id);
         if (e == null) throw new NegocioException("La opción no existe");
+        if (!editable(e.getTenant())) throw new NegocioException("La opción pertenece a otra empresa");
         e.setEstado(estadoNuevo);
     }
 }
