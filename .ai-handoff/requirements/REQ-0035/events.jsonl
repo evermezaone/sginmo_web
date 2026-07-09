@@ -1,0 +1,2 @@
+{"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F3: SPs del motor + SQL nativo adaptados al V26"}
+{"ts":"2026-07-09T00:00:02.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"V27 (3 SPs) verificada funcionalmente sobre V26 (rollback); SQL nativo Java corregido; mvn package EXIT 0"}

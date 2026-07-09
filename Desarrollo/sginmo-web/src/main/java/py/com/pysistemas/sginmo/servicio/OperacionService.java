@@ -209,9 +209,9 @@ public class OperacionService {
         Object num = em.createNativeQuery("SELECT f_siguiente_numero(:emp, 'DINT', 'OP')")
             .setParameter("emp", op.getTenant()).getSingleResult();
         em.createNativeQuery(
-            "INSERT INTO documento (empresa, tipo_codigo, serie, numero, fecha, persona, sucursal,"
+            "INSERT INTO documento (tenant, empresa, tipo, serie, numero, fecha, persona, sucursal,"
             + " moneda, direccion_dinero, observacion, usuario_creacion, fecha_creacion)"
-            + " VALUES (:emp, 'DINT', 'OP', :num, :fec, :per, :suc, :mon, 'ENTRADA', :obs, :usr, now())")
+            + " VALUES (:emp, :emp, 'DINT', 'OP', :num, :fec, :per, :suc, :mon, 'ENTRADA', :obs, :usr, now())")
             .setParameter("emp", op.getTenant()).setParameter("num", ((Number) num).longValue())
             .setParameter("fec", java.sql.Date.valueOf(op.getFechaOperacion()))
             .setParameter("per", op.getCliente()).setParameter("suc", op.getSucursal())
@@ -219,7 +219,7 @@ public class OperacionService {
             .setParameter("usr", usr)
             .executeUpdate();
         Object doc = em.createNativeQuery(
-            "SELECT documento FROM documento WHERE empresa = :emp AND tipo_codigo = 'DINT' AND serie = 'OP' AND numero = :num")
+            "SELECT documento FROM documento WHERE tenant = :emp AND tipo = 'DINT' AND serie = 'OP' AND numero = :num")
             .setParameter("emp", op.getTenant()).setParameter("num", ((Number) num).longValue())
             .getSingleResult();
         Long docId = ((Number) doc).longValue();

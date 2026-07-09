@@ -54,15 +54,15 @@ public class InicioBean implements Serializable {
             return;
         }
         // activos sin empresa asignada son globales (mismo criterio que listadoActivos, obs 236)
-        activosLibres = num("SELECT COUNT(*) FROM activo WHERE estado = 'LIBRE' AND (empresa = :emp OR empresa IS NULL)", emp);
-        activosOcupados = num("SELECT COUNT(*) FROM activo WHERE estado = 'OCUPADA' AND (empresa = :emp OR empresa IS NULL)", emp);
-        activosVendidos = num("SELECT COUNT(*) FROM activo WHERE estado = 'VENDIDA' AND (empresa = :emp OR empresa IS NULL)", emp);
-        operacionesVigentes = num("SELECT COUNT(*) FROM operacion WHERE estado = 'VIGENTE' AND empresa = :emp", emp);
+        activosLibres = num("SELECT COUNT(*) FROM activo WHERE estado = 'LIBRE' AND tenant = :emp", emp);
+        activosOcupados = num("SELECT COUNT(*) FROM activo WHERE estado = 'OCUPADA' AND tenant = :emp", emp);
+        activosVendidos = num("SELECT COUNT(*) FROM activo WHERE estado = 'VENDIDA' AND tenant = :emp", emp);
+        operacionesVigentes = num("SELECT COUNT(*) FROM operacion WHERE estado = 'VIGENTE' AND tenant = :emp", emp);
         cuotasVencidas = num("SELECT COUNT(*) FROM cronograma_cuota cc JOIN operacion o ON o.operacion = cc.operacion"
-                + " WHERE cc.estado = 'PENDIENTE' AND cc.fecha_vencimiento < current_date AND o.empresa = :emp", emp);
-        recaudadoHoy = dec("SELECT COALESCE(SUM(monto),0) FROM cobro WHERE estado = 'ACTIVO' AND fecha = current_date AND empresa = :emp", emp);
+                + " WHERE cc.estado = 'PENDIENTE' AND cc.fecha_vencimiento < current_date AND o.tenant = :emp", emp);
+        recaudadoHoy = dec("SELECT COALESCE(SUM(monto),0) FROM cobro WHERE estado = 'ACTIVO' AND fecha = current_date AND tenant = :emp", emp);
         saldoPorCobrar = dec("SELECT COALESCE(SUM(s.saldo_pendiente),0) FROM v_operacion_saldo s"
-                + " JOIN operacion o ON o.operacion = s.operacion WHERE o.empresa = :emp", emp);
+                + " JOIN operacion o ON o.operacion = s.operacion WHERE o.tenant = :emp", emp);
     }
 
     private long num(String sql, Long emp) {

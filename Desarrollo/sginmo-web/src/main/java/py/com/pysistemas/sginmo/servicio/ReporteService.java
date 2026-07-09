@@ -39,7 +39,7 @@ public class ReporteService {
     private String empresaDe(Long cobroOEmpresaId, boolean esEmpresa) {
         Long emp = cobroOEmpresaId;
         if (!esEmpresa) {
-            var r = em.createNativeQuery("SELECT empresa FROM cobro WHERE cobro = :c").setParameter("c", cobroOEmpresaId).getResultList();
+            var r = em.createNativeQuery("SELECT tenant FROM cobro WHERE cobro = :c").setParameter("c", cobroOEmpresaId).getResultList();
             emp = r.isEmpty() ? null : ((Number) r.get(0)).longValue();
         }
         if (emp == null) return "SGInmo";
@@ -56,7 +56,7 @@ public class ReporteService {
         List<Object[]> cab = em.createNativeQuery(
             "SELECT c.cobro, c.fecha, c.monto, COALESCE(p.nombre,'-'), COALESCE(fp.descripcion,'Efectivo'), c.estado"
             + " FROM cobro c LEFT JOIN persona p ON p.persona=c.persona"
-            + " LEFT JOIN forma_pago fp ON fp.forma_pago=c.forma_pago WHERE c.cobro=:c AND c.empresa=:emp")
+            + " LEFT JOIN forma_pago fp ON fp.forma_pago=c.forma_pago WHERE c.cobro=:c AND c.tenant=:emp")
             .setParameter("c", cobroId).setParameter("emp", empresaContexto).getResultList();
         if (cab.isEmpty()) throw new py.com.one.core.NegocioException("El cobro no existe");
         Object[] c = cab.get(0);
@@ -66,7 +66,7 @@ public class ReporteService {
         pdf.parrafo(r, "Forma de pago: " + txt(c[4]));
         pdf.espacio(r);
         List<Object[]> det = em.createNativeQuery(
-            "SELECT d.tipo_codigo, d.serie, d.numero, cd.monto"
+            "SELECT d.tipo, d.serie, d.numero, cd.monto"
             + " FROM cobro_detalle cd JOIN documento d ON d.documento=cd.documento"
             + " WHERE cd.cobro=:c AND cd.estado='ACTIVO'")
             .setParameter("c", cobroId).getResultList();
@@ -87,10 +87,10 @@ public class ReporteService {
         if (empresaContexto == null) throw new py.com.one.core.NegocioException("Falta el contexto de empresa");
         // aislamiento (obs 236): la operacion debe ser de la empresa del contexto
         List<Object[]> cab = em.createNativeQuery(
-            "SELECT o.operacion, p.nombre, a.nombre, o.monto_total_operacion, o.empresa,"
+            "SELECT o.operacion, p.nombre, a.nombre, o.monto_total_operacion, o.tenant,"
             + " s.saldo_pendiente, s.total_cancelado"
             + " FROM operacion o JOIN persona p ON p.persona=o.cliente JOIN activo a ON a.activo=o.activo"
-            + " JOIN v_operacion_saldo s ON s.operacion=o.operacion WHERE o.operacion=:o AND o.empresa=:emp")
+            + " JOIN v_operacion_saldo s ON s.operacion=o.operacion WHERE o.operacion=:o AND o.tenant=:emp")
             .setParameter("o", operacionId).setParameter("emp", empresaContexto).getResultList();
         if (cab.isEmpty()) throw new py.com.one.core.NegocioException("La operación no existe");
         Object[] o = cab.get(0);
@@ -122,8 +122,8 @@ public class ReporteService {
         if (empresaContexto == null) throw new py.com.one.core.NegocioException("Falta el contexto de empresa");
         // aislamiento (obs 236): la planilla debe ser de la empresa del contexto
         List<Object[]> cab = em.createNativeQuery(
-            "SELECT pl.planilla, pl.fecha_apertura, pl.monto_apertura, pl.monto_cobro, pl.estado, pl.empresa"
-            + " FROM planilla pl WHERE pl.planilla=:p AND pl.empresa=:emp")
+            "SELECT pl.planilla, pl.fecha_apertura, pl.monto_apertura, pl.monto_cobro, pl.estado, pl.tenant"
+            + " FROM planilla pl WHERE pl.planilla=:p AND pl.tenant=:emp")
             .setParameter("p", planillaId).setParameter("emp", empresaContexto).getResultList();
         if (cab.isEmpty()) throw new py.com.one.core.NegocioException("La planilla no existe");
         Object[] pl = cab.get(0);
@@ -154,8 +154,8 @@ public class ReporteService {
         // aislamiento (obs 236): activos de la empresa del contexto (los sin empresa son globales)
         var r = pdf.iniciar(empresaDe(empresaContexto, true), "LISTADO DE ACTIVOS / PROPIEDADES", usuario, null);
         List<Object[]> activos = em.createNativeQuery(
-            "SELECT a.nombre, a.tipo_codigo, a.precio_venta, a.precio_alquiler, a.estado"
-            + " FROM activo a WHERE a.empresa = :emp OR a.empresa IS NULL ORDER BY a.nombre")
+            "SELECT a.nombre, a.tipo, a.precio_venta, a.precio_alquiler, a.estado"
+            + " FROM activo a WHERE a.tenant = :emp ORDER BY a.nombre")
             .setParameter("emp", empresaContexto).getResultList();
         var filas = new ArrayList<String[]>();
         for (Object[] a : activos) {

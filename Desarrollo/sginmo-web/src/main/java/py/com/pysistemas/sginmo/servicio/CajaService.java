@@ -73,7 +73,7 @@ public class CajaService {
     @SuppressWarnings("unchecked")
     public List<Object[]> documentosPendientesDe(Long personaId) {
         return em.createNativeQuery(
-            "SELECT d.documento, d.tipo_codigo, d.serie, d.numero, d.fecha, d.total, d.saldo, d.observacion"
+            "SELECT d.documento, d.tipo, d.serie, d.numero, d.fecha, d.total, d.saldo, d.observacion"
             + " FROM documento d WHERE d.persona = :per AND d.estado = 'PENDIENTE'"
             + " AND d.direccion_dinero = 'ENTRADA' AND d.saldo > 0 ORDER BY d.fecha, d.documento")
             .setParameter("per", personaId).getResultList();
@@ -145,7 +145,7 @@ public class CajaService {
         if (personaId == null) return java.util.List.of();
         List<Object[]> filas = em.createNativeQuery(
                 "SELECT documento, serie || '-' || numero AS etiqueta, saldo FROM documento"
-                + " WHERE persona = :p AND tipo_codigo = 'NTCR' AND estado <> 'ANULADO'"
+                + " WHERE persona = :p AND tipo = 'NTCR' AND estado <> 'ANULADO'"
                 + " ORDER BY documento DESC")
             .setParameter("p", personaId).getResultList();
         return filas.stream()
