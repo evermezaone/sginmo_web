@@ -12,6 +12,7 @@ import org.primefaces.model.SortMeta;
 import py.com.one.core.NegocioException;
 import py.com.one.security.web.SesionUsuario;
 import py.com.pysistemas.sginmo.dominio.persona.Persona;
+import py.com.pysistemas.sginmo.dominio.persona.PersonaEmpresa;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaJuridica;
 import py.com.pysistemas.sginmo.dominio.persona.Sucursal;
 import py.com.pysistemas.sginmo.servicio.EmpresaService;
@@ -38,6 +39,8 @@ public class EmpresaBean implements Serializable {
 
     private LazyDataModel<PersonaJuridica> modelo;
     private PersonaJuridica seleccionado;
+    /** Datos comerciales propios de la empresa (persona_empresa, tenant = ella misma). */
+    private PersonaEmpresa datosEmpresa = new PersonaEmpresa();
     private String filtroGlobal = "";
     private boolean soloLectura;
     private boolean consultaFiltrada;
@@ -70,6 +73,7 @@ public class EmpresaBean implements Serializable {
         if (!sesion.puede(PANTALLA, "CREAR")) return;
         seleccionado = new PersonaJuridica();
         seleccionado.setPersona(new Persona());
+        datosEmpresa = new PersonaEmpresa();
         sucursales = java.util.List.of();
         sucursalNueva = new Sucursal();
         soloLectura = false;
@@ -78,6 +82,8 @@ public class EmpresaBean implements Serializable {
 
     public void editar(PersonaJuridica empresa) {
         seleccionado = empresa;
+        datosEmpresa = empresaService.datosDe(empresa.getId());
+        if (datosEmpresa == null) datosEmpresa = new PersonaEmpresa();
         sucursales = empresaService.sucursalesDe(empresa.getId());
         sucursalNueva = new Sucursal();
         soloLectura = !sesion.puede(PANTALLA, "EDITAR");
@@ -88,7 +94,7 @@ public class EmpresaBean implements Serializable {
         try {
             boolean esNueva = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
-            empresaService.guardar(seleccionado);
+            empresaService.guardar(seleccionado, datosEmpresa);
             contexto.refrescar();
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Empresa creada" : "Empresa actualizada", seleccionado.getRazonSocial());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgEmpresa').hide()");
@@ -141,6 +147,8 @@ public class EmpresaBean implements Serializable {
     public LazyDataModel<PersonaJuridica> getModelo() { return modelo; }
     public PersonaJuridica getSeleccionado() { return seleccionado; }
     public void setSeleccionado(PersonaJuridica seleccionado) { this.seleccionado = seleccionado; }
+    public PersonaEmpresa getDatosEmpresa() { return datosEmpresa; }
+    public void setDatosEmpresa(PersonaEmpresa datosEmpresa) { this.datosEmpresa = datosEmpresa; }
     public String getFiltroGlobal() { return filtroGlobal; }
     public void setFiltroGlobal(String filtroGlobal) { this.filtroGlobal = filtroGlobal; }
     public boolean isSoloLectura() { return soloLectura; }

@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.persona.Persona;
+import py.com.pysistemas.sginmo.dominio.persona.PersonaEmpresa;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaJuridica;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaRol;
 import py.com.pysistemas.sginmo.dominio.persona.Sucursal;
@@ -72,7 +73,24 @@ public class EmpresaService {
     // ── Escrituras ──
 
     @Transactional
-    public PersonaJuridica guardar(PersonaJuridica empresa) {
+    /** Datos comerciales propios de la empresa (persona_empresa con tenant = ella misma). */
+    public PersonaEmpresa datosDe(Long empresaId) {
+        if (empresaId == null) return null;
+        var r = em.createQuery(
+                "SELECT pe FROM PersonaEmpresa pe WHERE pe.persona = :p AND pe.tenant = :p", PersonaEmpresa.class)
+            .setParameter("p", empresaId).getResultList();
+        return r.isEmpty() ? null : r.get(0);
+    }
+
+    private void guardarDatosEmpresa(Long empresaId, PersonaEmpresa datos) {
+        if (datos == null || empresaId == null) return;
+        datos.setPersona(empresaId);
+        datos.setTenant(empresaId);          // la empresa es su propio tenant
+        if (datos.getEstado() == null) datos.setEstado("ACTIVO");
+        if (datos.getId() == null) em.persist(datos); else em.merge(datos);
+    }
+
+    public PersonaJuridica guardar(PersonaJuridica empresa, PersonaEmpresa datos) {
         boolean esNueva = empresa.getId() == null;
         autorizacion.exigir("empresas", esNueva ? "CREAR" : "EDITAR");
         Persona p = empresa.getPersona();
@@ -106,6 +124,8 @@ public class EmpresaService {
             } else {
                 resultado = em.merge(empresa);
             }
+            em.flush();
+            guardarDatosEmpresa(resultado.getId(), datos);
             em.flush();
             return resultado;
         } catch (jakarta.persistence.OptimisticLockException e) {

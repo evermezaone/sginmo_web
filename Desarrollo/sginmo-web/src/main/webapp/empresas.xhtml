@@ -29,15 +29,10 @@
             </f:facet>
             <p:column headerText="Razón social" toggleable="false">
                 <h:outputText value="#{emp.razonSocial}"/>
-                <h:outputText value=" (#{emp.nombreFantasia})" rendered="#{not empty emp.nombreFantasia}"
-                              style="color:#6c757d;"/>
             </p:column>
             <p:column headerText="RUC" style="width:9rem; white-space:nowrap;">
                 <h:outputText value="#{emp.persona.numeroDocumento}#{empty emp.persona.digitoVerificador ? '' : '-'}#{emp.persona.digitoVerificador}"
                               style="font-family:monospace;"/>
-            </p:column>
-            <p:column headerText="Teléfono" style="width:9rem;">
-                <h:outputText value="#{emp.persona.telefono}"/>
             </p:column>
             <p:column headerText="Estado" style="width:6.5rem; text-align:center;">
                 <p:tag value="#{emp.persona.estado}" severity="#{emp.persona.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
@@ -82,7 +77,7 @@
                             </div>
                             <div class="campo">
                                 <label>Nombre de fantasía</label>
-                                <p:inputText value="#{empresaBean.seleccionado.nombreFantasia}" label="Nombre de fantasía"
+                                <p:inputText value="#{empresaBean.datosEmpresa.nombreFantasia}" label="Nombre de fantasía"
                                              disabled="#{empresaBean.soloLectura}" maxlength="120"/>
                             </div>
                         </div>
@@ -100,18 +95,18 @@
                             </div>
                             <div class="campo">
                                 <label>Teléfono</label>
-                                <p:inputText value="#{empresaBean.seleccionado.persona.telefono}" label="Teléfono"
+                                <p:inputText value="#{empresaBean.datosEmpresa.telefono}" label="Teléfono"
                                              disabled="#{empresaBean.soloLectura}" maxlength="20"/>
                             </div>
                         </div>
                         <div class="campo">
                             <label>Dirección</label>
-                            <p:inputText value="#{empresaBean.seleccionado.persona.direccion}" label="Dirección"
+                            <p:inputText value="#{empresaBean.datosEmpresa.direccion}" label="Dirección"
                                          disabled="#{empresaBean.soloLectura}" maxlength="180" style="width:100%;"/>
                         </div>
                         <div class="campo">
                             <label>Email</label>
-                            <p:inputText value="#{empresaBean.seleccionado.persona.email}" label="Email" type="email"
+                            <p:inputText value="#{empresaBean.datosEmpresa.email}" label="Email" type="email"
                                          disabled="#{empresaBean.soloLectura}" maxlength="180" style="width:100%;"/>
                         </div>
                     </p:tab>
