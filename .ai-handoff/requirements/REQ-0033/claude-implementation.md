@@ -33,3 +33,11 @@ en verde y sin persistir nada. Evidencia en `test-plan.md`.
 V26 NO se aplica aun a la BD viva (sigue en V25). Aplicarla sola romperia la app
 desplegada (entidades/SP referencian empresa/tipo_codigo/*_lista). Se despliega junto a
 F2 (REQ-0034) y F3 (REQ-0035). Esta revision es del diseño y correctitud de la migracion.
+
+## obs 243 — compuerta de despliegue (RESUELTA)
+El bloqueo de secuencia ahora es EFECTIVO, no solo documental: V26 se movio a
+`tools/multiempresa/V26__multiempresa_esquema.sql` (FUERA de `classpath:db/migration`
+que `FlywayMigrator` ejecuta al arranque). Asi ningun deploy puede aplicar V26 antes de
+F2/F3. `db/migration/` queda con V1..V25. V26 se promueve a esa carpeta (git mv, ver
+`tools/multiempresa/README.md`) recien cuando F2+F3 esten listos como unidad desplegable.
+La evidencia reproducible (gen_v26.py + v26_checks.sql + rollback battery) sigue en staging.

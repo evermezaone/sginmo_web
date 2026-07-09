@@ -39,3 +39,12 @@ Cambios de la migracion `V26__multiempresa_esquema.sql`:
 La migracion NO se aplica aun a la BD viva: rompe la app desplegada (las entidades JPA
 y los SP todavia referencian empresa/tipo_codigo/*_lista). Se aplicara junto con F2
 (REQ-0034, entidades) y F3 (REQ-0035, SP) como unidad desplegable. La BD viva sigue en V25.
+
+## Compuerta de despliegue (obs 243)
+Para que el bloqueo sea EFECTIVO y no solo documental, V26 NO se entrega en el path
+activo de Flyway. `FlywayMigrator` corre `flyway.migrate()` sobre `classpath:db/migration`
+en cada arranque; si V26 estuviera ahi, el proximo deploy la aplicaria sola. Por eso V26
+vive en `tools/multiempresa/V26__multiempresa_esquema.sql` (staging, fuera del classpath
+del WAR) con su evidencia (gen + bateria + README). Se PROMUEVE a
+`Desarrollo/sginmo-web/src/main/resources/db/migration/` recien cuando F2+F3 formen la
+unidad desplegable. Asi ningun deploy puede aplicar V26 antes de tiempo.
