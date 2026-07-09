@@ -1,2 +1,4 @@
 {"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F6: SUPERADMIN, alta de empresas, UI por tenant"}
 {"ts":"2026-07-09T00:00:02.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"Alta unidad service+UI; aislamiento usuarios/grupos lecturas+escrituras; selector de tenant soporte; mvn package EXIT 0"}
+{"ts":"2026-07-09T00:01:20.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs257 operaciones de seguridad por id sin actorTenant; obs258 alta parcial via guardar"}
+{"ts":"2026-07-09T00:01:22.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"actorTenant+guardas en usuario/grupo por id; guardar rechaza alta nueva; mvn EXIT 0"}
