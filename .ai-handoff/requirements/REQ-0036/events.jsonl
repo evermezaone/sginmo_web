@@ -4,3 +4,5 @@
 {"ts":"2026-07-09T00:00:42.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"Guardas de pertenencia por id en los 5 services; mvn package EXIT 0"}
 {"ts":"2026-07-09T00:00:50.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs252/253: falta validar pertenencia de la contraparte (persona/propietario) en vinculos por id"}
 {"ts":"2026-07-09T00:00:52.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"agregarRol exige persona en cartera; agregarPropietario exige rol PROPIETARIO activo en el tenant; mvn EXIT 0"}
+{"ts":"2026-07-09T00:01:00.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs254: lecturas por id sin validar visibilidad/pertenencia"}
+{"ts":"2026-07-09T00:01:02.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"Guardas de visibilidad en lecturas por id de Operacion/Persona/Activo/Geografia; mvn EXIT 0"}
