@@ -63,20 +63,21 @@ public class GrupoBean implements Serializable {
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> filterBy) {
-                return (int) grupoService.contar(filtroGlobal);
+                return (int) grupoService.contar(filtroGlobal, sesion.tenantActual());
             }
 
             @Override
             public List<Grupo> load(int first, int pageSize,
                                     Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
-                return grupoService.listar(first, pageSize, filtroGlobal);
+                return grupoService.listar(first, pageSize, filtroGlobal, sesion.tenantActual());
             }
         };
     }
 
     private void cargarUsuarios() {
         var mapa = new java.util.LinkedHashMap<Long, py.com.one.security.dominio.Usuario>();
-        usuarioService.listar(0, 500, "").forEach(u -> mapa.put(u.getId(), u));
+        // F6: los integrantes visibles son los del tenant del contexto (SUPERADMIN todos).
+        usuarioService.listar(0, 500, "", sesion.tenantActual()).forEach(u -> mapa.put(u.getId(), u));
         usuariosPorId = mapa;
     }
 

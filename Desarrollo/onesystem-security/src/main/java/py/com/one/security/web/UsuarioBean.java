@@ -63,18 +63,19 @@ public class UsuarioBean implements Serializable {
     @PostConstruct
     public void iniciar() {
         pantallas = proveedorPantallas.pantallas();
-        gruposActivos = grupoService.gruposActivos();
-        gruposPorId = usuarioService.gruposPorId();
+        // F6: el ABM se aisla por tenant; SUPERADMIN (-1) ve todo, ADMINISTRADOR solo su empresa.
+        gruposActivos = grupoService.gruposActivos(sesion.tenantActual());
+        gruposPorId = usuarioService.gruposPorId(sesion.tenantActual());
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> filterBy) {
-                return (int) usuarioService.contar(filtroGlobal);
+                return (int) usuarioService.contar(filtroGlobal, sesion.tenantActual());
             }
 
             @Override
             public List<Usuario> load(int first, int pageSize,
                                       Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
-                return usuarioService.listar(first, pageSize, filtroGlobal);
+                return usuarioService.listar(first, pageSize, filtroGlobal, sesion.tenantActual());
             }
         };
     }

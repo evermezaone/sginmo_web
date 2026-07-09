@@ -57,6 +57,11 @@ public class SesionUsuario implements UsuarioActual, Serializable {
         return usuario != null && "ADMINISTRADOR".equals(usuario.getPerfil());
     }
 
+    /** Tenant (empresa) del usuario logueado; -1 = SUPERADMIN global. null si no hay sesion. */
+    public Long tenantActual() {
+        return usuario != null ? usuario.getTenant() : null;
+    }
+
     @Override
     public String codigoUsuario() {
         return usuario != null ? usuario.getCodigoUsuario() : SISTEMA;

@@ -32,26 +32,38 @@ public class UsuarioService {
 
     // ── Consultas ──
 
-    public long contar(String filtro) {
+    /** Tenant global -1 = SUPERADMIN: ve/gestiona los usuarios de TODAS las empresas. */
+    private static final Long TENANT_GLOBAL = -1L;
+
+    /** true si el contexto es SUPERADMIN (ve todo); null se trata como global por compatibilidad. */
+    private static boolean superadmin(Long tenantCtx) {
+        return tenantCtx == null || TENANT_GLOBAL.equals(tenantCtx);
+    }
+
+    public long contar(String filtro, Long tenantCtx) {
         var q = em.createQuery(
-            "SELECT COUNT(u) FROM Usuario u WHERE (:f = '' OR lower(u.codigoUsuario) LIKE :like OR lower(u.perfil) LIKE :like)",
+            "SELECT COUNT(u) FROM Usuario u WHERE (:sa = TRUE OR u.tenant = :t)"
+            + " AND (:f = '' OR lower(u.codigoUsuario) LIKE :like OR lower(u.perfil) LIKE :like)",
             Long.class);
-        aplicarFiltro(q, filtro);
+        aplicarFiltro(q, filtro, tenantCtx);
         return q.getSingleResult();
     }
 
-    public List<Usuario> listar(int primero, int cantidad, String filtro) {
+    public List<Usuario> listar(int primero, int cantidad, String filtro, Long tenantCtx) {
         var q = em.createQuery(
-            "SELECT u FROM Usuario u WHERE (:f = '' OR lower(u.codigoUsuario) LIKE :like OR lower(u.perfil) LIKE :like) ORDER BY u.codigoUsuario",
+            "SELECT u FROM Usuario u WHERE (:sa = TRUE OR u.tenant = :t)"
+            + " AND (:f = '' OR lower(u.codigoUsuario) LIKE :like OR lower(u.perfil) LIKE :like) ORDER BY u.codigoUsuario",
             Usuario.class);
-        aplicarFiltro(q, filtro);
+        aplicarFiltro(q, filtro, tenantCtx);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
     }
 
-    private void aplicarFiltro(jakarta.persistence.TypedQuery<?> q, String filtro) {
+    private void aplicarFiltro(jakarta.persistence.TypedQuery<?> q, String filtro, Long tenantCtx) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         q.setParameter("f", f);
         q.setParameter("like", "%" + f + "%");
+        q.setParameter("sa", superadmin(tenantCtx));
+        q.setParameter("t", tenantCtx);
     }
 
     public boolean existeCodigo(String codigo, Long exceptoId) {
@@ -122,10 +134,13 @@ public class UsuarioService {
             .getResultList();
     }
 
-    public java.util.Map<Long, py.com.one.security.dominio.Grupo> gruposPorId() {
+    public java.util.Map<Long, py.com.one.security.dominio.Grupo> gruposPorId(Long tenantCtx) {
         var mapa = new java.util.LinkedHashMap<Long, py.com.one.security.dominio.Grupo>();
-        em.createQuery("SELECT g FROM Grupo g ORDER BY g.descripcion",
-                py.com.one.security.dominio.Grupo.class)
+        // Visibles al contexto: SUPERADMIN todos; ADMINISTRADOR sus grupos + las plantillas -1.
+        em.createQuery("SELECT g FROM Grupo g WHERE (:sa = TRUE OR g.tenant = :t OR g.tenant = -1)"
+                + " ORDER BY g.descripcion", py.com.one.security.dominio.Grupo.class)
+            .setParameter("sa", superadmin(tenantCtx))
+            .setParameter("t", tenantCtx)
             .getResultList()
             .forEach(g -> mapa.put(g.getId(), g));
         return mapa;

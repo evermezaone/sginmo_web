@@ -28,30 +28,47 @@ public class GrupoService {
 
     // ── Consultas ──
 
-    public long contar(String filtro) {
+    /** Tenant global -1 = SUPERADMIN (ve todo) y hogar de los grupos plantilla. */
+    private static final Long TENANT_GLOBAL = -1L;
+
+    private static boolean superadmin(Long tenantCtx) {
+        return tenantCtx == null || TENANT_GLOBAL.equals(tenantCtx);
+    }
+
+    /** ABM: SUPERADMIN ve todos los grupos; ADMINISTRADOR sus grupos + las plantillas -1. */
+    public long contar(String filtro, Long tenantCtx) {
         var q = em.createQuery(
-            "SELECT COUNT(g) FROM Grupo g WHERE (:f = '' OR lower(g.codigo) LIKE :like OR lower(g.descripcion) LIKE :like)",
+            "SELECT COUNT(g) FROM Grupo g WHERE (:sa = TRUE OR g.tenant = :t OR g.tenant = -1)"
+            + " AND (:f = '' OR lower(g.codigo) LIKE :like OR lower(g.descripcion) LIKE :like)",
             Long.class);
-        aplicarFiltro(q, filtro);
+        aplicarFiltro(q, filtro, tenantCtx);
         return q.getSingleResult();
     }
 
-    public List<Grupo> listar(int primero, int cantidad, String filtro) {
+    public List<Grupo> listar(int primero, int cantidad, String filtro, Long tenantCtx) {
         var q = em.createQuery(
-            "SELECT g FROM Grupo g WHERE (:f = '' OR lower(g.codigo) LIKE :like OR lower(g.descripcion) LIKE :like) ORDER BY g.descripcion",
+            "SELECT g FROM Grupo g WHERE (:sa = TRUE OR g.tenant = :t OR g.tenant = -1)"
+            + " AND (:f = '' OR lower(g.codigo) LIKE :like OR lower(g.descripcion) LIKE :like) ORDER BY g.descripcion",
             Grupo.class);
-        aplicarFiltro(q, filtro);
+        aplicarFiltro(q, filtro, tenantCtx);
         return q.setFirstResult(primero).setMaxResults(cantidad).getResultList();
     }
 
-    private void aplicarFiltro(jakarta.persistence.TypedQuery<?> q, String filtro) {
+    private void aplicarFiltro(jakarta.persistence.TypedQuery<?> q, String filtro, Long tenantCtx) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         q.setParameter("f", f);
         q.setParameter("like", "%" + f + "%");
+        q.setParameter("sa", superadmin(tenantCtx));
+        q.setParameter("t", tenantCtx);
     }
 
-    public List<Grupo> gruposActivos() {
-        return em.createQuery("SELECT g FROM Grupo g WHERE g.estado = 'ACTIVO' ORDER BY g.descripcion", Grupo.class)
+    /** Grupos asignables a un usuario del contexto: los propios activos + las plantillas -1. */
+    public List<Grupo> gruposActivos(Long tenantCtx) {
+        return em.createQuery(
+                "SELECT g FROM Grupo g WHERE g.estado = 'ACTIVO' AND (:sa = TRUE OR g.tenant = :t OR g.tenant = -1)"
+                + " ORDER BY g.descripcion", Grupo.class)
+            .setParameter("sa", superadmin(tenantCtx))
+            .setParameter("t", tenantCtx)
             .getResultList();
     }
 
