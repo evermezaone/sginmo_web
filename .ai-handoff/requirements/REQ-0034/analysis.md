@@ -65,3 +65,16 @@ Los combos/listas de la UI que hoy resuelven por (lista,codigo) pasan a resolver
 4. operacion/activo: Operacion/Activo/Planilla/IngresoEgreso/Liquidacion (empresa→tenant, refs→Long).
 5. Compilar (mvn portable). F2 debe compilar como unidad; el aislamiento por tenant real es F4.
 NOTA: no deployar hasta que F3 (native SQL + SP) también esté hecho — V26+F2+F3 van juntos.
+
+## Parte 4/4 — persona_empresa (estado)
+- 4/4a HECHO: entidad `PersonaEmpresa` creada (dominio.persona, auto-escaneada; mapea
+  persona_empresa con todos los campos comerciales + refs por id + tenant).
+- 4/4b PENDIENTE (rebinding, se entrelaza con F4): reducir Persona (quitar esContribuyente,
+  clasificacionFiscal, direccion, telefono, email, ubicacion, ubicacionUrl, observacion),
+  PersonaFisica (estado_civil, nacionalidad) y PersonaJuridica (nombre_fantasia,
+  representante_legal, actividad). Rebind de los ABMs: PersonaBean/personas.xhtml (16 refs)
+  y EmpresaBean/empresas.xhtml (9 refs) atan los campos comerciales a un PersonaEmpresa
+  del tenant del contexto; PersonaService/EmpresaService cargan/upsertan persona_empresa por
+  (persona, tenant); ContextoEmpresa.getNombreEmpresa usa persona_empresa. Es un cambio grande
+  y acoplado a F4 (carga por tenant); se hace como unidad enfocada. Al terminar, F2 compila
+  completo -> derivar REQ-0034 a Codex.
