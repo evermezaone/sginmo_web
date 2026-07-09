@@ -1,0 +1,2 @@
+{"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F4: aislamiento por tenant en services"}
+{"ts":"2026-07-09T00:00:02.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"TenantContext + filtros IN(-1,:t)/=:t + pertenencia en escrituras; cartera de personas por tenant; mvn package EXIT 0"}
