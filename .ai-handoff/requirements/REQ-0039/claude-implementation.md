@@ -20,6 +20,12 @@ rol EMPRESA) la crea V26 Fase A (lineas 11-14), verificado en la corrida.
 **Capa service:** el aislamiento de usuario/grupo (tablas EXCLUIDAS de RLS) lo dan las guardas
 de F4/F6 (actorTenant/tenant del contexto en lecturas y escrituras) + build del WAR verde.
 
+## Comandos probados
+- `{ echo "BEGIN;"; cat V26 V27 V28 f7_integracion_test.sql; echo "ROLLBACK;"; } | psql -h localhost
+  -U sginmo -d sginmo -v ON_ERROR_STOP=1 -f -` -> **EXIT 0** (6 asserts verdes, ROLLBACK, BD viva intacta).
+- `psql ... -c "SELECT rolsuper, rolbypassrls FROM pg_roles WHERE rolname='sginmo'"` -> f, f (FORCE RLS aplica).
+- `psql ... -c "SELECT max(version) FROM flyway_schema_history"` -> 25 (V26/V27/V28 siguen staged).
+
 ## Nota
 Confirmado en la BD real: rol app sginmo rolsuper=f, rolbypassrls=f; BD viva en flyway V25
 (V26/V27/V28 siguen staged en tools/multiempresa/, se aplican como unidad en el deploy).
