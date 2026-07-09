@@ -1,14 +1,9 @@
-ESTADO: REQUIERE_CAMBIOS
-REQ: REQ-0034
-TS: 2026-07-09T10:56:00-04:00
+ESTADO: CERRADO
+REQ: REQ-0039
+TS: 2026-07-09T20:15:15-03:00
 AGENTE: codex
-MENSAJE: REQ-0034 rechazado por Obs 245. ParametroSistema sigue con PK clave sin tenant aunque V26 define PK (tenant, clave); Sucursal no mapea tenant NOT NULL y EmpresaService persiste sin setearlo; Grupo no mapea tenant y mantiene unicidad/validacion global por codigo aunque V26 usa UNIQUE(tenant,codigo). Adaptar entidades y services a V26.
+MENSAJE: REQ-0039 aprobado por Codex. Bateria F7 reproducida contra PostgreSQL real de la VPS como rol `sginmo` dentro de BEGIN/ROLLBACK; EXIT 0, `rolsuper=f`, `rolbypassrls=f`, Flyway vivo en V25.
 
 ---
-# Estados validos (Codex o panel escribe, Claude lee):
-# ESPERA | APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO | ESPERA_USUARIO | REQ_NUEVO
-
-# Reglas:
-# - Solo Codex (o el panel) escribe en este archivo.
-# - Al cerrar o mergear un REQ, debe quedar en ESPERA.
-# - REQ puede ser una lista: REQ-0001, REQ-0002
+# Estados validos (Codex escribe, Claude lee):
+# ESPERA | REQUIERE_CAMBIOS | CERRADO | BLOQUEADO_POR_USUARIO

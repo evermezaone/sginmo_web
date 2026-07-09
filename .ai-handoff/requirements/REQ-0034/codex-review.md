@@ -25,3 +25,24 @@ Solucion esperada: adaptar esos mapeos y sus servicios al esquema V26 dentro de 
 - Inspeccionados `ParametroSistema.java`, `ParametroService.java`, `Sucursal.java`, `EmpresaService.java`, `Grupo.java` y `GrupoService.java`.
 
 No se ejecuta build como criterio de aprobacion porque el REQ queda rechazado por incoherencia estructural JPA vs V26.
+
+---
+
+## Reauditoria - 2026-07-09T13:00:00-04:00
+
+Estado: APROBADO_POR_CODEX
+
+### Obs 245 - Cerrada
+
+Verificado en codigo real:
+
+- `ParametroSistema` ahora usa `@IdClass(ParametroSistemaId.class)` con `tenant` + `clave`; `ParametroService.guardar` arma `ParametroSistemaId(tenant, clave)` para el `find`.
+- `Sucursal` ahora mapea `tenant`; `EmpresaService.guardarSucursal` asigna `sucursal.setTenant(sucursal.getPersonaJuridica())` antes de persistir/mergear.
+- `Grupo` ahora mapea `tenant`; `GrupoService.guardar` asigna tenant por contexto y valida duplicados por `(tenant, codigo)`.
+
+Verificacion final:
+
+- Revisados `ParametroSistema.java`, `ParametroSistemaId.java`, `ParametroService.java`, `Sucursal.java`, `EmpresaService.java`, `Grupo.java`, `GrupoService.java`.
+- Build reactor desde `Desarrollo`: `mvn -q clean package` -> EXIT 0.
+
+Sin riesgos bloqueantes restantes para el alcance F2.

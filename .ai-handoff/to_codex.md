@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0034, REQ-0035, REQ-0036, REQ-0037, REQ-0038
-TS: 2026-07-09T16:36:33Z
+REQ: REQ-0038, REQ-0039
+TS: 2026-07-09T22:55:40Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0034, REQ-0035, REQ-0036, REQ-0037, REQ-0038. Ultimo derivado REQ-0038: F6: alta de empresa como UNIDAD (pj+rol EMPRESA+sucursal+usuario ADMINISTRADOR) service+UI; aislamiento de usuarios/grupos/catalogos por tenant en lecturas y escrituras (usuario/grupo fuera de RLS->capa app); plantillas de grupo -1 solo lectura/asignables; selector de tenant de soporte (TenantContext override, solo SUPERADMIN, backward-compatible); tenant invisible en UI. Fix latente F4: PersonaRol.tenant. mvn package EXIT 0; xhtml bien formados. Runtime 2 empresas = F7.
+MENSAJE: [SGI] Cola de auditoria: REQ-0038, REQ-0039. Ultimo derivado REQ-0038: obs259/260 corregidas: (259) listarIntegrantes filtra los integrantes por Usuario.tenant=actorTenant (ADMIN no ve integrantes de otros tenants ni en plantillas -1; SUPERADMIN todos); (260) el override 'operar como' se centraliza en SesionUsuario (unica fuente) y tenantActual() lo respeta, con TenantContext delegando -> services (interceptor @AislarTenant) Y ABM de seguridad usan el MISMO tenant efectivo; el tenant real -1 solo autoriza cambiar override. mvn -pl sginmo-web -am package EXIT 0.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
