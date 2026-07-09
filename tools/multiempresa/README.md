@@ -1,6 +1,18 @@
-# Multiempresa — migración V26 en staging (fuera de Flyway)
+# Multiempresa — migraciones V26/V27/V28
 
-`V26__multiempresa_esquema.sql` vive **acá a propósito**, NO en
+> **ESTADO 2026-07-09 — PROMOVIDAS.** Los 7 REQ (F1..F7) están CERRADOS y forman la unidad
+> desplegable, así que V26/V27/V28 **ya fueron promovidas** al path activo de Flyway
+> `Desarrollo/sginmo-web/src/main/resources/db/migration/` (la app arranca coherente porque
+> las entidades JPA y los SP ya usan `tenant`/`tipo`). Los archivos de ESTA carpeta se
+> conservan como **evidencia reproducible** (baterías `*_test.sql`, `v26_checks.sql`, gen_v26.py);
+> son un espejo idéntico de las migraciones activas. La copia autoritativa (la que aplica Flyway)
+> es la de `db/migration/`.
+
+---
+
+## Historial de la compuerta (obs 243, ya resuelta)
+
+Antes del cierre, `V26__multiempresa_esquema.sql` vivía SOLO acá, NO en
 `Desarrollo/sginmo-web/src/main/resources/db/migration/`.
 
 **Por qué (obs 243):** `FlywayMigrator` corre `flyway.migrate()` sobre
