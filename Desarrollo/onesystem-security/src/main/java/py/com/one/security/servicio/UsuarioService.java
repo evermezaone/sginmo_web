@@ -147,7 +147,19 @@ public class UsuarioService {
 
     // ── Grupos del usuario (V10) ──
 
-    public List<py.com.one.security.dominio.UsuarioGrupo> listarGruposDe(Long usuarioId) {
+    /** El usuario objetivo debe ser del tenant del actor (SUPERADMIN sin restriccion). Guarda
+     *  comun de las lecturas/escrituras por id sobre usuario (obs 257: usuario fuera de RLS). */
+    private void exigirUsuarioDelTenant(Long usuarioId, Long actorTenant) {
+        if (superadmin(actorTenant)) return;
+        Usuario u = usuarioId == null ? null : em.find(Usuario.class, usuarioId);
+        if (u == null) throw new NegocioException("El usuario no existe");
+        if (!actorTenant.equals(u.getTenant())) {
+            throw new NegocioException("El usuario pertenece a otra empresa");
+        }
+    }
+
+    public List<py.com.one.security.dominio.UsuarioGrupo> listarGruposDe(Long usuarioId, Long actorTenant) {
+        exigirUsuarioDelTenant(usuarioId, actorTenant);   // obs 257
         return em.createQuery(
                 "SELECT ug FROM UsuarioGrupo ug WHERE ug.usuario = :u ORDER BY ug.id",
                 py.com.one.security.dominio.UsuarioGrupo.class)
@@ -201,10 +213,11 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void quitarDeGrupo(Long usuarioGrupoId) {
+    public void quitarDeGrupo(Long usuarioGrupoId, Long actorTenant) {
         autorizacion.exigir("usuarios", "EDITAR");
         var ug = em.find(py.com.one.security.dominio.UsuarioGrupo.class, usuarioGrupoId);
         if (ug != null) {
+            exigirUsuarioDelTenant(ug.getUsuario(), actorTenant);   // obs 257
             em.remove(ug);
         }
     }
@@ -245,7 +258,8 @@ public class UsuarioService {
 
     // ── Permisos por accion ──
 
-    public List<PermisoUsuario> listarPermisos(Long usuarioId) {
+    public List<PermisoUsuario> listarPermisos(Long usuarioId, Long actorTenant) {
+        exigirUsuarioDelTenant(usuarioId, actorTenant);   // obs 257
         return em.createQuery(
                 "SELECT p FROM PermisoUsuario p WHERE p.usuario = :u ORDER BY p.pantalla, p.accion",
                 PermisoUsuario.class)
@@ -282,10 +296,11 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void eliminarPermiso(Long permisoId) {
+    public void eliminarPermiso(Long permisoId, Long actorTenant) {
         autorizacion.exigir("usuarios", "EDITAR");
         var p = em.find(PermisoUsuario.class, permisoId);
         if (p != null) {
+            exigirUsuarioDelTenant(p.getUsuario(), actorTenant);   // obs 257
             em.remove(p);
         }
     }

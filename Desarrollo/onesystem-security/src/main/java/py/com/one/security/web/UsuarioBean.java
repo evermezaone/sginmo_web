@@ -101,8 +101,8 @@ public class UsuarioBean implements Serializable {
     public void editar(Usuario usuario) {
         seleccionado = usuario;
         passwordInicial = null;
-        permisos = usuarioService.listarPermisos(usuario.getId());
-        grupos = usuarioService.listarGruposDe(usuario.getId());
+        permisos = usuarioService.listarPermisos(usuario.getId(), sesion.tenantActual());
+        grupos = usuarioService.listarGruposDe(usuario.getId(), sesion.tenantActual());
         limpiarNuevoPermiso();
         tabActivo = 0;
         soloLectura = !sesion.puede(PANTALLA, "EDITAR");
@@ -162,7 +162,7 @@ public class UsuarioBean implements Serializable {
         try {
             usuarioService.agregarPermiso(seleccionado.getId(), nuevoPermisoPantalla, nuevoPermisoAccion,
                     sesion.tenantActual());
-            permisos = usuarioService.listarPermisos(seleccionado.getId());
+            permisos = usuarioService.listarPermisos(seleccionado.getId(), sesion.tenantActual());
             limpiarNuevoPermiso();
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar el permiso", e.getMessage());
@@ -171,8 +171,8 @@ public class UsuarioBean implements Serializable {
 
     public void eliminarPermiso(Long permisoId) {
         try {
-            usuarioService.eliminarPermiso(permisoId);
-            permisos = usuarioService.listarPermisos(seleccionado.getId());
+            usuarioService.eliminarPermiso(permisoId, sesion.tenantActual());
+            permisos = usuarioService.listarPermisos(seleccionado.getId(), sesion.tenantActual());
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el permiso", e.getMessage());
         }
@@ -189,7 +189,7 @@ public class UsuarioBean implements Serializable {
     public void agregarGrupo() {
         try {
             usuarioService.agregarAGrupo(seleccionado.getId(), nuevoGrupo, sesion.tenantActual());
-            grupos = usuarioService.listarGruposDe(seleccionado.getId());
+            grupos = usuarioService.listarGruposDe(seleccionado.getId(), sesion.tenantActual());
             limpiarNuevoPermiso();
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar al grupo", e.getMessage());
@@ -198,8 +198,8 @@ public class UsuarioBean implements Serializable {
 
     public void quitarGrupo(Long usuarioGrupoId) {
         try {
-            usuarioService.quitarDeGrupo(usuarioGrupoId);
-            grupos = usuarioService.listarGruposDe(seleccionado.getId());
+            usuarioService.quitarDeGrupo(usuarioGrupoId, sesion.tenantActual());
+            grupos = usuarioService.listarGruposDe(seleccionado.getId(), sesion.tenantActual());
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar del grupo", e.getMessage());
         }

@@ -98,8 +98,8 @@ public class GrupoBean implements Serializable {
 
     public void editar(Grupo grupo) {
         seleccionado = grupo;
-        permisos = grupoService.listarPermisos(grupo.getId());
-        integrantes = grupoService.listarIntegrantes(grupo.getId());
+        permisos = grupoService.listarPermisos(grupo.getId(), sesion.tenantActual());
+        integrantes = grupoService.listarIntegrantes(grupo.getId(), sesion.tenantActual());
         limpiarAltas();
         tabActivo = 0;
     }
@@ -139,8 +139,8 @@ public class GrupoBean implements Serializable {
 
     public void agregarPermiso() {
         try {
-            grupoService.agregarPermiso(seleccionado.getId(), nuevoPermisoPantalla, nuevoPermisoAccion);
-            permisos = grupoService.listarPermisos(seleccionado.getId());
+            grupoService.agregarPermiso(seleccionado.getId(), nuevoPermisoPantalla, nuevoPermisoAccion, sesion.tenantActual());
+            permisos = grupoService.listarPermisos(seleccionado.getId(), sesion.tenantActual());
             limpiarAltas();
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar el permiso", e.getMessage());
@@ -148,8 +148,8 @@ public class GrupoBean implements Serializable {
     }
 
     public void eliminarPermiso(Long permisoId) {
-        grupoService.eliminarPermiso(permisoId);
-        permisos = grupoService.listarPermisos(seleccionado.getId());
+        grupoService.eliminarPermiso(permisoId, sesion.tenantActual());
+        permisos = grupoService.listarPermisos(seleccionado.getId(), sesion.tenantActual());
     }
 
     // ── Integrantes ──
@@ -157,7 +157,7 @@ public class GrupoBean implements Serializable {
     public void agregarIntegrante() {
         try {
             usuarioService.agregarAGrupo(nuevoIntegrante, seleccionado.getId(), sesion.tenantActual());
-            integrantes = grupoService.listarIntegrantes(seleccionado.getId());
+            integrantes = grupoService.listarIntegrantes(seleccionado.getId(), sesion.tenantActual());
             limpiarAltas();
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar el integrante", e.getMessage());
@@ -165,8 +165,8 @@ public class GrupoBean implements Serializable {
     }
 
     public void quitarIntegrante(Long usuarioGrupoId) {
-        usuarioService.quitarDeGrupo(usuarioGrupoId);
-        integrantes = grupoService.listarIntegrantes(seleccionado.getId());
+        usuarioService.quitarDeGrupo(usuarioGrupoId, sesion.tenantActual());
+        integrantes = grupoService.listarIntegrantes(seleccionado.getId(), sesion.tenantActual());
     }
 
     public String nombreUsuario(Long usuarioId) {

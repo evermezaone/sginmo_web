@@ -100,9 +100,8 @@ public class EmpresaService {
         if (datos.getId() == null) em.persist(datos); else em.merge(datos);
     }
 
-    public PersonaJuridica guardar(PersonaJuridica empresa, PersonaEmpresa datos) {
-        boolean esNueva = empresa.getId() == null;
-        autorizacion.exigir("empresas", esNueva ? "CREAR" : "EDITAR");
+    /** Validaciones comunes de la persona juridica (razon social, RUC, documento unico). */
+    private void validarEmpresa(PersonaJuridica empresa) {
         Persona p = empresa.getPersona();
         if (empresa.getRazonSocial() == null || empresa.getRazonSocial().isBlank()) {
             throw new NegocioException("La razón social es obligatoria");
@@ -121,28 +120,51 @@ public class EmpresaService {
         }
         p.setTipoPersoneria("JURIDICA");
         p.setNombre(empresa.getRazonSocial());   // nombre visible = razon social
+    }
+
+    /**
+     * SOLO edicion de una empresa existente. El alta de una empresa NUEVA es exclusiva del
+     * SUPERADMIN y se hace como UNIDAD (altaEmpresa): crear por aca dejaria una empresa a medio
+     * provisionar (sin sucursal ni usuario admin) y sin exigir SUPERADMIN (obs 258).
+     */
+    public PersonaJuridica guardar(PersonaJuridica empresa, PersonaEmpresa datos) {
+        if (empresa.getId() == null) {
+            throw new NegocioException("El alta de una empresa nueva la realiza el superadministrador (alta completa).");
+        }
+        autorizacion.exigir("empresas", "EDITAR");
+        validarEmpresa(empresa);
         try {
-            PersonaJuridica resultado;
-            if (esNueva) {
-                em.persist(empresa);             // cascade PERSIST crea persona (PK compartida)
-                em.flush();
-                var rol = new PersonaRol();
-                rol.setPersona(empresa.getId());
-                rol.setRol(rolEmpresaId());
-                // El rol EMPRESA es identitario y vive en el tenant global -1 (V26 backfill:
-                // persona_rol.tenant = -1 para EMPRESA). Sin esto violaria persona_rol.tenant NOT NULL.
-                rol.setTenant(py.com.pysistemas.sginmo.web.TenantContext.GLOBAL);
-                em.persist(rol);
-                resultado = empresa;
-            } else {
-                resultado = em.merge(empresa);
-            }
+            PersonaJuridica resultado = em.merge(empresa);
             em.flush();
             guardarDatosEmpresa(resultado.getId(), datos);
             em.flush();
             return resultado;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException("La empresa fue modificada por otro usuario. Vuelva a abrir el diálogo y reintente.");
+        } catch (jakarta.persistence.PersistenceException e) {
+            throw ErroresBd.traducir(e);
+        }
+    }
+
+    /** Alta interna de persona_juridica + rol EMPRESA (en -1) + datos comerciales. SOLO la invoca
+     *  altaEmpresa (que ya exige SUPERADMIN y provisiona sucursal + usuario admin como unidad). */
+    private PersonaJuridica crearEmpresa(PersonaJuridica empresa, PersonaEmpresa datos) {
+        autorizacion.exigir("empresas", "CREAR");
+        validarEmpresa(empresa);
+        try {
+            em.persist(empresa);                 // cascade PERSIST crea persona (PK compartida)
+            em.flush();
+            var rol = new PersonaRol();
+            rol.setPersona(empresa.getId());
+            rol.setRol(rolEmpresaId());
+            // El rol EMPRESA es identitario y vive en el tenant global -1 (V26 backfill:
+            // persona_rol.tenant = -1 para EMPRESA). Sin esto violaria persona_rol.tenant NOT NULL.
+            rol.setTenant(py.com.pysistemas.sginmo.web.TenantContext.GLOBAL);
+            em.persist(rol);
+            em.flush();
+            guardarDatosEmpresa(empresa.getId(), datos);
+            em.flush();
+            return empresa;
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);
         }
@@ -165,7 +187,7 @@ public class EmpresaService {
             throw new NegocioException("El usuario administrador inicial es obligatorio");
         }
         // 1) empresa (persona_juridica + rol EMPRESA en -1) + datos comerciales propios.
-        PersonaJuridica creada = guardar(empresa, datos);
+        PersonaJuridica creada = crearEmpresa(empresa, datos);
         // 2) sucursal por defecto de la nueva empresa (tenant = la empresa).
         if (sucursal != null) {
             sucursal.setPersonaJuridica(creada.getId());

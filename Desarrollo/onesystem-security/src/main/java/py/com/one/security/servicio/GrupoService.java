@@ -140,7 +140,27 @@ public class GrupoService {
 
     // ── Permisos del grupo ──
 
-    public List<PermisoGrupo> listarPermisos(Long grupoId) {
+    /** El grupo debe ser VISIBLE al actor: propio, plantilla -1 o SUPERADMIN (para lecturas). */
+    private void exigirGrupoVisible(Long grupoId, Long actorTenant) {
+        Grupo g = grupoId == null ? null : em.find(Grupo.class, grupoId);
+        if (g == null) throw new NegocioException("El grupo no existe");
+        boolean visible = superadmin(actorTenant) || TENANT_GLOBAL.equals(g.getTenant())
+                || (actorTenant != null && actorTenant.equals(g.getTenant()));
+        if (!visible) throw new NegocioException("El grupo pertenece a otra empresa");
+    }
+
+    /** El grupo debe ser EDITABLE por el actor: propio del tenant, o SUPERADMIN. Las plantillas
+     *  -1 son de solo lectura para el ADMINISTRADOR (obs 257). */
+    private void exigirGrupoEditable(Long grupoId, Long actorTenant) {
+        Grupo g = grupoId == null ? null : em.find(Grupo.class, grupoId);
+        if (g == null) throw new NegocioException("El grupo no existe");
+        if (!superadmin(actorTenant) && !(actorTenant != null && actorTenant.equals(g.getTenant()))) {
+            throw new NegocioException("El grupo pertenece a otra empresa");
+        }
+    }
+
+    public List<PermisoGrupo> listarPermisos(Long grupoId, Long actorTenant) {
+        exigirGrupoVisible(grupoId, actorTenant);   // obs 257
         return em.createQuery(
                 "SELECT p FROM PermisoGrupo p WHERE p.grupo = :g ORDER BY p.pantalla, p.accion", PermisoGrupo.class)
             .setParameter("g", grupoId)
@@ -148,11 +168,12 @@ public class GrupoService {
     }
 
     @Transactional
-    public void agregarPermiso(Long grupoId, String pantalla, String accion) {
+    public void agregarPermiso(Long grupoId, String pantalla, String accion, Long actorTenant) {
         autorizacion.exigir("grupos", "EDITAR");
         if (pantalla == null || pantalla.isBlank() || accion == null || accion.isBlank()) {
             throw new NegocioException("Elija pantalla y acción");
         }
+        exigirGrupoEditable(grupoId, actorTenant);   // obs 257: no se editan grupos ajenos ni plantillas -1
         Long repetidos = em.createQuery(
                 "SELECT COUNT(p) FROM PermisoGrupo p WHERE p.grupo = :g AND p.pantalla = :p AND p.accion = :a",
                 Long.class)
@@ -169,17 +190,19 @@ public class GrupoService {
     }
 
     @Transactional
-    public void eliminarPermiso(Long permisoId) {
+    public void eliminarPermiso(Long permisoId, Long actorTenant) {
         autorizacion.exigir("grupos", "EDITAR");
         var p = em.find(PermisoGrupo.class, permisoId);
         if (p != null) {
+            exigirGrupoEditable(p.getGrupo(), actorTenant);   // obs 257
             em.remove(p);
         }
     }
 
     // ── Integrantes ──
 
-    public List<UsuarioGrupo> listarIntegrantes(Long grupoId) {
+    public List<UsuarioGrupo> listarIntegrantes(Long grupoId, Long actorTenant) {
+        exigirGrupoVisible(grupoId, actorTenant);   // obs 257
         return em.createQuery(
                 "SELECT ug FROM UsuarioGrupo ug WHERE ug.grupo = :g ORDER BY ug.id", UsuarioGrupo.class)
             .setParameter("g", grupoId)
