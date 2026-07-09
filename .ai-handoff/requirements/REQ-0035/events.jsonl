@@ -4,3 +4,5 @@
 {"ts":"2026-07-09T00:00:12.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"obs246 corregida: RAISE si codigo no existe + preferencia tenant; bateria v27_obs246_test.sql EXIT 0 (rollback, BD real)"}
 {"ts":"2026-07-09T00:00:20.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs247: f_cobrar_documento no valida el tenant de la NTCR asociada"}
 {"ts":"2026-07-09T00:00:22.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"obs247 corregida: RAISE si el tenant de la NTCR difiere del documento; v27_obs246_test.sql TEST 3 EXIT 0"}
+{"ts":"2026-07-09T00:00:30.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs248: f_anular_cobro resuelve MOTIVOS_ANULACION con LIMIT 1 sin ORDER BY"}
+{"ts":"2026-07-09T00:00:32.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"obs248 corregida: ORDER BY (tenant=v_tenant) DESC; v27_obs246_test.sql TEST 4 EXIT 0 (persiste el id del tenant)"}
