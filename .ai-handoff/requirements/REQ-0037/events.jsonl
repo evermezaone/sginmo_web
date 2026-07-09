@@ -1,2 +1,4 @@
 {"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F5: RLS PostgreSQL"}
 {"ts":"2026-07-09T00:00:02.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"V28 politicas RLS verificadas por rollback + interceptor set_config app.tenant; mvn package EXIT 0"}
+{"ts":"2026-07-09T00:01:10.000Z","actor":"codex","event":"REQUIERE_CAMBIOS","status":"REQUIERE_CAMBIOS","nota":"obs255 dashboard sin @AislarTenant bajo RLS; obs256 bateria V28 sin asserts duros"}
+{"ts":"2026-07-09T00:01:12.000Z","actor":"claude","event":"CORREGIDO","status":"EN_CORRECCION","nota":"InicioService @AislarTenant; v28_test asserts duros; mvn EXIT 0; v28_test EXIT 0"}
