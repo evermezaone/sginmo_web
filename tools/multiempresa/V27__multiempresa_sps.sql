@@ -51,6 +51,7 @@ DECLARE
   v_saldo numeric; v_tenant bigint; v_sucursal bigint; v_cobro bigint;
   v_pla_tenant bigint; v_pla_sucursal bigint; v_pla_estado varchar;
   v_fp forma_pago%ROWTYPE; v_ntcr_tipo varchar; v_ntcr_persona bigint; v_ntcr_estado varchar;
+  v_ntcr_tenant bigint;
   v_hay_datos boolean;
   v_emisor bigint; v_procesador bigint; v_motivo_rechazo bigint;
 BEGIN
@@ -90,11 +91,16 @@ BEGIN
   END IF;
 
   IF p_ntcr IS NOT NULL THEN
-    SELECT tipo, persona, estado INTO v_ntcr_tipo, v_ntcr_persona, v_ntcr_estado
+    SELECT tipo, persona, estado, tenant INTO v_ntcr_tipo, v_ntcr_persona, v_ntcr_estado, v_ntcr_tenant
       FROM documento WHERE documento = p_ntcr;
     IF v_ntcr_tipo IS NULL THEN RAISE EXCEPTION 'La nota de crédito no existe'; END IF;
     IF v_ntcr_tipo <> 'NTCR' THEN RAISE EXCEPTION 'El documento asociado no es una nota de crédito'; END IF;
     IF v_ntcr_estado = 'ANULADO' THEN RAISE EXCEPTION 'La nota de crédito está anulada'; END IF;
+    -- Coherencia de tenant (obs 247): la NTCR debe ser de la MISMA empresa que el documento
+    -- cobrado; si no, quedaria una referencia cruzada entre empresas en dato_cobro.ntcr_documento.
+    IF v_ntcr_tenant <> v_tenant THEN
+      RAISE EXCEPTION 'La nota de crédito pertenece a otra empresa';
+    END IF;
     IF p_persona IS NOT NULL AND v_ntcr_persona <> p_persona THEN
       RAISE EXCEPTION 'La nota de crédito pertenece a otro cliente';
     END IF;

@@ -39,6 +39,17 @@ INSERT INTO planilla (planilla, tenant, sucursal, usuario_apertura, fecha_apertu
                       monto_apertura, monto_cobro, estado, usuario_creacion, fecha_creacion) VALUES
   (-9800, -9001, -9101, 't', current_date, now(), 0, 0, 'ABIERTA', 't', now());
 
+-- Segunda empresa (-9002) con una NTCR del MISMO cliente -> para probar el rechazo por tenant (obs 247).
+INSERT INTO persona (persona, tipo_personeria, nombre, numero_documento, estado, usuario_creacion, fecha_creacion) VALUES
+  (-9002, 'JURIDICA', 'Empresa B F3', '80930002-1', 'ACTIVO', 't', now());
+INSERT INTO persona_juridica (persona, razon_social, usuario_creacion, fecha_creacion) VALUES
+  (-9002, 'Empresa B F3', 't', now());
+INSERT INTO sucursal (sucursal, persona_juridica, tenant, descripcion, direccion, telefono, por_defecto, estado, usuario_creacion, fecha_creacion) VALUES
+  (-9102, -9002, -9002, 'Central B', 'Dir B', '-', true, 'ACTIVO', 't', now());
+INSERT INTO documento (documento, empresa, tenant, sucursal, tipo, serie, numero, fecha, moneda, cotizacion,
+                       total, saldo, direccion_dinero, estado, persona, usuario_creacion, fecha_creacion) VALUES
+  (-9650, -9002, -9002, -9102, 'NTCR', '001', '0000009', current_date, -9300, 1, 5000, 5000, 'SALIDA', 'PENDIENTE', -9500, 't', now());
+
 -- ── TEST 1: emisor inexistente 'NOPE' -> DEBE abortar (antes: dato_cobro.emisor NULL en silencio) ──
 DO $$ BEGIN
   BEGIN
@@ -59,4 +70,14 @@ DO $$ DECLARE v_cobro bigint; v_emisor bigint; BEGIN
   END IF;
 END $$;
 
-SELECT 'obs246 OK — codigo invalido aborta; codigo valido prefiere la opcion del tenant' AS resultado;
+-- ── TEST 3 (obs 247): NTCR de OTRO tenant (mismo cliente) -> f_cobrar_documento DEBE abortar ──
+DO $$ BEGIN
+  BEGIN
+    PERFORM f_cobrar_documento(-9600, -9800, -9400, -9500, 1000, -9300, current_date, 't', p_ntcr := -9650);
+    RAISE EXCEPTION 'T3 FALLA: f_cobrar_documento acepto una NTCR de otra empresa';
+  EXCEPTION WHEN raise_exception THEN
+    IF SQLERRM LIKE 'T3 FALLA%' THEN RAISE; END IF;   -- caso esperado: RAISE 'otra empresa'
+  END;
+END $$;
+
+SELECT 'obs246+247 OK — codigo invalido aborta; prefiere opcion del tenant; NTCR de otro tenant rechazada' AS resultado;
