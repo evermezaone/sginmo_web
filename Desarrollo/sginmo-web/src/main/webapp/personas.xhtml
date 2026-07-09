@@ -109,15 +109,15 @@
                                 </div>
                                 <div class="campo">
                                     <label>Estado civil</label>
-                                    <p:selectOneMenu value="#{personaBean.fisica.estadoCivilCodigo}" label="Estado civil" disabled="#{personaBean.soloLectura}">
+                                    <p:selectOneMenu value="#{personaBean.datosEmpresa.estadoCivil}" label="Estado civil" disabled="#{personaBean.soloLectura}">
                                         <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
-                                        <f:selectItems value="#{personaBean.estadosCiviles}" var="ec" itemLabel="#{ec.descripcion}" itemValue="#{ec.codigo}"/>
+                                        <f:selectItems value="#{personaBean.estadosCiviles}" var="ec" itemLabel="#{ec.descripcion}" itemValue="#{ec.id}"/>
                                     </p:selectOneMenu>
                                 </div>
                             </div>
                             <div class="campo">
                                 <label>Nacionalidad</label>
-                                <p:inputText value="#{personaBean.fisica.nacionalidad}" label="Nacionalidad"
+                                <p:inputText value="#{personaBean.datosEmpresa.nacionalidad}" label="Nacionalidad"
                                              disabled="#{personaBean.soloLectura}" maxlength="80"/>
                             </div>
                         </ui:fragment>
@@ -131,7 +131,7 @@
                                 </div>
                                 <div class="campo">
                                     <label>Nombre de fantasía</label>
-                                    <p:inputText value="#{personaBean.juridica.nombreFantasia}" label="Nombre de fantasía"
+                                    <p:inputText value="#{personaBean.datosEmpresa.nombreFantasia}" label="Nombre de fantasía"
                                                  disabled="#{personaBean.soloLectura}" maxlength="120"/>
                                 </div>
                             </div>
@@ -143,14 +143,14 @@
                                 </div>
                                 <div class="campo">
                                     <label>Actividad económica</label>
-                                    <p:selectOneMenu value="#{personaBean.juridica.actividadCodigo}" label="Actividad" disabled="#{personaBean.soloLectura}">
+                                    <p:selectOneMenu value="#{personaBean.datosEmpresa.actividad}" label="Actividad" disabled="#{personaBean.soloLectura}">
                                         <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
-                                        <f:selectItems value="#{personaBean.actividades}" var="ac" itemLabel="#{ac.descripcion}" itemValue="#{ac.codigo}"/>
+                                        <f:selectItems value="#{personaBean.actividades}" var="ac" itemLabel="#{ac.descripcion}" itemValue="#{ac.id}"/>
                                     </p:selectOneMenu>
                                 </div>
                                 <div class="campo">
                                     <label>Representante legal</label>
-                                    <p:selectOneMenu value="#{personaBean.juridica.representanteLegal}" label="Representante legal"
+                                    <p:selectOneMenu value="#{personaBean.datosEmpresa.representanteLegal}" label="Representante legal"
                                                      filter="true" filterMatchMode="contains" disabled="#{personaBean.soloLectura}">
                                         <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
                                         <f:selectItems value="#{personaBean.representantes}" var="rep" itemLabel="#{rep.nombre}" itemValue="#{rep.id}"/>
@@ -181,35 +181,35 @@
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Clasificación fiscal</label>
-                                <p:inputText value="#{personaBean.seleccionado.clasificacionFiscal}" label="Clasificación fiscal"
+                                <p:inputText value="#{personaBean.datosEmpresa.clasificacionFiscal}" label="Clasificación fiscal"
                                              disabled="#{personaBean.soloLectura}" maxlength="60"/>
                             </div>
                             <div class="campo">
                                 <label>Contribuyente</label>
-                                <p:toggleSwitch value="#{personaBean.seleccionado.esContribuyente}" disabled="#{personaBean.soloLectura}"/>
+                                <p:toggleSwitch value="#{personaBean.datosEmpresa.esContribuyente}" disabled="#{personaBean.soloLectura}"/>
                             </div>
                         </div>
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Teléfono</label>
-                                <p:inputText value="#{personaBean.seleccionado.telefono}" label="Teléfono"
+                                <p:inputText value="#{personaBean.datosEmpresa.telefono}" label="Teléfono"
                                              disabled="#{personaBean.soloLectura}" maxlength="20"/>
                             </div>
                             <div class="campo">
                                 <label>Email</label>
-                                <p:inputText value="#{personaBean.seleccionado.email}" label="Email" type="email"
+                                <p:inputText value="#{personaBean.datosEmpresa.email}" label="Email" type="email"
                                              disabled="#{personaBean.soloLectura}" maxlength="180"/>
                             </div>
                         </div>
                         <div class="campo">
                             <label>Dirección</label>
-                            <p:inputText value="#{personaBean.seleccionado.direccion}" label="Dirección"
+                            <p:inputText value="#{personaBean.datosEmpresa.direccion}" label="Dirección"
                                          disabled="#{personaBean.soloLectura}" maxlength="180" style="width:100%;"/>
                         </div>
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Ubicación (ciudad/barrio)</label>
-                                <p:selectOneMenu value="#{personaBean.seleccionado.ubicacion}" label="Ubicación"
+                                <p:selectOneMenu value="#{personaBean.datosEmpresa.ubicacion}" label="Ubicación"
                                                  filter="true" filterMatchMode="contains" disabled="#{personaBean.soloLectura}">
                                     <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
                                     <f:selectItems value="#{personaBean.ubicaciones}" var="ub" itemLabel="#{ub.nombre}" itemValue="#{ub.id}"/>
@@ -217,13 +217,13 @@
                             </div>
                             <div class="campo">
                                 <label>URL de ubicación (mapa)</label>
-                                <p:inputText value="#{personaBean.seleccionado.ubicacionUrl}" label="URL de ubicación"
+                                <p:inputText value="#{personaBean.datosEmpresa.ubicacionUrl}" label="URL de ubicación"
                                              disabled="#{personaBean.soloLectura}" maxlength="250"/>
                             </div>
                         </div>
                         <div class="campo">
                             <label>Observación</label>
-                            <p:inputTextarea value="#{personaBean.seleccionado.observacion}" rows="2" autoResize="false"
+                            <p:inputTextarea value="#{personaBean.datosEmpresa.observacion}" rows="2" autoResize="false"
                                              disabled="#{personaBean.soloLectura}" style="width:100%;"/>
                         </div>
                     </p:tab>

@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.persona.Persona;
+import py.com.pysistemas.sginmo.dominio.persona.PersonaEmpresa;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaFisica;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaJuridica;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaRol;
@@ -92,9 +93,18 @@ public class PersonaService {
 
     // ── Escrituras ──
 
-    /** Alta/edicion de persona fisica (persona + persona_fisica en una transaccion). */
+    /** Datos comerciales de la persona en un tenant (persona_empresa), o null si no hay. */
+    public PersonaEmpresa datosEmpresaDe(Long personaId, Long tenant) {
+        if (personaId == null || tenant == null) return null;
+        var r = em.createQuery(
+                "SELECT pe FROM PersonaEmpresa pe WHERE pe.persona = :p AND pe.tenant = :t", PersonaEmpresa.class)
+            .setParameter("p", personaId).setParameter("t", tenant).getResultList();
+        return r.isEmpty() ? null : r.get(0);
+    }
+
+    /** Alta/edicion de persona fisica (persona + persona_fisica + persona_empresa del tenant). */
     @Transactional
-    public Persona guardarFisica(Persona persona, PersonaFisica fisica) {
+    public Persona guardarFisica(Persona persona, PersonaFisica fisica, PersonaEmpresa datos, Long tenant) {
         autorizacion.exigir("personas", persona.getId() == null ? "CREAR" : "EDITAR");
         validarComun(persona);
         if (fisica.getNombres() == null || fisica.getNombres().isBlank()
@@ -103,12 +113,12 @@ public class PersonaService {
         }
         persona.setTipoPersoneria("FISICA");
         persona.setNombre((fisica.getNombres() + " " + fisica.getApellidos()).trim());
-        return persistirSubtipo(persona, fisica, null);
+        return persistirSubtipo(persona, fisica, null, datos, tenant);
     }
 
-    /** Alta/edicion de persona juridica (persona + persona_juridica en una transaccion). */
+    /** Alta/edicion de persona juridica (persona + persona_juridica + persona_empresa del tenant). */
     @Transactional
-    public Persona guardarJuridica(Persona persona, PersonaJuridica juridica) {
+    public Persona guardarJuridica(Persona persona, PersonaJuridica juridica, PersonaEmpresa datos, Long tenant) {
         autorizacion.exigir("personas", persona.getId() == null ? "CREAR" : "EDITAR");
         validarComun(persona);
         if (juridica.getRazonSocial() == null || juridica.getRazonSocial().isBlank()) {
@@ -116,10 +126,20 @@ public class PersonaService {
         }
         persona.setTipoPersoneria("JURIDICA");
         persona.setNombre(juridica.getRazonSocial());
-        return persistirSubtipo(persona, null, juridica);
+        return persistirSubtipo(persona, null, juridica, datos, tenant);
     }
 
-    private Persona persistirSubtipo(Persona persona, PersonaFisica fisica, PersonaJuridica juridica) {
+    /** Upsert de los datos comerciales de la persona en el tenant del contexto (V26). */
+    private void guardarDatosEmpresa(Persona persona, PersonaEmpresa datos, Long tenant) {
+        if (datos == null || tenant == null) return;
+        datos.setPersona(persona.getId());
+        datos.setTenant(tenant);
+        if (datos.getEstado() == null) datos.setEstado("ACTIVO");
+        if (datos.getId() == null) em.persist(datos); else em.merge(datos);
+    }
+
+    private Persona persistirSubtipo(Persona persona, PersonaFisica fisica, PersonaJuridica juridica,
+                                     PersonaEmpresa datos, Long tenant) {
         try {
             // El subtipo debe apuntar a la MISMA instancia de persona que trae los datos
             // comunes editados. Si no, el cascade MERGE del subtipo re-mergea una persona
@@ -137,6 +157,8 @@ public class PersonaService {
                 if (fisica != null) em.merge(fisica);
                 if (juridica != null) em.merge(juridica);
             }
+            em.flush();
+            guardarDatosEmpresa(persona, datos, tenant);
             em.flush();
             return persona;
         } catch (jakarta.persistence.OptimisticLockException e) {

@@ -13,6 +13,7 @@ import py.com.one.core.NegocioException;
 import py.com.one.security.web.SesionUsuario;
 import py.com.pysistemas.sginmo.dominio.catalogo.Entidad;
 import py.com.pysistemas.sginmo.dominio.persona.Persona;
+import py.com.pysistemas.sginmo.dominio.persona.PersonaEmpresa;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaFisica;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaJuridica;
 import py.com.pysistemas.sginmo.dominio.persona.PersonaRol;
@@ -42,10 +43,15 @@ public class PersonaBean implements Serializable {
     @Inject
     private SesionUsuario sesion;
 
+    @Inject
+    private ContextoEmpresa contexto;
+
     private LazyDataModel<Persona> modelo;
     private Persona seleccionado;
     private PersonaFisica fisica;
     private PersonaJuridica juridica;
+    /** Datos comerciales de la persona en el tenant del contexto (V26). */
+    private PersonaEmpresa datosEmpresa;
     private String filtroGlobal = "";
     private boolean soloLectura;
     private boolean consultaFiltrada;
@@ -99,6 +105,7 @@ public class PersonaBean implements Serializable {
         seleccionado = new Persona(); seleccionado.setTipoPersoneria("FISICA");
         fisica = new PersonaFisica(); fisica.setPersona(seleccionado);
         juridica = null;
+        datosEmpresa = new PersonaEmpresa();
         rolesPersona = java.util.List.of(); nuevoRol = null;
         soloLectura = false; tabActivo = 0;
     }
@@ -108,8 +115,14 @@ public class PersonaBean implements Serializable {
         seleccionado = new Persona(); seleccionado.setTipoPersoneria("JURIDICA");
         juridica = new PersonaJuridica(); juridica.setPersona(seleccionado);
         fisica = null;
+        datosEmpresa = new PersonaEmpresa();
         rolesPersona = java.util.List.of(); nuevoRol = null;
         soloLectura = false; tabActivo = 0;
+    }
+
+    /** Tenant del contexto (empresa del usuario logueado); null si aun no cargo. */
+    private Long tenantActual() {
+        return contexto.getEmpresa() == null ? null : contexto.getEmpresa().getId();
     }
 
     public void editar(Persona persona) {
@@ -121,6 +134,8 @@ public class PersonaBean implements Serializable {
             juridica = personaService.juridicaDe(persona.getId()); fisica = null;
             if (juridica == null) { juridica = new PersonaJuridica(); juridica.setPersona(persona); }
         }
+        datosEmpresa = personaService.datosEmpresaDe(persona.getId(), tenantActual());
+        if (datosEmpresa == null) datosEmpresa = new PersonaEmpresa();
         rolesPersona = personaService.rolesDe(persona.getId());
         nuevoRol = null;
         soloLectura = !sesion.puede(PANTALLA, "EDITAR");
@@ -137,10 +152,11 @@ public class PersonaBean implements Serializable {
         try {
             boolean esNueva = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
+            Long tenant = tenantActual();
             if (seleccionadoEsFisica()) {
-                personaService.guardarFisica(seleccionado, fisica);
+                personaService.guardarFisica(seleccionado, fisica, datosEmpresa, tenant);
             } else {
-                personaService.guardarJuridica(seleccionado, juridica);
+                personaService.guardarJuridica(seleccionado, juridica, datosEmpresa, tenant);
             }
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Persona creada" : "Persona actualizada", seleccionado.getNombre());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgPersona').hide()");
@@ -195,6 +211,8 @@ public class PersonaBean implements Serializable {
     public void setSeleccionado(Persona seleccionado) { this.seleccionado = seleccionado; }
     public PersonaFisica getFisica() { return fisica; }
     public PersonaJuridica getJuridica() { return juridica; }
+    public PersonaEmpresa getDatosEmpresa() { return datosEmpresa; }
+    public void setDatosEmpresa(PersonaEmpresa datosEmpresa) { this.datosEmpresa = datosEmpresa; }
     public String getFiltroGlobal() { return filtroGlobal; }
     public void setFiltroGlobal(String filtroGlobal) { this.filtroGlobal = filtroGlobal; }
     public boolean isSoloLectura() { return soloLectura; }
