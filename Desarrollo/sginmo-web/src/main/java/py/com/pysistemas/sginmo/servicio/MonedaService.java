@@ -13,6 +13,8 @@ import java.util.Map;
 
 /** ABM de monedas (contrato estandar). */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class MonedaService {
 
     private static final Map<String, String> ORDEN = Map.of(

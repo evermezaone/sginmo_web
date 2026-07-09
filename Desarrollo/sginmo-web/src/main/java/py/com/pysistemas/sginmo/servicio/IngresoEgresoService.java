@@ -13,6 +13,8 @@ import java.util.List;
 
 /** ABM de ingresos/egresos de caja (REQ-0024): gastos y otros ingresos. */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class IngresoEgresoService {
 
     @PersistenceContext(unitName = "sginmoPU")

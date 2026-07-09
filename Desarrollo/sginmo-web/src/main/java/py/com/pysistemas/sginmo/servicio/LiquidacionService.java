@@ -18,6 +18,8 @@ import java.util.List;
  * negativo: el inquilino debe). Una liquidacion por operacion (UNIQUE).
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class LiquidacionService {
 
     @PersistenceContext(unitName = "sginmoPU")

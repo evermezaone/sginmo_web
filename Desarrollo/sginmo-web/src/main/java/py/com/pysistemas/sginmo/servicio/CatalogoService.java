@@ -10,6 +10,8 @@ import java.util.List;
 
 /** Lecturas de catalogos para combos: listas de `entidad` e impuestos activos. */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class CatalogoService {
 
     @PersistenceContext(unitName = "sginmoPU")

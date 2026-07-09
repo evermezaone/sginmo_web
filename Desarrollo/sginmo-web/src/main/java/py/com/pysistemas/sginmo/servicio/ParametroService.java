@@ -12,6 +12,8 @@ import java.util.List;
 
 /** ABM de parametros de configuracion (clave inmutable; sin borrado: son configuracion viva). */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class ParametroService {
 
     @PersistenceContext(unitName = "sginmoPU")

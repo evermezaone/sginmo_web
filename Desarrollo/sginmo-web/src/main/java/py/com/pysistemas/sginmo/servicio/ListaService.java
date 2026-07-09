@@ -16,6 +16,8 @@ import java.util.List;
  * el codigo es INMUTABLE al editar (los datos historicos lo referencian).
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class ListaService {
 
     @PersistenceContext(unitName = "sginmoPU")

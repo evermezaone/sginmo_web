@@ -25,6 +25,8 @@ import java.util.List;
  * cuerpo (tabla o parrafos), pie con paginado. No hay plantillas .jrxml ni herramientas externas.
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class PdfService {
 
     private static final Font H1 = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 15, Color.decode("#1d3557"));

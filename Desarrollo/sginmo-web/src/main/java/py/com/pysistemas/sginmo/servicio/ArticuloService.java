@@ -17,6 +17,8 @@ import java.util.Map;
  * el bean JSF solo orquesta la UI.
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class ArticuloService {
 
     @PersistenceContext(unitName = "sginmoPU")

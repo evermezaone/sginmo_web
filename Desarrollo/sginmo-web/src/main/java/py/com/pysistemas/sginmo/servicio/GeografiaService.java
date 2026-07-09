@@ -13,6 +13,8 @@ import java.util.Map;
 
 /** ABM de geografia (REQ-0007): 8.276 ubicaciones INE, recursivo con autocomplete de padre. */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class GeografiaService {
 
     private static final Map<String, String> ORDEN = Map.of(

@@ -16,6 +16,8 @@ import java.util.Locale;
  * REQ-0026 (redefinido) / 0027 / 0028 / 0029.
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class ReporteService {
 
     @PersistenceContext(unitName = "sginmoPU")

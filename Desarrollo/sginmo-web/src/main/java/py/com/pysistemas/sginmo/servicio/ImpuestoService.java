@@ -20,6 +20,8 @@ import java.util.Map;
  * Modo avanzado: se editan factores y porcentaje de base gravada (regimenes 20%/30%).
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class ImpuestoService {
 
     private static final Map<String, String> ORDEN = Map.of(

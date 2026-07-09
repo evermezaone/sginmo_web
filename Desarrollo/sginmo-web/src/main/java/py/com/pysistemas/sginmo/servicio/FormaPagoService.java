@@ -13,6 +13,8 @@ import java.util.Map;
 
 /** ABM de formas de pago (contrato estandar) con habilitado y "por defecto" unico. */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class FormaPagoService {
 
     private static final Map<String, String> ORDEN = Map.of(

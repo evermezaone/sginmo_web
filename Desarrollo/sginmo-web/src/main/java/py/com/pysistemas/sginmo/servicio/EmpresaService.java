@@ -20,6 +20,8 @@ import java.util.List;
  * sucursales de cada empresa ("por defecto" unica por empresa).
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class EmpresaService {
 
     @PersistenceContext(unitName = "sginmoPU")

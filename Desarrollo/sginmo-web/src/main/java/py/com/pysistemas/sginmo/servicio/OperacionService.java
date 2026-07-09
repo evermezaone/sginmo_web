@@ -23,6 +23,8 @@ import java.util.List;
  * (alquiler) y de comision (segun % del activo) al confirmar la operacion.
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class OperacionService {
 
     @PersistenceContext(unitName = "sginmoPU")

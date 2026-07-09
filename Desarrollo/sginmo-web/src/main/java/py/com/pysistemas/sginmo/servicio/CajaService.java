@@ -18,6 +18,8 @@ import java.util.List;
  * f_cobrar_documento / f_anular_cobro (motor V17, verificado numericamente).
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class CajaService {
 
     @PersistenceContext(unitName = "sginmoPU")

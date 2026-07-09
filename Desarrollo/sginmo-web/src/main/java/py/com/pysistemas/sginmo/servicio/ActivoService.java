@@ -22,6 +22,8 @@ import java.util.Map;
  * VENDIDA lo mueven las operaciones (REQ-0016+), aqui es de solo lectura.
  */
 @ApplicationScoped
+@AislarTenant
+@jakarta.transaction.Transactional   // F5: fija app.tenant en la tx para RLS (V28)
 public class ActivoService {
 
     private static final Map<String, String> ORDEN = Map.of(
