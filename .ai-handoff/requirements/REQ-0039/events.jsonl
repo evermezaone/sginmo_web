@@ -1,0 +1,2 @@
+{"ts":"2026-07-09T00:00:00.000Z","actor":"claude","event":"REQ_CREADO","status":"EN_DESARROLLO","nota":"Multiempresa F7: verificacion integral 2 empresas"}
+{"ts":"2026-07-09T00:00:02.000Z","actor":"claude","event":"IMPLEMENTADO","status":"EN_DESARROLLO","nota":"Bateria RLS 2 empresas EXIT 0 (rollback, BD viva intacta); aislamiento service por analisis; login HTTP diferido al deploy"}
