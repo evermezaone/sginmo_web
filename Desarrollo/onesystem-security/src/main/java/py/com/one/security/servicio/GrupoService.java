@@ -74,15 +74,30 @@ public class GrupoService {
 
     // ── Escrituras ──
 
+    /** actorTenant (F6): tenant del operador (-1 = SUPERADMIN). Un ADMINISTRADOR solo crea/edita
+     *  grupos de SU tenant; las plantillas -1 son de solo lectura para el (solo el SUPERADMIN las toca). */
     @Transactional
-    public Grupo guardar(Grupo grupo) {
+    public Grupo guardar(Grupo grupo, Long actorTenant) {
         autorizacion.exigir("grupos", grupo.getId() == null ? "CREAR" : "EDITAR");
+        boolean sa = superadmin(actorTenant);
         if (grupo.getCodigo() == null || grupo.getCodigo().isBlank()) {
             throw new NegocioException("El código del grupo es obligatorio");
         }
-        // V26: unicidad por (tenant, codigo). Default -1 = grupo plantilla global; el modulo
-        // consumidor (SGInmo, F6) puede asignar el tenant del contexto antes de guardar.
-        if (grupo.getTenant() == null) grupo.setTenant(-1L);
+        if (grupo.getId() == null) {
+            // V26: unicidad por (tenant, codigo). El grupo nace en el tenant del operador; el
+            // SUPERADMIN puede crear plantillas globales dejando tenant=-1 explicito.
+            if (grupo.getTenant() == null) grupo.setTenant(sa ? -1L : actorTenant);
+            if (!sa && !actorTenant.equals(grupo.getTenant())) {
+                throw new NegocioException("No puede crear grupos en otra empresa");
+            }
+        } else {
+            Grupo enBd = em.find(Grupo.class, grupo.getId());
+            if (enBd == null) throw new NegocioException("El grupo no existe");
+            if (!sa && !actorTenant.equals(enBd.getTenant())) {
+                throw new NegocioException("El grupo pertenece a otra empresa");
+            }
+            grupo.setTenant(enBd.getTenant());   // el tenant no cambia por edicion
+        }
         Long repetidos = em.createQuery(
                 "SELECT COUNT(g) FROM Grupo g WHERE g.tenant = :t AND lower(g.codigo) = :codigo AND (:id IS NULL OR g.id <> :id)",
                 Long.class)
@@ -111,11 +126,14 @@ public class GrupoService {
     }
 
     @Transactional
-    public void cambiarEstado(Long id, String estadoNuevo) {
+    public void cambiarEstado(Long id, String estadoNuevo, Long actorTenant) {
         autorizacion.exigir("grupos", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         Grupo g = em.find(Grupo.class, id);
         if (g == null) {
             throw new NegocioException("El grupo no existe");
+        }
+        if (!superadmin(actorTenant) && !actorTenant.equals(g.getTenant())) {
+            throw new NegocioException("El grupo pertenece a otra empresa");
         }
         g.setEstado(estadoNuevo);
     }

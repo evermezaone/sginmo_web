@@ -114,7 +114,8 @@ public class UsuarioBean implements Serializable {
             if (soloLectura || !sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) {
                 return;
             }
-            usuarioService.guardar(seleccionado, passwordInicial, sesion.getUsuario().getTenant());
+            usuarioService.guardar(seleccionado, passwordInicial,
+                    sesion.tenantActual(), sesion.tenantActual());
             aviso(FacesMessage.SEVERITY_INFO, esNuevo ? "Usuario creado" : "Usuario actualizado",
                     seleccionado.getCodigoUsuario()
                     + (passwordInicial != null && !passwordInicial.isBlank()
@@ -133,7 +134,8 @@ public class UsuarioBean implements Serializable {
             if (!sesion.puede(PANTALLA, "ACTIVO".equals(nuevo) ? "REACTIVAR" : "INACTIVAR")) {
                 return;
             }
-            usuarioService.cambiarEstado(usuario.getId(), nuevo, sesion.getUsuario().getId());
+            usuarioService.cambiarEstado(usuario.getId(), nuevo,
+                    sesion.getUsuario().getId(), sesion.tenantActual());
             aviso(FacesMessage.SEVERITY_INFO,
                     "ACTIVO".equals(nuevo) ? "Usuario activado" : "Usuario inactivado",
                     usuario.getCodigoUsuario());
@@ -147,7 +149,7 @@ public class UsuarioBean implements Serializable {
             if (!sesion.puede(PANTALLA, "EDITAR")) {
                 return;
             }
-            usuarioService.desbloquear(usuario.getId());
+            usuarioService.desbloquear(usuario.getId(), sesion.tenantActual());
             aviso(FacesMessage.SEVERITY_INFO, "Usuario desbloqueado", usuario.getCodigoUsuario());
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo desbloquear", e.getMessage());

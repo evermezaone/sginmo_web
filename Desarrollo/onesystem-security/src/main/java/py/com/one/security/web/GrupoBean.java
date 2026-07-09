@@ -110,7 +110,7 @@ public class GrupoBean implements Serializable {
             if (!sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) {
                 return;
             }
-            grupoService.guardar(seleccionado);
+            grupoService.guardar(seleccionado, sesion.tenantActual());
             aviso(FacesMessage.SEVERITY_INFO, esNuevo ? "Grupo creado" : "Grupo actualizado",
                     seleccionado.getDescripcion());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgGrupo').hide()");
@@ -126,7 +126,7 @@ public class GrupoBean implements Serializable {
             if (!sesion.puede(PANTALLA, "ACTIVO".equals(nuevo) ? "REACTIVAR" : "INACTIVAR")) {
                 return;
             }
-            grupoService.cambiarEstado(grupo.getId(), nuevo);
+            grupoService.cambiarEstado(grupo.getId(), nuevo, sesion.tenantActual());
             aviso(FacesMessage.SEVERITY_INFO,
                     "ACTIVO".equals(nuevo) ? "Grupo activado" : "Grupo inactivado (sus permisos dejan de aplicar)",
                     grupo.getDescripcion());

@@ -80,10 +80,15 @@ public class UsuarioService {
 
     // ── Escrituras ──
 
-    /** Alta/edicion. passwordPlano: obligatorio al crear; en edicion, si viene, resetea (y fuerza cambio). */
+    /**
+     * Alta/edicion. passwordPlano: obligatorio al crear; en edicion, si viene, resetea (y fuerza cambio).
+     * actorTenant (F6): tenant del usuario que opera (-1 = SUPERADMIN). Un ADMINISTRADOR solo puede
+     * crear/editar usuarios de SU tenant (usuario/grupo estan fuera de RLS: la guarda es de la capa app).
+     */
     @Transactional
-    public Usuario guardar(Usuario usuario, String passwordPlano, Long empresaDefecto) {
+    public Usuario guardar(Usuario usuario, String passwordPlano, Long empresaDefecto, Long actorTenant) {
         autorizacion.exigir("usuarios", usuario.getId() == null ? "CREAR" : "EDITAR");
+        boolean sa = superadmin(actorTenant);
         if (usuario.getCodigoUsuario() == null || usuario.getCodigoUsuario().isBlank()) {
             throw new NegocioException("El código de usuario es obligatorio");
         }
@@ -101,8 +106,24 @@ public class UsuarioService {
             if (usuario.getTenant() == null) {
                 usuario.setTenant(empresaDefecto);
             }
+            // Pertenencia: un ADMINISTRADOR no puede crear usuarios en otra empresa.
+            if (!sa && !actorTenant.equals(usuario.getTenant())) {
+                throw new NegocioException("No puede crear usuarios en otra empresa");
+            }
             em.persist(usuario);
             return usuario;
+        }
+        // Edicion: el usuario existente debe ser del tenant del actor (salvo SUPERADMIN); el tenant
+        // no se reasigna desde el ABM comun (lo fija el alta / el SUPERADMIN).
+        Usuario enBd = em.find(Usuario.class, usuario.getId());
+        if (enBd == null) {
+            throw new NegocioException("El usuario no existe");
+        }
+        if (!sa && !actorTenant.equals(enBd.getTenant())) {
+            throw new NegocioException("El usuario pertenece a otra empresa");
+        }
+        if (!sa) {
+            usuario.setTenant(enBd.getTenant());
         }
         if (passwordPlano != null && !passwordPlano.isBlank()) {
             seguridadService.validarNueva(passwordPlano, passwordPlano);
@@ -175,7 +196,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void cambiarEstado(Long id, String estadoNuevo, Long usuarioActualId) {
+    public void cambiarEstado(Long id, String estadoNuevo, Long usuarioActualId, Long actorTenant) {
         autorizacion.exigir("usuarios", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
         if (id != null && id.equals(usuarioActualId) && "INACTIVO".equals(estadoNuevo)) {
             throw new NegocioException("No puede inactivar su propio usuario");
@@ -183,6 +204,9 @@ public class UsuarioService {
         Usuario u = em.find(Usuario.class, id);
         if (u == null) {
             throw new NegocioException("El usuario no existe");
+        }
+        if (!superadmin(actorTenant) && !actorTenant.equals(u.getTenant())) {
+            throw new NegocioException("El usuario pertenece a otra empresa");
         }
         u.setEstado(estadoNuevo);
         if ("ACTIVO".equals(estadoNuevo)) {
@@ -193,10 +217,13 @@ public class UsuarioService {
 
     /** Desbloqueo manual sin esperar el vencimiento del bloqueo. */
     @Transactional
-    public void desbloquear(Long id) {
+    public void desbloquear(Long id, Long actorTenant) {
         autorizacion.exigir("usuarios", "EDITAR");
         Usuario u = em.find(Usuario.class, id);
         if (u != null) {
+            if (!superadmin(actorTenant) && !actorTenant.equals(u.getTenant())) {
+                throw new NegocioException("El usuario pertenece a otra empresa");
+            }
             u.setIntentosFallidos(0);
             u.setBloqueadoHasta(null);
         }

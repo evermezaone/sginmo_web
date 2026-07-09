@@ -176,7 +176,7 @@ public class EmpresaService {
         admin.setPerfil("ADMINISTRADOR");
         admin.setTenant(creada.getId());
         admin.setEstado("ACTIVO");
-        usuarioService.guardar(admin, passwordAdmin, creada.getId());
+        usuarioService.guardar(admin, passwordAdmin, creada.getId(), tenant.actual());
         return creada;
     }
 
