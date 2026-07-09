@@ -4,29 +4,26 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import py.com.one.security.web.SesionUsuario;
+import py.com.pysistemas.sginmo.servicio.InicioService;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
  * Tablero de inicio (REQ-0030): indicadores del negocio + datos del esqueleto (REQ-0001).
- * Consultas de agregacion directas; los saldos salen de la vista v_operacion_saldo del motor.
+ * Los KPIs se calculan en InicioService (@AislarTenant) para que corran con app.tenant bajo
+ * RLS (obs 255); el bean solo presenta el snapshot.
  */
 @Named
 @RequestScoped
 public class InicioBean implements Serializable {
 
-    @PersistenceContext(unitName = "sginmoPU")
-    private transient EntityManager em;
-
     @Inject
     private SesionUsuario sesion;
 
     @Inject
-    private ContextoEmpresa contexto;
+    private transient InicioService inicioService;
 
     private long activosLibres, activosOcupados, activosVendidos;
     private long operacionesVigentes, cuotasVencidas;
@@ -47,40 +44,15 @@ public class InicioBean implements Serializable {
         if (sesion == null || !sesion.isLogueado()) {
             return;
         }
-        // Aislamiento multiempresa (obs 238): TODOS los KPIs se filtran por la empresa
-        // del contexto. Sin empresa seleccionada, el tablero queda en cero.
-        Long emp = contexto == null || contexto.getEmpresa() == null ? null : contexto.getEmpresa().getId();
-        if (emp == null) {
-            return;
-        }
-        // activos sin empresa asignada son globales (mismo criterio que listadoActivos, obs 236)
-        activosLibres = num("SELECT COUNT(*) FROM activo WHERE estado = 'LIBRE' AND tenant = :emp", emp);
-        activosOcupados = num("SELECT COUNT(*) FROM activo WHERE estado = 'OCUPADA' AND tenant = :emp", emp);
-        activosVendidos = num("SELECT COUNT(*) FROM activo WHERE estado = 'VENDIDA' AND tenant = :emp", emp);
-        operacionesVigentes = num("SELECT COUNT(*) FROM operacion WHERE estado = 'VIGENTE' AND tenant = :emp", emp);
-        cuotasVencidas = num("SELECT COUNT(*) FROM cronograma_cuota cc JOIN operacion o ON o.operacion = cc.operacion"
-                + " WHERE cc.estado = 'PENDIENTE' AND cc.fecha_vencimiento < current_date AND o.tenant = :emp", emp);
-        recaudadoHoy = dec("SELECT COALESCE(SUM(monto),0) FROM cobro WHERE estado = 'ACTIVO' AND fecha = current_date AND tenant = :emp", emp);
-        saldoPorCobrar = dec("SELECT COALESCE(SUM(s.saldo_pendiente),0) FROM v_operacion_saldo s"
-                + " JOIN operacion o ON o.operacion = s.operacion WHERE o.tenant = :emp", emp);
-    }
-
-    private long num(String sql, Long emp) {
-        try {
-            Object r = em.createNativeQuery(sql).setParameter("emp", emp).getSingleResult();
-            return r == null ? 0 : ((Number) r).longValue();
-        } catch (RuntimeException e) {
-            return 0;
-        }
-    }
-
-    private BigDecimal dec(String sql, Long emp) {
-        try {
-            Object r = em.createNativeQuery(sql).setParameter("emp", emp).getSingleResult();
-            return r == null ? BigDecimal.ZERO : new BigDecimal(r.toString());
-        } catch (RuntimeException e) {
-            return BigDecimal.ZERO;
-        }
+        // Los KPIs se calculan en el service @AislarTenant (fija app.tenant -> RLS ve el tenant).
+        InicioService.Kpis k = inicioService.kpis();
+        activosLibres = k.activosLibres;
+        activosOcupados = k.activosOcupados;
+        activosVendidos = k.activosVendidos;
+        operacionesVigentes = k.operacionesVigentes;
+        cuotasVencidas = k.cuotasVencidas;
+        recaudadoHoy = k.recaudadoHoy;
+        saldoPorCobrar = k.saldoPorCobrar;
     }
 
     public long getActivosLibres() { return activosLibres; }
