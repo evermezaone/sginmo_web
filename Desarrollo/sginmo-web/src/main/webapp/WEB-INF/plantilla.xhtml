@@ -59,6 +59,20 @@
             <h1>SGInmo</h1>
             <small>Gestión inmobiliaria</small>
         </div>
+
+        <h:form id="frmSoporte" rendered="#{superadminBean.esSuperadmin}">
+            <div class="seccion">Soporte · empresa activa</div>
+            <div style="padding: .1rem 1.2rem .7rem;">
+                <p:selectOneMenu value="#{superadminBean.tenantActivo}" style="width:100%;"
+                                 converter="jakarta.faces.Long" title="Operar como una empresa (soporte)">
+                    <f:selectItem itemValue="#{-1}" itemLabel="Global (todas)"/>
+                    <f:selectItems value="#{superadminBean.empresas}" var="e"
+                                   itemValue="#{e.id}" itemLabel="#{e.razonSocial}"/>
+                    <p:ajax listener="#{superadminBean.cambiar()}" oncomplete="window.location.reload()"/>
+                </p:selectOneMenu>
+            </div>
+        </h:form>
+
         <a class="item" href="index.xhtml"><i class="pi pi-home"></i> Inicio</a>
 
         <div class="seccion">Operaciones</div>

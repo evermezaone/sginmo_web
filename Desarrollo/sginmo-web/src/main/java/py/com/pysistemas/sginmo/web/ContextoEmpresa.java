@@ -28,6 +28,9 @@ public class ContextoEmpresa implements Serializable {
     private SesionUsuario sesion;
 
     @Inject
+    private TenantContext tenant;
+
+    @Inject
     private transient EmpresaService empresaService;
 
     @Inject
@@ -42,7 +45,9 @@ public class ContextoEmpresa implements Serializable {
         if (cargado || !sesion.isLogueado()) {
             return;
         }
-        empresa = empresaService.buscar(sesion.getUsuario().getTenant());
+        // F6: usa el tenant EFECTIVO (respeta el "operar como" del SUPERADMIN); en global (-1)
+        // no hay una empresa propia, la barra queda sin nombre hasta elegir una.
+        empresa = empresaService.buscar(tenant.actual());
         if (empresa != null) {
             sucursales = empresaService.sucursalesActivasDe(empresa.getId());
             String guardada = preferencias.leer(sesion.getUsuario().getId(), PANTALLA, CLAVE);
