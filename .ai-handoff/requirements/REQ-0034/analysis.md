@@ -93,7 +93,6 @@ NOTA: no deployar hasta que F3 (native SQL + SP) también esté hecho — V26+F2
 - CATALOGOS SIN tenant mapeado: Articulo/Moneda/Impuesto/FormaPago/UbicacionGeografica
   recibieron `tenant` en V26 pero la entidad JPA no lo mapeaba. CORREGIDO en F4b (commit
   75e6c10): se agrego el campo `tenant` + accesores. Si Codex lo observa en REQ-0034, ya esta.
-- PENDIENTE (F4/F6): ParametroSistema.PK paso a (tenant,clave) en V26 pero la entidad mapea
-  @Id solo `clave`; hay que revisar el mapeo (IdClass/EmbeddedId) cuando se filtren parametros
-  por tenant. Atributo/AtributoPorTipo/Grupo/Sucursal ganaron tenant (Atributo sin entidad JPA;
-  Sucursal/Grupo a revisar al aislar sus ABMs).
+- RESUELTO (obs 245 de Codex): ParametroSistema -> PK compuesta (tenant,clave) via @IdClass;
+  Sucursal +tenant (= persona_juridica); Grupo +tenant con unique (tenant,codigo). Servicios y
+  lectores nativos adaptados. Atributo sigue sin entidad JPA (native SQL, F3/F4).
