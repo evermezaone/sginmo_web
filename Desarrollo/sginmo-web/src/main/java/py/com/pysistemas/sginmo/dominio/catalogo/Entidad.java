@@ -1,28 +1,38 @@
 package py.com.pysistemas.sginmo.dominio.catalogo;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import py.com.one.core.Auditable;
 
 /**
- * Listas abiertas configurables (decision de diseño 3 del usuario):
- * cada lista es un valor de `entidad` y sus opciones son los `codigo`.
- * En la UI el campo lista va fijo y el combo muestra los codigos ACTIVO.
+ * Listas abiertas configurables (tabla generica `entidad`). Multiempresa (V26):
+ * PK numerica autonumerica + indice unico (lista, codigo, tenant). El mismo codigo
+ * puede existir por tenant; -1 = opcion GLOBAL (bloqueada, solo SUPERADMIN).
+ * Los campos que referencian una opcion guardan el id numerico (FK a entidad).
+ * Filtro estandar de combos: WHERE lista = :lista AND tenant IN (-1, :tenant).
  */
 @jakarta.persistence.Entity
 @Table(name = "entidad")
-@IdClass(EntidadId.class)
 public class Entidad extends Auditable {
 
     @Id
-    @Column(name = "entidad", length = 40)
-    private String entidad;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "entidad")
+    private Long id;
 
-    @Id
-    @Column(name = "codigo", length = 40)
+    /** Nombre de la lista (ex columna 'entidad'): TIPOS_CONTRATOS, ESTADOS_CIVILES, ... */
+    @Column(name = "lista", length = 40, nullable = false)
+    private String lista;
+
+    @Column(name = "codigo", length = 40, nullable = false)
     private String codigo;
+
+    /** Discriminador multiempresa; -1 = opcion GLOBAL bloqueada. */
+    @Column(name = "tenant", nullable = false)
+    private Long tenant;
 
     @Column(name = "descripcion", length = 180, nullable = false)
     private String descripcion;
@@ -33,11 +43,17 @@ public class Entidad extends Auditable {
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
 
-    public String getEntidad() { return entidad; }
-    public void setEntidad(String entidad) { this.entidad = entidad; }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getLista() { return lista; }
+    public void setLista(String lista) { this.lista = lista; }
 
     public String getCodigo() { return codigo; }
     public void setCodigo(String codigo) { this.codigo = codigo; }
+
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
 
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }

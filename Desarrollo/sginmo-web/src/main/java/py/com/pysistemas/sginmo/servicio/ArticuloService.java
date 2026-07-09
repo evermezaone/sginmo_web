@@ -259,7 +259,7 @@ public class ArticuloService {
 
     private boolean existeEntidadActiva(String lista, String codigo) {
         return em.createQuery(
-                "SELECT COUNT(e) FROM Entidad e WHERE e.entidad = :lista AND e.codigo = :codigo AND e.estado = 'ACTIVO'",
+                "SELECT COUNT(e) FROM Entidad e WHERE e.lista = :lista AND e.codigo = :codigo AND e.estado = 'ACTIVO'",
                 Long.class)
             .setParameter("lista", lista)
             .setParameter("codigo", codigo)

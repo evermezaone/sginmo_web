@@ -60,7 +60,7 @@ public class ListaBean implements Serializable {
     public void nuevo() {
         if (!sesion.puede(PANTALLA, "CREAR")) return;
         seleccionado = new Entidad();
-        seleccionado.setEntidad(listaSeleccionada);
+        seleccionado.setLista(listaSeleccionada);
         esNueva = true;
         soloLectura = false;
     }
@@ -76,7 +76,7 @@ public class ListaBean implements Serializable {
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
             listaService.guardar(seleccionado, esNueva);
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Opción creada" : "Opción actualizada",
-                    seleccionado.getEntidad() + " / " + seleccionado.getCodigo());
+                    seleccionado.getLista() + " / " + seleccionado.getCodigo());
             listas = listaService.listas();   // por si nacio una lista nueva
             refrescar();
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgLista').hide()");
@@ -90,7 +90,7 @@ public class ListaBean implements Serializable {
         try {
             String nuevo = "ACTIVO".equals(opcion.getEstado()) ? "INACTIVO" : "ACTIVO";
             if (!sesion.puede(PANTALLA, "ACTIVO".equals(nuevo) ? "REACTIVAR" : "INACTIVAR")) return;
-            listaService.cambiarEstado(opcion.getEntidad(), opcion.getCodigo(), nuevo);
+            listaService.cambiarEstado(opcion.getId(), nuevo);
             refrescar();
             aviso(FacesMessage.SEVERITY_INFO, "ACTIVO".equals(nuevo) ? "Opción activada" : "Opción inactivada (deja de aparecer en los combos)",
                     opcion.getCodigo());

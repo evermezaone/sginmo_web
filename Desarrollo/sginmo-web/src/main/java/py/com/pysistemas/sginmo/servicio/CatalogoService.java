@@ -18,7 +18,7 @@ public class CatalogoService {
     /** Opciones ACTIVO de una lista configurable (el campo lista va fijo, patron del diseño). */
     public List<Entidad> opciones(String lista) {
         return em.createQuery(
-                "SELECT e FROM Entidad e WHERE e.entidad = :lista AND e.estado = 'ACTIVO' ORDER BY e.descripcion",
+                "SELECT e FROM Entidad e WHERE e.lista = :lista AND e.estado = 'ACTIVO' ORDER BY e.descripcion",
                 Entidad.class)
             .setParameter("lista", lista)
             .getResultList();

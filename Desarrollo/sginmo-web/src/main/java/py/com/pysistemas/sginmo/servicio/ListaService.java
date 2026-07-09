@@ -27,14 +27,14 @@ public class ListaService {
 
     /** Nombres de listas existentes (para el combo selector de la pantalla). */
     public List<String> listas() {
-        return em.createQuery("SELECT DISTINCT e.entidad FROM Entidad e ORDER BY e.entidad", String.class)
+        return em.createQuery("SELECT DISTINCT e.lista FROM Entidad e ORDER BY e.lista", String.class)
             .getResultList();
     }
 
     public List<Entidad> opcionesDe(String lista, String filtro) {
         String f = filtro == null ? "" : filtro.trim().toLowerCase();
         return em.createQuery(
-                "SELECT e FROM Entidad e WHERE e.entidad = :lista AND (:f = '' OR lower(e.codigo) LIKE :like OR lower(e.descripcion) LIKE :like) ORDER BY e.descripcion",
+                "SELECT e FROM Entidad e WHERE e.lista = :lista AND (:f = '' OR lower(e.codigo) LIKE :like OR lower(e.descripcion) LIKE :like) ORDER BY e.descripcion",
                 Entidad.class)
             .setParameter("lista", lista).setParameter("f", f).setParameter("like", "%" + f + "%")
             .getResultList();
@@ -43,7 +43,7 @@ public class ListaService {
     @Transactional
     public Entidad guardar(Entidad opcion, boolean esNueva) {
         autorizacion.exigir("listas", esNueva ? "CREAR" : "EDITAR");
-        if (opcion.getEntidad() == null || opcion.getEntidad().isBlank()
+        if (opcion.getLista() == null || opcion.getLista().isBlank()
                 || opcion.getCodigo() == null || opcion.getCodigo().isBlank()) {
             throw new NegocioException("Lista y código son obligatorios");
         }
@@ -52,11 +52,16 @@ public class ListaService {
         }
         try {
             if (esNueva) {
-                opcion.setEntidad(opcion.getEntidad().trim().toUpperCase());
+                opcion.setLista(opcion.getLista().trim().toUpperCase());
                 opcion.setCodigo(opcion.getCodigo().trim());
-                var pk = new py.com.pysistemas.sginmo.dominio.catalogo.EntidadId(opcion.getEntidad(), opcion.getCodigo());
-                if (em.find(Entidad.class, pk) != null) {
-                    throw new NegocioException("Ya existe el código '" + opcion.getCodigo() + "' en la lista " + opcion.getEntidad());
+                // TODO(F6): el tenant sale del contexto (SUPERADMIN edita -1; ADMIN su tenant).
+                if (opcion.getTenant() == null) opcion.setTenant(-1L);
+                Long dup = em.createQuery(
+                        "SELECT COUNT(e) FROM Entidad e WHERE e.lista = :l AND e.codigo = :c AND e.tenant = :t", Long.class)
+                    .setParameter("l", opcion.getLista()).setParameter("c", opcion.getCodigo())
+                    .setParameter("t", opcion.getTenant()).getSingleResult();
+                if (dup > 0) {
+                    throw new NegocioException("Ya existe el código '" + opcion.getCodigo() + "' en la lista " + opcion.getLista());
                 }
                 em.persist(opcion);
             } else {
@@ -72,10 +77,9 @@ public class ListaService {
     }
 
     @Transactional
-    public void cambiarEstado(String lista, String codigo, String estadoNuevo) {
+    public void cambiarEstado(Long id, String estadoNuevo) {
         autorizacion.exigir("listas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
-        var pk = new py.com.pysistemas.sginmo.dominio.catalogo.EntidadId(lista, codigo);
-        Entidad e = em.find(Entidad.class, pk);
+        Entidad e = em.find(Entidad.class, id);
         if (e == null) throw new NegocioException("La opción no existe");
         e.setEstado(estadoNuevo);
     }

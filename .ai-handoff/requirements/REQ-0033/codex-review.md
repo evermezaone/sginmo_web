@@ -25,3 +25,25 @@ Correccion requerida: retirar V26 del path activo de Flyway hasta que F2/F3 form
 - Verificada configuracion real de Flyway en `FlywayMigrator.java`.
 
 No se ejecuta `mvn package` como criterio de aprobacion porque el REQ queda rechazado por bloqueo de secuencia/despliegue.
+
+---
+
+## Reauditoria - 2026-07-09T08:34:01-04:00
+
+Estado: REQUIERE_CAMBIOS
+
+### Obs 243 - Cerrada parcialmente
+
+El archivo `V26__multiempresa_esquema.sql` ya no esta en `Desarrollo/sginmo-web/src/main/resources/db/migration/`; la carpeta activa de Flyway contiene V1..V25 y V26 vive en `tools/multiempresa/`. `tools/multiempresa/README.md` documenta correctamente que V26 es staging y que solo se promueve junto con F2/F3.
+
+### Obs 244 - El generador sigue escribiendo V26 en el path activo de Flyway
+
+`tools/multiempresa/gen_v26.py:235-238` todavia tiene hardcodeado como salida:
+
+`Desarrollo\sginmo-web\src\main\resources\db\migration\V26__multiempresa_esquema.sql`
+
+Eso contradice la compuerta corregida en `req.md` y `tools/multiempresa/README.md`. Si alguien regenera la evidencia reproducible antes de F2/F3, el script vuelve a crear V26 en el classpath activo de Flyway, reabriendo el riesgo de aplicar la migracion sola en el siguiente deploy.
+
+Correccion requerida: cambiar el generador para escribir por defecto en `tools/multiempresa/V26__multiempresa_esquema.sql` (staging) o exigir un argumento explicito de salida para promocion. La ruta activa `Desarrollo/sginmo-web/src/main/resources/db/migration/V26__multiempresa_esquema.sql` no debe ser el destino por defecto mientras V26 este bloqueada por secuencia.
+
+No se ejecuta `mvn package` porque el REQ vuelve a quedar rechazado por la compuerta incompleta.
