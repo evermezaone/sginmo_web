@@ -168,10 +168,24 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void agregarAGrupo(Long usuarioId, Long grupoId) {
+    public void agregarAGrupo(Long usuarioId, Long grupoId, Long actorTenant) {
         autorizacion.exigir("usuarios", "EDITAR");
         if (usuarioId == null || grupoId == null) {
             throw new NegocioException("Elija el grupo");
+        }
+        // Pertenencia (F6): el usuario debe ser del tenant del actor y el grupo asignable
+        // (plantilla -1 o del propio tenant); el SUPERADMIN no tiene restriccion.
+        if (!superadmin(actorTenant)) {
+            Usuario u = em.find(Usuario.class, usuarioId);
+            if (u == null) throw new NegocioException("El usuario no existe");
+            if (!actorTenant.equals(u.getTenant())) {
+                throw new NegocioException("El usuario pertenece a otra empresa");
+            }
+            py.com.one.security.dominio.Grupo g = em.find(py.com.one.security.dominio.Grupo.class, grupoId);
+            if (g == null) throw new NegocioException("El grupo no existe");
+            if (!TENANT_GLOBAL.equals(g.getTenant()) && !actorTenant.equals(g.getTenant())) {
+                throw new NegocioException("El grupo pertenece a otra empresa");
+            }
         }
         Long repetidos = em.createQuery(
                 "SELECT COUNT(ug) FROM UsuarioGrupo ug WHERE ug.usuario = :u AND ug.grupo = :g", Long.class)
@@ -240,10 +254,17 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void agregarPermiso(Long usuarioId, String pantalla, String accion) {
+    public void agregarPermiso(Long usuarioId, String pantalla, String accion, Long actorTenant) {
         autorizacion.exigir("usuarios", "EDITAR");
         if (pantalla == null || pantalla.isBlank() || accion == null || accion.isBlank()) {
             throw new NegocioException("Elija pantalla y acción");
+        }
+        if (!superadmin(actorTenant)) {
+            Usuario u = em.find(Usuario.class, usuarioId);
+            if (u == null) throw new NegocioException("El usuario no existe");
+            if (!actorTenant.equals(u.getTenant())) {
+                throw new NegocioException("El usuario pertenece a otra empresa");
+            }
         }
         Long repetidos = em.createQuery(
                 "SELECT COUNT(p) FROM PermisoUsuario p WHERE p.usuario = :u AND p.pantalla = :p AND p.accion = :a",

@@ -156,7 +156,7 @@ public class GrupoBean implements Serializable {
 
     public void agregarIntegrante() {
         try {
-            usuarioService.agregarAGrupo(nuevoIntegrante, seleccionado.getId());
+            usuarioService.agregarAGrupo(nuevoIntegrante, seleccionado.getId(), sesion.tenantActual());
             integrantes = grupoService.listarIntegrantes(seleccionado.getId());
             limpiarAltas();
         } catch (NegocioException e) {

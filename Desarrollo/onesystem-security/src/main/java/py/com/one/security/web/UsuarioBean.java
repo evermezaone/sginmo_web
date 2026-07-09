@@ -160,7 +160,8 @@ public class UsuarioBean implements Serializable {
 
     public void agregarPermiso() {
         try {
-            usuarioService.agregarPermiso(seleccionado.getId(), nuevoPermisoPantalla, nuevoPermisoAccion);
+            usuarioService.agregarPermiso(seleccionado.getId(), nuevoPermisoPantalla, nuevoPermisoAccion,
+                    sesion.tenantActual());
             permisos = usuarioService.listarPermisos(seleccionado.getId());
             limpiarNuevoPermiso();
         } catch (NegocioException e) {
@@ -187,7 +188,7 @@ public class UsuarioBean implements Serializable {
 
     public void agregarGrupo() {
         try {
-            usuarioService.agregarAGrupo(seleccionado.getId(), nuevoGrupo);
+            usuarioService.agregarAGrupo(seleccionado.getId(), nuevoGrupo, sesion.tenantActual());
             grupos = usuarioService.listarGruposDe(seleccionado.getId());
             limpiarNuevoPermiso();
         } catch (NegocioException e) {
