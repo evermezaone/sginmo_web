@@ -221,6 +221,7 @@ public class PersonaService {
         var rol = new PersonaRol();
         rol.setPersona(personaId);
         rol.setRol(rolId);
+        rol.setTenant(tenant.actual());   // V26: el rol pertenece al tenant del contexto (NOT NULL)
         em.persist(rol);
     }
 

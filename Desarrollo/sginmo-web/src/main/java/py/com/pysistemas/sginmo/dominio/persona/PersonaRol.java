@@ -25,6 +25,11 @@ public class PersonaRol extends Auditable implements Serializable {
     @Column(name = "rol", nullable = false)
     private Long rol;                    // FK bigint a entidad (lista ROLES_PERSONA)
 
+    /** Discriminador multiempresa (V26): el rol pertenece a un tenant; -1 = rol identitario
+     *  global (p.ej. EMPRESA). NOT NULL en BD; sin esto la carga de un rol violaria la restriccion. */
+    @Column(name = "tenant", nullable = false)
+    private Long tenant;
+
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
 
@@ -33,6 +38,8 @@ public class PersonaRol extends Auditable implements Serializable {
     public void setPersona(Long persona) { this.persona = persona; }
     public Long getRol() { return rol; }
     public void setRol(Long rol) { this.rol = rol; }
+    public Long getTenant() { return tenant; }
+    public void setTenant(Long tenant) { this.tenant = tenant; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 

@@ -35,6 +35,14 @@ public class EmpresaService {
     @jakarta.inject.Inject
     private CatalogoService catalogoService;
 
+    /** Provisiona el usuario ADMINISTRADOR inicial de una empresa nueva (F6). */
+    @jakarta.inject.Inject
+    private py.com.one.security.servicio.UsuarioService usuarioService;
+
+    /** Contexto multiempresa: solo el SUPERADMIN (-1) puede provisionar empresas (F6). */
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
     /** Id de la opcion EMPRESA en la lista ROLES_PERSONA (identitaria, vive en -1). */
     private Long rolEmpresaId() { return catalogoService.idOpcion("ROLES_PERSONA", "EMPRESA"); }
 
@@ -121,6 +129,9 @@ public class EmpresaService {
                 var rol = new PersonaRol();
                 rol.setPersona(empresa.getId());
                 rol.setRol(rolEmpresaId());
+                // El rol EMPRESA es identitario y vive en el tenant global -1 (V26 backfill:
+                // persona_rol.tenant = -1 para EMPRESA). Sin esto violaria persona_rol.tenant NOT NULL.
+                rol.setTenant(py.com.pysistemas.sginmo.web.TenantContext.GLOBAL);
                 em.persist(rol);
                 resultado = empresa;
             } else {
@@ -135,6 +146,38 @@ public class EmpresaService {
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);
         }
+    }
+
+    /**
+     * Alta de empresa como UNIDAD (F6, SUPERADMIN): en una sola transaccion crea la persona
+     * juridica con rol EMPRESA, sus datos comerciales, la sucursal por defecto y el usuario
+     * ADMINISTRADOR inicial (tenant = la nueva empresa, con cambio de clave forzado). Si algo
+     * falla, no queda una empresa a medio provisionar. Solo el SUPERADMIN (-1) puede hacerlo.
+     */
+    @Transactional
+    public PersonaJuridica altaEmpresa(PersonaJuridica empresa, PersonaEmpresa datos,
+                                       Sucursal sucursal, py.com.one.security.dominio.Usuario admin,
+                                       String passwordAdmin) {
+        if (!tenant.esSuperadmin()) {
+            throw new NegocioException("Solo el superadministrador puede dar de alta empresas");
+        }
+        if (admin == null || admin.getCodigoUsuario() == null || admin.getCodigoUsuario().isBlank()) {
+            throw new NegocioException("El usuario administrador inicial es obligatorio");
+        }
+        // 1) empresa (persona_juridica + rol EMPRESA en -1) + datos comerciales propios.
+        PersonaJuridica creada = guardar(empresa, datos);
+        // 2) sucursal por defecto de la nueva empresa (tenant = la empresa).
+        if (sucursal != null) {
+            sucursal.setPersonaJuridica(creada.getId());
+            sucursal.setPorDefecto(true);
+            guardarSucursal(sucursal);
+        }
+        // 3) usuario ADMINISTRADOR inicial, atado al tenant de la nueva empresa.
+        admin.setPerfil("ADMINISTRADOR");
+        admin.setTenant(creada.getId());
+        admin.setEstado("ACTIVO");
+        usuarioService.guardar(admin, passwordAdmin, creada.getId());
+        return creada;
     }
 
     /** Baja/alta logica sobre persona.estado (la empresa desaparece de selecciones nuevas). */
