@@ -47,12 +47,9 @@ public class Persona extends Auditable implements Serializable {
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
 
-    // ── Datos fiscales / ubicacion (columnas de la tabla que faltaban en el ABM) ──
-    @Column(name = "tipo_documento_lista", length = 40)
-    private String tipoDocumentoLista = "TIPOS_DOCUMENTOS_IDENTIDAD";
-
-    @Column(name = "tipo_documento_codigo", length = 40)
-    private String tipoDocumentoCodigo;
+    // ── Tipo de documento por id (V26): FK bigint a entidad (lista TIPOS_DOCUMENTOS_IDENTIDAD) ──
+    @Column(name = "tipo_documento")
+    private Long tipoDocumento;
 
     @Column(name = "clasificacion_fiscal", length = 60)
     private String clasificacionFiscal;
@@ -87,10 +84,8 @@ public class Persona extends Auditable implements Serializable {
     public void setEmail(String email) { this.email = email; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
-    public String getTipoDocumentoLista() { return tipoDocumentoLista; }
-    public void setTipoDocumentoLista(String v) { this.tipoDocumentoLista = v; }
-    public String getTipoDocumentoCodigo() { return tipoDocumentoCodigo; }
-    public void setTipoDocumentoCodigo(String v) { this.tipoDocumentoCodigo = v; }
+    public Long getTipoDocumento() { return tipoDocumento; }
+    public void setTipoDocumento(Long v) { this.tipoDocumento = v; }
     public String getClasificacionFiscal() { return clasificacionFiscal; }
     public void setClasificacionFiscal(String v) { this.clasificacionFiscal = v; }
     public Long getUbicacion() { return ubicacion; }

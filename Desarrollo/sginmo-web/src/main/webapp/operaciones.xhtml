@@ -106,14 +106,14 @@
                 </div>
                 <div class="fila-3">
                     <div class="campo"><label>Tipo de contrato</label>
-                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoContratoCodigo}" label="Tipo de contrato">
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoContrato}" label="Tipo de contrato">
                             <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
-                            <f:selectItems value="#{operacionBean.tiposContrato}" var="tc" itemLabel="#{tc.descripcion}" itemValue="#{tc.codigo}"/>
+                            <f:selectItems value="#{operacionBean.tiposContrato}" var="tc" itemLabel="#{tc.descripcion}" itemValue="#{tc.id}"/>
                         </p:selectOneMenu></div>
                     <div class="campo"><label>Tipo de financiación</label>
-                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoFinanciacionCodigo}" label="Tipo de financiación">
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.tipoFinanciacion}" label="Tipo de financiación">
                             <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
-                            <f:selectItems value="#{operacionBean.tiposFinanciacion}" var="tf" itemLabel="#{tf.descripcion}" itemValue="#{tf.codigo}"/>
+                            <f:selectItems value="#{operacionBean.tiposFinanciacion}" var="tf" itemLabel="#{tf.descripcion}" itemValue="#{tf.id}"/>
                         </p:selectOneMenu></div>
                     <div class="campo"><label>Avisar renovación</label>
                         <p:toggleSwitch value="#{operacionBean.seleccionado.avisoRenovacion}"/></div>

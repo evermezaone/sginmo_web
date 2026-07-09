@@ -162,9 +162,9 @@
                         <div class="fila-3">
                             <div class="campo">
                                 <label>Tipo de documento</label>
-                                <p:selectOneMenu value="#{personaBean.seleccionado.tipoDocumentoCodigo}" label="Tipo de documento" disabled="#{personaBean.soloLectura}">
+                                <p:selectOneMenu value="#{personaBean.seleccionado.tipoDocumento}" label="Tipo de documento" disabled="#{personaBean.soloLectura}">
                                     <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{personaBean.tiposDocumento}" var="td" itemLabel="#{td.descripcion}" itemValue="#{td.codigo}"/>
+                                    <f:selectItems value="#{personaBean.tiposDocumento}" var="td" itemLabel="#{td.descripcion}" itemValue="#{td.id}"/>
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
