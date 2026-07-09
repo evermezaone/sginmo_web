@@ -52,6 +52,7 @@ DECLARE
   v_pla_tenant bigint; v_pla_sucursal bigint; v_pla_estado varchar;
   v_fp forma_pago%ROWTYPE; v_ntcr_tipo varchar; v_ntcr_persona bigint; v_ntcr_estado varchar;
   v_hay_datos boolean;
+  v_emisor bigint; v_procesador bigint; v_motivo_rechazo bigint;
 BEGIN
   -- La planilla debe existir (FOR UPDATE), estar ABIERTA y coincidir en tenant/sucursal.
   SELECT tenant, sucursal, estado INTO v_pla_tenant, v_pla_sucursal, v_pla_estado
@@ -115,20 +116,38 @@ BEGIN
       OR COALESCE(p_numero_deposito,'') <> '' OR COALESCE(p_estado_deposito,'') <> ''
       OR COALESCE(p_motivo_rechazo,'') <> '' OR p_ntcr IS NOT NULL;
   IF v_hay_datos THEN
-    -- V26: emisor/procesador/motivo_rechazo son id de entidad; se resuelven desde el
-    -- codigo por (lista, codigo, tenant IN(-1, tenant del documento)).
+    -- V26: emisor/procesador/motivo_rechazo son id de entidad. Se resuelven desde el codigo
+    -- por (lista, codigo, tenant IN(-1, tenant del documento)) PREFIRIENDO la opcion propia
+    -- del tenant sobre la global. Si el codigo viene NO vacio y no existe para el tenant
+    -- visible, se ABORTA (obs 246): antes la FK compuesta contra entidad lo rechazaba; ahora
+    -- resolver a NULL en silencio perderia la trazabilidad del medio de pago.
+    IF COALESCE(p_emisor,'') <> '' THEN
+      SELECT e.entidad INTO v_emisor FROM entidad e
+        WHERE e.lista='EMISORES' AND e.codigo=p_emisor AND e.tenant IN (-1, v_tenant)
+        ORDER BY (e.tenant = v_tenant) DESC LIMIT 1;
+      IF v_emisor IS NULL THEN RAISE EXCEPTION 'El emisor % no existe en EMISORES para la empresa', p_emisor; END IF;
+    END IF;
+    IF COALESCE(p_procesador,'') <> '' THEN
+      SELECT e.entidad INTO v_procesador FROM entidad e
+        WHERE e.lista='PROCESADORES' AND e.codigo=p_procesador AND e.tenant IN (-1, v_tenant)
+        ORDER BY (e.tenant = v_tenant) DESC LIMIT 1;
+      IF v_procesador IS NULL THEN RAISE EXCEPTION 'El procesador % no existe en PROCESADORES para la empresa', p_procesador; END IF;
+    END IF;
+    IF COALESCE(p_motivo_rechazo,'') <> '' THEN
+      SELECT e.entidad INTO v_motivo_rechazo FROM entidad e
+        WHERE e.lista='MOTIVOS_RECHAZO' AND e.codigo=p_motivo_rechazo AND e.tenant IN (-1, v_tenant)
+        ORDER BY (e.tenant = v_tenant) DESC LIMIT 1;
+      IF v_motivo_rechazo IS NULL THEN RAISE EXCEPTION 'El motivo de rechazo % no existe en MOTIVOS_RECHAZO para la empresa', p_motivo_rechazo; END IF;
+    END IF;
     INSERT INTO dato_cobro (cobro, emisor, procesador, numero, serie,
                             cuenta_corriente, fecha_vencimiento, referencia,
                             cobrador, fecha_deposito, numero_deposito, estado_deposito,
                             motivo_rechazo, ntcr_documento,
                             usuario_creacion, fecha_creacion)
-      VALUES (v_cobro,
-              (SELECT e.entidad FROM entidad e WHERE e.lista='EMISORES'        AND e.codigo=NULLIF(p_emisor,'')         AND e.tenant IN (-1, v_tenant) LIMIT 1),
-              (SELECT e.entidad FROM entidad e WHERE e.lista='PROCESADORES'    AND e.codigo=NULLIF(p_procesador,'')     AND e.tenant IN (-1, v_tenant) LIMIT 1),
+      VALUES (v_cobro, v_emisor, v_procesador,
               NULLIF(p_numero,''), NULLIF(p_serie,''), NULLIF(p_cuenta,''), p_vencimiento, NULLIF(p_referencia,''),
               p_cobrador, p_fecha_deposito, NULLIF(p_numero_deposito,''), NULLIF(p_estado_deposito,''),
-              (SELECT e.entidad FROM entidad e WHERE e.lista='MOTIVOS_RECHAZO' AND e.codigo=NULLIF(p_motivo_rechazo,'') AND e.tenant IN (-1, v_tenant) LIMIT 1),
-              p_ntcr, p_usuario, now());
+              v_motivo_rechazo, p_ntcr, p_usuario, now());
   END IF;
 
   UPDATE documento SET saldo = saldo - p_monto, version = version + 1 WHERE documento = p_documento;
