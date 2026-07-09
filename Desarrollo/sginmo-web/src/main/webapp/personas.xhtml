@@ -249,7 +249,7 @@
                         <p:dataTable id="tblRoles" var="rp" value="#{personaBean.rolesPersona}"
                                      emptyMessage="Sin roles asignados" style="margin-top:.5rem;">
                             <p:column headerText="Rol">
-                                <h:outputText value="#{personaBean.descripcionRol(rp.rolCodigo)}"/>
+                                <h:outputText value="#{personaBean.descripcionRol(rp.rol)}"/>
                             </p:column>
                             <p:column style="width:4rem; text-align:center;">
                                 <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"

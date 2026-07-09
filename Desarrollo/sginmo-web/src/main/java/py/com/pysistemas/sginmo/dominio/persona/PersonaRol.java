@@ -22,8 +22,8 @@ public class PersonaRol extends Auditable implements Serializable {
     @Column(name = "persona", nullable = false)
     private Long persona;
 
-    @Column(name = "rol_codigo", length = 40, nullable = false)
-    private String rolCodigo;
+    @Column(name = "rol", nullable = false)
+    private Long rol;                    // FK bigint a entidad (lista ROLES_PERSONA)
 
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ACTIVO";
@@ -31,8 +31,8 @@ public class PersonaRol extends Auditable implements Serializable {
     public Long getId() { return id; }
     public Long getPersona() { return persona; }
     public void setPersona(Long persona) { this.persona = persona; }
-    public String getRolCodigo() { return rolCodigo; }
-    public void setRolCodigo(String rolCodigo) { this.rolCodigo = rolCodigo; }
+    public Long getRol() { return rol; }
+    public void setRol(Long rol) { this.rol = rol; }
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
 

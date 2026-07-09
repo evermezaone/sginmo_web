@@ -28,8 +28,12 @@ public class EmpresaService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
-    private static final String EXISTE_ROL_EMPRESA =
-        "SELECT COUNT(r) FROM PersonaRol r WHERE r.persona = :persona AND r.rolCodigo = 'EMPRESA' AND r.estado = 'ACTIVO'";
+    /** Resuelve id de opciones de catalogo (V26: PersonaRol.rol es id de entidad). */
+    @jakarta.inject.Inject
+    private CatalogoService catalogoService;
+
+    /** Id de la opcion EMPRESA en la lista ROLES_PERSONA (identitaria, vive en -1). */
+    private Long rolEmpresaId() { return catalogoService.idOpcion("ROLES_PERSONA", "EMPRESA"); }
 
     // ── Consultas ──
 
@@ -53,7 +57,7 @@ public class EmpresaService {
     }
 
     private String subRol() {
-        return "SELECT 1 FROM PersonaRol r WHERE r.persona = pj.id AND r.rolCodigo = 'EMPRESA'";
+        return "SELECT 1 FROM PersonaRol r WHERE r.persona = pj.id AND r.rol = " + rolEmpresaId();
     }
 
     private void filtroGlobal(jakarta.persistence.TypedQuery<?> q, String filtro) {
@@ -96,7 +100,7 @@ public class EmpresaService {
                 em.flush();
                 var rol = new PersonaRol();
                 rol.setPersona(empresa.getId());
-                rol.setRolCodigo("EMPRESA");
+                rol.setRol(rolEmpresaId());
                 em.persist(rol);
                 resultado = empresa;
             } else {

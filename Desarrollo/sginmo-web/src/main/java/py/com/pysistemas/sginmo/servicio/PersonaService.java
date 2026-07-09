@@ -33,6 +33,10 @@ public class PersonaService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    /** Resuelve id de opciones de catalogo (V26: PersonaRol.rol es id de entidad). */
+    @jakarta.inject.Inject
+    private CatalogoService catalogoService;
+
     // ── Consultas ──
 
     public long contar(String filtro) {
@@ -59,11 +63,13 @@ public class PersonaService {
 
     /** Personas activas con un rol dado (para combos de clientes, proveedores, propietarios...). */
     public List<Persona> porRol(String rolCodigo) {
+        Long rolId = catalogoService.idOpcion("ROLES_PERSONA", rolCodigo);
+        if (rolId == null) return java.util.List.of();
         return em.createQuery(
                 "SELECT p FROM Persona p WHERE p.estado = 'ACTIVO' AND EXISTS "
-                + "(SELECT 1 FROM PersonaRol r WHERE r.persona = p.id AND r.rolCodigo = :rol AND r.estado = 'ACTIVO')"
+                + "(SELECT 1 FROM PersonaRol r WHERE r.persona = p.id AND r.rol = :rol AND r.estado = 'ACTIVO')"
                 + " ORDER BY p.nombre", Persona.class)
-            .setParameter("rol", rolCodigo)
+            .setParameter("rol", rolId)
             .getResultList();
     }
 
@@ -74,7 +80,7 @@ public class PersonaService {
 
     /** Roles ACTIVOS de la persona (los INACTIVOS quedan como historial, no se listan). */
     public List<PersonaRol> rolesDe(Long personaId) {
-        return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.estado = 'ACTIVO' ORDER BY r.rolCodigo", PersonaRol.class)
+        return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.estado = 'ACTIVO' ORDER BY r.rol", PersonaRol.class)
             .setParameter("p", personaId).getResultList();
     }
 
@@ -163,10 +169,12 @@ public class PersonaService {
     public void agregarRol(Long personaId, String rolCodigo) {
         autorizacion.exigir("personas", "EDITAR");
         if (rolCodigo == null || rolCodigo.isBlank()) throw new NegocioException("Elija el rol");
+        Long rolId = catalogoService.idOpcion("ROLES_PERSONA", rolCodigo);
+        if (rolId == null) throw new NegocioException("El rol '" + rolCodigo + "' no existe en el catalogo");
         // Si ya existe (activo o inactivo) NO se duplica: activo -> error; inactivo -> se reactiva.
         var existentes = em.createQuery(
-                "SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.rolCodigo = :r", PersonaRol.class)
-            .setParameter("p", personaId).setParameter("r", rolCodigo).getResultList();
+                "SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.rol = :r", PersonaRol.class)
+            .setParameter("p", personaId).setParameter("r", rolId).getResultList();
         for (var r : existentes) {
             if ("ACTIVO".equals(r.getEstado())) throw new NegocioException("La persona ya tiene ese rol");
         }
@@ -176,7 +184,7 @@ public class PersonaService {
         }
         var rol = new PersonaRol();
         rol.setPersona(personaId);
-        rol.setRolCodigo(rolCodigo);
+        rol.setRol(rolId);
         em.persist(rol);
     }
 

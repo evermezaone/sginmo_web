@@ -180,8 +180,10 @@ public class PersonaBean implements Serializable {
         }
     }
 
-    public String descripcionRol(String codigo) {
-        return roles.stream().filter(r -> r.getCodigo().equals(codigo)).map(Entidad::getDescripcion).findFirst().orElse(codigo);
+    public String descripcionRol(Long id) {
+        if (id == null) return "";
+        return roles.stream().filter(r -> r.getId().equals(id)).map(Entidad::getDescripcion)
+                .findFirst().orElse(String.valueOf(id));
     }
 
     private void aviso(FacesMessage.Severity s, String t, String d) {
