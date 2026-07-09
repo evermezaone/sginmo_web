@@ -26,6 +26,10 @@ public class ArticuloService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    /** Resuelve id de opciones de catalogo (V26: ArticuloPropiedad.propiedad es id). */
+    @jakarta.inject.Inject
+    private CatalogoService catalogoService;
+
     // ── Consultas (paginacion lazy para p:dataTable) ──
 
     /** Rutas JPQL permitidas para ordenar (clave = field de la columna en la vista). */
@@ -144,15 +148,15 @@ public class ArticuloService {
         var origen = listarPropiedades(origenId);
         for (var p : origen) {
             Long repetidas = em.createQuery(
-                    "SELECT COUNT(x) FROM ArticuloPropiedad x WHERE x.articulo = :art AND x.propiedadCodigo = :cod",
+                    "SELECT COUNT(x) FROM ArticuloPropiedad x WHERE x.articulo = :art AND x.propiedad = :cod",
                     Long.class)
                 .setParameter("art", destinoId)
-                .setParameter("cod", p.getPropiedadCodigo())
+                .setParameter("cod", p.getPropiedad())
                 .getSingleResult();
             if (repetidas == 0) {
                 var copia = new py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad();
                 copia.setArticulo(destinoId);
-                copia.setPropiedadCodigo(p.getPropiedadCodigo());
+                copia.setPropiedad(p.getPropiedad());
                 copia.setValor(p.getValor());
                 em.persist(copia);
             }
@@ -163,7 +167,7 @@ public class ArticuloService {
 
     public List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> listarPropiedades(Long articuloId) {
         return em.createQuery(
-                "SELECT p FROM ArticuloPropiedad p WHERE p.articulo = :art ORDER BY p.propiedadCodigo",
+                "SELECT p FROM ArticuloPropiedad p WHERE p.articulo = :art ORDER BY p.propiedad",
                 py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad.class)
             .setParameter("art", articuloId)
             .getResultList();
@@ -181,18 +185,19 @@ public class ArticuloService {
         if (!existeEntidadActiva("PROPIEDADES_ARTICULO", codigo)) {
             throw new NegocioException("La propiedad elegida no existe o está inactiva");
         }
+        Long propId = catalogoService.idOpcion("PROPIEDADES_ARTICULO", codigo);
         Long repetidas = em.createQuery(
-                "SELECT COUNT(p) FROM ArticuloPropiedad p WHERE p.articulo = :art AND p.propiedadCodigo = :cod",
+                "SELECT COUNT(p) FROM ArticuloPropiedad p WHERE p.articulo = :art AND p.propiedad = :cod",
                 Long.class)
             .setParameter("art", articuloId)
-            .setParameter("cod", codigo)
+            .setParameter("cod", propId)
             .getSingleResult();
         if (repetidas > 0) {
             throw new NegocioException("El artículo ya tiene cargada esa propiedad");
         }
         var p = new py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad();
         p.setArticulo(articuloId);
-        p.setPropiedadCodigo(codigo);
+        p.setPropiedad(propId);
         p.setValor(valor);
         em.persist(p);
     }

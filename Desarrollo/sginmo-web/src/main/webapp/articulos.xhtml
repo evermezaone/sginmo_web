@@ -455,7 +455,7 @@
                         <p:dataTable id="tblPropiedades" var="prop" value="#{articuloBean.propiedades}"
                                      emptyMessage="Sin propiedades cargadas" style="margin-top:.5rem;">
                             <p:column headerText="Propiedad" style="width:14rem;">
-                                <h:outputText value="#{prop.propiedadCodigo}"/>
+                                <h:outputText value="#{articuloBean.descripcionPropiedad(prop.propiedad)}"/>
                             </p:column>
                             <p:column headerText="Valor">
                                 <h:outputText value="#{prop.valor}"/>

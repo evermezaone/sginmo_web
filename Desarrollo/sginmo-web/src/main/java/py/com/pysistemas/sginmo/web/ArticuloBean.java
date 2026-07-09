@@ -392,6 +392,9 @@ public class ArticuloBean implements Serializable {
     public List<Entidad> getGrupos() { return grupos; }
     public List<Entidad> getSubgrupos() { return subgrupos; }
     public List<Entidad> getProcedencias() { return procedencias; }
+
+    /** Descripcion de la propiedad (id -> texto) para la grilla (V26: propiedad es id). */
+    public String descripcionPropiedad(Long id) { return catalogoService.descripcionOpcion(id); }
     public List<py.com.pysistemas.sginmo.dominio.persona.Persona> getProveedores() { return proveedores; }
 
     public List<py.com.pysistemas.sginmo.dominio.catalogo.ArticuloPropiedad> getPropiedades() { return propiedades; }

@@ -23,11 +23,8 @@ public class ArticuloPropiedad extends Auditable {
     @Column(name = "articulo", nullable = false)
     private Long articulo;
 
-    @Column(name = "propiedad_lista", length = 40, nullable = false)
-    private String propiedadLista = "PROPIEDADES_ARTICULO";
-
-    @Column(name = "propiedad_codigo", length = 40, nullable = false)
-    private String propiedadCodigo;
+    @Column(name = "propiedad", nullable = false)
+    private Long propiedad;              // FK bigint a entidad (lista PROPIEDADES_ARTICULO)
 
     @Column(name = "valor", length = 100)
     private String valor;
@@ -44,11 +41,8 @@ public class ArticuloPropiedad extends Auditable {
     public Long getArticulo() { return articulo; }
     public void setArticulo(Long articulo) { this.articulo = articulo; }
 
-    public String getPropiedadLista() { return propiedadLista; }
-    public void setPropiedadLista(String propiedadLista) { this.propiedadLista = propiedadLista; }
-
-    public String getPropiedadCodigo() { return propiedadCodigo; }
-    public void setPropiedadCodigo(String propiedadCodigo) { this.propiedadCodigo = propiedadCodigo; }
+    public Long getPropiedad() { return propiedad; }
+    public void setPropiedad(Long propiedad) { this.propiedad = propiedad; }
 
     public String getValor() { return valor; }
     public void setValor(String valor) { this.valor = valor; }
