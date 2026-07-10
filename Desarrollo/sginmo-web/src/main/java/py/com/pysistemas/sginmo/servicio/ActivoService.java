@@ -127,6 +127,18 @@ public class ActivoService {
             .setMaxResults(15).getResultList();
     }
 
+    /** Combo cerrado para generacion masiva: solo activos tipo LOTEAMIENTO del tenant. */
+    public List<Activo> loteamientos() {
+        Long loteamiento = catalogoService.idOpcion("TIPOS_ACTIVO", "LOTEAMIENTO");
+        if (loteamiento == null) return java.util.List.of();
+        return em.createQuery(
+                "SELECT a FROM Activo a WHERE a.tenant = :t AND a.tipo = :tipo ORDER BY a.nombre",
+                Activo.class)
+            .setParameter("t", tenant.actual())
+            .setParameter("tipo", loteamiento)
+            .getResultList();
+    }
+
     /** Ids de todos los descendientes (subarbol) de un activo, via CTE recursiva. */
     private java.util.Set<Long> descendientes(Long rootId) {
         if (rootId == null) return java.util.Set.of();

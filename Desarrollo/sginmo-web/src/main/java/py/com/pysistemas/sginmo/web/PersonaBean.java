@@ -158,6 +158,7 @@ public class PersonaBean implements Serializable {
             } else {
                 personaService.guardarJuridica(seleccionado, juridica, datosEmpresa, tenant);
             }
+            guardarRolesPendientes();
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Persona creada" : "Persona actualizada", seleccionado.getNombre());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgPersona').hide()");
             org.primefaces.PrimeFaces.current().ajax().update("frmLista:tabla", "frmLista:mensajes");
@@ -179,6 +180,24 @@ public class PersonaBean implements Serializable {
 
     public void agregarRol() {
         try {
+            if (nuevoRol == null || nuevoRol.isBlank()) {
+                throw new NegocioException("Elija el rol");
+            }
+            if (seleccionado.getId() == null) {
+                Long rolId = catalogoService.idOpcion("ROLES_PERSONA", nuevoRol);
+                if (rolId == null) throw new NegocioException("El rol '" + nuevoRol + "' no existe en el catalogo");
+                if (rolesPersona.stream().anyMatch(r -> rolId.equals(r.getRol()))) {
+                    throw new NegocioException("La persona ya tiene ese rol");
+                }
+                var temporal = new PersonaRol();
+                temporal.setRol(rolId);
+                temporal.setTenant(tenantActual());
+                var copia = new java.util.ArrayList<>(rolesPersona);
+                copia.add(temporal);
+                rolesPersona = copia;
+                nuevoRol = null;
+                return;
+            }
             personaService.agregarRol(seleccionado.getId(), nuevoRol);
             rolesPersona = personaService.rolesDe(seleccionado.getId());
             nuevoRol = null;
@@ -187,19 +206,48 @@ public class PersonaBean implements Serializable {
         }
     }
 
-    public void quitarRol(Long personaRolId) {
+    public void quitarRol(PersonaRol rol) {
         try {
-            personaService.quitarRol(personaRolId);
+            if (rol == null) return;
+            if (rol.getId() == null) {
+                rolesPersona = rolesPersona.stream()
+                    .filter(r -> !java.util.Objects.equals(r.getRol(), rol.getRol()))
+                    .toList();
+                return;
+            }
+            personaService.quitarRol(rol.getId());
             rolesPersona = personaService.rolesDe(seleccionado.getId());
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el rol", e.getMessage());
         }
     }
 
+    private void guardarRolesPendientes() {
+        if (seleccionado.getId() == null) return;
+        var pendientes = rolesPersona.stream()
+            .filter(r -> r.getId() == null)
+            .map(PersonaRol::getRol)
+            .toList();
+        for (Long rolId : pendientes) {
+            String codigo = roles.stream()
+                .filter(r -> r.getId().equals(rolId))
+                .map(Entidad::getCodigo)
+                .findFirst()
+                .orElseThrow(() -> new NegocioException("El rol seleccionado ya no existe"));
+            personaService.agregarRol(seleccionado.getId(), codigo);
+        }
+        rolesPersona = personaService.rolesDe(seleccionado.getId());
+    }
+
     public String descripcionRol(Long id) {
         if (id == null) return "";
         return roles.stream().filter(r -> r.getId().equals(id)).map(Entidad::getDescripcion)
                 .findFirst().orElse(String.valueOf(id));
+    }
+
+    public String getTituloDialogo() {
+        if (seleccionado == null) return "Persona";
+        return seleccionadoEsFisica() ? "Persona fisica" : "Persona juridica";
     }
 
     private void aviso(FacesMessage.Severity s, String t, String d) {

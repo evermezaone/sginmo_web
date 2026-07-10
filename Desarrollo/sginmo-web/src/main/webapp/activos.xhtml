@@ -63,11 +63,10 @@
             <p:messages id="msjLotes" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <div class="campo">
                 <label>Loteamiento contenedor *</label>
-                <p:autoComplete value="#{activoBean.loteContenedor}" label="Loteamiento"
-                                completeMethod="#{activoBean.completarLoteamiento}" var="lc"
-                                itemLabel="#{lc.nombre}" itemValue="#{lc.id}"
-                                forceSelection="true" minQueryLength="2" queryDelay="400"
-                                style="width:100%;" inputStyle="width:100%;"/>
+                <p:selectOneMenu value="#{activoBean.loteContenedor}" label="Loteamiento" filter="true" filterMatchMode="contains">
+                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{activoBean.loteamientos}" var="lc" itemLabel="#{lc.nombre}" itemValue="#{lc.id}"/>
+                </p:selectOneMenu>
             </div>
             <div class="fila-3">
                 <div class="campo"><label>Manzana</label>
@@ -103,6 +102,45 @@
             <ui:fragment rendered="#{not empty activoBean.seleccionado}">
                 <p:tabView id="tabs" widgetVar="wtabsAct" activeIndex="#{activoBean.tabActivo}">
                     <p:tab title="Datos">
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Pais</label>
+                                <p:selectOneMenu id="pais" value="#{activoBean.pais}" label="Pais" filter="true" filterMatchMode="contains"
+                                                 disabled="#{activoBean.soloLectura}">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{activoBean.paises}" var="g" itemLabel="#{g.nombre}" itemValue="#{g.id}"/>
+                                    <p:ajax listener="#{activoBean.paisCambiado()}" update="departamento ciudad barrio"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Departamento</label>
+                                <p:selectOneMenu id="departamento" value="#{activoBean.departamento}" label="Departamento" filter="true" filterMatchMode="contains"
+                                                 disabled="#{activoBean.soloLectura or empty activoBean.pais}">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{activoBean.departamentos}" var="g" itemLabel="#{g.nombre}" itemValue="#{g.id}"/>
+                                    <p:ajax listener="#{activoBean.departamentoCambiado()}" update="ciudad barrio"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Ciudad</label>
+                                <p:selectOneMenu id="ciudad" value="#{activoBean.ciudad}" label="Ciudad" filter="true" filterMatchMode="contains"
+                                                 disabled="#{activoBean.soloLectura or empty activoBean.departamento}">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{activoBean.ciudades}" var="g" itemLabel="#{g.nombre}" itemValue="#{g.id}"/>
+                                    <p:ajax listener="#{activoBean.ciudadCambiada()}" update="barrio"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Barrio</label>
+                                <p:selectOneMenu id="barrio" value="#{activoBean.barrio}" label="Barrio" filter="true" filterMatchMode="contains"
+                                                 disabled="#{activoBean.soloLectura or empty activoBean.ciudad}">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{activoBean.barrios}" var="g" itemLabel="#{g.nombre}" itemValue="#{g.id}"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
                         <div class="fila-2">
                             <div class="campo">
                                 <label>Nombre *</label>
@@ -193,9 +231,7 @@
                         </p:dataTable>
                     </p:tab>
 
-                    <p:tab title="Propietarios"
-                           disabled="#{activoBean.seleccionado.id == null}"
-                           titletip="#{activoBean.seleccionado.id == null ? 'Guarde el activo para asignar propietarios' : ''}">
+                    <p:tab title="Propietarios">
                         <div class="campo">
                             <label>Propietario (personas con rol Propietario)</label>
                             <div style="display:flex; gap:.5rem;">
@@ -212,7 +248,7 @@
                             <p:column headerText="Propietario"><h:outputText value="#{pr[1]}"/></p:column>
                             <p:column style="width:4rem; text-align:center;">
                                 <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar" rendered="#{!activoBean.soloLectura}"
-                                                 actionListener="#{activoBean.quitarPropietario(pr[0])}"
+                                                 actionListener="#{activoBean.quitarPropietario(pr)}"
                                                  process="@this" update="tblProp :frmEdicion:msjEdicion"/>
                             </p:column>
                         </p:dataTable>

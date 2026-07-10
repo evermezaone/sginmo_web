@@ -164,6 +164,35 @@ public class PdfService {
         }
     }
 
+    public void titulo(Reporte r, String texto) {
+        try {
+            var p = new Paragraph(texto == null ? "" : texto, FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK));
+            p.setSpacingBefore(6);
+            p.setSpacingAfter(6);
+            r.doc.add(p);
+        } catch (Exception e) {
+            throw new NegocioException("No se pudo generar el PDF: " + e.getMessage());
+        }
+    }
+
+    public void parrafos(Reporte r, String texto) {
+        if (texto == null || texto.isBlank()) {
+            espacio(r);
+            return;
+        }
+        for (String bloque : texto.replace("\r\n", "\n").split("\n")) {
+            if (bloque.isBlank()) {
+                espacio(r);
+            } else {
+                parrafo(r, bloque);
+            }
+        }
+    }
+
+    public void nuevaPagina(Reporte r) {
+        r.doc.newPage();
+    }
+
     public void espacio(Reporte r) {
         try { r.doc.add(new Paragraph(" ")); } catch (Exception ignored) { }
     }

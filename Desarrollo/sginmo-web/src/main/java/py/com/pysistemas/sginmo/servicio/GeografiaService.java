@@ -31,6 +31,9 @@ public class GeografiaService {
     @jakarta.inject.Inject
     private py.com.pysistemas.sginmo.web.TenantContext tenant;
 
+    @jakarta.inject.Inject
+    private CatalogoService catalogoService;
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(u) FROM UbicacionGeografica u WHERE (u.tenant = -1 OR u.tenant = :t) AND (:f = '' OR lower(u.nombre) LIKE :like OR u.codigoOficial LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -70,6 +73,33 @@ public class GeografiaService {
         boolean visible = tenant.esSuperadmin() || (t != null
                 && (t.equals(tenant.actual()) || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(t)));
         return visible ? u : null;
+    }
+
+    public List<UbicacionGeografica> porNivel(String nivelCodigo) {
+        Long nivel = catalogoService.idOpcion("NIVELES_UBICACION", nivelCodigo);
+        if (nivel == null) return java.util.List.of();
+        return em.createQuery(
+                "SELECT u FROM UbicacionGeografica u WHERE u.estado = 'ACTIVO'"
+                + " AND (u.tenant = -1 OR u.tenant = :t) AND u.nivel = :nivel ORDER BY u.nombre",
+                UbicacionGeografica.class)
+            .setParameter("t", tenant.actual())
+            .setParameter("nivel", nivel)
+            .getResultList();
+    }
+
+    public List<UbicacionGeografica> hijosDe(Long padreId) {
+        if (padreId == null) return java.util.List.of();
+        return em.createQuery(
+                "SELECT u FROM UbicacionGeografica u WHERE u.estado = 'ACTIVO'"
+                + " AND (u.tenant = -1 OR u.tenant = :t) AND u.padre.id = :padre ORDER BY u.nombre",
+                UbicacionGeografica.class)
+            .setParameter("t", tenant.actual())
+            .setParameter("padre", padreId)
+            .getResultList();
+    }
+
+    public String codigoNivel(Long nivelId) {
+        return catalogoService.codigoOpcion(nivelId);
     }
 
     @Transactional

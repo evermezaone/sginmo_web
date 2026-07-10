@@ -5,9 +5,11 @@ import jakarta.faces.context.FacesContext;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import py.com.one.security.web.SesionUsuario;
+import py.com.pysistemas.sginmo.servicio.PlantillaDocumentoService;
 import py.com.pysistemas.sginmo.servicio.ReporteService;
 
 import java.io.Serializable;
+import java.util.List;
 
 /** Descarga de PDFs estandar (OpenPDF). Escribe el PDF en la respuesta HTTP. */
 @Named
@@ -16,6 +18,9 @@ public class DescargaBean implements Serializable {
 
     @Inject
     private transient ReporteService reporteService;
+
+    @Inject
+    private transient PlantillaDocumentoService plantillaDocumentoService;
 
     @Inject
     private SesionUsuario sesion;
@@ -42,6 +47,21 @@ public class DescargaBean implements Serializable {
 
     public void listadoActivos() {
         enviar(reporteService.listadoActivos(sesion.codigoUsuario(), empresaContexto()), "activos.pdf");
+    }
+
+    public void contrato(Long operacionId) {
+        var doc = plantillaDocumentoService.contrato(operacionId, sesion.codigoUsuario());
+        enviar(doc.contenido(), doc.nombreArchivo());
+    }
+
+    public void pagare(Long operacionId, Long cuotaId) {
+        var doc = plantillaDocumentoService.pagare(operacionId, cuotaId, sesion.codigoUsuario());
+        enviar(doc.contenido(), doc.nombreArchivo());
+    }
+
+    public void pagares(Long operacionId, List<Long> cuotaIds) {
+        var doc = plantillaDocumentoService.pagares(operacionId, cuotaIds, sesion.codigoUsuario());
+        enviar(doc.contenido(), doc.nombreArchivo());
     }
 
     private void enviar(byte[] pdf, String archivo) {

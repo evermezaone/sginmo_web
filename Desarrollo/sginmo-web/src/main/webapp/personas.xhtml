@@ -69,7 +69,7 @@
         </p:confirmDialog>
     </h:form>
 
-    <p:dialog header="#{personaBean.fisica != null ? 'Persona física' : 'Persona jurídica'}" widgetVar="dlgPersona"
+    <p:dialog header="#{personaBean.tituloDialogo}" widgetVar="dlgPersona"
               modal="true" resizable="false" responsive="true" width="700" dynamic="true" closeOnEscape="true">
         <h:form id="frmEdicion">
             <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
@@ -225,9 +225,7 @@
                         </div>
                     </p:tab>
 
-                    <p:tab title="Roles"
-                           disabled="#{personaBean.seleccionado.id == null}"
-                           titletip="#{personaBean.seleccionado.id == null ? 'Guarde la persona para asignar roles' : ''}">
+                    <p:tab title="Roles">
                         <p style="color:#6c757d; font-size:.8rem; margin:0 0 .8rem;">
                             Una misma persona puede ser cliente, proveedor, propietario, inquilino, etc.
                         </p>
@@ -251,7 +249,7 @@
                             <p:column style="width:4rem; text-align:center;">
                                 <p:commandButton icon="pi pi-trash" styleClass="ui-button-flat ui-button-danger" title="Quitar"
                                                  rendered="#{!personaBean.soloLectura}"
-                                                 actionListener="#{personaBean.quitarRol(rp.id)}"
+                                                 actionListener="#{personaBean.quitarRol(rp)}"
                                                  process="@this" update="tblRoles :frmEdicion:msjEdicion"/>
                             </p:column>
                         </p:dataTable>

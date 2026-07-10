@@ -50,6 +50,7 @@ public class OperacionBean implements Serializable {
     private String filtroGlobal = "";
     private boolean consultaFiltrada;
     private List<CronogramaCuota> cuotas = java.util.List.of();
+    private List<CronogramaCuota> cuotasSeleccionadas = new java.util.ArrayList<>();
 
     private List<Persona> clientes;
     private List<Persona> vendedores;
@@ -90,12 +91,14 @@ public class OperacionBean implements Serializable {
         if (contexto.getEmpresa() != null) seleccionado.setTenant(contexto.getEmpresa().getId());
         if (contexto.sucursal() != null) seleccionado.setSucursal(contexto.sucursal().getId());
         cuotas = java.util.List.of();
+        cuotasSeleccionadas = new java.util.ArrayList<>();
     }
 
     public void ver(Long operacionId) {
         // Resolver por id directo: no depende de las primeras 1000 filas de la grilla lazy.
         seleccionado = operacionService.porId(operacionId);
         cuotas = operacionService.cuotasDe(operacionId);
+        cuotasSeleccionadas = new java.util.ArrayList<>();
     }
 
     public List<Activo> completarActivo(String t) { return operacionService.activosLibres(t); }
@@ -148,6 +151,13 @@ public class OperacionBean implements Serializable {
         FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(s, t, d));
     }
 
+    public List<Long> idsCuotasSeleccionadas() {
+        if (cuotasSeleccionadas == null || cuotasSeleccionadas.isEmpty()) {
+            return java.util.List.of();
+        }
+        return cuotasSeleccionadas.stream().map(CronogramaCuota::getId).toList();
+    }
+
     public LazyDataModel<Object[]> getModelo() { return modelo; }
     public Operacion getSeleccionado() { return seleccionado; }
     public void setSeleccionado(Operacion v) { this.seleccionado = v; }
@@ -155,6 +165,8 @@ public class OperacionBean implements Serializable {
     public void setFiltroGlobal(String v) { this.filtroGlobal = v; }
     public boolean isConsultaFiltrada() { return consultaFiltrada; }
     public List<CronogramaCuota> getCuotas() { return cuotas; }
+    public List<CronogramaCuota> getCuotasSeleccionadas() { return cuotasSeleccionadas; }
+    public void setCuotasSeleccionadas(List<CronogramaCuota> v) { this.cuotasSeleccionadas = v; }
     public List<Persona> getClientes() { return clientes; }
     public List<Persona> getVendedores() { return vendedores; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getTiposContrato() { return tiposContrato; }

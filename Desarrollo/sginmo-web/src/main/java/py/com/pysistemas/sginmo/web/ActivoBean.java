@@ -40,6 +40,9 @@ public class ActivoBean implements Serializable {
     private transient PersonaService personaService;
 
     @Inject
+    private transient py.com.pysistemas.sginmo.servicio.GeografiaService geografiaService;
+
+    @Inject
     private SesionUsuario sesion;
 
     private LazyDataModel<Activo> modelo;
@@ -54,9 +57,18 @@ public class ActivoBean implements Serializable {
     private List<Object[]> propietarios = java.util.List.of();
     private List<Persona> propietariosPosibles;
     private Long nuevoPropietario;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> paises = java.util.List.of();
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> departamentos = java.util.List.of();
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> ciudades = java.util.List.of();
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> barrios = java.util.List.of();
+    private Long pais;
+    private Long departamento;
+    private Long ciudad;
+    private Long barrio;
 
     // Generacion masiva de lotes (REQ-0015)
     private Long loteContenedor;
+    private List<Activo> loteamientos = java.util.List.of();
     private String loteManzana;
     private int loteDesde = 1;
     private int loteCantidad = 10;
@@ -67,6 +79,8 @@ public class ActivoBean implements Serializable {
     public void iniciar() {
         tipos = catalogoService.opciones("TIPOS_ACTIVO");
         propietariosPosibles = personaService.porRol("PROPIETARIO");
+        paises = geografiaService.porNivel("PAIS");
+        loteamientos = activoService.loteamientos();
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> filterBy) {
@@ -96,6 +110,7 @@ public class ActivoBean implements Serializable {
         atributos = java.util.List.of();
         propietarios = java.util.List.of();
         nuevoPropietario = null;
+        limpiarUbicacion();
         soloLectura = false; tabActivo = 0;
     }
 
@@ -104,6 +119,7 @@ public class ActivoBean implements Serializable {
         atributos = activoService.atributosDe(activo.getId(), activo.getTipo());
         propietarios = activoService.propietariosConId(activo.getId());
         nuevoPropietario = null;
+        cargarUbicacion(activo.getUbicacion());
         soloLectura = !sesion.puede(PANTALLA, "EDITAR");
         tabActivo = 0;
     }
@@ -122,7 +138,9 @@ public class ActivoBean implements Serializable {
         try {
             boolean esNuevo = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNuevo ? "CREAR" : "EDITAR")) return;
+            seleccionado.setUbicacion(ubicacionSeleccionada());
             activoService.guardar(seleccionado, atributos);
+            guardarPropietariosPendientes();
             if (esNuevo) {
                 atributos = activoService.atributosDe(seleccionado.getId(), seleccionado.getTipo());
             }
@@ -136,6 +154,22 @@ public class ActivoBean implements Serializable {
 
     public void agregarPropietario() {
         try {
+            if (nuevoPropietario == null) throw new NegocioException("Elija el propietario");
+            if (seleccionado.getId() == null) {
+                if (propietarios.stream().anyMatch(p -> nuevoPropietario.equals(propietarioIdFila(p)))) {
+                    throw new NegocioException("Esa persona ya figura como propietaria");
+                }
+                String nombre = propietariosPosibles.stream()
+                    .filter(p -> p.getId().equals(nuevoPropietario))
+                    .map(Persona::getNombre)
+                    .findFirst()
+                    .orElseThrow(() -> new NegocioException("El propietario seleccionado ya no esta disponible"));
+                var copia = new java.util.ArrayList<Object[]>(propietarios);
+                copia.add(new Object[] { null, nombre, nuevoPropietario });
+                propietarios = copia;
+                nuevoPropietario = null;
+                return;
+            }
             activoService.agregarPropietario(seleccionado.getId(), nuevoPropietario);
             propietarios = activoService.propietariosConId(seleccionado.getId());
             nuevoPropietario = null;
@@ -144,17 +178,93 @@ public class ActivoBean implements Serializable {
         }
     }
 
-    public void quitarPropietario(Long activoPropietarioId) {
+    public void quitarPropietario(Object[] fila) {
         try {
-            activoService.quitarPropietario(activoPropietarioId);
+            if (fila == null) return;
+            if (fila[0] == null) {
+                Long propietarioId = propietarioIdFila(fila);
+                propietarios = propietarios.stream()
+                    .filter(p -> !java.util.Objects.equals(propietarioIdFila(p), propietarioId))
+                    .toList();
+                return;
+            }
+            activoService.quitarPropietario(((Number) fila[0]).longValue());
             propietarios = activoService.propietariosConId(seleccionado.getId());
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el propietario", e.getMessage());
         }
     }
 
+    private Long propietarioIdFila(Object[] fila) {
+        if (fila == null) return null;
+        if (fila.length > 2 && fila[2] != null) return ((Number) fila[2]).longValue();
+        return null;
+    }
+
+    private void guardarPropietariosPendientes() {
+        if (seleccionado.getId() == null) return;
+        var pendientes = propietarios.stream()
+            .filter(p -> p[0] == null && propietarioIdFila(p) != null)
+            .map(this::propietarioIdFila)
+            .toList();
+        for (Long propietarioId : pendientes) {
+            activoService.agregarPropietario(seleccionado.getId(), propietarioId);
+        }
+        if (!pendientes.isEmpty()) {
+            propietarios = activoService.propietariosConId(seleccionado.getId());
+        }
+    }
+
     public List<Activo> completarLoteamiento(String texto) {
         return activoService.buscarLoteamiento(texto);
+    }
+
+    public void paisCambiado() {
+        departamento = null; ciudad = null; barrio = null;
+        departamentos = geografiaService.hijosDe(pais);
+        ciudades = java.util.List.of();
+        barrios = java.util.List.of();
+    }
+
+    public void departamentoCambiado() {
+        ciudad = null; barrio = null;
+        ciudades = geografiaService.hijosDe(departamento);
+        barrios = java.util.List.of();
+    }
+
+    public void ciudadCambiada() {
+        barrio = null;
+        barrios = geografiaService.hijosDe(ciudad);
+    }
+
+    private Long ubicacionSeleccionada() {
+        if (barrio != null) return barrio;
+        if (ciudad != null) return ciudad;
+        if (departamento != null) return departamento;
+        return pais;
+    }
+
+    private void limpiarUbicacion() {
+        pais = null; departamento = null; ciudad = null; barrio = null;
+        departamentos = java.util.List.of();
+        ciudades = java.util.List.of();
+        barrios = java.util.List.of();
+    }
+
+    private void cargarUbicacion(Long ubicacionId) {
+        limpiarUbicacion();
+        var actual = geografiaService.buscarPorId(ubicacionId);
+        while (actual != null) {
+            String nivel = geografiaService.codigoNivel(actual.getNivel());
+            if ("BARRIO".equals(nivel)) barrio = actual.getId();
+            else if ("CIUDAD".equals(nivel)) ciudad = actual.getId();
+            else if ("DEPARTAMENTO".equals(nivel)) departamento = actual.getId();
+            else if ("PAIS".equals(nivel)) pais = actual.getId();
+            actual = actual.getPadre();
+        }
+        if (pais != null) departamentos = geografiaService.hijosDe(pais);
+        if (departamento != null) ciudades = geografiaService.hijosDe(departamento);
+        if (ciudad != null) barrios = geografiaService.hijosDe(ciudad);
     }
 
     public void generarLotes() {
@@ -163,6 +273,7 @@ public class ActivoBean implements Serializable {
             int creados = activoService.generarLotes(loteContenedor, "LOTE", loteManzana,
                     loteDesde, loteCantidad, lotePrecio, loteComision);
             aviso(FacesMessage.SEVERITY_INFO, "Lotes generados", creados + " lote(s) creado(s)");
+            loteamientos = activoService.loteamientos();
             loteContenedor = null; loteManzana = null; loteDesde = 1; loteCantidad = 10;
             lotePrecio = java.math.BigDecimal.ZERO; loteComision = java.math.BigDecimal.ZERO;
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgLotes').hide()");
@@ -197,9 +308,22 @@ public class ActivoBean implements Serializable {
     public List<Persona> getPropietariosPosibles() { return propietariosPosibles; }
     public Long getNuevoPropietario() { return nuevoPropietario; }
     public void setNuevoPropietario(Long nuevoPropietario) { this.nuevoPropietario = nuevoPropietario; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> getPaises() { return paises; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> getDepartamentos() { return departamentos; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> getCiudades() { return ciudades; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> getBarrios() { return barrios; }
+    public Long getPais() { return pais; }
+    public void setPais(Long pais) { this.pais = pais; }
+    public Long getDepartamento() { return departamento; }
+    public void setDepartamento(Long departamento) { this.departamento = departamento; }
+    public Long getCiudad() { return ciudad; }
+    public void setCiudad(Long ciudad) { this.ciudad = ciudad; }
+    public Long getBarrio() { return barrio; }
+    public void setBarrio(Long barrio) { this.barrio = barrio; }
 
     public Long getLoteContenedor() { return loteContenedor; }
     public void setLoteContenedor(Long v) { this.loteContenedor = v; }
+    public List<Activo> getLoteamientos() { return loteamientos; }
     public String getLoteManzana() { return loteManzana; }
     public void setLoteManzana(String v) { this.loteManzana = v; }
     public int getLoteDesde() { return loteDesde; }

@@ -1,0 +1,141 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{plantillaDocumentoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Plantillas</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" skipDetailIfEqualsSummary="true" life="4000"/>
+        <p:dataTable id="tabla" var="p" value="#{plantillaDocumentoBean.plantillas}"
+                     paginator="true" rows="12" emptyMessage="No hay plantillas documentales">
+            <f:facet name="header">
+                <div class="barra-tabla">
+                    <p:commandButton value="Contrato" icon="pi pi-plus"
+                                     rendered="#{sesionUsuario.puede('plantillas-documentos','CREAR')}"
+                                     actionListener="#{plantillaDocumentoBean.nuevoContrato()}"
+                                     update=":frmEdicion" oncomplete="PF('dlgPlantilla').show()"/>
+                    <p:commandButton value="Pagare" icon="pi pi-plus"
+                                     rendered="#{sesionUsuario.puede('plantillas-documentos','CREAR')}"
+                                     actionListener="#{plantillaDocumentoBean.nuevoPagare()}"
+                                     update=":frmEdicion" oncomplete="PF('dlgPlantilla').show()"/>
+                    <span style="flex:1"></span>
+                    <p:inputText value="#{plantillaDocumentoBean.filtroGlobal}" placeholder="Buscar codigo o descripcion" style="width:17rem;">
+                        <p:ajax event="keyup" delay="400" listener="#{plantillaDocumentoBean.buscar()}" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Codigo" style="width:9rem;"><h:outputText value="#{p.codigo}"/></p:column>
+            <p:column headerText="Descripcion"><h:outputText value="#{p.descripcion}"/></p:column>
+            <p:column headerText="Tipo" style="width:7rem;"><p:tag value="#{p.tipo}" severity="#{p.tipo eq 'CONTRATO' ? 'info' : 'warning'}"/></p:column>
+            <p:column headerText="Operacion" style="width:7rem;"><h:outputText value="#{empty p.tipoOperacion ? 'Todas' : p.tipoOperacion}"/></p:column>
+            <p:column headerText="Alcance" style="width:7rem;"><h:outputText value="#{plantillaDocumentoBean.alcance(p)}"/></p:column>
+            <p:column headerText="Version" style="width:5rem; text-align:right;"><h:outputText value="#{p.versionPlantilla}"/></p:column>
+            <p:column headerText="Estado" style="width:7rem; text-align:center;">
+                <p:tag value="#{p.estado}" severity="#{p.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:7rem; text-align:center;" exportable="false">
+                <p:commandButton icon="#{sesionUsuario.puede('plantillas-documentos','EDITAR') ? 'pi pi-pencil' : 'pi pi-eye'}"
+                                 title="#{sesionUsuario.puede('plantillas-documentos','EDITAR') ? 'Editar' : 'Ver'}"
+                                 styleClass="ui-button-flat"
+                                 actionListener="#{plantillaDocumentoBean.editar(p)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgPlantilla').show()"/>
+                <p:commandButton icon="#{p.estado eq 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check-circle'}"
+                                 title="#{p.estado eq 'ACTIVO' ? 'Inactivar' : 'Activar'}"
+                                 styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('plantillas-documentos', p.estado eq 'ACTIVO' ? 'INACTIVAR' : 'REACTIVAR')}"
+                                 actionListener="#{plantillaDocumentoBean.cambiarEstado(p)}"
+                                 update="tabla mensajes">
+                    <p:confirm header="Confirmar" message="Cambiar el estado de #{p.descripcion}?" icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Plantilla documental" widgetVar="dlgPlantilla" modal="true" resizable="false"
+              responsive="true" width="820" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
+            <ui:fragment rendered="#{not empty plantillaDocumentoBean.seleccionado}">
+                <p:tabView>
+                    <p:tab title="Principal">
+                        <div class="fila-3">
+                            <div class="campo">
+                                <label>Codigo *</label>
+                                <p:inputText value="#{plantillaDocumentoBean.seleccionado.codigo}" required="true"
+                                             label="Codigo" maxlength="60"
+                                             disabled="#{!sesionUsuario.puede('plantillas-documentos','EDITAR') and plantillaDocumentoBean.seleccionado.id != null}"/>
+                            </div>
+                            <div class="campo">
+                                <label>Tipo *</label>
+                                <p:selectOneMenu value="#{plantillaDocumentoBean.seleccionado.tipo}" required="true" label="Tipo">
+                                    <f:selectItem itemLabel="Contrato" itemValue="CONTRATO"/>
+                                    <f:selectItem itemLabel="Pagare" itemValue="PAGARE"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Estado</label>
+                                <p:inputText value="#{plantillaDocumentoBean.seleccionado.estado}" disabled="true"/>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Descripcion *</label>
+                            <p:inputText value="#{plantillaDocumentoBean.seleccionado.descripcion}" required="true"
+                                         label="Descripcion" maxlength="180" style="width:100%;"/>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Tipo de operacion</label>
+                                <p:selectOneMenu value="#{plantillaDocumentoBean.seleccionado.tipoOperacion}" label="Tipo de operacion">
+                                    <f:selectItem itemLabel="Todas" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItem itemLabel="Alquiler" itemValue="ALQUILER"/>
+                                    <f:selectItem itemLabel="Venta" itemValue="VENTA"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Tipo de contrato</label>
+                                <p:selectOneMenu value="#{plantillaDocumentoBean.seleccionado.tipoContrato}" label="Tipo de contrato">
+                                    <f:selectItem itemLabel="Todos" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{plantillaDocumentoBean.tiposContrato}" var="tc"
+                                                   itemLabel="#{tc.descripcion}" itemValue="#{tc.id}"/>
+                                </p:selectOneMenu>
+                            </div>
+                        </div>
+                        <div class="campo">
+                            <label>Cuerpo *</label>
+                            <p:inputTextarea value="#{plantillaDocumentoBean.seleccionado.cuerpo}" required="true"
+                                             label="Cuerpo" rows="16" autoResize="false" style="width:100%; font-family:monospace;"/>
+                        </div>
+                    </p:tab>
+                    <p:tab title="Variables">
+                        <p:dataTable var="v" value="#{plantillaDocumentoBean.variables}" emptyMessage="Sin variables">
+                            <p:column headerText="Variable" style="width:17rem;">
+                                <h:outputText value="#{v.codigo}"/>
+                            </p:column>
+                            <p:column headerText="Descripcion">
+                                <h:outputText value="#{v.descripcion}"/>
+                            </p:column>
+                        </p:dataTable>
+                    </p:tab>
+                </p:tabView>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgPlantilla').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save"
+                                     rendered="#{sesionUsuario.puede('plantillas-documentos', plantillaDocumentoBean.seleccionado.id == null ? 'CREAR' : 'EDITAR')}"
+                                     actionListener="#{plantillaDocumentoBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

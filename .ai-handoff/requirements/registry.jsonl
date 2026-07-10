@@ -31,3 +31,6 @@
 {"req": "REQ-0031", "titulo": "ETL Firebird a PostgreSQL", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:51.560Z", "ts_actualizado": "2026-07-04T01:59:51.560Z"}
 {"req": "REQ-0032", "titulo": "Provision de servidor y deploy", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-04T01:59:52.741Z", "ts_actualizado": "2026-07-04T01:59:52.741Z"}
 {"req": "REQ-0000", "titulo": "Infraestructura: esquema git y acceso a VPS", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-03T23:15:00Z", "ts_actualizado": "2026-07-04T12:07:20Z"}
+{"req": "REQ-0041", "titulo": "Generacion de contratos y pagares desde plantillas", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-10T00:00:00-04:00", "ts_actualizado": "2026-07-10T15:51:09-03:00"}
+{"req": "REQ-0040", "titulo": "ajuste en el modulo persona", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-10T16:22:56-03:00", "ts_actualizado": "2026-07-10T16:22:56-03:00"}
+{"req": "REQ-0042", "titulo": "ajustes en el modulo activo (activos.xhtml)", "estado": "CERRADO", "rama": "pendiente", "ts_creado": "2026-07-10T16:22:56-03:00", "ts_actualizado": "2026-07-10T16:22:56-03:00"}
