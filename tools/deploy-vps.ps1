@@ -33,3 +33,16 @@ if ($LASTEXITCODE -ne 0) { Write-Error 'scp fallo'; exit 1 }
 ssh -o BatchMode=yes sginmo-vps 'd=~/apps/wildfly-40.0.0.Final/standalone/deployments; mv $d/sginmo-web.war.tmp $d/sginmo-web.war; rm -f $d/sginmo-web.war.deployed $d/sginmo-web.war.failed $d/sginmo-web.war.undeployed; touch $d/sginmo-web.war.dodeploy; for i in $(seq 1 60); do [ -f $d/sginmo-web.war.deployed ] && { echo "Redeploy OK"; break; }; [ -f $d/sginmo-web.war.failed ] && { echo "REDEPLOY FALLO:"; cat $d/sginmo-web.war.failed; exit 1; }; sleep 2; done; [ -f $d/sginmo-web.war.deployed ] || { echo "Timeout esperando redeploy"; exit 1; }; code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/sginmo-web/login.xhtml); echo "Verificacion VPS: HTTP $code"; [ "$code" = "200" ] || { echo "VERIFICACION FALLO: se esperaba HTTP 200 en login.xhtml y llego $code"; exit 1; }'
 if ($LASTEXITCODE -ne 0) { Write-Error 'Redeploy fallo en la VPS'; exit 1 }
 Write-Output 'Deploy completado.'
+
+# Smoke-test post-deploy (procedimiento firme): loguea y verifica el RENDER de todas las
+# pantallas (los errores de render JSF no los atrapa el build). Best-effort: si no hay Python
+# o faltan credenciales SMOKE_* (en .env), avisa pero NO marca el deploy como fallido.
+$smoke = Join-Path $PSScriptRoot 'smoke-test-vps.py'
+$py = (Get-Command python -ErrorAction SilentlyContinue)
+if ($py -and (Test-Path $smoke)) {
+    Write-Output '--- Smoke-test de render (todas las pantallas) ---'
+    & $py.Source $smoke
+    if ($LASTEXITCODE -ne 0) { Write-Warning 'SMOKE-TEST: alguna pantalla dio ERROR de render (revisar arriba).' }
+} else {
+    Write-Warning 'Smoke-test omitido (falta python o tools/smoke-test-vps.py). Verificar render manualmente.'
+}
