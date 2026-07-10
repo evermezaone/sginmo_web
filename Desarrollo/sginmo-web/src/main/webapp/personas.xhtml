@@ -42,9 +42,6 @@
                 <h:outputText value="#{per.numeroDocumento}#{empty per.digitoVerificador ? '' : '-'}#{per.digitoVerificador}"
                               style="font-family:monospace;"/>
             </p:column>
-            <p:column headerText="Teléfono" style="width:9rem;">
-                <h:outputText value="#{per.telefono}"/>
-            </p:column>
             <p:column headerText="Estado" sortBy="#{per.estado}" style="width:6.5rem; text-align:center;">
                 <p:tag value="#{per.estado}" severity="#{per.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
             </p:column>
