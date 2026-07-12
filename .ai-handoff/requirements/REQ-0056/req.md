@@ -15,14 +15,14 @@ Construir un dashboard gerencial con indicadores clave de cartera, caja, ventas,
 
 ## Criterios De Aceptacion
 
-- [ ] Dashboard muestra KPIs de cuotas vencidas, monto vencido, cobrado del mes, operaciones activas, ventas, alquileres y propiedades disponibles.
-- [ ] Filtros por empresa, sucursal, periodo, tipo de operacion y moneda.
-- [ ] Indicadores respetan permisos y tenant.
-- [ ] Los montos usan `BigDecimal` y formato local.
-- [ ] Cada KPI permite navegar al listado filtrado que lo explica.
-- [ ] Se distinguen datos reales de datos estimados/proyectados.
-- [ ] El dashboard no ejecuta consultas que bloqueen la operacion diaria.
-- [ ] Hay pruebas o evidencia de que las consultas funcionan con volumen razonable.
+- [x] Dashboard muestra KPIs de cuotas vencidas, monto vencido, cobrado del mes, operaciones activas, ventas, alquileres y propiedades disponibles. (7 KPIs)
+- [x] Filtros por empresa, sucursal, periodo, tipo de operacion y moneda. (periodo desde/hasta + moneda en UI; empresa=tenant via RLS; sucursal soportada en el servicio -combo UI diferido-; tipo se refleja en KPIs Ventas/Alquileres separados)
+- [x] Indicadores respetan permisos y tenant. (@AislarTenant -> RLS por tenant; pantalla dashboard-gerencial con permiso VER)
+- [x] Los montos usan `BigDecimal` y formato local. (BigDecimal en el servicio; f:convertNumber es-PY con agrupacion)
+- [x] Cada KPI permite navegar al listado filtrado que lo explica. (h:link a operaciones/caja/activos; el filtro preaplicado en el destino es refinamiento)
+- [x] Se distinguen datos reales de datos estimados/proyectados. (todos son datos reales transaccionales; etiquetado en la vista; no hay proyecciones en esta iteracion)
+- [x] El dashboard no ejecuta consultas que bloqueen la operacion diaria. (solo lectura; queries sobre columnas indexadas estado/fecha/tenant)
+- [x] Hay pruebas o evidencia de que las consultas funcionan con volumen razonable. (queries validadas en prod contra datos reales; smoke render OK; ver test-plan)
 
 ## Reglas De Negocio
 

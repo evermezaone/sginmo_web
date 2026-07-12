@@ -1,0 +1,76 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{dashboardGerencialBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Dashboard gerencial</ui:define>
+<ui:define name="estilos">
+    <style>
+        .kpis-g { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:.8rem; margin:1rem 0; }
+        .kpi-g { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:1rem; text-decoration:none; color:#343a40; display:block; }
+        .kpi-g:hover { border-color:#457b9d; box-shadow:0 4px 14px rgba(0,0,0,.08); }
+        .kpi-g .n { font-size:1.6rem; font-weight:700; color:#1d3557; }
+        .kpi-g .n.alerta { color:#e63946; }
+        .kpi-g .n.ok { color:#2a9d8f; }
+        .kpi-g .t { font-size:.75rem; color:#6c757d; text-transform:uppercase; letter-spacing:.4px; }
+    </style>
+</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <div class="barra-tabla" style="gap:.6rem; flex-wrap:wrap; align-items:flex-end;">
+            <div class="campo"><label>Desde</label>
+                <p:datePicker value="#{dashboardGerencialBean.desde}" pattern="dd/MM/yyyy" showIcon="true"/></div>
+            <div class="campo"><label>Hasta</label>
+                <p:datePicker value="#{dashboardGerencialBean.hasta}" pattern="dd/MM/yyyy" showIcon="true"/></div>
+            <div class="campo"><label>Moneda</label>
+                <p:selectOneMenu value="#{dashboardGerencialBean.monedaId}" style="width:11rem;">
+                    <f:selectItems value="#{dashboardGerencialBean.monedas}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.id}"/>
+                </p:selectOneMenu></div>
+            <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{dashboardGerencialBean.recalcular()}" update="frm"/>
+        </div>
+
+        <div class="kpis-g">
+            <h:link outcome="/operaciones" styleClass="kpi-g">
+                <div class="n">#{dashboardGerencialBean.kpis.operacionesActivas}</div>
+                <div class="t">Operaciones activas</div>
+            </h:link>
+            <h:link outcome="/operaciones" styleClass="kpi-g">
+                <div class="n">#{dashboardGerencialBean.kpis.ventas}</div>
+                <div class="t">Ventas</div>
+            </h:link>
+            <h:link outcome="/operaciones" styleClass="kpi-g">
+                <div class="n">#{dashboardGerencialBean.kpis.alquileres}</div>
+                <div class="t">Alquileres</div>
+            </h:link>
+            <h:link outcome="/activos" styleClass="kpi-g">
+                <div class="n ok">#{dashboardGerencialBean.kpis.propiedadesDisponibles}</div>
+                <div class="t">Propiedades disponibles</div>
+            </h:link>
+            <h:link outcome="/caja" styleClass="kpi-g">
+                <div class="n #{dashboardGerencialBean.kpis.cuotasVencidas gt 0 ? 'alerta' : ''}">#{dashboardGerencialBean.kpis.cuotasVencidas}</div>
+                <div class="t">Cuotas vencidas</div>
+            </h:link>
+            <h:link outcome="/caja" styleClass="kpi-g">
+                <div class="n #{dashboardGerencialBean.kpis.montoVencido gt 0 ? 'alerta' : ''}">
+                    <h:outputText value="#{dashboardGerencialBean.kpis.montoVencido}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                </div>
+                <div class="t">Monto vencido (Gs.)</div>
+            </h:link>
+            <h:link outcome="/caja" styleClass="kpi-g">
+                <div class="n ok">
+                    <h:outputText value="#{dashboardGerencialBean.kpis.cobradoPeriodo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                </div>
+                <div class="t">Cobrado en el periodo</div>
+            </h:link>
+        </div>
+        <p style="color:#9ca3af; font-size:.85rem;">
+            Indicadores de datos reales (transaccionales). Los montos corresponden a la moneda seleccionada
+            (no se mezclan monedas). Cada tarjeta enlaza al modulo correspondiente.
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>

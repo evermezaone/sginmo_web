@@ -1,2 +1,4 @@
 ﻿
 
+{"ts":"2026-07-12T04:25:19Z","actor":"claude","evento":"implementado","nota":"V37 pantalla + DashboardGerencialService/Bean/xhtml (7 KPIs por moneda/periodo)"}
+{"ts":"2026-07-12T04:25:19Z","actor":"claude","evento":"desplegado","nota":"Flyway V37 success, smoke 23/23 render OK"}

@@ -74,6 +74,8 @@
         </h:form>
 
         <a class="item" href="index.xhtml"><i class="pi pi-home"></i> Inicio</a>
+        <h:outputLink styleClass="item" value="dashboard-gerencial.xhtml"
+                      rendered="#{sesionUsuario.puede('dashboard-gerencial','VER')}"><i class="pi pi-chart-bar"></i> Dashboard gerencial</h:outputLink>
 
         <div class="seccion">Operaciones</div>
         <h:outputLink styleClass="item" value="operaciones.xhtml"
