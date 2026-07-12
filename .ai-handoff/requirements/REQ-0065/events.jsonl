@@ -1,2 +1,2 @@
-﻿
-
+{"ts":"2026-07-12T08:45:00Z","actor":"claude","evento":"implementado","nota":"Kit tools/vps: sginmo-backup.sh (pg_dump custom+RLS, tar archivos, manifiesto sha256, retencion daily/weekly/monthly), unidades systemd, backup.env.example, README runbook; Salud (REQ-0051) ya muestra el indicador de backup"}
+{"ts":"2026-07-12T08:45:00Z","actor":"claude","evento":"verificado","nota":"Script corrido en la VPS: latest.json resultado OK, dump ~400KB con .sha256, retencion podando sin vaciar clase, promocion semanal (domingo). Programacion del timer diferida a operaciones (persistencia en host)"}
