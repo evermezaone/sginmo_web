@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0043, REQ-0044, REQ-0045, REQ-0046, REQ-0048, REQ-0049, REQ-0050, REQ-0051, REQ-0052
-TS: 2026-07-12T02:39:04Z
+REQ: REQ-0043, REQ-0044, REQ-0045, REQ-0046, REQ-0048, REQ-0049, REQ-0050, REQ-0051, REQ-0052, REQ-0053
+TS: 2026-07-12T02:57:50Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0043, REQ-0044, REQ-0045, REQ-0046, REQ-0048, REQ-0049, REQ-0050, REQ-0051, REQ-0052. Ultimo derivado REQ-0052: Agenda operativa: tabla agenda_evento por-tenant con RLS (V33), eventos automaticos de vencimiento (cuotas+contratos) con dedup, alta de tareas, KPIs en el tablero. Build+deploy+smoke 20/20 OK. Bug NPE (Map.of clave null) corregido. Limitaciones documentadas (selectores UI de vinculo, filtros responsable/fecha, promesas via REQ-0057).
+MENSAJE: [SGI] Cola de auditoria: REQ-0043, REQ-0044, REQ-0045, REQ-0046, REQ-0048, REQ-0049, REQ-0050, REQ-0051, REQ-0052, REQ-0053. Ultimo derivado REQ-0053: Gestion documental: tabla documento_adjunto por-tenant (V34, RLS), upload nativo con validacion ext/tamano, archivos fuera del WAR (nombre UUID), descarga protegida por permiso+tenant, baja logica, vencimiento. Build+deploy+smoke 21/21. Criterio 9 (union con documento_generado) diferido y documentado.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

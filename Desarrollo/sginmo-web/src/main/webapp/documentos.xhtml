@@ -1,0 +1,119 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{documentoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Documentos y adjuntos</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:dataTable id="tabla" var="d" value="#{documentoBean.modelo}" lazy="true"
+                     paginator="true" rows="12" emptyMessage="No hay documentos adjuntos">
+            <f:facet name="header">
+                <div class="barra-tabla" style="gap:.5rem; flex-wrap:wrap; align-items:center;">
+                    <p:commandButton value="Adjuntar" icon="pi pi-upload"
+                                     rendered="#{sesionUsuario.puede('documentos','CREAR')}"
+                                     actionListener="#{documentoBean.nuevo()}"
+                                     update=":frmDoc" oncomplete="PF('dlgDoc').show()"/>
+                    <span style="flex:1"></span>
+                    <p:selectOneMenu value="#{documentoBean.filtroEntidadTipo}" style="width:11rem;">
+                        <f:selectItem itemLabel="Toda entidad" itemValue="#{null}"/>
+                        <f:selectItems value="#{documentoBean.entidadTipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                        <p:ajax event="change" update="tabla"/>
+                    </p:selectOneMenu>
+                    <p:selectOneMenu value="#{documentoBean.filtroTipo}" style="width:11rem;">
+                        <f:selectItem itemLabel="Todo tipo" itemValue="#{null}"/>
+                        <f:selectItems value="#{documentoBean.tipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                        <p:ajax event="change" update="tabla"/>
+                    </p:selectOneMenu>
+                </div>
+            </f:facet>
+            <p:column headerText="Fecha" style="width:8rem;">
+                <h:outputText value="#{d.fechaCreacion}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+            </p:column>
+            <p:column headerText="Tipo" style="width:8rem;"><p:tag value="#{d.tipo}"/></p:column>
+            <p:column headerText="Entidad" style="width:9rem;">
+                <h:outputText value="#{d.entidadTipo}#{empty d.entidadId ? '' : (' #'.concat(d.entidadId))}"/>
+            </p:column>
+            <p:column headerText="Descripcion"><h:outputText value="#{d.descripcion}"/></p:column>
+            <p:column headerText="Archivo"><h:outputText value="#{d.nombreOriginal}"/></p:column>
+            <p:column headerText="Vence" style="width:8rem;">
+                <h:outputText value="#{d.fechaVencimiento}" rendered="#{not empty d.fechaVencimiento}">
+                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Estado" style="width:7rem; text-align:center;">
+                <p:tag value="#{d.estado}" severity="#{d.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:8rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-download" title="Descargar" styleClass="ui-button-flat" ajax="false"
+                                 rendered="#{sesionUsuario.puede('documentos','VER')}">
+                    <p:fileDownload value="#{documentoBean.descargar(d)}"/>
+                </p:commandButton>
+                <p:commandButton icon="pi pi-trash" title="Dar de baja" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('documentos','INACTIVAR') and d.estado eq 'ACTIVO'}"
+                                 actionListener="#{documentoBean.baja(d)}" update="tabla mensajes">
+                    <p:confirm header="Confirmar" message="Dar de baja el documento #{d.nombreOriginal}?" icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+
+    <p:dialog header="Adjuntar documento" widgetVar="dlgDoc" modal="true" resizable="false"
+              responsive="true" width="620" dynamic="true" closeOnEscape="true">
+        <h:form id="frmDoc" enctype="multipart/form-data">
+            <p:messages id="msjDoc" showDetail="true" closable="true"/>
+            <ui:fragment rendered="#{not empty documentoBean.seleccionado}">
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Tipo *</label>
+                        <p:selectOneMenu value="#{documentoBean.seleccionado.tipo}" required="true">
+                            <f:selectItems value="#{documentoBean.tipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo">
+                        <label>Entidad vinculada *</label>
+                        <p:selectOneMenu value="#{documentoBean.seleccionado.entidadTipo}" required="true">
+                            <f:selectItems value="#{documentoBean.entidadTipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div class="fila-2">
+                    <div class="campo">
+                        <label>Id de la entidad (opcional)</label>
+                        <p:inputText value="#{documentoBean.seleccionado.entidadId}"/>
+                    </div>
+                    <div class="campo">
+                        <label>Vencimiento (opcional)</label>
+                        <p:datePicker value="#{documentoBean.seleccionado.fechaVencimiento}" pattern="dd/MM/yyyy" showIcon="true"/>
+                    </div>
+                </div>
+                <div class="campo">
+                    <label>Descripcion</label>
+                    <p:inputText value="#{documentoBean.seleccionado.descripcion}" maxlength="250" style="width:100%;"/>
+                </div>
+                <div class="campo">
+                    <label>Archivo * (max 10 MB: pdf, imagenes, office)</label>
+                    <p:fileUpload mode="simple" skinSimple="true" value="#{documentoBean.archivo}"
+                                  allowTypes="/(\.|\/)(pdf|jpe?g|png|gif|docx?|xlsx?|odt|ods|txt|csv)$/"/>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgDoc').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save" ajax="false"
+                                     rendered="#{sesionUsuario.puede('documentos','CREAR')}"
+                                     actionListener="#{documentoBean.guardar()}"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

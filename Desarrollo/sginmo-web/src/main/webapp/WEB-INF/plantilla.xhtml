@@ -88,6 +88,8 @@
                       rendered="#{sesionUsuario.puede('plantillas-documentos','VER')}"><i class="pi pi-file-word"></i> Plantillas</h:outputLink>
         <h:outputLink styleClass="item" value="agenda.xhtml"
                       rendered="#{sesionUsuario.puede('agenda','VER')}"><i class="pi pi-calendar"></i> Agenda</h:outputLink>
+        <h:outputLink styleClass="item" value="documentos.xhtml"
+                      rendered="#{sesionUsuario.puede('documentos','VER')}"><i class="pi pi-paperclip"></i> Documentos</h:outputLink>
 
         <div class="seccion">Catálogos</div>
         <h:outputLink styleClass="item" value="personas.xhtml"
