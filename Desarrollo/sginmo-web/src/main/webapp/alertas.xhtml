@@ -1,0 +1,62 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{alertaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Alertas gerenciales</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+        <div style="margin-bottom:.7rem;">
+            <p:commandButton value="Recalcular" icon="pi pi-refresh" action="#{alertaBean.recalcular}" update="frm"/>
+        </div>
+
+        <p:dataTable id="tabla" var="a" value="#{alertaBean.alertas}" emptyMessage="No hay alertas abiertas"
+                     paginator="true" rows="20">
+            <p:column headerText="Prioridad" style="width:8rem; text-align:center;">
+                <p:tag value="#{a.prioridad}"
+                       severity="#{a.prioridad eq 'CRITICA' ? 'danger' : (a.prioridad eq 'ALTA' ? 'warning' : (a.prioridad eq 'MEDIA' ? 'info' : null))}"/>
+            </p:column>
+            <p:column headerText="Causa"><h:outputText value="#{a.causa}"/></p:column>
+            <p:column headerText="Impacto"><h:outputText value="#{a.impacto}"/></p:column>
+            <p:column headerText="Accion sugerida"><h:outputText value="#{a.accion}"/></p:column>
+            <p:column headerText="Acciones" style="width:15rem; text-align:center;">
+                <h:link outcome="/dashboard-detalle" rendered="#{a.tieneEvidencia}" styleClass="ui-button ui-button-flat" title="Ver evidencia">
+                    <f:param name="clave" value="#{a.drillClave}"/>
+                    <f:param name="hasta" value="#{a.drillRef}"/>
+                    <i class="pi pi-search"></i>
+                </h:link>
+                <p:commandButton icon="pi pi-check" title="Marcar revisada" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('alertas','EDITAR')}"
+                                 actionListener="#{alertaBean.revisar(a)}" update="frm"/>
+                <p:commandButton icon="pi pi-times" title="Descartar" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('alertas','EDITAR')}"
+                                 action="#{alertaBean.prepararDescartar(a)}" update="frm:dlg" oncomplete="PF('dlgDesc').show()"/>
+            </p:column>
+        </p:dataTable>
+
+        <p:dialog id="dlg" header="Descartar alerta" widgetVar="dlgDesc" modal="true" width="440">
+            <h:panelGroup rendered="#{not empty alertaBean.seleccionada}">
+                <p>#{alertaBean.seleccionada.causa}</p>
+                <div class="campo"><label>Motivo del descarte (obligatorio)</label><br/>
+                    <p:inputTextarea value="#{alertaBean.motivo}" rows="3" style="width:100%;" maxlength="300"/>
+                </div>
+                <div style="text-align:right; margin-top:.6rem;">
+                    <p:commandButton value="Descartar" icon="pi pi-times" action="#{alertaBean.descartar}"
+                                     update="frm" oncomplete="if (!args.validationFailed &amp;&amp; #{empty alertaBean.seleccionada}) PF('dlgDesc').hide()"/>
+                </div>
+            </h:panelGroup>
+        </p:dialog>
+
+        <p style="color:#9ca3af; font-size:.83rem;">
+            Las alertas se derivan de los objetivos (REQ-0073) y reglas configurables (parametros). Cada alerta
+            trae causa, impacto y accion sugerida, y enlaza a su evidencia. Descartar exige motivo y queda auditado.
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>

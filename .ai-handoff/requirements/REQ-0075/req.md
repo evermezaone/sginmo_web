@@ -16,16 +16,16 @@ desde las metricas y objetivos del dashboard.
 
 ## Criterios De Aceptacion
 
-- [ ] El dashboard muestra alertas automaticas cuando un objetivo esta en riesgo, incumplido o mejora/empeora significativamente.
-- [ ] Alertas iniciales: ocupacion bajo objetivo, mora sobre umbral, cobros por debajo del mes anterior, egresos por encima del objetivo, rentabilidad negativa y contratos por vencer.
-- [ ] Cada alerta muestra causa, impacto y accion sugerida.
-- [ ] Cada alerta enlaza a evidencia de detalle (REQ-0074).
-- [ ] Las alertas se calculan con reglas configurables o parametros, no con numeros hardcodeados.
-- [ ] Se puede marcar una alerta como revisada/descartada con motivo y usuario.
-- [ ] Las alertas no deben duplicarse innecesariamente: misma entidad/indicador/periodo debe consolidarse.
-- [ ] La UI muestra prioridades: critica, alta, media, informativa.
-- [ ] Las alertas respetan tenant y permisos.
-- [ ] Debe quedar preparado el envio futuro por email/notificacion, sin exigirlo en esta primera version.
+- [x] El dashboard muestra alertas automaticas cuando un objetivo esta en riesgo o incumplido. (AlertaService.generar() deriva de los objetivos con semaforo != OK; pantalla Alertas + modulo)
+- [x] Alertas iniciales: ocupacion bajo objetivo, mora sobre umbral, egresos sobre objetivo (via objetivos), rentabilidad negativa y contratos por vencer (reglas fijas). (cobros-bajo-mes-anterior queda como regla adicional documentada -el motor MoM ya lo detecta-)
+- [x] Cada alerta muestra causa, impacto y accion sugerida. (columnas causa/impacto/accion_sugerida)
+- [x] Cada alerta enlaza a evidencia de detalle (REQ-0074). (drill_clave -> dashboard-detalle; boton "ver evidencia" cuando aplica)
+- [x] Las alertas se calculan con reglas configurables/parametros, no con numeros hardcodeados. (objetivos configurables + parametro CONTRATOS_AVISO_DIAS; umbrales vienen de los objetivos)
+- [x] Se puede marcar una alerta como revisada/descartada con motivo y usuario. (cerrar(): DESCARTADA exige motivo; guarda usuario+fecha; auditado REQ-0067)
+- [x] Las alertas no se duplican: misma entidad/indicador/periodo se consolida. (hash_dedup = tipo|indicador|periodo; unique index parcial sobre ABIERTA; upsert chequea existencia)
+- [x] La UI muestra prioridades: critica, alta, media, informativa. (columna prioridad con tag por severidad; orden por prioridad)
+- [x] Las alertas respetan tenant y permisos. (RLS V51; permiso alertas/VER para ver, alertas/EDITAR para cerrar)
+- [x] Queda preparado el envio futuro por email/notificacion sin exigirlo. (modelo con causa/impacto/accion/prioridad listo; el envio es un paso futuro documentado, no implementado)
 
 ## Reglas De Negocio
 

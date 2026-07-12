@@ -1,0 +1,2 @@
+{"ts":"2026-07-12T18:45:00Z","actor":"claude","evento":"implementado","nota":"V51 alerta_gerencial (RLS + dedup) + param CONTRATOS_AVISO_DIAS + pantalla alertas; AlertaService (generar desde objetivos + rentabilidad negativa + contratos por vencer, dedup, cerrar con motivo auditado); AlertaBean + alertas.xhtml con prioridad + evidencia"}
+{"ts":"2026-07-12T18:45:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; Flyway V51; smoke 36/36 (alertas 200)"}
