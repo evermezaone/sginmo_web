@@ -61,6 +61,7 @@ public class PersonaBean implements Serializable {
     private List<Entidad> estadosCiviles;
     private List<Entidad> tiposDocumento;
     private List<Entidad> actividades;
+    private List<Entidad> nacionalidades;   // REQ-0043
     private List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> ubicaciones;
     private List<Persona> representantes;
     private List<PersonaRol> rolesPersona = java.util.List.of();
@@ -72,6 +73,7 @@ public class PersonaBean implements Serializable {
         estadosCiviles = catalogoService.opciones("ESTADOS_CIVILES");
         tiposDocumento = catalogoService.opciones("TIPOS_DOCUMENTOS_IDENTIDAD");
         actividades = catalogoService.opciones("ACTIVIDADES_ECONOMICAS");
+        nacionalidades = catalogoService.opciones("NACIONALIDADES");   // REQ-0043
         ubicaciones = geografiaService.listar(0, 1000, "", null, true);
         // representante legal: personas fisicas activas
         representantes = personaService.listar(0, 1000, "", null, true).stream()
@@ -269,6 +271,7 @@ public class PersonaBean implements Serializable {
     public void setTabActivo(int tabActivo) { this.tabActivo = tabActivo; }
     public List<Entidad> getRoles() { return roles; }
     public List<Entidad> getEstadosCiviles() { return estadosCiviles; }
+    public List<Entidad> getNacionalidades() { return nacionalidades; }   // REQ-0043
     public List<Entidad> getTiposDocumento() { return tiposDocumento; }
     public List<Entidad> getActividades() { return actividades; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.UbicacionGeografica> getUbicaciones() { return ubicaciones; }

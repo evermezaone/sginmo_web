@@ -74,6 +74,8 @@
         <h:form id="frmEdicion">
             <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <ui:fragment rendered="#{not empty personaBean.seleccionado}">
+                <!-- REQ-0045: cuerpo con scroll interno para que los botones del pie queden siempre visibles -->
+                <div style="max-height:60vh; overflow-y:auto; overflow-x:hidden; padding-right:.5rem;">
                 <p:tabView id="tabs" widgetVar="wtabsPer" activeIndex="#{personaBean.tabActivo}">
                     <p:tab title="Datos">
                         <!-- Persona FISICA -->
@@ -114,8 +116,11 @@
                             </div>
                             <div class="campo">
                                 <label>Nacionalidad</label>
-                                <p:inputText value="#{personaBean.datosEmpresa.nacionalidad}" label="Nacionalidad"
-                                             disabled="#{personaBean.soloLectura}" maxlength="80"/>
+                                <p:selectOneMenu value="#{personaBean.datosEmpresa.nacionalidad}" label="Nacionalidad"
+                                                 filter="true" filterMatchMode="contains" disabled="#{personaBean.soloLectura}">
+                                    <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{personaBean.nacionalidades}" var="na" itemLabel="#{na.descripcion}" itemValue="#{na.id}"/>
+                                </p:selectOneMenu>
                             </div>
                         </ui:fragment>
                         <!-- Persona JURIDICA -->
@@ -176,11 +181,6 @@
                             </div>
                         </div>
                         <div class="fila-2">
-                            <div class="campo">
-                                <label>Clasificación fiscal</label>
-                                <p:inputText value="#{personaBean.datosEmpresa.clasificacionFiscal}" label="Clasificación fiscal"
-                                             disabled="#{personaBean.soloLectura}" maxlength="60"/>
-                            </div>
                             <div class="campo">
                                 <label>Contribuyente</label>
                                 <p:toggleSwitch value="#{personaBean.datosEmpresa.esContribuyente}" disabled="#{personaBean.soloLectura}"/>
@@ -255,6 +255,7 @@
                         </p:dataTable>
                     </p:tab>
                 </p:tabView>
+                </div><!-- /cuerpo-scroll (REQ-0045) -->
                 <div class="pie-dialogo">
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgPersona').hide()"
                                      styleClass="ui-button-secondary" style="margin-right:.5rem;"/>

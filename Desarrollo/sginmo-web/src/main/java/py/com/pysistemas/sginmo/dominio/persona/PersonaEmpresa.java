@@ -60,8 +60,8 @@ public class PersonaEmpresa extends Auditable implements Serializable {
     @Column(name = "estado_civil")
     private Long estadoCivil;
 
-    @Column(name = "nacionalidad", length = 80)
-    private String nacionalidad;
+    @Column(name = "nacionalidad")
+    private Long nacionalidad;   // REQ-0043: id de entidad (lista NACIONALIDADES), antes varchar libre
 
     @Column(name = "nombre_fantasia", length = 120)
     private String nombreFantasia;
@@ -101,8 +101,8 @@ public class PersonaEmpresa extends Auditable implements Serializable {
     public void setObservacion(String v) { this.observacion = v; }
     public Long getEstadoCivil() { return estadoCivil; }
     public void setEstadoCivil(Long v) { this.estadoCivil = v; }
-    public String getNacionalidad() { return nacionalidad; }
-    public void setNacionalidad(String v) { this.nacionalidad = v; }
+    public Long getNacionalidad() { return nacionalidad; }
+    public void setNacionalidad(Long v) { this.nacionalidad = v; }
     public String getNombreFantasia() { return nombreFantasia; }
     public void setNombreFantasia(String v) { this.nombreFantasia = v; }
     public Long getRepresentanteLegal() { return representanteLegal; }

@@ -75,6 +75,14 @@ public class CatalogoService {
             .setParameter("t", t()).getResultList();
     }
 
+    /** Monedas ACTIVAS visibles al tenant (globales -1 + propias) para combos (REQ-0046). */
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Moneda> monedasActivas() {
+        return em.createQuery(
+                "SELECT m FROM Moneda m WHERE m.estado = 'ACTIVO' AND (m.tenant = -1 OR m.tenant = :t)"
+                + " ORDER BY m.descripcion", py.com.pysistemas.sginmo.dominio.catalogo.Moneda.class)
+            .setParameter("t", t()).getResultList();
+    }
+
     /** Formas de pago ACTIVO y HABILITADO para nuevos cobros (caja). */
     public List<py.com.pysistemas.sginmo.dominio.catalogo.FormaPago> formasHabilitadas() {
         return em.createQuery(

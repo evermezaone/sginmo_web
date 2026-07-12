@@ -91,6 +91,12 @@
                         <p:inputNumber value="#{operacionBean.seleccionado.plazo}" decimalPlaces="0" minValue="0"/></div>
                 </div>
                 <div class="fila-3">
+                    <div class="campo"><label>Moneda *</label>
+                        <p:selectOneMenu value="#{operacionBean.seleccionado.moneda}" label="Moneda" required="true"
+                                         requiredMessage="La moneda es obligatoria">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{operacionBean.monedas}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.id}"/>
+                        </p:selectOneMenu></div>
                     <div class="campo"><label>Precio (mensual o total) *</label>
                         <p:inputNumber value="#{operacionBean.seleccionado.precio}" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
                     <div class="campo"><label>Garantía (alquiler)</label>

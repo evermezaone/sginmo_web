@@ -56,6 +56,7 @@ public class OperacionBean implements Serializable {
     private List<Persona> vendedores;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> tiposContrato;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> tiposFinanciacion;
+    private List<py.com.pysistemas.sginmo.dominio.catalogo.Moneda> monedas;   // REQ-0046
 
     // renovacion / rescision / regeneracion
     private int renovMeses = 12;
@@ -70,6 +71,7 @@ public class OperacionBean implements Serializable {
         vendedores = personaService.porRol("VENDEDOR");
         tiposContrato = catalogoService.opciones("TIPOS_CONTRATOS");
         tiposFinanciacion = catalogoService.opciones("TIPOS_FINANCIACIONES");
+        monedas = catalogoService.monedasActivas();   // REQ-0046
         modelo = new LazyDataModel<>() {
             @Override
             public int count(Map<String, FilterMeta> f) { return (int) operacionService.contar(filtroGlobal); }
@@ -90,6 +92,12 @@ public class OperacionBean implements Serializable {
         seleccionado = new Operacion();
         if (contexto.getEmpresa() != null) seleccionado.setTenant(contexto.getEmpresa().getId());
         if (contexto.sucursal() != null) seleccionado.setSucursal(contexto.sucursal().getId());
+        // Moneda obligatoria (REQ-0046): por defecto Guaranies si existe, si no la primera visible.
+        if (monedas != null && !monedas.isEmpty()) {
+            seleccionado.setMoneda(monedas.stream()
+                .filter(m -> m.getDescripcion() != null && m.getDescripcion().toLowerCase().contains("guaran"))
+                .findFirst().orElse(monedas.get(0)).getId());
+        }
         cuotas = java.util.List.of();
         cuotasSeleccionadas = new java.util.ArrayList<>();
     }
@@ -170,6 +178,7 @@ public class OperacionBean implements Serializable {
     public List<Persona> getClientes() { return clientes; }
     public List<Persona> getVendedores() { return vendedores; }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getTiposContrato() { return tiposContrato; }
+    public List<py.com.pysistemas.sginmo.dominio.catalogo.Moneda> getMonedas() { return monedas; }   // REQ-0046
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getTiposFinanciacion() { return tiposFinanciacion; }
     public int getRenovMeses() { return renovMeses; }
     public void setRenovMeses(int v) { this.renovMeses = v; }
