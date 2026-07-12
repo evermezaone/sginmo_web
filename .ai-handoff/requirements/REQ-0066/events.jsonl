@@ -1,2 +1,2 @@
-﻿
-
+{"ts":"2026-07-12T09:05:00Z","actor":"claude","evento":"implementado","nota":"tools/vps/sginmo-restore.sh (restore a base temporal + validaciones Flyway/conteos con app.tenant=-1 + reporte JSON + guardia anti-prod doble confirmacion); docs/operacion/restore.md (RPO/RTO, recuperacion total/parcial, rollback)"}
+{"ts":"2026-07-12T09:05:00Z","actor":"claude","evento":"verificado","nota":"bash -n OK; modo plan en la VPS OK (carga backup.env, elige el ultimo dump). Corrida real del simulacro (crea/borra base temporal) diferida a operaciones por sandbox; registro en el runbook"}
