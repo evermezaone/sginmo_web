@@ -1,0 +1,51 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewParam name="clave" value="#{dashboardDetalleBean.clave}"/>
+    <f:viewParam name="desde" value="#{dashboardDetalleBean.desde}"/>
+    <f:viewParam name="hasta" value="#{dashboardDetalleBean.hasta}"/>
+    <f:viewParam name="moneda" value="#{dashboardDetalleBean.moneda}"/>
+    <f:viewParam name="sucursal" value="#{dashboardDetalleBean.sucursal}"/>
+    <f:viewParam name="ref" value="#{dashboardDetalleBean.ref}"/>
+    <f:viewAction action="#{dashboardDetalleBean.verificarAcceso()}"/>
+    <f:viewAction action="#{dashboardDetalleBean.cargar()}"/>
+</f:metadata>
+<ui:define name="titulo">Detalle de evidencia</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:messages/>
+        <h:panelGroup rendered="#{dashboardDetalleBean.vacio}">
+            <div style="padding:1rem 1.2rem; background:#eef2f7; border-radius:8px; color:#334155;">
+                <h:outputText rendered="#{empty dashboardDetalleBean.error}"
+                    value="Esta pantalla muestra la evidencia detallada de un KPI del dashboard. Se abre desde el dashboard con un indicador y sus filtros."/>
+                <h:outputText rendered="#{not empty dashboardDetalleBean.error}" style="color:#c62828;"
+                    value="Detalle no disponible: #{dashboardDetalleBean.error}"/>
+            </div>
+        </h:panelGroup>
+
+        <h:panelGroup rendered="#{not dashboardDetalleBean.vacio}">
+            <h2 style="margin:.2rem 0;">#{dashboardDetalleBean.detalle.titulo}</h2>
+            <p style="color:#6c757d; font-size:.83rem;">
+                #{dashboardDetalleBean.detalle.filtros} &#183; generado #{dashboardDetalleBean.detalle.generado}
+            </p>
+            <div style="margin:.5rem 0;">
+                <p:commandButton value="Exportar CSV" icon="pi pi-download" ajax="false">
+                    <p:fileDownload value="#{dashboardDetalleBean.csv}"/>
+                </p:commandButton>
+                <p:button value="Volver al dashboard" icon="pi pi-arrow-left" outcome="dashboard-gerencial"
+                          styleClass="ui-button-secondary" style="margin-left:.4rem;"/>
+            </div>
+            <p:dataTable var="fila" value="#{dashboardDetalleBean.detalle.filas}" paginator="true" rows="25"
+                         emptyMessage="Sin registros para los filtros aplicados">
+                <p:columns value="#{dashboardDetalleBean.detalle.columnas}" var="col" columnIndexVar="colIndex" headerText="#{col}">
+                    <h:outputText value="#{fila[colIndex]}"/>
+                </p:columns>
+            </p:dataTable>
+        </h:panelGroup>
+    </h:form>
+</ui:define>
+</ui:composition>

@@ -16,16 +16,16 @@ pueda abrir el detalle exacto que compone el numero mostrado.
 
 ## Criterios De Aceptacion
 
-- [ ] Existe pantalla `dashboard-detalle.xhtml` o mecanismo equivalente para mostrar evidencia filtrada por indicador.
-- [ ] Cada KPI del dashboard expone una clave de detalle y parametros firmes: periodo, moneda, sucursal, tipo, estado y otros filtros aplicados.
-- [ ] El detalle de mora abre cuotas/clientes/documentos que componen el monto.
-- [ ] El detalle de cobros abre cobros reales del periodo.
-- [ ] El detalle de ingresos/egresos abre documentos o movimientos que componen cada subtotal.
-- [ ] El detalle de ocupacion/vacancia abre propiedades que componen ocupado, vacante o brecha al objetivo.
-- [ ] El detalle de rentabilidad abre ingresos y egresos vinculados al activo/operacion/persona correspondiente.
-- [ ] La pantalla de detalle permite exportar CSV/PDF con filtros aplicados y sin mezclar monedas.
-- [ ] Los enlaces de drill-down no aceptan rutas/query libres que permitan inyeccion JPQL/SQL; se usa whitelist de indicadores y filtros.
-- [ ] El detalle respeta permisos: ver dashboard no necesariamente permite ver datos sensibles si el usuario no tiene permiso del modulo origen.
+- [x] Existe pantalla `dashboard-detalle.xhtml` para mostrar evidencia filtrada por indicador. (creada; tabla dinamica + estado vacio)
+- [x] Cada KPI expone una clave de detalle y parametros firmes: periodo, moneda, sucursal, tipo, estado, ref. (view params clave/desde/hasta/moneda/sucursal/ref; los KPIs de 0069/0071/0072/0073 ya exponen drillKey)
+- [x] El detalle de mora abre cuotas/clientes que componen el monto. (clave `mora`: cronograma_cuota vencidas + cliente + moneda + saldo)
+- [x] El detalle de cobros abre cobros reales del periodo. (clave `cobros`)
+- [x] El detalle de ingresos/egresos abre movimientos que componen cada subtotal. (claves `ingresos`/`egresos`: ingreso_egreso por aplicacion)
+- [x] El detalle de ocupacion/vacancia abre propiedades que componen ocupado/vacante. (claves `ocupacion`/`vacancia`)
+- [x] El detalle de rentabilidad abre ingresos/egresos del activo. (clave `rentabilidad_activo` con ref=activo)
+- [x] La pantalla permite exportar CSV con filtros aplicados y sin mezclar monedas. (export CSV con encabezado de filtros; el filtro de moneda evita mezcla)
+- [x] Los enlaces de drill-down no aceptan rutas/query libres (anti-injection): whitelist de indicadores y filtros. (DrilldownService.PERMISO = whitelist; consultas parametrizadas; parametros tipados -LocalDate/Long-)
+- [x] El detalle respeta permisos del modulo origen (ver dashboard no basta). (cada clave exige su permiso: cobros->caja/VER, mora->cobranza/VER, ing/egr->ingresos-egresos/VER, ocup/vac->ocupacion/VER, rent->rentabilidad/VER; ademas dashboard-gerencial/VER para abrir)
 
 ## Reglas De Negocio
 

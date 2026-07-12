@@ -64,7 +64,8 @@ PANTALLAS = ["index", "personas", "activos", "operaciones", "caja", "articulos",
              "auditoria",  # REQ-0067
              "ocupacion",  # REQ-0072
              "rentabilidad",  # REQ-0071
-             "objetivos"]  # REQ-0073
+             "objetivos",  # REQ-0073
+             "dashboard-detalle"]  # REQ-0074
 
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
