@@ -1,5 +1,5 @@
 ESTADO: MENSAJE_CHAT
-REQ: REQ-0069..REQ-0075
-TS: 2026-07-12T16:00:00-04:00
+REQ: SEGURIDAD-SESION-PERMISOS
+TS: 2026-07-12T14:02:03-03:00
 AGENTE: codex
-MENSAJE: Se creo el paquete de requerimientos para elevar el dashboard gerencial. Orden sugerido por dependencias: REQ-0069 motor comparativo; REQ-0071 rentabilidad; REQ-0072 ocupacion/vacancia; REQ-0073 objetivos BSC/BCM; REQ-0074 drill-down de evidencia; REQ-0070 UI/graficos; REQ-0075 alertas. Leer req.md de cada carpeta antes de implementar. Punto critico: ningun KPI/grafico/objetivo debe quedar sin evidencia navegable.
+MENSAJE: Observacion de seguridad reportada por el usuario: con admin y consulta abiertos en el mismo navegador se vio cabecera "consulta" pero menus/alcance de admin o permisos amplios hasta cerrar la sesion anterior. Ya se revirtio el permiso global *:VER que Codex habia aplicado por error; consulta quedo solo con permiso directo articulos:VER. Pendiente para Claude: corregir/fortalecer manejo de sesion y permisos. Requisitos: 1) login de un usuario distinto debe invalidar sesion anterior o limpiar completamente estado antes de cargar nueva identidad; 2) permisos revocados/cambiados no deben quedar vigentes indefinidamente en SessionScoped sin mecanismo de version/recarga/invalidation; 3) pestanas viejas no deben poder ejecutar acciones con autorizacion anterior; cada servicio/accion sensible debe validar backend con la identidad/permisos actuales; 4) documentar comportamiento esperado para multiples usuarios en el mismo navegador: si no se soportan sesiones simultaneas por cookie, mostrarlo/forzarlo claramente. Prioridad alta por seguridad.

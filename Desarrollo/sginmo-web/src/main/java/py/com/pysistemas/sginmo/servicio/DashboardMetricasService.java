@@ -118,6 +118,14 @@ public class DashboardMetricasService {
         return c;
     }
 
+    /** Valor de un indicador para el mes en curso (reutilizado por objetivos REQ-0073). */
+    public BigDecimal valorMesActual(String indicador, Long moneda, Long sucursal) {
+        Long emp = tenant.actual();
+        if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return BigDecimal.ZERO;
+        Periodos p = Periodos.para(LocalDate.now(), LocalDate.now());
+        return valor(indicador, p.actual, moneda, sucursal);
+    }
+
     // ── Calculo por indicador y rango ─────────────────────────────────────────
 
     private BigDecimal valor(String indicador, Rango r, Long moneda, Long sucursal) {

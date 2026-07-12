@@ -1,0 +1,113 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{objetivoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Objetivos gerenciales</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+        <div style="margin-bottom:.7rem;">
+            <p:commandButton value="Nuevo objetivo" icon="pi pi-plus"
+                             rendered="#{sesionUsuario.puede('objetivos','CREAR')}"
+                             action="#{objetivoBean.nuevo}" update="frm:dlg" oncomplete="PF('dlgObj').show()"/>
+        </div>
+
+        <p:dataTable id="tabla" var="o" value="#{objetivoBean.objetivos}" emptyMessage="Sin objetivos definidos"
+                     paginator="true" rows="15">
+            <p:column headerText="Estado" style="width:6rem; text-align:center;">
+                <p:tag value="#{o.semaforo}"
+                       severity="#{o.semaforo eq 'OK' ? 'success' : (o.semaforo eq 'ADVERTENCIA' ? 'warning' : 'danger')}"/>
+            </p:column>
+            <p:column headerText="Objetivo"><h:outputText value="#{o.descripcion}"/></p:column>
+            <p:column headerText="Indicador" style="width:11rem;"><h:outputText value="#{o.indicador}"/></p:column>
+            <p:column headerText="Meta" style="width:8rem; text-align:right;">
+                <h:outputText value="#{o.meta}"><f:convertNumber pattern="#,##0.##"/></h:outputText>
+                <h:outputText value="%" rendered="#{o.unidad eq 'PORCENTAJE'}"/>
+            </p:column>
+            <p:column headerText="Actual" style="width:8rem; text-align:right;">
+                <h:outputText value="#{o.valorActual}"><f:convertNumber pattern="#,##0.##"/></h:outputText>
+                <h:outputText value="%" rendered="#{o.unidad eq 'PORCENTAJE'}"/>
+            </p:column>
+            <p:column headerText="Cumplim." style="width:7rem; text-align:right;">
+                <h:outputText value="#{o.cumplimientoPct}#{o.cumplimientoPct ne null ? '%' : 'n/a'}"/>
+            </p:column>
+            <p:column headerText="Brecha" style="width:9rem; text-align:right;">
+                <h:outputText value="#{o.brecha}"><f:convertNumber pattern="#,##0.##"/></h:outputText>
+                <h:outputText value=" (faltan #{o.faltanUnidades} prop.)" rendered="#{o.indicador eq 'ocupacion' and o.faltanUnidades gt 0}"
+                              style="color:#c62828;"/>
+            </p:column>
+            <p:column headerText="Estado" style="width:6rem; text-align:center;"><h:outputText value="#{o.estado}"/></p:column>
+            <p:column headerText="Acciones" style="width:11rem; text-align:center;">
+                <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('objetivos','EDITAR')}"
+                                 action="#{objetivoBean.editar(o)}" update="frm:dlg" oncomplete="PF('dlgObj').show()"/>
+                <p:commandButton icon="pi pi-camera" title="Registrar medicion" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('objetivos','EDITAR')}"
+                                 actionListener="#{objetivoBean.medir(o)}" update="frm:mensajes"/>
+                <p:commandButton icon="pi pi-ban" title="Inactivar" styleClass="ui-button-flat"
+                                 rendered="#{o.estado eq 'ACTIVO' and sesionUsuario.puede('objetivos','INACTIVAR')}"
+                                 actionListener="#{objetivoBean.inactivar(o)}" update="frm"/>
+                <p:commandButton icon="pi pi-check" title="Reactivar" styleClass="ui-button-flat"
+                                 rendered="#{o.estado eq 'INACTIVO' and sesionUsuario.puede('objetivos','REACTIVAR')}"
+                                 actionListener="#{objetivoBean.reactivar(o)}" update="frm"/>
+            </p:column>
+        </p:dataTable>
+
+        <p:dialog id="dlg" header="Objetivo" widgetVar="dlgObj" modal="true" width="520" showEffect="fade">
+            <h:panelGroup rendered="#{objetivoBean.editando}">
+                <div class="campo"><label>Indicador</label><br/>
+                    <p:selectOneMenu value="#{objetivoBean.edicion.indicador}" style="width:100%;">
+                        <f:selectItems value="#{objetivoBean.indicadores}"/>
+                    </p:selectOneMenu>
+                </div>
+                <div class="campo"><label>Descripcion</label><br/>
+                    <p:inputText value="#{objetivoBean.edicion.descripcion}" style="width:100%;" maxlength="200"/>
+                </div>
+                <div style="display:flex; gap:.6rem;">
+                    <div class="campo" style="flex:1;"><label>Meta</label><br/>
+                        <p:inputNumber value="#{objetivoBean.edicion.meta}" decimalPlaces="2" style="width:100%;"/>
+                    </div>
+                    <div class="campo" style="flex:1;"><label>Unidad</label><br/>
+                        <p:selectOneMenu value="#{objetivoBean.edicion.unidad}" style="width:100%;">
+                            <f:selectItems value="#{objetivoBean.unidades}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo" style="flex:1;"><label>Sentido</label><br/>
+                        <p:selectOneMenu value="#{objetivoBean.edicion.sentido}" style="width:100%;">
+                            <f:selectItems value="#{objetivoBean.sentidos}"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div style="display:flex; gap:.6rem;">
+                    <div class="campo" style="flex:1;"><label>Periodo</label><br/>
+                        <p:selectOneMenu value="#{objetivoBean.edicion.periodo}" style="width:100%;">
+                            <f:selectItems value="#{objetivoBean.periodos}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo" style="flex:1;"><label>Moneda (si es monto)</label><br/>
+                        <p:selectOneMenu value="#{objetivoBean.edicion.moneda}" style="width:100%;">
+                            <f:selectItem itemLabel="(ninguna)" itemValue="#{null}"/>
+                            <f:selectItems value="#{objetivoBean.monedas}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.id}"/>
+                        </p:selectOneMenu>
+                    </div>
+                </div>
+                <div style="margin-top:.8rem; text-align:right;">
+                    <p:commandButton value="Guardar" icon="pi pi-save" action="#{objetivoBean.guardar}"
+                                     update="frm" oncomplete="if (!args.validationFailed &amp;&amp; #{not objetivoBean.editando}) PF('dlgObj').hide()"/>
+                </div>
+            </h:panelGroup>
+        </p:dialog>
+
+        <p style="color:#9ca3af; font-size:.83rem;">
+            El valor actual, la brecha, el % de cumplimiento y el semaforo se calculan automaticamente desde
+            las metricas reales. Para "ocupacion" se muestra cuantas propiedades faltan alquilar.
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>

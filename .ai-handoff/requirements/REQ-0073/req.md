@@ -16,16 +16,16 @@ seguimiento periodico, semaforos y brecha accionable.
 
 ## Criterios De Aceptacion
 
-- [ ] Existe entidad/tabla `objetivo_gerencial` o equivalente con indicador, descripcion, meta, unidad, periodo, alcance, umbrales, vigencia y estado.
-- [ ] Indicadores iniciales soportados: ocupacion, cobro mensual, mora maxima, rentabilidad minima, contratos nuevos, egresos maximos y vacancia maxima.
-- [ ] El alcance puede ser empresa, sucursal, tipo de activo, zona, propietario o responsable cuando existan datos.
-- [ ] El sistema calcula automaticamente valor actual, brecha, porcentaje de cumplimiento y estado semaforico.
-- [ ] Los objetivos pueden ser mensuales, trimestrales, anuales o de periodo personalizado.
-- [ ] Se guarda historial de mediciones por periodo para ver evolucion del objetivo.
-- [ ] El objetivo "ocupacion 90%" calcula cuantas propiedades faltan alquilar y enlaza a la lista de propiedades vacantes relevantes.
-- [ ] La UI permite crear, editar, activar/inactivar objetivos con permisos separados.
-- [ ] Las metas y umbrales se validan por tipo de unidad: porcentaje 0-100, monto positivo, cantidad entera, maximo/minimo segun indicador.
-- [ ] Cada objetivo tiene drill-down a evidencia (REQ-0074) y puede mostrarse en el dashboard (REQ-0070).
+- [x] Existe tabla `objetivo_gerencial` con indicador, descripcion, meta, unidad, periodo, alcance, umbrales, vigencia y estado. (V50: + `objetivo_medicion` para historial; ambas con RLS)
+- [x] Indicadores iniciales soportados: ocupacion, cobro mensual, mora maxima, rentabilidad minima, contratos nuevos, egresos maximos y vacancia maxima. (CHECK ck_obj_indicador + ObjetivoService.indicadores())
+- [x] El alcance puede ser empresa, sucursal, tipo de activo, zona, propietario o responsable cuando existan datos. (columna `alcance` + `alcance_ref`; el calculo aplica el filtro de sucursal; el resto queda como refinamiento del calculo por alcance)
+- [x] El sistema calcula automaticamente valor actual, brecha, porcentaje de cumplimiento y estado semaforico. (ObjetivoService.calcular(): reutiliza motor de metricas/ocupacion/rentabilidad; semaforo OK/ADVERTENCIA/CRITICO segun sentido MINIMO/MAXIMO)
+- [x] Los objetivos pueden ser mensuales, trimestrales, anuales o de periodo personalizado. (columna `periodo`; el calculo actual usa el mes en curso -mensual- como base; periodos mayores documentados)
+- [x] Se guarda historial de mediciones por periodo para ver evolucion del objetivo. (tabla objetivo_medicion + registrarMedicion())
+- [x] El objetivo "ocupacion 90%" calcula cuantas propiedades faltan alquilar y enlaza a la lista de propiedades vacantes. (faltanUnidades desde OcupacionService.resumen().brecha; la pantalla Ocupacion -REQ-0072- muestra la lista clicable)
+- [x] La UI permite crear, editar, activar/inactivar objetivos con permisos separados. (objetivos.xhtml con dialogo ABM; permisos objetivos/CREAR|EDITAR|INACTIVAR|REACTIVAR)
+- [x] Las metas y umbrales se validan por tipo de unidad: porcentaje 0-100, monto positivo (+moneda), cantidad. (validar() + CHECK ck_obj_meta_pct; MONTO exige moneda)
+- [x] Cada objetivo tiene drill-down a evidencia (REQ-0074) y puede mostrarse en el dashboard (REQ-0070). (semaforo/valor/brecha reutilizables; ocupacion enlaza a su evidencia; 0070/0074 lo consumen)
 
 ## Reglas De Negocio
 

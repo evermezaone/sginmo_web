@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0069, REQ-0071, REQ-0072
-TS: 2026-07-12T17:02:04Z
+REQ: REQ-0069, REQ-0071, REQ-0072, REQ-0073
+TS: 2026-07-12T17:09:53Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0069, REQ-0071, REQ-0072. Ultimo derivado REQ-0071: Rentabilidad base caja (V49): RentabilidadService + pantalla rentabilidad; ingresos/egresos por tipo (articulo.aplicacion), neto, margen %, deposito de garantia como pasivo (excluido), ranking de activos por neto. No mezcla monedas (ingreso_egreso base). Build+deploy+smoke 33/33.
+MENSAJE: [SGI] Cola de auditoria: REQ-0069, REQ-0071, REQ-0072, REQ-0073. Ultimo derivado REQ-0073: Objetivos gerenciales BSC (V50): objetivo_gerencial + objetivo_medicion con RLS + pantalla ABM; calculo automatico de valor actual/brecha/cumplimiento/semaforo reutilizando el motor de metricas/ocupacion/rentabilidad; ocupacion muestra 'faltan N propiedades'; permisos separados + auditoria; historial de mediciones. Build+deploy+smoke 34/34.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

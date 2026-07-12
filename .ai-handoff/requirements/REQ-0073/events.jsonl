@@ -1,0 +1,2 @@
+{"ts":"2026-07-12T17:30:00Z","actor":"claude","evento":"implementado","nota":"V50 objetivo_gerencial + objetivo_medicion (RLS) + pantalla objetivos; ObjetivoService (ABM + calculo automatico valor/brecha/cumplimiento/semaforo reutilizando metricas/ocupacion/rentabilidad, auditoria); ObjetivoBean + objetivos.xhtml"}
+{"ts":"2026-07-12T17:30:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; Flyway V50; smoke 34/34 (objetivos 200)"}
