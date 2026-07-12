@@ -2,7 +2,7 @@
 
 Fecha: 2026-07-12T16:28:03-03:00
 Auditor: codex
-Decision: REQUIERE_CAMBIOS
+Decision: APROBADO EN RONDA 2
 
 ## Alcance revisado
 
@@ -48,3 +48,22 @@ Evidencia:
 ## Resultado
 
 No apruebo REQ-0069. El motor esta bien encaminado y compila, pero debe corregir el enforcement de permisos en la API publica y la semantica del filtro sucursal en ocupacion/vacancia antes de destrabar REQ-0070..REQ-0075.
+
+## Re-auditoria Ronda 2 - 2026-07-12
+
+Decision: APROBADO_POR_CODEX
+
+Verificacion:
+
+- `mvn -q clean package` en `Desarrollo`: OK.
+- Relectura de `DashboardMetricasService.java`: completada.
+- Revision de consumidores de `valorMesActual`: `ObjetivoService` exige `objetivos:VER` antes de calcular/listar objetivos; `AlertaService` consume objetivos mediante esa API autorizada.
+
+Observaciones cerradas:
+
+- Obs 1: corregida. `comparativo(...)` ahora es privado y `valorMesActual(...)` ya no es publico; queda package-private y documentado como API interna para servicios gerenciales del mismo paquete con permisos propios. Las entradas publicas del dashboard (`comparativos`, `serieMensual`) siguen exigiendo `dashboard-gerencial:VER`.
+- Obs 2: corregida. Ocupacion/vacancia ya no filtran solo una parte por sucursal; `valor()` llama a `ocupacionPct(r.hasta)` y `vacantes(r.hasta)`, y `alquilables/ocupados` calculan el universo de tenant de forma consistente. El comentario explicita que no se aplica sucursal porque `activo` no tiene esa columna.
+
+Resultado final:
+
+REQ-0069 aprobado. Puede destrabarse la auditoria de REQ-0070..REQ-0075 por prioridad.

@@ -49,6 +49,9 @@ public class DashboardMetricasService {
             COBROS, MORA, INGRESOS, EGRESOS, RENTABILIDAD);
     /** Indicadores de foto a fecha (snapshot) vs de flujo por rango. */
     private static final java.util.Set<String> SNAPSHOT = java.util.Set.of(MORA, OCUPACION, VACANCIA);
+    /** Indicadores con evidencia navegable (drill-down REQ-0074): coinciden con la whitelist de DrilldownService. */
+    private static final java.util.Set<String> NAVEGABLES = java.util.Set.of(
+            COBROS, MORA, INGRESOS, EGRESOS, OCUPACION, VACANCIA);
 
     private static final Map<String, String> ETIQUETA = new LinkedHashMap<>();
     static {
@@ -103,6 +106,8 @@ public class DashboardMetricasService {
         c.monedaId = c.monetario ? moneda : null;
         c.sucursalId = sucursal;
         c.drillKey = indicador;
+        // obs 275: clave de evidencia navegable (null si el indicador no tiene detalle en la whitelist).
+        c.detalleClave = NAVEGABLES.contains(indicador) ? indicador : null;
         boolean sinMoneda = c.monetario && moneda == null;
         if (sinMoneda) {
             c.aplicable = false;   // no se calcula un monto sin moneda (no mezclar monedas)
@@ -121,19 +126,23 @@ public class DashboardMetricasService {
         return c;
     }
 
-    /** Serie mensual de un indicador (ultimos {@code meses}) para graficos de evolucion (REQ-0070). */
-    public List<Punto> serieMensual(String indicador, Long moneda, Long sucursal, int meses) {
+    /**
+     * Serie mensual de un indicador para graficos de evolucion (REQ-0070). Los {@code meses} terminan en
+     * el mes de {@code refHasta} (el filtro de periodo del dashboard), no en hoy (obs 274), asi los
+     * graficos respetan el periodo seleccionado. Cada mes se acota a refHasta si cae dentro.
+     */
+    public List<Punto> serieMensual(String indicador, Long moneda, Long sucursal, int meses, LocalDate refHasta) {
         autorizacion.exigir(PANTALLA, "VER");
         List<Punto> out = new ArrayList<>();
         Long emp = tenant.actual();
         if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return out;
         if (MONETARIOS.contains(indicador) && moneda == null) return out;   // no mezcla monedas
-        LocalDate hoy = LocalDate.now();
-        LocalDate primer = hoy.withDayOfMonth(1).minusMonths(Math.max(1, meses) - 1L);
+        LocalDate ref = refHasta == null ? LocalDate.now() : refHasta;
+        LocalDate primer = ref.withDayOfMonth(1).minusMonths(Math.max(1, meses) - 1L);
         for (int i = 0; i < Math.max(1, meses); i++) {
             LocalDate ini = primer.plusMonths(i);
             LocalDate fin = ini.withDayOfMonth(ini.lengthOfMonth());
-            if (fin.isAfter(hoy)) fin = hoy;
+            if (fin.isAfter(ref)) fin = ref;
             out.add(new Punto(ini, valor(indicador, new Rango(ini, fin), moneda, sucursal)));
         }
         return out;
@@ -354,7 +363,7 @@ public class DashboardMetricasService {
     // ── DTO de salida ─────────────────────────────────────────────────────────
 
     public static class Comparativo {
-        public String indicador, etiqueta, periodoDesc, drillKey;
+        public String indicador, etiqueta, periodoDesc, drillKey, detalleClave;
         public boolean monetario, aplicable;
         public Long monedaId, sucursalId;
         public BigDecimal actual = BigDecimal.ZERO, periodoAnterior = BigDecimal.ZERO,
@@ -365,6 +374,8 @@ public class DashboardMetricasService {
         public String getEtiqueta() { return etiqueta; }
         public String getPeriodoDesc() { return periodoDesc; }
         public String getDrillKey() { return drillKey; }
+        public String getDetalleClave() { return detalleClave; }
+        public boolean isNavegable() { return detalleClave != null; }
         public boolean isMonetario() { return monetario; }
         public boolean isAplicable() { return aplicable; }
         public Long getMonedaId() { return monedaId; }

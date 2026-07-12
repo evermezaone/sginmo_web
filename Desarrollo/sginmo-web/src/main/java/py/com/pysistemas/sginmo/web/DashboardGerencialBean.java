@@ -75,9 +75,10 @@ public class DashboardGerencialBean implements Serializable {
     }
 
     private void construirGraficos() {
-        List<DashboardMetricasService.Punto> sCob = metricas.serieMensual(DashboardMetricasService.COBROS, monedaId, sucursalId, 12);
-        List<DashboardMetricasService.Punto> sIng = metricas.serieMensual(DashboardMetricasService.INGRESOS, monedaId, sucursalId, 12);
-        List<DashboardMetricasService.Punto> sEgr = metricas.serieMensual(DashboardMetricasService.EGRESOS, monedaId, sucursalId, 12);
+        // obs 274: la serie termina en el mes de 'hasta' (el filtro de periodo), no en hoy.
+        List<DashboardMetricasService.Punto> sCob = metricas.serieMensual(DashboardMetricasService.COBROS, monedaId, sucursalId, 12, hasta);
+        List<DashboardMetricasService.Punto> sIng = metricas.serieMensual(DashboardMetricasService.INGRESOS, monedaId, sucursalId, 12, hasta);
+        List<DashboardMetricasService.Punto> sEgr = metricas.serieMensual(DashboardMetricasService.EGRESOS, monedaId, sucursalId, 12, hasta);
         List<String> labels = new ArrayList<>();
         for (DashboardMetricasService.Punto p : (sCob.isEmpty() ? (sIng.isEmpty() ? sEgr : sIng) : sCob)) labels.add(p.getEtiqueta());
         labelsJson = arrStr(labels);

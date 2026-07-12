@@ -48,6 +48,18 @@
                             value="MoM #{c.mom.aplica ? c.mom.porcentual : 'n/a'}#{c.mom.aplica ? '%' : ''}"/>
                         <h:outputText style="color:#8d99ae;" value=" · YoY #{c.yoy.aplica ? c.yoy.porcentual : 'n/a'}#{c.yoy.aplica ? '%' : ''}"/>
                     </h:panelGroup>
+                    <!-- obs 275: cada KPI con evidencia enlaza a su detalle filtrado (0074) -->
+                    <h:link outcome="/dashboard-detalle" rendered="#{c.navegable}" styleClass="drill"
+                            style="font-size:.78rem; display:inline-block; margin-top:.35rem;">
+                        <f:param name="clave" value="#{c.detalleClave}"/>
+                        <f:param name="desde" value="#{dashboardGerencialBean.desde}"/>
+                        <f:param name="hasta" value="#{dashboardGerencialBean.hasta}"/>
+                        <f:param name="moneda" value="#{c.monedaId}"/>
+                        <f:param name="sucursal" value="#{c.sucursalId}"/>
+                        <i class="pi pi-search" style="font-size:.72rem;"></i> ver detalle
+                    </h:link>
+                    <h:outputText rendered="#{not c.navegable and c.aplicable}" style="font-size:.72rem; color:#adb5bd; display:inline-block; margin-top:.35rem;"
+                                  value="(sin detalle directo)"/>
                 </div>
             </ui:repeat>
         </div>
@@ -86,6 +98,29 @@
         })();
         //]]>
         </script>
+
+        <!-- obs 276: seccion de ocupacion/vacancia enlazada a su listado operativo -->
+        <div class="card" style="margin-top:1rem;">
+            <h3>Ocupacion y vacancia</h3>
+            <div style="display:flex; flex-wrap:wrap; gap:1.4rem; align-items:center;">
+                <ui:repeat value="#{dashboardGerencialBean.comparativos}" var="oc">
+                    <h:panelGroup rendered="#{oc.indicador eq 'ocupacion' or oc.indicador eq 'vacancia'}" layout="block">
+                        <span style="font-size:1.4rem; font-weight:700; color:#1d3557;">
+                            <h:outputText value="#{oc.actual}"><f:convertNumber maxFractionDigits="#{oc.indicador eq 'ocupacion' ? 2 : 0}"/></h:outputText><h:outputText value="%" rendered="#{oc.indicador eq 'ocupacion'}"/>
+                        </span>
+                        <span style="color:#6c757d; font-size:.8rem; margin-left:.35rem;">#{oc.etiqueta}</span>
+                    </h:panelGroup>
+                </ui:repeat>
+                <div style="margin-left:auto; display:flex; gap:.5rem;">
+                    <p:button value="Ocupacion y vacantes" icon="pi pi-home" outcome="ocupacion"/>
+                    <h:link outcome="/dashboard-detalle" styleClass="ui-button ui-button-secondary">
+                        <f:param name="clave" value="vacancia"/>
+                        <f:param name="hasta" value="#{dashboardGerencialBean.hasta}"/>
+                        <i class="pi pi-list"></i> Propiedades vacantes
+                    </h:link>
+                </div>
+            </div>
+        </div>
 
         <h3 style="margin:1.2rem 0 .3rem; color:#1d3557;">Indicadores operativos</h3>
         <div class="kpis-g">
