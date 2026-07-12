@@ -118,6 +118,24 @@ public class DashboardMetricasService {
         return c;
     }
 
+    /** Serie mensual de un indicador (ultimos {@code meses}) para graficos de evolucion (REQ-0070). */
+    public List<Punto> serieMensual(String indicador, Long moneda, Long sucursal, int meses) {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Punto> out = new ArrayList<>();
+        Long emp = tenant.actual();
+        if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return out;
+        if (MONETARIOS.contains(indicador) && moneda == null) return out;   // no mezcla monedas
+        LocalDate hoy = LocalDate.now();
+        LocalDate primer = hoy.withDayOfMonth(1).minusMonths(Math.max(1, meses) - 1L);
+        for (int i = 0; i < Math.max(1, meses); i++) {
+            LocalDate ini = primer.plusMonths(i);
+            LocalDate fin = ini.withDayOfMonth(ini.lengthOfMonth());
+            if (fin.isAfter(hoy)) fin = hoy;
+            out.add(new Punto(ini, valor(indicador, new Rango(ini, fin), moneda, sucursal)));
+        }
+        return out;
+    }
+
     /** Valor de un indicador para el mes en curso (reutilizado por objetivos REQ-0073). */
     public BigDecimal valorMesActual(String indicador, Long moneda, Long sucursal) {
         Long emp = tenant.actual();
@@ -240,6 +258,18 @@ public class DashboardMetricasService {
 
     /** Rango de fechas inclusivo. */
     public record Rango(LocalDate desde, LocalDate hasta) { }
+
+    /** Punto de una serie mensual: etiqueta MM/yyyy + valor. */
+    public static final class Punto {
+        public final LocalDate mes; public final BigDecimal valor; public final String etiqueta;
+        public Punto(LocalDate mes, BigDecimal valor) {
+            this.mes = mes; this.valor = valor == null ? BigDecimal.ZERO : valor;
+            this.etiqueta = String.format("%02d/%04d", mes.getMonthValue(), mes.getYear());
+        }
+        public LocalDate getMes() { return mes; }
+        public BigDecimal getValor() { return valor; }
+        public String getEtiqueta() { return etiqueta; }
+    }
 
     /**
      * Conjunto de periodos comparables para un mes de referencia. Si el mes de referencia es el mes en

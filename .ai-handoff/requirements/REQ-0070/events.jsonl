@@ -1,0 +1,2 @@
+{"ts":"2026-07-12T18:20:00Z","actor":"claude","evento":"implementado","nota":"Dashboard gerencial visual: resumen ejecutivo comparativo (MoM/YoY con color) + 3 graficos Chart.js (evolucion 12m, ingresos vs egresos, composicion de ingresos) + KPIs con enlace a evidencia (0074); serieMensual en el motor"}
+{"ts":"2026-07-12T18:20:00Z","actor":"claude","evento":"desplegado","nota":"PF15 removio la API Java de charts -> Chart.js incluido + canvas; Build OK; smoke 35/35 (dashboard-gerencial 200)"}

@@ -8,19 +8,20 @@
     <f:viewAction action="#{dashboardGerencialBean.verificarAcceso()}"/>
 </f:metadata>
 <ui:define name="titulo">Dashboard gerencial</ui:define>
-<ui:define name="estilos">
-    <style>
-        .kpis-g { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:.8rem; margin:1rem 0; }
-        .kpi-g { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:1rem; text-decoration:none; color:#343a40; display:block; }
-        .kpi-g:hover { border-color:#457b9d; box-shadow:0 4px 14px rgba(0,0,0,.08); }
-        .kpi-g .n { font-size:1.6rem; font-weight:700; color:#1d3557; }
-        .kpi-g .n.alerta { color:#e63946; }
-        .kpi-g .n.ok { color:#2a9d8f; }
-        .kpi-g .t { font-size:.75rem; color:#6c757d; text-transform:uppercase; letter-spacing:.4px; }
-    </style>
-</ui:define>
 <ui:define name="contenido">
     <h:form id="frm">
+        <style>
+            .kpis-g { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:.8rem; margin:1rem 0; }
+            .kpi-g { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:.9rem 1rem; }
+            .kpi-g .t { font-size:.72rem; color:#6c757d; text-transform:uppercase; letter-spacing:.4px; }
+            .kpi-g .n { font-size:1.5rem; font-weight:700; color:#1d3557; line-height:1.15; }
+            .kpi-g .v { font-size:.8rem; margin-top:.2rem; }
+            .up { color:#2a9d8f; } .down { color:#e63946; } .flat { color:#8d99ae; }
+            .charts { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:1.2rem; margin-top:1rem; }
+            .card { background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:1rem; }
+            .card h3 { margin:.1rem 0 .6rem; font-size:1rem; color:#1d3557; }
+        </style>
+
         <div class="barra-tabla" style="gap:.6rem; flex-wrap:wrap; align-items:flex-end;">
             <div class="campo"><label>Desde</label>
                 <p:datePicker value="#{dashboardGerencialBean.desde}" pattern="dd/MM/yyyy" showIcon="true"/></div>
@@ -33,43 +34,84 @@
             <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{dashboardGerencialBean.recalcular()}" update="frm"/>
         </div>
 
+        <h3 style="margin:1rem 0 .3rem; color:#1d3557;">Resumen ejecutivo (comparativo)</h3>
         <div class="kpis-g">
-            <h:link outcome="/operaciones" styleClass="kpi-g">
-                <div class="n">#{dashboardGerencialBean.kpis.operacionesActivas}</div>
-                <div class="t">Operaciones activas</div>
-            </h:link>
-            <h:link outcome="/operaciones" styleClass="kpi-g">
-                <div class="n">#{dashboardGerencialBean.kpis.ventas}</div>
-                <div class="t">Ventas</div>
-            </h:link>
-            <h:link outcome="/operaciones" styleClass="kpi-g">
-                <div class="n">#{dashboardGerencialBean.kpis.alquileres}</div>
-                <div class="t">Alquileres</div>
-            </h:link>
-            <h:link outcome="/activos" styleClass="kpi-g">
-                <div class="n ok">#{dashboardGerencialBean.kpis.propiedadesDisponibles}</div>
-                <div class="t">Propiedades disponibles</div>
-            </h:link>
-            <h:link outcome="/caja" styleClass="kpi-g">
-                <div class="n #{dashboardGerencialBean.kpis.cuotasVencidas gt 0 ? 'alerta' : ''}">#{dashboardGerencialBean.kpis.cuotasVencidas}</div>
-                <div class="t">Cuotas vencidas</div>
-            </h:link>
-            <h:link outcome="/caja" styleClass="kpi-g">
-                <div class="n #{dashboardGerencialBean.kpis.montoVencido gt 0 ? 'alerta' : ''}">
-                    <h:outputText value="#{dashboardGerencialBean.kpis.montoVencido}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            <ui:repeat value="#{dashboardGerencialBean.comparativos}" var="c">
+                <div class="kpi-g">
+                    <div class="t">#{c.etiqueta}</div>
+                    <div class="n">
+                        <h:outputText value="#{c.actual}" rendered="#{c.aplicable}"><f:convertNumber maxFractionDigits="#{c.monetario ? 0 : 2}" groupingUsed="true"/></h:outputText>
+                        <h:outputText value="sin moneda" rendered="#{not c.aplicable}" style="font-size:.85rem; color:#8d99ae;"/>
+                    </div>
+                    <h:panelGroup layout="block" styleClass="v" rendered="#{c.aplicable}">
+                        <h:outputText styleClass="#{c.mom.direccion eq 'MEJORA' ? 'up' : (c.mom.direccion eq 'EMPEORA' ? 'down' : 'flat')}"
+                            value="MoM #{c.mom.aplica ? c.mom.porcentual : 'n/a'}#{c.mom.aplica ? '%' : ''}"/>
+                        <h:outputText style="color:#8d99ae;" value=" · YoY #{c.yoy.aplica ? c.yoy.porcentual : 'n/a'}#{c.yoy.aplica ? '%' : ''}"/>
+                    </h:panelGroup>
                 </div>
-                <div class="t">Monto vencido (Gs.)</div>
+            </ui:repeat>
+        </div>
+
+        <h:outputScript library="primefaces" name="chart/chart.js"/>
+        <div class="charts">
+            <div class="card">
+                <h3>Evolucion mensual (12 meses)</h3>
+                <div style="position:relative; height:300px;"><canvas id="chEvol"></canvas></div>
+            </div>
+            <div class="card">
+                <h3>Ingresos vs egresos por mes</h3>
+                <div style="position:relative; height:300px;"><canvas id="chIngEgr"></canvas></div>
+            </div>
+            <div class="card">
+                <h3>Composicion de ingresos por tipo</h3>
+                <div style="position:relative; height:300px;"><canvas id="chDist"></canvas></div>
+                <h:outputText style="color:#8d99ae;" rendered="#{not dashboardGerencialBean.hayDistribucion}"
+                              value="Sin ingresos en el periodo seleccionado."/>
+            </div>
+        </div>
+        <script>
+        //<![CDATA[
+        (function(){
+          function draw(){
+            if (typeof Chart === 'undefined') { setTimeout(draw, 200); return; }
+            ['sgEvol','sgIngEgr','sgDist'].forEach(function(k){ if(window[k]){ try{window[k].destroy();}catch(e){} window[k]=null; } });
+            var e=document.getElementById('chEvol');
+            if(e) window.sgEvol=new Chart(e,{type:'line',data:{labels:#{dashboardGerencialBean.labelsJson},datasets:#{dashboardGerencialBean.evolucionDatasetsJson}},options:{responsive:true,maintainAspectRatio:false}});
+            var b=document.getElementById('chIngEgr');
+            if(b) window.sgIngEgr=new Chart(b,{type:'bar',data:{labels:#{dashboardGerencialBean.labelsJson},datasets:#{dashboardGerencialBean.ingEgrDatasetsJson}},options:{responsive:true,maintainAspectRatio:false}});
+            var p=document.getElementById('chDist');
+            if(p) window.sgDist=new Chart(p,{type:'pie',data:{labels:#{dashboardGerencialBean.distLabelsJson},datasets:[{data:#{dashboardGerencialBean.distDataJson},backgroundColor:#{dashboardGerencialBean.distColoresJson}}]},options:{responsive:true,maintainAspectRatio:false}});
+          }
+          draw();
+        })();
+        //]]>
+        </script>
+
+        <h3 style="margin:1.2rem 0 .3rem; color:#1d3557;">Indicadores operativos</h3>
+        <div class="kpis-g">
+            <div class="kpi-g"><div class="t">Operaciones activas</div><div class="n">#{dashboardGerencialBean.kpis.operacionesActivas}</div></div>
+            <div class="kpi-g"><div class="t">Ventas</div><div class="n">#{dashboardGerencialBean.kpis.ventas}</div></div>
+            <div class="kpi-g"><div class="t">Alquileres</div><div class="n">#{dashboardGerencialBean.kpis.alquileres}</div></div>
+            <div class="kpi-g"><div class="t">Propiedades disponibles</div><div class="n up">#{dashboardGerencialBean.kpis.propiedadesDisponibles}</div></div>
+            <h:link outcome="/dashboard-detalle" styleClass="kpi-g" style="text-decoration:none; color:inherit;">
+                <f:param name="clave" value="mora"/>
+                <f:param name="hasta" value="#{dashboardGerencialBean.hasta}"/>
+                <f:param name="moneda" value="#{dashboardGerencialBean.monedaId}"/>
+                <div class="t">Cuotas vencidas (ver detalle)</div>
+                <div class="n #{dashboardGerencialBean.kpis.cuotasVencidas gt 0 ? 'down' : ''}">#{dashboardGerencialBean.kpis.cuotasVencidas}</div>
             </h:link>
-            <h:link outcome="/caja" styleClass="kpi-g">
-                <div class="n ok">
-                    <h:outputText value="#{dashboardGerencialBean.kpis.cobradoPeriodo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
-                </div>
-                <div class="t">Cobrado en el periodo</div>
+            <h:link outcome="/dashboard-detalle" styleClass="kpi-g" style="text-decoration:none; color:inherit;">
+                <f:param name="clave" value="cobros"/>
+                <f:param name="desde" value="#{dashboardGerencialBean.desde}"/>
+                <f:param name="hasta" value="#{dashboardGerencialBean.hasta}"/>
+                <f:param name="moneda" value="#{dashboardGerencialBean.monedaId}"/>
+                <div class="t">Cobrado en el periodo (ver detalle)</div>
+                <div class="n up"><h:outputText value="#{dashboardGerencialBean.kpis.cobradoPeriodo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></div>
             </h:link>
         </div>
-        <p style="color:#9ca3af; font-size:.85rem;">
-            Indicadores de datos reales (transaccionales). Los montos corresponden a la moneda seleccionada
-            (no se mezclan monedas). Cada tarjeta enlaza al modulo correspondiente.
+        <p style="color:#9ca3af; font-size:.83rem;">
+            Datos reales (transaccionales). Los montos son de la moneda seleccionada (no se mezclan monedas).
+            Verde = mejora, rojo = empeora, gris = sin base comparable. Los KPIs enlazan a su evidencia detallada.
         </p>
     </h:form>
 </ui:define>

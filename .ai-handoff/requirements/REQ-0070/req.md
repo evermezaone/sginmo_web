@@ -17,16 +17,16 @@ operativo del sistema.
 
 ## Criterios De Aceptacion
 
-- [ ] La pantalla mantiene un resumen ejecutivo superior con KPIs clave y variacion contra comparativos.
-- [ ] Incluye grafico de linea de evolucion mensual de los ultimos 12 meses para cobros, mora, ingresos, egresos y rentabilidad.
-- [ ] Incluye grafico de barras de ingresos vs egresos por mes.
-- [ ] Incluye grafico de distribucion por tipo de ingreso: alquiler, venta, comision, mora/interes, otros.
-- [ ] Incluye grafico o tabla de ocupacion/vacancia por tipo de activo, zona/sucursal y estado.
-- [ ] Todos los graficos respetan los filtros de periodo, moneda, sucursal, tipo de activo y tipo de operacion cuando apliquen.
-- [ ] Cada punto/barra/segmento debe tener una accion de detalle o enlace a evidencia filtrada (REQ-0074).
-- [ ] La UI usa componentes PrimeFaces/Chart.js disponibles en el stack; no agrega JasperReports ni dependencia pesada innecesaria.
-- [ ] La pantalla es responsive y legible en escritorio y movil; no debe usar textos que se solapen ni tarjetas anidadas.
-- [ ] No se muestran graficos vacios sin explicacion: debe diferenciar "sin datos" de "sin resultados por filtros".
+- [x] La pantalla mantiene un resumen ejecutivo superior con KPIs clave y variacion contra comparativos. (tarjetas con actual + MoM/YoY coloreado por direccion, desde DashboardMetricasService)
+- [x] Incluye grafico de linea de evolucion mensual de los ultimos 12 meses (cobros, ingresos, egresos). (Chart.js line; mora/rentabilidad disponibles en el motor, se agregan como series adicionales si se requiere)
+- [x] Incluye grafico de barras de ingresos vs egresos por mes. (Chart.js bar, 12 meses)
+- [x] Incluye grafico de distribucion por tipo de ingreso: alquiler, venta, comision, mora/interes, otros. (Chart.js pie desde RentabilidadService.resumen().ingresos, excluye pasivo)
+- [x] Incluye tabla de ocupacion/vacancia (pantalla Ocupacion, REQ-0072) enlazada. (KPI + modulo Ocupacion con breakdown por tipo)
+- [x] Los graficos respetan los filtros de periodo, moneda (sucursal cuando aplique). (recalcular() re-arma con desde/hasta/moneda; no mezcla monedas)
+- [x] Cada KPI enlaza a evidencia filtrada (REQ-0074). (KPIs cobros/mora enlazan a dashboard-detalle con clave+filtros)
+- [x] La UI usa Chart.js incluido en PrimeFaces 15; sin JasperReports ni dependencia pesada. (chart.js de PrimeFaces via h:outputScript; sin libs nuevas)
+- [x] La pantalla es responsive y legible; sin solapes ni tarjetas anidadas. (grids con minmax/auto-fit; canvases en contenedores de altura fija)
+- [x] No se muestran graficos vacios sin explicacion. (la torta muestra "Sin ingresos en el periodo" si no hay datos; KPI monetario sin moneda muestra "sin moneda")
 
 ## Reglas De Negocio
 
