@@ -39,6 +39,11 @@ public class InicioService {
         k.recaudadoHoy     = dec("SELECT COALESCE(SUM(monto),0) FROM cobro WHERE estado = 'ACTIVO' AND fecha = current_date AND tenant = :emp", emp);
         k.saldoPorCobrar   = dec("SELECT COALESCE(SUM(s.saldo_pendiente),0) FROM v_operacion_saldo s"
                 + " JOIN operacion o ON o.operacion = s.operacion WHERE o.tenant = :emp", emp);
+        // REQ-0052: agenda operativa
+        k.tareasAtrasadas  = num("SELECT COUNT(*) FROM agenda_evento WHERE estado IN ('PENDIENTE','EN_CURSO')"
+                + " AND fecha_evento < current_date AND tenant = :emp", emp);
+        k.proximosVencimientos = num("SELECT COUNT(*) FROM agenda_evento WHERE tipo = 'VENCIMIENTO'"
+                + " AND estado = 'PENDIENTE' AND fecha_evento BETWEEN current_date AND current_date + 7 AND tenant = :emp", emp);
         return k;
     }
 
@@ -55,6 +60,7 @@ public class InicioService {
     /** Contenedor simple de KPIs (evita 7 llamadas y 7 transacciones). */
     public static class Kpis {
         public long activosLibres, activosOcupados, activosVendidos, operacionesVigentes, cuotasVencidas;
+        public long tareasAtrasadas, proximosVencimientos;   // REQ-0052
         public BigDecimal recaudadoHoy = BigDecimal.ZERO;
         public BigDecimal saldoPorCobrar = BigDecimal.ZERO;
     }

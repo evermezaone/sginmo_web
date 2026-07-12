@@ -1,0 +1,127 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{agendaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Agenda y vencimientos</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:dataTable id="tabla" var="e" value="#{agendaBean.modelo}" lazy="true"
+                     paginator="true" rows="12" emptyMessage="No hay eventos en la agenda">
+            <f:facet name="header">
+                <div class="barra-tabla" style="gap:.5rem; flex-wrap:wrap; align-items:center;">
+                    <p:commandButton value="Nueva tarea" icon="pi pi-plus"
+                                     rendered="#{sesionUsuario.puede('agenda','CREAR')}"
+                                     actionListener="#{agendaBean.nuevo()}"
+                                     update=":frmEdicion" oncomplete="PF('dlgAgenda').show()"/>
+                    <span style="flex:1"></span>
+                    <p:selectOneMenu value="#{agendaBean.filtroTipo}" style="width:11rem;">
+                        <f:selectItem itemLabel="Todos los tipos" itemValue="#{null}"/>
+                        <f:selectItems value="#{agendaBean.tipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                        <p:ajax event="itemSelect" update="tabla"/>
+                        <p:ajax event="change" update="tabla"/>
+                    </p:selectOneMenu>
+                    <p:selectOneMenu value="#{agendaBean.filtroEstado}" style="width:11rem;">
+                        <f:selectItem itemLabel="Todos los estados" itemValue="#{null}"/>
+                        <f:selectItems value="#{agendaBean.estados}" var="s" itemLabel="#{s}" itemValue="#{s}"/>
+                        <p:ajax event="change" update="tabla"/>
+                    </p:selectOneMenu>
+                    <p:inputText value="#{agendaBean.filtroGlobal}" placeholder="Buscar titulo/descripcion" style="width:15rem;">
+                        <p:ajax event="keyup" delay="400" update="tabla"/>
+                    </p:inputText>
+                </div>
+            </f:facet>
+            <p:column headerText="Fecha" sortBy="#{e.fechaEvento}" style="width:8rem;">
+                <h:outputText value="#{e.fechaEvento}">
+                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Tipo" style="width:8rem;">
+                <p:tag value="#{e.tipo}" severity="#{e.tipo eq 'VENCIMIENTO' ? 'warning' : (e.tipo eq 'PROMESA' ? 'info' : null)}"/>
+            </p:column>
+            <p:column headerText="Titulo"><h:outputText value="#{e.titulo}"/></p:column>
+            <p:column headerText="Prioridad" sortBy="#{e.prioridad}" style="width:7rem; text-align:center;">
+                <p:tag value="#{e.prioridad}" severity="#{e.prioridad eq 'ALTA' ? 'danger' : (e.prioridad eq 'BAJA' ? 'success' : 'warning')}"/>
+            </p:column>
+            <p:column headerText="Estado" sortBy="#{e.estado}" style="width:8rem; text-align:center;">
+                <p:tag value="#{e.estado}" severity="#{e.estado eq 'CERRADO' ? 'success' : (e.estado eq 'RESUELTO' ? 'info' : 'warning')}"/>
+            </p:column>
+            <p:column headerText="Responsable" style="width:9rem;"><h:outputText value="#{e.responsable}"/></p:column>
+            <p:column headerText="Acciones" style="width:7rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-pencil" title="Editar" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('agenda','EDITAR')}"
+                                 actionListener="#{agendaBean.editar(e)}"
+                                 update=":frmEdicion" oncomplete="PF('dlgAgenda').show()"/>
+                <p:commandButton icon="pi pi-check" title="Cerrar" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('agenda','EDITAR') and e.estado ne 'CERRADO'}"
+                                 actionListener="#{agendaBean.cerrar(e)}" update="tabla mensajes"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Evento de agenda" widgetVar="dlgAgenda" modal="true" resizable="false"
+              responsive="true" width="640" dynamic="true" closeOnEscape="true">
+        <h:form id="frmEdicion">
+            <p:messages id="msjEdicion" showDetail="true" closable="true"/>
+            <ui:fragment rendered="#{not empty agendaBean.seleccionado}">
+                <div style="max-height:60vh; overflow-y:auto; overflow-x:hidden; padding-right:.5rem;">
+                    <div class="fila-2">
+                        <div class="campo">
+                            <label>Tipo *</label>
+                            <p:selectOneMenu value="#{agendaBean.seleccionado.tipo}" required="true">
+                                <f:selectItems value="#{agendaBean.tipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="campo">
+                            <label>Fecha *</label>
+                            <p:datePicker value="#{agendaBean.seleccionado.fechaEvento}" pattern="dd/MM/yyyy"
+                                          showIcon="true" required="true"/>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label>Titulo *</label>
+                        <p:inputText value="#{agendaBean.seleccionado.titulo}" required="true"
+                                     maxlength="180" style="width:100%;"/>
+                    </div>
+                    <div class="campo">
+                        <label>Descripcion</label>
+                        <p:inputTextarea value="#{agendaBean.seleccionado.descripcion}" rows="3"
+                                         maxlength="500" style="width:100%;"/>
+                    </div>
+                    <div class="fila-3">
+                        <div class="campo">
+                            <label>Prioridad</label>
+                            <p:selectOneMenu value="#{agendaBean.seleccionado.prioridad}">
+                                <f:selectItems value="#{agendaBean.prioridades}" var="p" itemLabel="#{p}" itemValue="#{p}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="campo">
+                            <label>Estado</label>
+                            <p:selectOneMenu value="#{agendaBean.seleccionado.estado}">
+                                <f:selectItems value="#{agendaBean.estados}" var="s" itemLabel="#{s}" itemValue="#{s}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="campo">
+                            <label>Responsable</label>
+                            <p:inputText value="#{agendaBean.seleccionado.responsable}" maxlength="20"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgAgenda').hide()"
+                                     styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Guardar" icon="pi pi-save"
+                                     rendered="#{sesionUsuario.puede('agenda', agendaBean.seleccionado.id == null ? 'CREAR' : 'EDITAR')}"
+                                     actionListener="#{agendaBean.guardar()}"
+                                     update="msjEdicion :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

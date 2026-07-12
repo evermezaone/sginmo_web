@@ -86,6 +86,8 @@
                       rendered="#{sesionUsuario.puede('liquidaciones','VER')}"><i class="pi pi-calculator"></i> Liquidaciones</h:outputLink>
         <h:outputLink styleClass="item" value="plantillas-documentos.xhtml"
                       rendered="#{sesionUsuario.puede('plantillas-documentos','VER')}"><i class="pi pi-file-word"></i> Plantillas</h:outputLink>
+        <h:outputLink styleClass="item" value="agenda.xhtml"
+                      rendered="#{sesionUsuario.puede('agenda','VER')}"><i class="pi pi-calendar"></i> Agenda</h:outputLink>
 
         <div class="seccion">Catálogos</div>
         <h:outputLink styleClass="item" value="personas.xhtml"

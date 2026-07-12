@@ -32,6 +32,8 @@
         <div class="kpi"><div class="n">#{inicioBean.activosVendidos}</div><div class="t">Vendidos</div></div>
         <div class="kpi"><div class="n">#{inicioBean.operacionesVigentes}</div><div class="t">Operaciones vigentes</div></div>
         <div class="kpi"><div class="n #{inicioBean.cuotasVencidas gt 0 ? 'alerta' : ''}">#{inicioBean.cuotasVencidas}</div><div class="t">Cuotas vencidas</div></div>
+        <div class="kpi"><div class="n #{inicioBean.proximosVencimientos gt 0 ? 'alerta' : ''}">#{inicioBean.proximosVencimientos}</div><div class="t">Próximos vencimientos (7 días)</div></div>
+        <div class="kpi"><div class="n #{inicioBean.tareasAtrasadas gt 0 ? 'alerta' : ''}">#{inicioBean.tareasAtrasadas}</div><div class="t">Tareas atrasadas</div></div>
         <div class="kpi"><div class="n ok"><h:outputText value="#{inicioBean.recaudadoHoy}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></div><div class="t">Recaudado hoy (Gs.)</div></div>
         <div class="kpi"><div class="n"><h:outputText value="#{inicioBean.saldoPorCobrar}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></div><div class="t">Saldo por cobrar (Gs.)</div></div>
     </div>

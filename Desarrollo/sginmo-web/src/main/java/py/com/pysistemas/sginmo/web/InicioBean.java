@@ -25,8 +25,12 @@ public class InicioBean implements Serializable {
     @Inject
     private transient InicioService inicioService;
 
+    @Inject
+    private transient py.com.pysistemas.sginmo.servicio.AgendaService agendaService;
+
     private long activosLibres, activosOcupados, activosVendidos;
     private long operacionesVigentes, cuotasVencidas;
+    private long tareasAtrasadas, proximosVencimientos;   // REQ-0052
     private BigDecimal recaudadoHoy = BigDecimal.ZERO;
     private BigDecimal saldoPorCobrar = BigDecimal.ZERO;
 
@@ -44,6 +48,8 @@ public class InicioBean implements Serializable {
         if (sesion == null || !sesion.isLogueado()) {
             return;
         }
+        // REQ-0052: refresca los vencimientos automaticos antes de contar (idempotente por dedup).
+        try { agendaService.generarAutomaticos(); } catch (RuntimeException ignore) { /* no bloquea el tablero */ }
         // Los KPIs se calculan en el service @AislarTenant (fija app.tenant -> RLS ve el tenant).
         InicioService.Kpis k = inicioService.kpis();
         activosLibres = k.activosLibres;
@@ -51,6 +57,8 @@ public class InicioBean implements Serializable {
         activosVendidos = k.activosVendidos;
         operacionesVigentes = k.operacionesVigentes;
         cuotasVencidas = k.cuotasVencidas;
+        tareasAtrasadas = k.tareasAtrasadas;
+        proximosVencimientos = k.proximosVencimientos;
         recaudadoHoy = k.recaudadoHoy;
         saldoPorCobrar = k.saldoPorCobrar;
     }
@@ -60,6 +68,8 @@ public class InicioBean implements Serializable {
     public long getActivosVendidos() { return activosVendidos; }
     public long getOperacionesVigentes() { return operacionesVigentes; }
     public long getCuotasVencidas() { return cuotasVencidas; }
+    public long getTareasAtrasadas() { return tareasAtrasadas; }
+    public long getProximosVencimientos() { return proximosVencimientos; }
     public BigDecimal getRecaudadoHoy() { return recaudadoHoy; }
     public BigDecimal getSaldoPorCobrar() { return saldoPorCobrar; }
 }
