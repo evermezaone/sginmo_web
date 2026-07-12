@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0068
-TS: 2026-07-12T15:05:50Z
+REQ: REQ-0069
+TS: 2026-07-12T16:18:28Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0068. Ultimo derivado REQ-0068: Pulido del login (onesystem-security): (1) campos usuario/clave del mismo ancho, (2) titulo/subtitulo configurables por SGINMO_APP_TITULO/SUBTITULO o -D, (3) return-url tras login validado anti open-redirect. Build+deploy: login 200, dashboard sin sesion->302, smoke 31/31.
+MENSAJE: [SGI] Cola de auditoria: REQ-0069. Ultimo derivado REQ-0069: Motor de metricas comparativas (DashboardMetricasService): 9 indicadores con actual/mes-anterior/mismo-mes-anio-anterior/YTD/YTD-anterior + variacion semantica MEJORA/EMPEORA/NEUTRO/NA; BigDecimal, no mezcla monedas, RLS+permiso, drillKey para 0074. Build+deploy+smoke 31/31.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
