@@ -1,28 +1,33 @@
-﻿# REQ-0062 - Plan De Implementacion
+# REQ-0062 - Plan De Implementacion
 
 **Estado:** APROBADO_PARA_DESARROLLO
-**Fecha:** 2026-07-11
+**Fecha:** 2026-07-12
 
 ## Estrategia
 
-[Plan tecnico]
+Servicio comun ReportesConsultaService (generar/pdf/csv) con parametros tipados, permisos y limite de
+filas (parametro EXPORT_LIMITE_FILAS). Reutiliza PdfService (OpenPDF, sin Jasper). Reportes: propiedades,
+cobros por periodo, mora.
 
 ## Archivos A Modificar
 
 | Archivo | Cambio |
 |---|---|
-| [archivo] | [descripcion] |
+| V43__pantalla_reportes.sql | registra pantalla |
+| servicio/ReportesConsultaService.java | NUEVO — servicio comun PDF/CSV |
+| web/ReportesBean.java + webapp/reportes.xhtml | NUEVOS |
+| WEB-INF/plantilla.xhtml + smoke | menu + cobertura |
 
 ## Pruebas Previstas
 
-- [ ] Prueba 1
-- [ ] Prueba 2
+- [ ] Build OK
+- [ ] V43 rollback + deploy + smoke
+- [ ] Sin Jasper; CSV UTF-8; limite de filas
 
 ## Riesgos
 
-[Riesgos de implementacion]
+- Bajo-medio: solo lectura. No mezclar monedas (filtro moneda); BigDecimal.
 
 ## Cambios De Datos
 
-Sin cambios.
-
+V43 registra pantalla `reportes`.

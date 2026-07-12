@@ -1,0 +1,45 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{reportesBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Reportes exportables</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" life="4000"/>
+        <div class="barra-tabla" style="gap:.6rem; flex-wrap:wrap; align-items:flex-end;">
+            <div class="campo"><label>Reporte</label>
+                <p:selectOneMenu value="#{reportesBean.tipo}" style="width:14rem;">
+                    <f:selectItems value="#{reportesBean.tipos}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                    <p:ajax event="change" update="frm"/>
+                </p:selectOneMenu></div>
+            <div class="campo" style="#{reportesBean.requierePeriodo ? '' : 'display:none;'}"><label>Desde</label>
+                <p:datePicker value="#{reportesBean.desde}" pattern="dd/MM/yyyy" showIcon="true"/></div>
+            <div class="campo" style="#{reportesBean.requierePeriodo ? '' : 'display:none;'}"><label>Hasta</label>
+                <p:datePicker value="#{reportesBean.hasta}" pattern="dd/MM/yyyy" showIcon="true"/></div>
+            <div class="campo" style="#{reportesBean.requierePeriodo ? '' : 'display:none;'}"><label>Moneda</label>
+                <p:selectOneMenu value="#{reportesBean.monedaId}" style="width:11rem;">
+                    <f:selectItem itemLabel="Todas" itemValue="#{null}"/>
+                    <f:selectItems value="#{reportesBean.monedas}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.id}"/>
+                </p:selectOneMenu></div>
+            <p:commandButton value="PDF" icon="pi pi-file-pdf" ajax="false"
+                             rendered="#{sesionUsuario.puede('reportes','EXPORTAR')}">
+                <p:fileDownload value="#{reportesBean.pdf}"/>
+            </p:commandButton>
+            <p:commandButton value="CSV" icon="pi pi-file-excel" ajax="false"
+                             rendered="#{sesionUsuario.puede('reportes','EXPORTAR')}">
+                <p:fileDownload value="#{reportesBean.csv}"/>
+            </p:commandButton>
+        </div>
+        <p style="color:#9ca3af; font-size:.85rem; margin-top:.8rem;">
+            Reportes generados con consultas controladas y OpenPDF/CSV (sin JasperReports). Respetan el
+            aislamiento por empresa (RLS), el limite de filas de exportacion (parametro EXPORT_LIMITE_FILAS)
+            y no mezclan monedas (se filtran por moneda cuando aplica).
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>

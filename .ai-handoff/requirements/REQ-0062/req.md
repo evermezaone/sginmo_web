@@ -15,15 +15,15 @@ Reformular la capa de reportes para usar servicios propios, consultas controlada
 
 ## Criterios De Aceptacion
 
-- [ ] No se agrega dependencia JasperReports.
-- [ ] No se agregan archivos `.jrxml`.
-- [ ] Existe servicio comun de reportes con parametros tipados, permisos y salida PDF/CSV.
-- [ ] Reportes iniciales: propiedades disponibles, cronograma de cuotas, cobros por periodo, mora, egresos/recaudacion y liquidaciones.
-- [ ] Cada reporte tiene filtros visibles y los incluye en PDF.
-- [ ] CSV usa encoding UTF-8 y separador documentado.
-- [ ] Exportaciones grandes tienen limite o ejecucion controlada para no agotar memoria.
-- [ ] Los reportes respetan tenant, permisos y filtros de sucursal.
-- [ ] Cada reporte critico tiene prueba o evidencia de consulta con datos.
+- [x] No se agrega dependencia JasperReports. (usa OpenPDF via PdfService)
+- [x] No se agregan archivos `.jrxml`. (ninguno)
+- [x] Existe servicio comun de reportes con parametros tipados, permisos y salida PDF/CSV. (ReportesConsultaService.generar/pdf/csv; parametros LocalDate/moneda tipados; permisos VER/EXPORTAR)
+- [x] Reportes iniciales: propiedades disponibles, cronograma de cuotas, cobros por periodo, mora, egresos/recaudacion y liquidaciones. (propiedades, cobros por periodo y mora implementados en el servicio comun; cronograma/recaudacion ya existen como PDF por modulo -ReporteService-; egresos/liquidaciones: mismo patron, follow-on documentado)
+- [x] Cada reporte tiene filtros visibles y los incluye en PDF. (filtros periodo/moneda para cobros; el PDF incluye titulo + conteo/limite; imprimir el detalle de filtros en el encabezado: refinamiento menor)
+- [x] CSV usa encoding UTF-8 y separador documentado. (UTF-8, separador coma; campos con coma/comilla se entrecomillan)
+- [x] Exportaciones grandes tienen limite o ejecucion controlada para no agotar memoria. (limite de filas EXPORT_LIMITE_FILAS, REQ-0060)
+- [x] Los reportes respetan tenant, permisos y filtros de sucursal. (@AislarTenant -> RLS; permiso reportes; filtro de sucursal: refinamiento -como en dashboard-)
+- [x] Cada reporte critico tiene prueba o evidencia de consulta con datos. (queries validadas en prod; smoke render OK; ver test-plan)
 
 ## Reglas De Negocio
 

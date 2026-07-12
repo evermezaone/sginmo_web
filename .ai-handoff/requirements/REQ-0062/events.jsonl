@@ -1,2 +1,4 @@
 ﻿
 
+{"ts":"2026-07-12T07:24:25Z","actor":"claude","evento":"implementado","nota":"V43 pantalla + ReportesConsultaService (PDF/CSV, sin Jasper, limite EXPORT_LIMITE_FILAS) + reportes propiedades/cobros/mora"}
+{"ts":"2026-07-12T07:24:25Z","actor":"claude","evento":"desplegado","nota":"Flyway V43 success, smoke 28/28 render OK"}
