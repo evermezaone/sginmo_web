@@ -124,6 +124,8 @@
                       rendered="#{sesionUsuario.puede('listas','VER')}"><i class="pi pi-list"></i> Listas del sistema</h:outputLink>
         <h:outputLink styleClass="item" value="parametros.xhtml"
                       rendered="#{sesionUsuario.puede('parametros','VER')}"><i class="pi pi-sliders-h"></i> Parámetros</h:outputLink>
+        <h:outputLink styleClass="item" value="importacion.xhtml"
+                      rendered="#{sesionUsuario.puede('importacion','VER')}"><i class="pi pi-upload"></i> Importacion</h:outputLink>
         <h:outputLink styleClass="item" value="salud.xhtml"
                       rendered="#{sesionUsuario.puede('salud','VER')}"><i class="pi pi-heart"></i> Salud del sistema</h:outputLink>
 
