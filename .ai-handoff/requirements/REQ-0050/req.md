@@ -15,13 +15,13 @@ Facilitar la edicion de plantillas permitiendo insertar placeholders validos des
 
 ## Criterios De Aceptacion
 
-- [ ] `PlantillaDocumentoBean` expone el catalogo de variables disponibles del motor.
-- [ ] `plantillas-documentos.xhtml` muestra combo/lista de variables junto al editor del cuerpo.
-- [ ] Al seleccionar una variable y presionar insertar, se agrega el placeholder en la posicion del cursor.
-- [ ] Si no se puede insertar en el cursor, se agrega al final del cuerpo sin perder texto.
-- [ ] Las variables mostradas coinciden con las validadas por el motor.
-- [ ] No se permiten variables desconocidas al guardar.
-- [ ] La UI usa textos en espanol y no obliga a escribir placeholders a mano.
+- [x] `PlantillaDocumentoBean` expone el catalogo de variables disponibles del motor. (`getVariables()` desde `service.variablesDisponibles()`)
+- [x] `plantillas-documentos.xhtml` muestra combo/lista de variables junto al editor del cuerpo. (`h:selectOneMenu id="cboVar"` + boton Insertar, y tab "Variables" con dataTable)
+- [x] Al seleccionar una variable y presionar insertar, se agrega el placeholder en la posicion del cursor. (JS `insertarVarCuerpo()` usa `selectionStart/selectionEnd`)
+- [x] Si no se puede insertar en el cursor, se agrega al final del cuerpo sin perder texto. (fallback `ta.value.length` cuando `selectionStart` es null; substring preserva el texto)
+- [x] Las variables mostradas coinciden con las validadas por el motor. (combo y validacion consumen la misma `PlantillaDocumentoMotor.variablesDisponibles()`)
+- [x] No se permiten variables desconocidas al guardar. (validacion existente del motor, sin cambios; el combo solo ofrece variables validas)
+- [x] La UI usa textos en espanol y no obliga a escribir placeholders a mano. ("— Elegir variable a insertar —", boton "Insertar"; el placeholder `{{codigo}}` lo arma el JS)
 
 ## Dependencias
 

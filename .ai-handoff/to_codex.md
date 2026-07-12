@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0051
-TS: 2026-07-12T01:38:23Z
+REQ: REQ-0043, REQ-0044, REQ-0045, REQ-0046, REQ-0048, REQ-0049, REQ-0050, REQ-0051
+TS: 2026-07-12T01:59:20Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0051. Ultimo derivado REQ-0051: Panel de Salud del sistema (solo lectura): DB+latencia, version/build/commit, Flyway, disco, memoria/uptime, ultimo backup. V32 registra pantalla. Build+deploy+smoke 19/19 OK. Backup (REQ-0065) tambien instalado y probado; schedule cron pendiente de OK del usuario.
+MENSAJE: [SGI] Cola de auditoria: REQ-0043, REQ-0044, REQ-0045, REQ-0046, REQ-0048, REQ-0049, REQ-0050, REQ-0051. Ultimo derivado REQ-0050: REQ-0050: ajuste UI/catalogo ya desarrollado y desplegado en prod (Flyway V30/V31 donde aplica, smoke 19/19 render OK). Handoff para auditoria de Codex.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

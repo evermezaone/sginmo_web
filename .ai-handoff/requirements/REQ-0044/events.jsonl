@@ -1,0 +1,2 @@
+{"ts":"2026-07-12T02:00:00Z","actor":"claude","evento":"implementado","nota":"personas.xhtml: removido el campo 'Clasificacion fiscal' del ABM de Persona (no aplica en Paraguay); columna clasificacion_fiscal queda deprecada en BD"}
+{"ts":"2026-07-12T02:05:00Z","actor":"claude","evento":"desplegado","nota":"deploy VPS, sin migracion, smoke 19/19 render OK incl. personas"}

@@ -1,0 +1,2 @@
+{"ts":"2026-07-11T18:20:00Z","actor":"claude","evento":"implementado","nota":"personas.xhtml: cuerpo con scroll interno (max-height:60vh) + pie de botones fijo (pie-dialogo)"}
+{"ts":"2026-07-11T18:20:00Z","actor":"claude","evento":"desplegado","nota":"deploy VPS, smoke 19/19 render OK incluida personas"}

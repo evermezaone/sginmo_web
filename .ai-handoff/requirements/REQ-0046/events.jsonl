@@ -1,0 +1,2 @@
+{"ts":"2026-07-11T18:25:00Z","actor":"claude","evento":"implementado","nota":"selector Moneda required en operaciones.xhtml + monedasActivas() en CatalogoService + default Guaranies en OperacionBean.nuevo()"}
+{"ts":"2026-07-11T18:25:00Z","actor":"claude","evento":"desplegado","nota":"deploy VPS, smoke 19/19 render OK; alta de operacion sin error de integridad por moneda null"}

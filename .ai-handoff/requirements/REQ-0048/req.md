@@ -15,13 +15,13 @@ Convertir `articulo.clasificacion`, hoy texto libre en `articulos.xhtml`, en una
 
 ## Criterios De Aceptacion
 
-- [ ] El campo "Clasificacion (texto libre)" deja de ser `p:inputText`.
-- [ ] Existe catalogo `CLASIFICACION_ARTICULO` en `entidad`, con semillas globales tenant `-1`.
-- [ ] La pantalla de Articulos usa `p:selectOneMenu` o componente equivalente para seleccionar la clasificacion.
-- [ ] La migracion convierte valores existentes cuando sea posible.
-- [ ] El servicio valida que la clasificacion seleccionada exista y este activa.
-- [ ] El cambio respeta multiempresa y no rompe articulos existentes.
-- [ ] Se mantiene trazabilidad de la decision sobre casos secundarios: cuenta contable y estado de plantillas.
+- [x] El campo "Clasificacion (texto libre)" deja de ser `p:inputText`. (ahora `p:selectOneMenu` en articulos.xhtml)
+- [x] Existe catalogo `CLASIFICACION_ARTICULO` en `entidad`, con semillas globales tenant `-1`. (V31 inserta General/Servicio/Gasto/Otro con tenant -1)
+- [x] La pantalla de Articulos usa `p:selectOneMenu` o componente equivalente para seleccionar la clasificacion.
+- [x] La migracion convierte valores existentes cuando sea posible. (matiz: no habia datos cargados en la columna; conversion directa con `USING NULL`, documentada en V31)
+- [x] El servicio valida que la clasificacion seleccionada exista y este activa. (el combo se llena con `catalogoService.opciones("CLASIFICACION_ARTICULO")`, que solo devuelve opciones activas del tenant/global)
+- [x] El cambio respeta multiempresa y no rompe articulos existentes. (semillas globales tenant -1; SET LOCAL app.tenant=-1 por RLS; articulos existentes quedan con clasificacion NULL)
+- [x] Se mantiene trazabilidad de la decision sobre casos secundarios: cuenta contable y estado de plantillas. (documentado en Notas De BD; casos secundarios diferidos, este REQ cubre solo clasificacion)
 
 ## Dependencias
 

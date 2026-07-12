@@ -1,2 +1,2 @@
-﻿
-
+{"ts":"2026-07-12T02:00:00Z","actor":"claude","evento":"implementado","nota":"Articulo.clasificacion String->Long + ArticuloBean.clasificaciones + articulos.xhtml selectOneMenu + V31"}
+{"ts":"2026-07-12T02:05:00Z","actor":"claude","evento":"desplegado","nota":"deploy VPS, Flyway V31 success=t, smoke 19/19 render OK"}
