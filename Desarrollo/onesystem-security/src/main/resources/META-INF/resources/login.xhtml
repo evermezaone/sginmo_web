@@ -3,7 +3,7 @@
       xmlns:h="jakarta.faces.html"
       xmlns:p="primefaces">
 <h:head>
-    <title>Ingreso — SGInmo Web</title>
+    <title>#{loginBean.appTitulo} — Ingreso</title>
     <style>
         body { margin: 0; background: linear-gradient(160deg, #1d3557 0%, #457b9d 100%); min-height: 100vh; }
         .caja-login { max-width: 380px; margin: 10vh auto 0; background: #fff; border-radius: 10px;
@@ -12,13 +12,17 @@
         .caja-login .sub { color: #6c757d; font-size: .85rem; margin: 0 0 1.4rem; }
         .campo { margin-bottom: 1rem; display: flex; flex-direction: column; gap: .3rem; }
         .campo > label { font-weight: 600; font-size: .85rem; color: #495057; }
-        .campo .ui-inputtext, .campo .ui-password { width: 100%; }
+        /* Igualar ambos campos (obs usuario): el toggle-mask de la contraseña no debe angostar el input.
+           El wrapper y el input interno ocupan el 100% y box-sizing evita que el padding desborde. */
+        .campo .ui-inputtext, .campo .ui-password { width: 100%; box-sizing: border-box; }
+        .campo .ui-password { display: block; }
+        .campo .ui-password > input { width: 100%; box-sizing: border-box; }
     </style>
 </h:head>
 <h:body>
     <div class="caja-login">
-        <h1>SGInmo</h1>
-        <p class="sub">Gestión inmobiliaria — ingrese con su usuario</p>
+        <h1>#{loginBean.appTitulo}</h1>
+        <p class="sub">#{loginBean.appSubtitulo}</p>
         <h:form id="frmLogin">
             <p:messages id="msj" showDetail="false" closable="true"/>
             <div class="campo">

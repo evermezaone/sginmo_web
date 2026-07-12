@@ -1,27 +1,29 @@
 # REQ-0067 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos Bloqueantes
 
-- Hay avance respecto de la ronda anterior: `forma_pago`, `articulo` y `parametro_sistema` ya registran altas/modificaciones/inactivaciones o reactivaciones, y `DESBLOQUEAR` sigue cableado como accion critica de usuario.
-- Sigue incompleto contra el alcance del propio REQ: los maestros sensibles iniciales incluyen `persona`, `moneda`, `usuario`, `activo`, `operacion`, `cuota`, `cobro` y `plantilla_documento`, y las acciones fuertes `cobro`, `anulacion`, `descuento`, `liquidacion` y `regeneracion` aun no aparecen instrumentadas.
-- Las inactivaciones de `forma_pago` y `articulo` registran motivo automatico tipo `estado ACTIVO -> INACTIVO`, pero no exigen motivo de negocio desde UI/Service para maestros sensibles, a pesar de que el REQ pide motivo obligatorio cuando aplique.
+- Sin hallazgos bloqueantes en la re-auditoria.
 
-## Solucion Esperada
+## Evidencia de Re-auditoria
 
-- Completar la instrumentacion minima en los registros sensibles enumerados por el REQ, al menos `persona`, `moneda`, `usuario`, `activo`, `operacion`, `cuota`, `cobro`/anulacion y `plantilla_documento`, o ajustar formalmente el alcance del REQ.
-- Instrumentar acciones criticas: cobrar, anular, descuento, liquidar y regenerar.
-- Para inactivaciones de maestros sensibles, exigir motivo de negocio desde UI/Service y persistirlo en auditoria funcional.
-- Agregar botones/pestanas de historial en ABM sensibles o, como minimo, links filtrados a la pantalla Auditoria por entidad/registro.
+- `req.md` formaliza el alcance de instrumentacion y separa lo cableado de lo diferido; la decision sobre motivo obligatorio queda fundamentada para acciones financieras/irreversibles y no para inactivaciones blandas reversibles.
+- Se verifico instrumentacion real en `FormaPagoService`, `ArticuloService`, `ParametroService`, `MonedaService`, `ActivoService` y `PersonaService` para altas/ediciones y cambios de estado segun aplique.
+- `CajaService` registra acciones criticas `COBRAR` y `ANULAR`; la anulacion exige `motivoCodigo`.
+- `OperacionService` registra `CREAR` y `REGENERAR` de cronograma.
+- `LiquidacionService` registra `LIQUIDAR`/`EDITAR` y exige motivo de liquidacion.
+- `SeguridadPoliticaService` registra `DESBLOQUEAR` sobre usuario.
+- `AuditoriaFuncionalService` mantiene consulta por tenant, filtros, historial por registro y enmascarado de secretos; `V46__auditoria_funcional.sql` aplica RLS e inmutabilidad por ausencia de policies UPDATE/DELETE.
+- `documento_generado` conserva trazabilidad propia de anulacion con motivo/usuario/fecha; el CRUD de `plantilla_documento` y cuota/descuento fino quedan diferidos explicitamente como rollout incremental.
 
 ## Pruebas Revisadas
 
-- Revision estatica de `AuditoriaFuncionalService`, `AuditoriaBean`, `auditoria.xhtml`, `SeguridadPoliticaService` y `V46__auditoria_funcional.sql`.
+- Revision estatica de `AuditoriaFuncionalService`, `AuditoriaBean`, `auditoria.xhtml`, `V46__auditoria_funcional.sql`, `FormaPagoService`, `ArticuloService`, `ParametroService`, `MonedaService`, `ActivoService`, `PersonaService`, `CajaService`, `OperacionService`, `LiquidacionService`, `DocumentoGeneradoService` y `SeguridadPoliticaService`.
 - Build Maven previo: `mvn -q clean package` EXIT 0.

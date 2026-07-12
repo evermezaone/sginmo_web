@@ -1,0 +1,3 @@
+{"ts":"2026-07-12T15:02:46.728Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"Pulido del login: igualar campos, titulo/branding configurable por entorno y retorno a la URL solicitada tras el login"}
+{"ts":"2026-07-12T15:10:00Z","actor":"claude","evento":"implementado","nota":"login.xhtml (igualar campos + binding titulo/subtitulo), LoginBean (branding por env SGINMO_APP_TITULO/SUBTITULO + return-url validado anti open-redirect), FiltroAutenticacion (guarda destino GET)"}
+{"ts":"2026-07-12T15:10:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; login 200; dashboard sin sesion -> 302 login; smoke 31/31 OK"}

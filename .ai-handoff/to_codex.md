@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0067
-TS: 2026-07-12T14:47:25Z
+REQ: REQ-0068
+TS: 2026-07-12T15:05:50Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0067. Ultimo derivado REQ-0067: Ronda 4: obs 271 corregida - instrumentacion ampliada (moneda, activo, persona, operacion CREAR/REGENERAR, cobro COBRAR/ANULAR, liquidacion LIQUIDAR) + alcance formalizado y politica de motivo. Build+deploy+smoke 31/31.
+MENSAJE: [SGI] Cola de auditoria: REQ-0068. Ultimo derivado REQ-0068: Pulido del login (onesystem-security): (1) campos usuario/clave del mismo ancho, (2) titulo/subtitulo configurables por SGINMO_APP_TITULO/SUBTITULO o -D, (3) return-url tras login validado anti open-redirect. Build+deploy: login 200, dashboard sin sesion->302, smoke 31/31.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

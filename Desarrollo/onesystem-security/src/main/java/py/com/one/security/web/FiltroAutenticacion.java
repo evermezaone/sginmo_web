@@ -50,6 +50,12 @@ public class FiltroAutenticacion implements Filter {
             destino = req.getContextPath() + "/cambiar-password.xhtml";
         } else {
             destino = req.getContextPath() + "/login.xhtml";
+            // Return-url: recordar la pagina que el usuario pidio (solo navegacion GET) para volver
+            // alli despues del login. LoginBean lo lee y valida antes de redirigir (anti open-redirect).
+            if ("GET".equalsIgnoreCase(req.getMethod()) && !esCambioPassword) {
+                String qs = req.getQueryString();
+                req.getSession(true).setAttribute(LoginBean.ATTR_DESTINO, uri + (qs != null ? "?" + qs : ""));
+            }
         }
         if ("partial/ajax".equals(req.getHeader("Faces-Request"))) {
             res.setContentType("text/xml");
