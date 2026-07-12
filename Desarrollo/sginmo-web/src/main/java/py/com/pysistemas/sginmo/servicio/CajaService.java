@@ -28,6 +28,9 @@ public class CajaService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 271: auditoria funcional visible
+
     // ── Planilla (caja) ──
 
     public Planilla planillaAbierta(Long empresa, Long sucursal) {
@@ -135,7 +138,11 @@ public class CajaService {
                 .setParameter("ndep", numeroDeposito).setParameter("edep", estadoDeposito)
                 .setParameter("mrech", motivoRechazo).setParameter("ntcr", notaCredito)
                 .getSingleResult();
-            return ((Number) r).longValue();
+            long cobroId = ((Number) r).longValue();
+            // obs 271: accion critica COBRAR en la auditoria funcional visible.
+            auditoria.registrar("cobro", cobroId, AuditoriaFuncionalService.COBRAR, "caja",
+                    "monto " + monto + (monedaId != null ? " (moneda " + monedaId + ")" : "") + " doc " + documentoId);
+            return cobroId;
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(traducirSp(e));
         }
@@ -166,6 +173,8 @@ public class CajaService {
                 .setParameter("cob", cobroId).setParameter("usr", usuario)
                 .setParameter("mot", motivoCodigo)
                 .getSingleResult();
+            // obs 271: accion critica ANULAR con motivo obligatorio en la auditoria funcional.
+            auditoria.registrar("cobro", cobroId, AuditoriaFuncionalService.ANULAR, "caja", "motivo: " + motivoCodigo);
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(traducirSp(e));
         }

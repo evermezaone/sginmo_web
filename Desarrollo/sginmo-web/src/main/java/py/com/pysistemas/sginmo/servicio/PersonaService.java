@@ -36,6 +36,9 @@ public class PersonaService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 271: auditoria funcional visible
+
     /** Resuelve id de opciones de catalogo (V26: PersonaRol.rol es id de entidad). */
     @jakarta.inject.Inject
     private CatalogoService catalogoService;
@@ -182,6 +185,11 @@ public class PersonaService {
             if (fisica != null) fisica.setPersona(persona);
             if (juridica != null) juridica.setPersona(persona);
             boolean esNueva = persona.getId() == null;
+            Map<String, Object> antes = null;   // obs 271: snapshot para el diff de auditoria
+            if (!esNueva) {
+                Persona o = em.find(Persona.class, persona.getId());
+                if (o != null) antes = snapP(o);
+            }
             if (esNueva) {
                 em.persist(persona);
                 em.flush();
@@ -195,6 +203,8 @@ public class PersonaService {
             em.flush();
             guardarDatosEmpresa(persona, datos, tenant);
             em.flush();
+            if (esNueva) auditoria.registrarAlta("persona", persona.getNumeroDocumento(), "personas");
+            else if (antes != null) auditoria.registrarCambios("persona", persona.getNumeroDocumento(), "personas", null, antes, snapP(persona));
             return persona;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException("La persona fue modificada por otro usuario. Vuelva a abrir el diálogo y reintente.");
@@ -214,12 +224,27 @@ public class PersonaService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
-        autorizacion.exigir("personas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
+        boolean reactivar = "ACTIVO".equals(estadoNuevo);
+        autorizacion.exigir("personas", reactivar ? "REACTIVAR" : "INACTIVAR");
         Persona p = em.find(Persona.class, id);
         if (p == null) throw new NegocioException("La persona no existe");
         // Pertenencia (obs 250): solo se opera sobre personas de la cartera del tenant.
         if (!perteneceAlTenant(id)) throw new NegocioException("La persona pertenece a otra empresa");
+        String estadoAnterior = p.getEstado();
         p.setEstado(estadoNuevo);
+        auditoria.registrar("persona", p.getNumeroDocumento(),
+                reactivar ? AuditoriaFuncionalService.REACTIVAR : AuditoriaFuncionalService.INACTIVAR,
+                "personas", "estado " + estadoAnterior + " -> " + estadoNuevo);
+    }
+
+    /** Snapshot de campos auditables de la persona (obs 271). */
+    private static Map<String, Object> snapP(Persona p) {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("nombre", p.getNombre());
+        m.put("numeroDocumento", p.getNumeroDocumento());
+        m.put("tipoPersoneria", p.getTipoPersoneria());
+        m.put("estado", p.getEstado());
+        return m;
     }
 
     // ── Roles ──

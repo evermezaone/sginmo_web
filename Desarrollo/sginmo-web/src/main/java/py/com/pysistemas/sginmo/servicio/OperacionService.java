@@ -34,6 +34,9 @@ public class OperacionService {
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
     @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 271: auditoria funcional visible
+
+    @jakarta.inject.Inject
     private py.com.one.core.UsuarioActual usuarioActual;
 
     /** Aislamiento por tenant (F4): las operaciones son transaccionales, tenant = actual. */
@@ -195,6 +198,9 @@ public class OperacionService {
             // el activo pasa a OCUPADA (alquiler) o VENDIDA (venta)
             activo.setEstado("ALQUILER".equals(op.getTipoOperacion()) ? "OCUPADA" : "VENDIDA");
             em.flush();
+            // obs 271: alta de operacion (accion critica) en la auditoria funcional visible.
+            auditoria.registrar("operacion", op.getId(), AuditoriaFuncionalService.CREAR, "operaciones",
+                    op.getTipoOperacion() + "/" + op.getCondicionOperacion() + " monto " + op.getMontoTotalOperacion());
             return op;
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);
@@ -307,6 +313,9 @@ public class OperacionService {
                 fin = fin.withDayOfMonth(op.getDiaPago());
             }
             op.setFechaFinContrato(fin);
+            // obs 271: regeneracion de cuotas (accion critica correctiva) en la auditoria funcional.
+            auditoria.registrar("operacion", operacionId, AuditoriaFuncionalService.REGENERAR, "operaciones",
+                    "regenero cronograma a " + cuotas + " cuotas desde " + primeraFecha);
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);   // "ya tiene cuotas con cobros" viene de la BD
         }

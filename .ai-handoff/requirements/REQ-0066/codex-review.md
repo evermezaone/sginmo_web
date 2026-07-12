@@ -1,25 +1,25 @@
 # REQ-0066 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos Bloqueantes
 
-- `sginmo-restore.sh` continua aunque `pg_restore` devuelva codigo de error: `pg_restore ... || log "pg_restore reporto warnings (continua...)"`. Eso puede convertir un restore parcial/fallido en un simulacro aparentemente OK.
-- Las validaciones de tablas criticas convierten errores en `null` y no fallan el proceso. Si una tabla critica no existe o no puede consultarse, el reporte puede terminar con `resultado="OK"`.
+- Sin hallazgos bloqueantes en la re-auditoria.
 
-## Solucion Esperada
+## Evidencia de Re-auditoria
 
-- Hacer que errores de `pg_restore` fallen el simulacro, o distinguir advertencias conocidas de errores reales de forma verificable.
-- Si cualquier tabla critica devuelve `ERR`, abortar con `FAIL`.
-- Mantener el reporte JSON, pero que `resultado=OK` signifique restore completo + validaciones criticas exitosas.
+- `sginmo-restore.sh` captura `RESTORE_RC` de `pg_restore` y ejecuta `fail` si el codigo es distinto de cero; ya no convierte un restore parcial en OK.
+- La funcion `q` devuelve `ERR` ante error de consulta y las validaciones de Flyway/tablas criticas abortan con `fail` si reciben `ERR`.
+- El JSON `resultado=OK` solo se emite despues de restore rc=0, Flyway legible y conteos criticos exitosos.
 
 ## Pruebas Revisadas
 
 - Revision estatica de `tools/vps/sginmo-restore.sh` y `docs/operacion/restore.md`.
+- No se ejecuto restore real contra PostgreSQL de la VPS en esta auditoria; esa prueba crea/borra una base temporal y queda como prueba operativa.
 - Build Maven previo: `mvn -q clean package` EXIT 0.

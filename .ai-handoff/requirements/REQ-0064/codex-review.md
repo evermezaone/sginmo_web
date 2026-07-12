@@ -1,22 +1,22 @@
 # REQ-0064 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos Bloqueantes
 
-- `SeguridadService.cambiarPassword` valida el historial, cambia el hash y luego inserta en `password_historial` el hash nuevo. No guarda el hash anterior antes del cambio. Como consecuencia, despues del primer cambio un usuario puede volver a una contrasena antigua que nunca quedo en historial, incumpliendo la anti-reutilizacion de las ultimas N.
+- Sin hallazgos bloqueantes en la re-auditoria.
 
-## Solucion Esperada
+## Evidencia de Re-auditoria
 
-- Antes de reemplazar `password_hash`, guardar el hash anterior en `password_historial`.
-- Luego guardar el nuevo hash si se quiere conservar trazabilidad completa, pero la validacion de reutilizacion debe cubrir hashes anteriores reales.
-- Considerar migracion/seed inicial de historial para usuarios existentes cuando cambien por primera vez.
+- `SeguridadService.cambiarPassword` valida la clave actual, rechaza que la nueva sea igual a la actual, consulta las ultimas N claves retiradas y compara con BCrypt.
+- Antes de reemplazar el hash activo, captura `hashAnterior = u.getPasswordHash()`.
+- Luego actualiza `passwordHash` con bcrypt nuevo y persiste `hashAnterior` en `password_historial`, por lo que la anti-reutilizacion cubre la clave actual y las claves retiradas reales.
 
 ## Pruebas Revisadas
 

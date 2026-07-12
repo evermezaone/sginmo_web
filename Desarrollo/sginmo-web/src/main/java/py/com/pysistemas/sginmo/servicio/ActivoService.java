@@ -54,6 +54,9 @@ public class ActivoService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 271: auditoria funcional visible
+
     /** Aislamiento por tenant (F4): activo es transaccional, se filtra tenant = actual. */
     @jakarta.inject.Inject
     private py.com.pysistemas.sginmo.web.TenantContext tenant;
@@ -231,6 +234,7 @@ public class ActivoService {
         }
         // Pertenencia por tenant (F4): el alta toma el tenant del usuario; en edicion el
         // activo debe ser del tenant del contexto y su tenant no se cambia.
+        Map<String, Object> antes = null;   // obs 271: snapshot para el diff de auditoria
         if (esNuevo) {
             activo.setTenant(tenant.actual());
         } else {
@@ -239,6 +243,7 @@ public class ActivoService {
             if (enBd.getTenant() == null || !enBd.getTenant().equals(tenant.actual())) {
                 throw new NegocioException("El activo pertenece a otra empresa");
             }
+            antes = snap(enBd);
             activo.setTenant(enBd.getTenant());
         }
         try {
@@ -250,6 +255,8 @@ public class ActivoService {
                 }
             }
             em.flush();
+            if (esNuevo) auditoria.registrarAlta("activo", r.getNombre(), "activos");
+            else if (antes != null) auditoria.registrarCambios("activo", r.getNombre(), "activos", null, antes, snap(r));
             return r;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException("El activo fue modificado por otro usuario. Vuelva a abrir el diálogo y reintente.");
@@ -259,6 +266,17 @@ public class ActivoService {
     }
 
     private Activo persistir(Activo a) { em.persist(a); return a; }
+
+    /** Snapshot de campos auditables del activo (obs 271). */
+    private static Map<String, Object> snap(Activo a) {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("nombre", a.getNombre());
+        m.put("tipo", a.getTipo());
+        m.put("padre", a.getPadre());
+        m.put("precioVenta", a.getPrecioVenta());
+        m.put("precioAlquiler", a.getPrecioAlquiler());
+        return m;
+    }
 
     private void guardarValorAtributo(Long activoId, ActivoAtributoValor a) {
         boolean vacio = a.getValor() == null || a.getValor().isBlank();

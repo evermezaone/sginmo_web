@@ -1,23 +1,23 @@
 # REQ-0063 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos Bloqueantes
 
-- `rol_plantilla_permiso` no tiene RLS y `RolPlantillaService.permisosPlantilla` carga permisos solo por `plantillaId`, sin validar que la plantilla sea global o del tenant actual. Con un id conocido/manipulado, se podria aplicar una plantilla de otro tenant a un grupo propio.
-- La plantilla CAJA no concede permisos consistentes con el arqueo implementado en REQ-0059 (`caja/EDITAR`, `caja/EXPORTAR`, `caja/REACTIVAR` o equivalentes `arqueo/*`), dejando incompleto un perfil operativo clave.
+- Sin hallazgos bloqueantes en la re-auditoria.
 
-## Solucion Esperada
+## Evidencia de Re-auditoria
 
-- Validar siempre la cabecera `rol_plantilla` antes de leer/aplicar sus permisos: `tenant=-1`, tenant actual o SUPERADMIN.
-- Considerar RLS o join obligatorio contra `rol_plantilla` para el detalle.
-- Corregir la plantilla CAJA junto con la matriz final de permisos de arqueo.
+- `RolPlantillaService.exigirPlantillaVisible` valida cabecera activa de `rol_plantilla`; la RLS de `rol_plantilla` restringe a global/tenant actual o superadmin.
+- `permisosPlantilla` lee el detalle por `JOIN rol_plantilla`, evitando cargar permisos de una plantilla no visible aunque `rol_plantilla_permiso` no tenga RLS propia.
+- `diff` y `aplicar` validan tanto plantilla visible como grupo del tenant antes de calcular o escribir permisos.
+- La inconsistencia CAJA/arqeo queda corregida por REQ-0059/V47: cierre y exportacion usan `arqueo/*` y la plantilla CAJA recibe `arqueo/EDITAR`.
 
 ## Pruebas Revisadas
 

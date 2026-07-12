@@ -8,6 +8,7 @@ import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.catalogo.Moneda;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +28,9 @@ public class MonedaService {
     /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
+
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 271: auditoria funcional visible
 
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(m) FROM Moneda m WHERE (:f = '' OR lower(m.descripcion) LIKE :like OR lower(m.simbolo) LIKE :like)", Long.class);
@@ -56,11 +60,19 @@ public class MonedaService {
 
     @Transactional
     public Moneda guardar(Moneda moneda) {
-        autorizacion.exigir("monedas", moneda.getId() == null ? "CREAR" : "EDITAR");
+        boolean nuevo = moneda.getId() == null;
+        autorizacion.exigir("monedas", nuevo ? "CREAR" : "EDITAR");
         validar(moneda);
+        Map<String, Object> antes = null;   // obs 271: snapshot para el diff de auditoria
+        if (!nuevo) {
+            Moneda o = em.find(Moneda.class, moneda.getId());
+            if (o != null) antes = snap(o);
+        }
         try {
-            Moneda r = moneda.getId() == null ? persistir(moneda) : em.merge(moneda);
+            Moneda r = nuevo ? persistir(moneda) : em.merge(moneda);
             em.flush();
+            if (nuevo) auditoria.registrarAlta("moneda", r.getDescripcion(), "monedas");
+            else if (antes != null) auditoria.registrarCambios("moneda", r.getDescripcion(), "monedas", null, antes, snap(r));
             return r;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException("La moneda fue modificada por otro usuario. Vuelva a abrir el diálogo y reintente.");
@@ -73,11 +85,25 @@ public class MonedaService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
-        autorizacion.exigir("monedas", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
+        boolean reactivar = "ACTIVO".equals(estadoNuevo);
+        autorizacion.exigir("monedas", reactivar ? "REACTIVAR" : "INACTIVAR");
         Moneda m = em.find(Moneda.class, id);
         if (m == null) throw new NegocioException("La moneda no existe");
-        if ("ACTIVO".equals(estadoNuevo)) validar(m);
+        if (reactivar) validar(m);
+        String estadoAnterior = m.getEstado();
         m.setEstado(estadoNuevo);
+        auditoria.registrar("moneda", m.getDescripcion(),
+                reactivar ? AuditoriaFuncionalService.REACTIVAR : AuditoriaFuncionalService.INACTIVAR,
+                "monedas", "estado " + estadoAnterior + " -> " + estadoNuevo);
+    }
+
+    /** Snapshot de campos auditables (obs 271). */
+    private static Map<String, Object> snap(Moneda m) {
+        Map<String, Object> x = new LinkedHashMap<>();
+        x.put("descripcion", m.getDescripcion());
+        x.put("simbolo", m.getSimbolo());
+        x.put("estado", m.getEstado());
+        return x;
     }
 
     private void validar(Moneda m) {

@@ -31,6 +31,35 @@ Hacer visible para administradores el historial de cambios de registros sensible
 - Las acciones de cobro, anulacion, descuento, liquidacion y regeneracion de cuotas deben tener trazabilidad fuerte.
 - La auditoria tecnica automatica no reemplaza la auditoria funcional visible.
 
+## Alcance De Instrumentacion (formal, obs 271)
+
+Registros/acciones CABLEADOS a la auditoria funcional (entidad -> acciones):
+
+| Entidad | Acciones instrumentadas | Servicio |
+|---|---|---|
+| forma_pago | CREAR, EDITAR (diff), INACTIVAR, REACTIVAR | FormaPagoService |
+| articulo | CREAR, EDITAR (diff), INACTIVAR, REACTIVAR | ArticuloService |
+| parametro_sistema | CREAR, EDITAR (diff) | ParametroService |
+| moneda | CREAR, EDITAR (diff), INACTIVAR, REACTIVAR | MonedaService |
+| activo | CREAR, EDITAR (diff) | ActivoService |
+| persona | CREAR, EDITAR (diff), INACTIVAR, REACTIVAR | PersonaService |
+| operacion | CREAR, REGENERAR (cronograma) | OperacionService |
+| cobro | COBRAR, ANULAR (motivo obligatorio) | CajaService |
+| liquidacion | LIQUIDAR, EDITAR | LiquidacionService |
+| documento_generado | (anulacion con motivo obligatorio ya existente) | DocumentoGeneradoService |
+| usuario | DESBLOQUEAR | SeguridadPoliticaService |
+
+Politica de MOTIVO obligatorio (fundamentada): se exige motivo real en las acciones
+financieras/irreversibles -anular cobro (motivoCodigo), anular documento generado, liquidacion
+(motivo), reapertura de arqueo-. Para la inactivacion "blanda" de maestros de catalogo (moneda,
+articulo, forma_pago, persona) la auditoria registra accion+usuario+fecha+estado anterior/nuevo; NO
+se fuerza un motivo de texto libre porque agrega friccion con bajo valor de auditoria y la
+reactivacion es reversible. Es una decision de alcance, no una omision.
+
+Diferido (rollout incremental, misma API): cuota individual y descuento puntual como acciones
+finas (hoy se auditan via operacion/cobro), y plantilla_documento CRUD (el uso critico -generar/
+anular- ya queda trazado).
+
 ## Dependencias
 
 - Depende de: REQ-0002, REQ-0004, REQ-0006.

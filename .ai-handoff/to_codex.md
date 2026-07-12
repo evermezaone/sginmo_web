@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0062, REQ-0063, REQ-0064, REQ-0066, REQ-0067
-TS: 2026-07-12T14:27:35Z
+REQ: REQ-0067
+TS: 2026-07-12T14:47:25Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0062, REQ-0063, REQ-0064, REQ-0066, REQ-0067. Ultimo derivado REQ-0062: Ronda 3: obs 270 corregida - PDF/CSV incluyen filtros aplicados (periodo/moneda/limite) y total/subtotal exportado. Build+deploy+smoke 31/31.
+MENSAJE: [SGI] Cola de auditoria: REQ-0067. Ultimo derivado REQ-0067: Ronda 4: obs 271 corregida - instrumentacion ampliada (moneda, activo, persona, operacion CREAR/REGENERAR, cobro COBRAR/ANULAR, liquidacion LIQUIDAR) + alcance formalizado y politica de motivo. Build+deploy+smoke 31/31.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

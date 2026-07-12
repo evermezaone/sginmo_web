@@ -29,6 +29,9 @@ public class LiquidacionService {
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
     @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 271: auditoria funcional visible
+
+    @jakarta.inject.Inject
     private py.com.one.core.UsuarioActual usuarioActual;
 
     /** Usuario autenticado para las escrituras nativas (obs 232); fallback 'sistema' solo sin sesion. */
@@ -199,6 +202,10 @@ public class LiquidacionService {
                 }
             }
             em.flush();
+            // obs 271: liquidacion (accion critica) en la auditoria funcional visible.
+            auditoria.registrar("liquidacion", r.getId(),
+                    esNueva ? AuditoriaFuncionalService.LIQUIDAR : AuditoriaFuncionalService.EDITAR,
+                    "liquidaciones", "operacion " + liq.getOperacion() + " total gastos " + totalGastos + " saldo " + liq.getSaldo());
             return r;
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);   // UNIQUE(operacion) -> ya liquidada
