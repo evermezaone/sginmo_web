@@ -38,6 +38,8 @@ public class PlantillaDocumentoBean implements Serializable {
     private List<PlantillaDocumentoMotor.Variable> variables;
     private PlantillaDocumento seleccionado;
     private String filtroGlobal = "";
+    /** REQ-0050: variable elegida en el combo del cuerpo; solo enlace del <select>, el insert lo hace JS. */
+    private String varSeleccionada;
 
     @PostConstruct
     public void iniciar() {
@@ -122,4 +124,6 @@ public class PlantillaDocumentoBean implements Serializable {
     public void setSeleccionado(PlantillaDocumento seleccionado) { this.seleccionado = seleccionado; }
     public String getFiltroGlobal() { return filtroGlobal; }
     public void setFiltroGlobal(String filtroGlobal) { this.filtroGlobal = filtroGlobal; }
+    public String getVarSeleccionada() { return varSeleccionada; }
+    public void setVarSeleccionada(String varSeleccionada) { this.varSeleccionada = varSeleccionada; }
 }

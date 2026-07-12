@@ -111,7 +111,18 @@
                         </div>
                         <div class="campo">
                             <label>Cuerpo *</label>
-                            <p:inputTextarea value="#{plantillaDocumentoBean.seleccionado.cuerpo}" required="true"
+                            <!-- REQ-0050: elegir una variable del catalogo e insertarla en el cuerpo (posicion del cursor) -->
+                            <div style="display:flex; gap:.5rem; align-items:center; margin-bottom:.4rem;">
+                                <h:selectOneMenu id="cboVar" value="#{plantillaDocumentoBean.varSeleccionada}"
+                                                 style="flex:1; max-width:26rem;">
+                                    <f:selectItem itemLabel="— Elegir variable a insertar —" itemValue=""/>
+                                    <f:selectItems value="#{plantillaDocumentoBean.variables}" var="vv"
+                                                   itemLabel="#{vv.codigo} — #{vv.descripcion}" itemValue="#{vv.codigo}"/>
+                                </h:selectOneMenu>
+                                <p:commandButton type="button" value="Insertar" icon="pi pi-plus"
+                                                 onclick="insertarVarCuerpo(); return false;"/>
+                            </div>
+                            <p:inputTextarea id="cuerpoTxt" value="#{plantillaDocumentoBean.seleccionado.cuerpo}" required="true"
                                              label="Cuerpo" rows="16" autoResize="false" style="width:100%; font-family:monospace;"/>
                         </div>
                     </p:tab>
@@ -137,5 +148,23 @@
             </ui:fragment>
         </h:form>
     </p:dialog>
+
+    <!-- REQ-0050: inserta el placeholder {{variable}} elegido en el cuerpo, en la posicion del cursor -->
+    <script type="text/javascript">
+        //<![CDATA[
+        function insertarVarCuerpo() {
+            var sel = document.getElementById('frmEdicion:cboVar');
+            var ta  = document.getElementById('frmEdicion:cuerpoTxt');
+            if (!sel || !ta || !sel.value) { return; }
+            var ph = '{{' + sel.value + '}}';
+            var s = (ta.selectionStart != null) ? ta.selectionStart : ta.value.length;
+            var e = (ta.selectionEnd   != null) ? ta.selectionEnd   : ta.value.length;
+            ta.value = ta.value.substring(0, s) + ph + ta.value.substring(e);
+            var pos = s + ph.length;
+            ta.selectionStart = ta.selectionEnd = pos;
+            ta.focus();
+        }
+        //]]>
+    </script>
 </ui:define>
 </ui:composition>

@@ -48,6 +48,8 @@
         <h:form id="frmEdicion">
             <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <ui:fragment rendered="#{not empty operacionBean.seleccionado}">
+                <!-- REQ-0049: cuerpo con scroll interno para que los botones del pie queden siempre visibles -->
+                <div style="max-height:60vh; overflow-y:auto; overflow-x:hidden; padding-right:.5rem;">
                 <div class="fila-2">
                     <div class="campo">
                         <label>Tipo *</label>
@@ -128,6 +130,7 @@
                     A crédito se genera el cronograma automáticamente. En alquiler se crean los documentos de
                     garantía y comisión según el % del activo.
                 </p>
+                </div><!-- /cuerpo-scroll (REQ-0049) -->
                 <div class="pie-dialogo">
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgOperacion').hide()"
                                      styleClass="ui-button-secondary" style="margin-right:.5rem;"/>

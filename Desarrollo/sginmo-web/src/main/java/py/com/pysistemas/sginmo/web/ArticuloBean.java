@@ -63,6 +63,7 @@ public class ArticuloBean implements Serializable {
     private List<Entidad> grupos;
     private List<Entidad> subgrupos;
     private List<Entidad> procedencias;
+    private List<Entidad> clasificaciones;   // REQ-0048
     private List<py.com.pysistemas.sginmo.dominio.persona.Persona> proveedores;
 
     // Propiedades parametrizables (tab habilitado solo con articulo guardado)
@@ -99,6 +100,7 @@ public class ArticuloBean implements Serializable {
         grupos = catalogoService.opciones("GRUPOS_ARTICULO");
         subgrupos = catalogoService.opciones("SUBGRUPOS_ARTICULO");
         procedencias = catalogoService.opciones("PROCEDENCIAS");
+        clasificaciones = catalogoService.opciones("CLASIFICACION_ARTICULO");   // REQ-0048
         proveedores = personaService.porRol("PROVEEDOR");
 
         modelo = new LazyDataModel<>() {
@@ -392,6 +394,7 @@ public class ArticuloBean implements Serializable {
     public List<Entidad> getGrupos() { return grupos; }
     public List<Entidad> getSubgrupos() { return subgrupos; }
     public List<Entidad> getProcedencias() { return procedencias; }
+    public List<Entidad> getClasificaciones() { return clasificaciones; }   // REQ-0048
 
     /** Descripcion de la propiedad (id -> texto) para la grilla (V26: propiedad es id). */
     public String descripcionPropiedad(Long id) { return catalogoService.descripcionOpcion(id); }

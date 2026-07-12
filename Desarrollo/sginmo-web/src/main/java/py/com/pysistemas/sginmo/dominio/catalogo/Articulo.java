@@ -62,8 +62,8 @@ public class Articulo extends Auditable {
     @Column(name = "presentacion")
     private Long presentacion;           // lista PRESENTACIONES
 
-    @Column(name = "clasificacion", length = 20)
-    private String clasificacion;
+    @Column(name = "clasificacion")
+    private Long clasificacion;   // REQ-0048: id de entidad (lista CLASIFICACION_ARTICULO), antes varchar libre
 
     @Column(name = "marca")
     private Long marca;                  // lista MARCAS
@@ -159,8 +159,8 @@ public class Articulo extends Auditable {
     public void setUnidadMedida(Long v) { this.unidadMedida = v; }
     public Long getPresentacion() { return presentacion; }
     public void setPresentacion(Long v) { this.presentacion = v; }
-    public String getClasificacion() { return clasificacion; }
-    public void setClasificacion(String v) { this.clasificacion = v; }
+    public Long getClasificacion() { return clasificacion; }
+    public void setClasificacion(Long v) { this.clasificacion = v; }
     public Long getMarca() { return marca; }
     public void setMarca(Long v) { this.marca = v; }
     public Long getModelo() { return modelo; }

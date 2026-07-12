@@ -312,8 +312,12 @@
                                 </p:selectOneMenu>
                             </div>
                             <div class="campo">
-                                <label>Clasificación (texto libre)</label>
-                                <p:inputText value="#{articuloBean.seleccionado.clasificacion}" label="Clasificación" maxlength="20" disabled="#{articuloBean.soloLectura}"/>
+                                <label>Clasificación</label>
+                                <p:selectOneMenu value="#{articuloBean.seleccionado.clasificacion}" label="Clasificación"
+                                                 filter="true" filterMatchMode="contains" disabled="#{articuloBean.soloLectura}">
+                                    <f:selectItem itemLabel="Sin especificar" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{articuloBean.clasificaciones}" var="cl" itemLabel="#{cl.descripcion}" itemValue="#{cl.id}"/>
+                                </p:selectOneMenu>
                             </div>
                             <div class="campo">
                                 <label>Proveedor</label>
