@@ -90,8 +90,11 @@ public class DashboardMetricasService {
         return out;
     }
 
-    /** Un indicador puntual con sus comparativos (reutilizado por REQ-0070/0074/0075). */
-    public Comparativo comparativo(String indicador, Periodos p, Long moneda, Long sucursal) {
+    /**
+     * Obs 272: privado. Un indicador puntual con sus comparativos. La entrada publica autorizada es
+     * comparativos() (que ya exige dashboard-gerencial/VER); este helper no se expone.
+     */
+    private Comparativo comparativo(String indicador, Periodos p, Long moneda, Long sucursal) {
         Comparativo c = new Comparativo();
         c.indicador = indicador;
         c.etiqueta = ETIQUETA.getOrDefault(indicador, indicador);
@@ -136,8 +139,13 @@ public class DashboardMetricasService {
         return out;
     }
 
-    /** Valor de un indicador para el mes en curso (reutilizado por objetivos REQ-0073). */
-    public BigDecimal valorMesActual(String indicador, Long moneda, Long sucursal) {
+    /**
+     * Obs 272: API INTERNA (package-private) para los servicios gerenciales del mismo paquete
+     * (ObjetivoService, AlertaService), que YA exigen su propio permiso (objetivos/alertas VER) antes
+     * de llamar. No es una entrada publica del dashboard; por eso no repite dashboard-gerencial/VER.
+     * Valor de un indicador para el mes en curso.
+     */
+    BigDecimal valorMesActual(String indicador, Long moneda, Long sucursal) {
         Long emp = tenant.actual();
         if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return BigDecimal.ZERO;
         Periodos p = Periodos.para(LocalDate.now(), LocalDate.now());
@@ -153,8 +161,10 @@ public class DashboardMetricasService {
             case INGRESOS -> flujoIngEgr("INGRESO", r, sucursal);
             case EGRESOS -> flujoIngEgr("EGRESO", r, sucursal);
             case RENTABILIDAD -> flujoIngEgr("INGRESO", r, sucursal).subtract(flujoIngEgr("EGRESO", r, sucursal));
-            case OCUPACION -> ocupacionPct(r.hasta, sucursal);
-            case VACANCIA -> BigDecimal.valueOf(vacantes(r.hasta, sucursal));
+            // Obs 273: ocupacion/vacancia NO aplican sucursal: el universo (activo) no tiene sucursal, y
+            // filtrar solo los ocupados por operacion.sucursal daria un % falso. Se calcula por tenant.
+            case OCUPACION -> ocupacionPct(r.hasta);
+            case VACANCIA -> BigDecimal.valueOf(vacantes(r.hasta));
             case CONTRATOS_NUEVOS -> BigDecimal.valueOf(contratosNuevos(r, sucursal));
             case CONTRATOS_FINALIZADOS -> BigDecimal.valueOf(contratosFinalizados(r, sucursal));
             default -> BigDecimal.ZERO;
@@ -195,40 +205,36 @@ public class DashboardMetricasService {
         return dec(q);
     }
 
-    // ── Ocupacion / vacancia (universo alquilable; refinado en REQ-0072) ──
+    // ── Ocupacion / vacancia (universo alquilable por tenant; sin sucursal, obs 273; ver REQ-0072) ──
 
-    /** Activos alquilables: con precio_alquiler > 0 y no vendidos. */
-    private long alquilables(Long sucursal) {
-        // activo no tiene sucursal; el filtro por sucursal no aplica al universo de activos.
+    /** Activos alquilables: con precio_alquiler > 0 y no vendidos. El activo no tiene sucursal. */
+    private long alquilables() {
         Query q = em.createNativeQuery(
             "SELECT COUNT(*) FROM activo WHERE precio_alquiler > 0 AND estado <> 'VENDIDA'");
         return num(q);
     }
 
-    /** Ocupados a la fecha: activos con una operacion de ALQUILER que cubre esa fecha. */
-    private long ocupados(LocalDate fecha, Long sucursal) {
-        String suc = sucursal != null ? " AND o.sucursal = :suc" : "";
+    /** Ocupados a la fecha: activos con una operacion de ALQUILER que cubre esa fecha (por tenant). */
+    private long ocupados(LocalDate fecha) {
         Query q = em.createNativeQuery(
             "SELECT COUNT(DISTINCT o.activo) FROM operacion o"
           + " WHERE o.tipo_operacion='ALQUILER' AND o.fecha_inicio_contrato <= :f"
           + " AND (o.fecha_finalizacion IS NULL OR o.fecha_finalizacion > :f)"
-          + " AND o.activo IN (SELECT a.activo FROM activo a WHERE a.precio_alquiler > 0 AND a.estado <> 'VENDIDA')"
-          + suc);
+          + " AND o.activo IN (SELECT a.activo FROM activo a WHERE a.precio_alquiler > 0 AND a.estado <> 'VENDIDA')");
         q.setParameter("f", fecha);
-        if (sucursal != null) q.setParameter("suc", sucursal);
         return num(q);
     }
 
-    private BigDecimal ocupacionPct(LocalDate fecha, Long sucursal) {
-        long alq = alquilables(sucursal);
+    private BigDecimal ocupacionPct(LocalDate fecha) {
+        long alq = alquilables();
         if (alq == 0) return BigDecimal.ZERO;
-        long ocu = ocupados(fecha, sucursal);
+        long ocu = ocupados(fecha);
         return BigDecimal.valueOf(ocu).multiply(BigDecimal.valueOf(100))
                 .divide(BigDecimal.valueOf(alq), 2, RoundingMode.HALF_UP);
     }
 
-    private long vacantes(LocalDate fecha, Long sucursal) {
-        return Math.max(0, alquilables(sucursal) - ocupados(fecha, sucursal));
+    private long vacantes(LocalDate fecha) {
+        return Math.max(0, alquilables() - ocupados(fecha));
     }
 
     private long contratosNuevos(Rango r, Long sucursal) {

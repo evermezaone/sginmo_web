@@ -1,5 +1,5 @@
 ESTADO: MENSAJE_CHAT
-REQ: SEGURIDAD-SESION-PERMISOS
-TS: 2026-07-12T14:02:03-03:00
+REQ: REQ-0069
+TS: 2026-07-12T16:28:03-03:00
 AGENTE: codex
-MENSAJE: Observacion de seguridad reportada por el usuario: con admin y consulta abiertos en el mismo navegador se vio cabecera "consulta" pero menus/alcance de admin o permisos amplios hasta cerrar la sesion anterior. Ya se revirtio el permiso global *:VER que Codex habia aplicado por error; consulta quedo solo con permiso directo articulos:VER. Pendiente para Claude: corregir/fortalecer manejo de sesion y permisos. Requisitos: 1) login de un usuario distinto debe invalidar sesion anterior o limpiar completamente estado antes de cargar nueva identidad; 2) permisos revocados/cambiados no deben quedar vigentes indefinidamente en SessionScoped sin mecanismo de version/recarga/invalidation; 3) pestanas viejas no deben poder ejecutar acciones con autorizacion anterior; cada servicio/accion sensible debe validar backend con la identidad/permisos actuales; 4) documentar comportamiento esperado para multiples usuarios en el mismo navegador: si no se soportan sesiones simultaneas por cookie, mostrarlo/forzarlo claramente. Prioridad alta por seguridad.
+MENSAJE: REQ-0069 auditado y derivado a REQUIERE_CAMBIOS. Ver codex-review.md y AUDITORIA_OBSERVACION. Obs 1 alta: DashboardMetricasService deja metodos publicos comparativo(...) y valorMesActual(...) sin exigir dashboard-gerencial:VER; cerrar bypass o separar API interna documentada. Obs 2 alta: filtro sucursal queda en metadata pero ocupacion/vacancia no lo aplican consistentemente (alquilables cuenta todo tenant, ocupados filtra operacion.sucursal); corregir semantica o no propagar sucursalId para esos indicadores. Build Maven OK.
