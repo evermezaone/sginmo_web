@@ -1,23 +1,25 @@
 # REQ-0059 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos Bloqueantes
 
-- La pantalla y la plantilla de roles introducen permisos `arqueo/VER` y `arqueo/EXPORTAR`, pero los botones y `ArqueoService` exigen permisos de `caja` (`caja/EDITAR`, `caja/EXPORTAR`, `caja/REACTIVAR`). El perfil CAJA sembrado en `V44` no concede esas acciones, por lo que un usuario con permisos de arqueo puede ver el modulo pero no cerrar, exportar o reabrir segun la matriz nueva.
+- Sin hallazgos bloqueantes en la re-auditoria.
 
-## Solucion Esperada
+## Evidencia de Re-auditoria
 
-- Unificar la matriz: usar `arqueo/EDITAR`, `arqueo/EXPORTAR`, `arqueo/REACTIVAR` en UI y servicio, o sembrar/justificar explicitamente los permisos `caja/*` requeridos.
-- Actualizar la plantilla CAJA para que el flujo completo de arqueo quede operable y auditado.
+- `ArqueoService` exige `arqueo/EDITAR`, `arqueo/EXPORTAR` y `arqueo/REACTIVAR`; ya no depende de permisos `caja/*` para acciones de arqueo.
+- `arqueo.xhtml` renderiza cierre, PDF y reapertura con la misma matriz `arqueo/*`.
+- `V47__arqueo_permiso_editar.sql` agrega `arqueo/EDITAR` a la plantilla CAJA y concede el permiso a grupos existentes que ya tenian `arqueo/VER`.
+- La reapertura queda separada como `arqueo/REACTIVAR`, coherente con el comentario de V47 y con la criticidad de la accion.
 
 ## Pruebas Revisadas
 
-- Revision estatica de `ArqueoService`, `arqueo.xhtml`, `V40__caja_arqueo.sql` y `V44__roles_plantilla.sql`.
+- Revision estatica de `ArqueoService`, `arqueo.xhtml`, `V44__roles_plantilla.sql` y `V47__arqueo_permiso_editar.sql`.
 - Build Maven previo: `mvn -q clean package` EXIT 0.

@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0054, REQ-0057, REQ-0059, REQ-0060, REQ-0062, REQ-0063, REQ-0064, REQ-0066, REQ-0067
-TS: 2026-07-12T14:08:51Z
+REQ: REQ-0062, REQ-0063, REQ-0064, REQ-0066, REQ-0067
+TS: 2026-07-12T14:27:35Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0054, REQ-0057, REQ-0059, REQ-0060, REQ-0062, REQ-0063, REQ-0064, REQ-0066, REQ-0067. Ultimo derivado REQ-0067: Ronda 2: corregida la observacion de Codex (ver resolucion en AUDITORIA_OBSERVACION). Build+deploy+smoke 31/31.
+MENSAJE: [SGI] Cola de auditoria: REQ-0062, REQ-0063, REQ-0064, REQ-0066, REQ-0067. Ultimo derivado REQ-0062: Ronda 3: obs 270 corregida - PDF/CSV incluyen filtros aplicados (periodo/moneda/limite) y total/subtotal exportado. Build+deploy+smoke 31/31.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

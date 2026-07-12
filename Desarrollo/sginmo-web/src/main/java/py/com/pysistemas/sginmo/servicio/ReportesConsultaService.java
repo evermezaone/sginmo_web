@@ -55,12 +55,39 @@ public class ReportesConsultaService {
         autorizacion.exigir("reportes", "VER");
         Long emp = tenant.actual();
         if (emp == null || TenantContext.GLOBAL.equals(emp)) return new Reporte("Sin empresa", new String[0]);
-        return switch (tipo) {
+        Reporte r = switch (tipo) {
             case "PROPIEDADES" -> propiedades();
             case "COBROS"      -> cobros(desde, hasta, moneda);
             case "MORA"        -> mora();
             default -> throw new NegocioException("Reporte no soportado: " + tipo);
         };
+        // Obs 270: los filtros aplicados quedan en el modelo para imprimirse en PDF y CSV (trazabilidad).
+        r.filtros = filtrosDe(tipo, desde, hasta, moneda);
+        return r;
+    }
+
+    /** Obs 270: descripcion legible de los filtros aplicados (periodo, moneda, limite). */
+    private String filtrosDe(String tipo, LocalDate desde, LocalDate hasta, Long moneda) {
+        List<String> f = new ArrayList<>();
+        switch (tipo) {
+            case "COBROS" -> {
+                f.add("Periodo: " + fecha(desde) + " a " + fecha(hasta));
+                f.add("Moneda: " + (moneda == null ? "Todas" : monedaNombre(moneda)));
+            }
+            case "MORA" -> f.add("Cuotas vencidas al " + fecha(LocalDate.now()));
+            case "PROPIEDADES" -> f.add("Estado: LIBRE (disponibles)");
+            default -> { }
+        }
+        f.add("Limite export: " + limite() + " filas");
+        return String.join("   |   ", f);
+    }
+
+    private String monedaNombre(Long id) {
+        try {
+            Object n = em.createNativeQuery("SELECT descripcion FROM moneda WHERE moneda=:m")
+                    .setParameter("m", id).getSingleResult();
+            return n == null ? ("#" + id) : n.toString();
+        } catch (RuntimeException e) { return "#" + id; }
     }
 
     private Reporte propiedades() {
@@ -127,6 +154,8 @@ public class ReportesConsultaService {
         autorizacion.exigir("reportes", "EXPORTAR");
         var rep = pdf.iniciar(empresaNombre(), r.titulo, sesion.codigoUsuario(),
                 r.filas.size() + " fila(s)" + (r.filas.size() >= limite() ? " (limitado a " + limite() + ")" : ""));
+        // Obs 270: los filtros aplicados se imprimen en el PDF.
+        if (r.filtros != null && !r.filtros.isBlank()) { pdf.parrafo(rep, "Filtros: " + r.filtros); pdf.espacio(rep); }
         float[] anchos = new float[r.columnas.length];
         java.util.Arrays.fill(anchos, 1f);
         pdf.tabla(rep, r.columnas, r.filas, anchos);
@@ -137,8 +166,19 @@ public class ReportesConsultaService {
     public byte[] csv(Reporte r) {
         autorizacion.exigir("reportes", "EXPORTAR");
         StringBuilder sb = new StringBuilder();
+        // Obs 270: trazabilidad de la exportacion — metadata de filtros y emision antes de la tabla.
+        sb.append(String.join(",", escapar(new String[]{"Reporte", r.titulo}))).append("\n");
+        if (r.filtros != null && !r.filtros.isBlank())
+            sb.append(String.join(",", escapar(new String[]{"Filtros", r.filtros}))).append("\n");
+        sb.append(String.join(",", escapar(new String[]{"Emitido por", s(sesion.codigoUsuario())}))).append("\n");
+        sb.append(String.join(",", escapar(new String[]{"Fecha", fecha(LocalDate.now())}))).append("\n");
+        sb.append("\n");
         sb.append(String.join(",", escapar(r.columnas))).append("\n");
         for (String[] fila : r.filas) sb.append(String.join(",", escapar(fila))).append("\n");
+        // Obs 270: el total/subtotal por moneda tambien se exporta en el CSV.
+        if (r.total != null && !r.total.isBlank()) {
+            sb.append("\n").append(String.join(",", escapar(new String[]{r.total}))).append("\n");
+        }
         return sb.toString().getBytes(StandardCharsets.UTF_8);
     }
 
@@ -178,10 +218,12 @@ public class ReportesConsultaService {
         public final String[] columnas;
         public final List<String[]> filas = new ArrayList<>();
         public String total;
+        public String filtros;   // obs 270: filtros aplicados (periodo, moneda, limite) para PDF/CSV
         public Reporte(String titulo, String[] columnas) { this.titulo = titulo; this.columnas = columnas; }
         public String getTitulo() { return titulo; }
         public String[] getColumnas() { return columnas; }
         public List<String[]> getFilas() { return filas; }
         public String getTotal() { return total; }
+        public String getFiltros() { return filtros; }
     }
 }

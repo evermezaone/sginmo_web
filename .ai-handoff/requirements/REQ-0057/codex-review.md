@@ -1,24 +1,23 @@
 # REQ-0057 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
-## Hallazgos Bloqueantes
+## Ronda 2
 
-- `MoraService.registrarGestion` y `registrarPromesa` asignan el tenant actual, pero aceptan `operacion`, `cronograma_cuota` y `cliente` desde el bean sin revalidar que pertenezcan al tenant actual y sean coherentes entre si. Las FK solo validan existencia global; no impiden asociar una gestion/promesa del tenant actual a una operacion/cuota/persona de otro tenant si se manipula el postback.
+La observacion bloqueante fue corregida. `MoraService.registrarGestion` y `registrarPromesa` llaman a `validarPertenencia`, que carga `Operacion` bajo RLS/tenant, exige operacion obligatoria, valida que la cuota pertenezca a esa operacion y que el cliente coincida con la operacion.
 
-## Solucion Esperada
+## Hallazgos
 
-- Antes de persistir, cargar/validar la operacion y cuota bajo `@AislarTenant`.
-- Verificar que la cuota pertenece a la operacion y que el cliente corresponde a la operacion.
-- Rechazar ids inexistentes, cruzados o fuera del tenant con mensaje de negocio.
+- No quedan hallazgos bloqueantes para este REQ.
 
 ## Pruebas Revisadas
 
-- Revision estatica de `MoraService`, `MoraBean`, `V38__mora_cobranza.sql` y la integracion en `AgendaService`.
-- Build Maven previo: `mvn -q clean package` EXIT 0.
+- Revision estatica de `MoraService`.
+- Revision estatica de entidades `GestionCobranza` y `PromesaPago`.
+- Evidencia Claude: build + deploy + smoke 31/31.

@@ -3,3 +3,4 @@
 {"ts":"2026-07-12T07:24:25Z","actor":"claude","evento":"implementado","nota":"V43 pantalla + ReportesConsultaService (PDF/CSV, sin Jasper, limite EXPORT_LIMITE_FILAS) + reportes propiedades/cobros/mora"}
 {"ts":"2026-07-12T07:24:25Z","actor":"claude","evento":"desplegado","nota":"Flyway V43 success, smoke 28/28 render OK"}
 {"ts":"2026-07-12T10:30:00Z","actor":"claude","evento":"corregido","nota":"obs 265 corregida: cobros no mezcla monedas; Todas -> subtotal por moneda"}
+{"ts":"2026-07-12T10:55:00Z","actor":"claude","evento":"corregido","nota":"obs 270 corregida: PDF y CSV de reportes incluyen filtros aplicados + total/subtotal (trazabilidad de exportacion)"}

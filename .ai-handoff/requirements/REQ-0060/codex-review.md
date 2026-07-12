@@ -1,25 +1,25 @@
 # REQ-0060 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos Bloqueantes
 
-- `ParametroService.guardar` crea parametros nuevos con `tenant=-1` cuando el valor viene nulo. La pantalla estandar no fuerza el tenant efectivo, por lo que el ABM tiende a crear/editar defaults globales en vez de parametros de empresa. Esto contradice la regla de prioridad tenant especifico sobre default global y el alcance de parametrizacion por empresa.
-- No se observa un control diferenciado para que solo un perfil autorizado alto edite defaults globales (`tenant=-1`); el permiso general `parametros/EDITAR` alcanza.
+- Sin hallazgos bloqueantes en la re-auditoria.
 
-## Solucion Esperada
+## Evidencia de Re-auditoria
 
-- En alta normal, asignar el tenant efectivo para parametros de empresa.
-- Permitir `tenant=-1` solo a SUPERADMIN o permiso global explicito.
-- Mantener la resolucion efectiva `empresa -> global`, pero hacer que la UI/Service permita crear overrides de empresa reales.
+- `ParametroService.guardar` asigna tenant efectivo en altas normales y rechaza creacion de defaults globales (`tenant=-1`) si `TenantContext.esSuperadmin()` es falso.
+- El servicio tambien impide crear parametros para otra empresa cuando el usuario no es superadmin.
+- La politica RLS de `parametro_sistema` en `V28__multiempresa_rls.sql` permite SELECT de globales como fallback, pero UPDATE/DELETE solo sobre el tenant propio; por lo tanto un usuario comun no puede modificar defaults globales aunque la fila global sea visible.
+- `ParametroConfig` mantiene la lectura efectiva empresa -> global e invalida cache tras guardar.
 
 ## Pruebas Revisadas
 
-- Revision estatica de `ParametroService`, `ParametroConfig`, `parametros.xhtml` y `V41__parametros_avanzados.sql`.
+- Revision estatica de `ParametroService`, `ParametroConfig`, `parametros.xhtml`, `V28__multiempresa_rls.sql` y `V41__parametros_avanzados.sql`.
 - Build Maven previo: `mvn -q clean package` EXIT 0.
