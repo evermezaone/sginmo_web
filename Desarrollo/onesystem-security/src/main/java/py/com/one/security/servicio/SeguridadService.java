@@ -72,9 +72,11 @@ public class SeguridadService {
                         + " minutos tras " + maximo + " intentos fallidos de acceso ("
                         + ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ").\n"
                         + "Si no fue usted, contacte al administrador de inmediato.");
+                registrarLogin(u.getCodigoUsuario(), false, "bloqueo");
                 throw new NegocioException("Usuario bloqueado por " + minutos + " minutos por intentos fallidos");
             }
             u.setIntentosFallidos(intentos);
+            registrarLogin(u.getCodigoUsuario(), false, "credenciales");
             alertar(u, "Intento de acceso fallido",
                     "Se registró un intento de acceso FALLIDO a su cuenta '" + u.getCodigoUsuario()
                     + "' (" + ahora.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + "), intento "
@@ -83,6 +85,7 @@ public class SeguridadService {
         }
         u.setIntentosFallidos(0);
         u.setBloqueadoHasta(null);
+        registrarLogin(u.getCodigoUsuario(), true, "OK");
         return u;
     }
 
@@ -126,18 +129,60 @@ public class SeguridadService {
         if (BCrypt.checkpw(nueva, u.getPasswordHash())) {
             throw new NegocioException("La contraseña nueva debe ser distinta de la actual");
         }
+        // REQ-0064: anti-reutilizacion de las ultimas N contrasenas (configurable).
+        int hist = parametroEntero("LOGIN_PASS_HISTORIAL", 3);
+        if (hist > 0) {
+            try {
+                @SuppressWarnings("unchecked")
+                java.util.List<String> previas = em.createNativeQuery(
+                    "SELECT password_hash FROM password_historial WHERE usuario=:u ORDER BY fecha DESC")
+                    .setParameter("u", usuarioId).setMaxResults(hist).getResultList();
+                for (String h : previas) {
+                    if (h != null && BCrypt.checkpw(nueva, h)) {
+                        throw new NegocioException("No puede reutilizar una de sus últimas contraseñas");
+                    }
+                }
+            } catch (NegocioException e) {
+                throw e;
+            } catch (RuntimeException ignore) {
+                // si el historial no esta disponible, no se bloquea el cambio legitimo
+            }
+        }
         u.setPasswordHash(hash(nueva));
         u.setDebeCambiarPassword(false);
+        try {
+            em.createNativeQuery("INSERT INTO password_historial (usuario, password_hash, fecha) VALUES (:u, :h, now())")
+                .setParameter("u", usuarioId).setParameter("h", u.getPasswordHash()).executeUpdate();
+        } catch (RuntimeException ignore) {
+            // el registro del historial no debe romper el cambio de contrasena
+        }
         return u;
     }
 
-    /** Politica minima de contrasenas del sistema. */
+    /** Politica de contrasenas del sistema (configurable, REQ-0064). */
     public void validarNueva(String nueva, String repetida) {
-        if (nueva == null || nueva.length() < 8) {
-            throw new NegocioException("La contraseña nueva debe tener al menos 8 caracteres");
+        int min = parametroEntero("LOGIN_PASS_MIN_LEN", 8);
+        if (nueva == null || nueva.length() < min) {
+            throw new NegocioException("La contraseña nueva debe tener al menos " + min + " caracteres");
+        }
+        if ("SI".equalsIgnoreCase(valorODefecto(parametro("LOGIN_PASS_COMPLEJIDAD"), "NO"))
+                && !(nueva.matches(".*[A-Za-z].*") && nueva.matches(".*\\d.*"))) {
+            throw new NegocioException("La contraseña debe incluir letras y números");
         }
         if (!nueva.equals(repetida)) {
             throw new NegocioException("Las contraseñas no coinciden");
+        }
+    }
+
+    /** REQ-0064: registra un intento de login (auditoria). Jamas rompe el login (fail-safe). */
+    private void registrarLogin(String codigo, boolean exito, String causa) {
+        try {
+            em.createNativeQuery(
+                "INSERT INTO login_evento (usuario_codigo, exito, causa, fecha) VALUES (:u, :e, :c, now())")
+                .setParameter("u", codigo == null ? "" : codigo)
+                .setParameter("e", exito).setParameter("c", causa).executeUpdate();
+        } catch (RuntimeException ignore) {
+            // la tabla puede no existir en entornos viejos; la auditoria nunca bloquea el acceso
         }
     }
 

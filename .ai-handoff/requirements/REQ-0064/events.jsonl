@@ -1,2 +1,2 @@
-﻿
-
+{"ts":"2026-07-12T08:30:00Z","actor":"claude","evento":"implementado","nota":"V45 params LOGIN_* + login_evento + password_historial + pantalla seguridad; SeguridadService (validarNueva config, registrarLogin fail-safe, anti-reuse); SeguridadPoliticaService/Bean/xhtml"}
+{"ts":"2026-07-12T08:30:00Z","actor":"claude","evento":"desplegado","nota":"Flyway V45 success; smoke 30/30 render OK; login_evento poblado (login sigue OK tras tocar autenticar)"}

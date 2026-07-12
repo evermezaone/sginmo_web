@@ -1,0 +1,57 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{seguridadBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Politicas de seguridad</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+        <h3>Politicas configurables</h3>
+        <p:dataTable var="p" value="#{seguridadBean.politicas}" emptyMessage="Sin politicas">
+            <p:column headerText="Parametro" style="width:18rem;"><h:outputText value="#{p.a}" style="font-family:monospace;"/></p:column>
+            <p:column headerText="Valor" style="width:8rem;"><h:outputText value="#{p.b}"/></p:column>
+            <p:column headerText="Descripcion"><h:outputText value="#{p.c}"/></p:column>
+        </p:dataTable>
+        <p style="color:#9ca3af; font-size:.83rem;">
+            Se editan en Parametros (grupo Seguridad). Las contrasenas se guardan con hash bcrypt (nunca reversible).
+        </p>
+
+        <h3 style="margin-top:1.4rem;">Usuarios bloqueados / con intentos fallidos</h3>
+        <p:dataTable var="u" value="#{seguridadBean.bloqueados}" emptyMessage="No hay usuarios bloqueados">
+            <p:column headerText="Usuario" style="width:14rem;"><h:outputText value="#{u.b}"/></p:column>
+            <p:column headerText="Bloqueado hasta" style="width:12rem;">
+                <h:outputText value="#{u.c}"/>
+            </p:column>
+            <p:column headerText="Intentos" style="width:7rem; text-align:right;"><h:outputText value="#{u.d}"/></p:column>
+            <p:column headerText="Accion" style="width:8rem; text-align:center;">
+                <p:commandButton value="Desbloquear" icon="pi pi-unlock" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('usuarios','EDITAR')}"
+                                 actionListener="#{seguridadBean.desbloquear(u)}" update="frm">
+                    <p:confirm header="Confirmar" message="Desbloquear al usuario?" icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+        <h3 style="margin-top:1.4rem;">Auditoria de accesos (ultimos 100)</h3>
+        <p:dataTable var="e" value="#{seguridadBean.eventos}" paginator="true" rows="15" emptyMessage="Sin eventos">
+            <p:column headerText="Fecha" style="width:12rem;"><h:outputText value="#{e.a}"/></p:column>
+            <p:column headerText="Usuario" style="width:14rem;"><h:outputText value="#{e.b}"/></p:column>
+            <p:column headerText="Resultado" style="width:8rem; text-align:center;">
+                <p:tag value="#{e.c ? 'OK' : 'FALLO'}" severity="#{e.c ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Causa"><h:outputText value="#{e.d}"/></p:column>
+        </p:dataTable>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+</ui:define>
+</ui:composition>
