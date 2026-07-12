@@ -28,7 +28,7 @@
                 </div>
             </f:facet>
             <p:column headerText="Fecha" style="width:8rem;">
-                <h:outputText value="#{d.fechaCreacion}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                <h:outputText value="#{d.fechaCreacion}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/></h:outputText>
             </p:column>
             <p:column headerText="Tipo" style="width:7rem;"><p:tag value="#{d.tipo}"/></p:column>
             <p:column headerText="Operacion" style="width:7rem;"><h:outputText value="#{d.operacion}"/></p:column>
@@ -39,7 +39,7 @@
             </p:column>
             <p:column headerText="Firma" style="width:8rem;">
                 <h:outputText value="#{d.fechaFirma}" rendered="#{not empty d.fechaFirma}">
-                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    <f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/>
                 </h:outputText>
             </p:column>
             <p:column headerText="Acciones" style="width:7rem; text-align:center;" exportable="false">

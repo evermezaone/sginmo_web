@@ -1,28 +1,34 @@
-﻿# REQ-0059 - Plan De Implementacion
+# REQ-0059 - Plan De Implementacion
 
 **Estado:** APROBADO_PARA_DESARROLLO
-**Fecha:** 2026-07-11
+**Fecha:** 2026-07-12
 
 ## Estrategia
 
-[Plan tecnico]
+Extender la planilla existente (no recrear) con datos de arqueo. ArqueoService aparte para el cierre
+controlado, reapertura y PDF; CajaService NO se toca. Pantalla de arqueo.
 
 ## Archivos A Modificar
 
 | Archivo | Cambio |
 |---|---|
-| [archivo] | [descripcion] |
+| V40__caja_arqueo.sql | ALTER planilla + pantalla arqueo |
+| dominio/operacion/Planilla.java | campos de arqueo |
+| servicio/ArqueoService.java | NUEVO — resumen/cierre/reapertura/PDF |
+| web/ArqueoBean.java + webapp/arqueo.xhtml | NUEVOS |
+| WEB-INF/plantilla.xhtml + smoke | menu + cobertura |
+| (transversal) *.xhtml nuevos | fix convertDateTime type |
 
 ## Pruebas Previstas
 
-- [ ] Prueba 1
-- [ ] Prueba 2
+- [ ] Build OK
+- [ ] V40 rollback + deploy + smoke (26/26)
+- [ ] CajaService intacto (caja renderiza)
 
 ## Riesgos
 
-[Riesgos de implementacion]
+- Dominio de caja: mitigado extendiendo la planilla y sin tocar CajaService.
 
 ## Cambios De Datos
 
-Sin cambios.
-
+V40 ALTER planilla + pantalla arqueo.

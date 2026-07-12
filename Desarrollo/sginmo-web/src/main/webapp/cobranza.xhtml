@@ -35,7 +35,7 @@
             <p:column headerText="Cliente"><h:outputText value="#{c.clienteNombre}"/></p:column>
             <p:column headerText="Cuota" style="width:5rem;"><h:outputText value="#{c.numeroCuota}"/></p:column>
             <p:column headerText="Vencimiento" style="width:8rem;">
-                <h:outputText value="#{c.fechaVencimiento}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                <h:outputText value="#{c.fechaVencimiento}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
             </p:column>
             <p:column headerText="Dias" style="width:5rem; text-align:right;">
                 <span style="color:#e63946; font-weight:600;">#{c.diasMora}</span>
@@ -68,7 +68,7 @@
                 <p:tabView>
                     <p:tab title="Gestiones">
                         <p:dataTable var="g" value="#{moraBean.gestiones}" emptyMessage="Sin gestiones" rows="5" paginator="true">
-                            <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{g.fecha}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                            <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{g.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
                             <p:column headerText="Resultado" style="width:8rem;">#{g.resultado}</p:column>
                             <p:column headerText="Comentario">#{g.comentario}</p:column>
                             <p:column headerText="Prox. accion" style="width:9rem;">#{g.proximaAccion}</p:column>
@@ -90,7 +90,7 @@
                     </p:tab>
                     <p:tab title="Promesas de pago">
                         <p:dataTable var="pp" value="#{moraBean.promesas}" emptyMessage="Sin promesas" rows="5" paginator="true">
-                            <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{pp.fechaPromesa}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                            <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{pp.fechaPromesa}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
                             <p:column headerText="Monto" style="width:9rem; text-align:right;"><h:outputText value="#{pp.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
                             <p:column headerText="Estado" style="width:8rem;"><p:tag value="#{pp.estado}" severity="#{pp.estado eq 'CUMPLIDA' ? 'success' : (pp.estado eq 'INCUMPLIDA' ? 'danger' : 'warning')}"/></p:column>
                             <p:column headerText="Accion" style="width:11rem;" exportable="false">

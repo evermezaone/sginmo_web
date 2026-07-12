@@ -25,7 +25,7 @@
             </f:facet>
             <p:column headerText="Nro" style="width:7rem;"><h:outputText value="#{c.cobro}"/></p:column>
             <p:column headerText="Fecha" style="width:8rem;">
-                <h:outputText value="#{c.fecha}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                <h:outputText value="#{c.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
             </p:column>
             <p:column headerText="Cliente"><h:outputText value="#{c.cliente}"/></p:column>
             <p:column headerText="Moneda" style="width:8rem;"><h:outputText value="#{c.moneda}"/></p:column>

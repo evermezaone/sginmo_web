@@ -86,6 +86,8 @@
                       rendered="#{sesionUsuario.puede('cobranza','VER')}"><i class="pi pi-exclamation-circle"></i> Mora y cobranza</h:outputLink>
         <h:outputLink styleClass="item" value="comprobantes.xhtml"
                       rendered="#{sesionUsuario.puede('comprobantes','VER')}"><i class="pi pi-file-pdf"></i> Comprobantes</h:outputLink>
+        <h:outputLink styleClass="item" value="arqueo.xhtml"
+                      rendered="#{sesionUsuario.puede('arqueo','VER')}"><i class="pi pi-calculator"></i> Arqueo de caja</h:outputLink>
         <h:outputLink styleClass="item" value="ingresos-egresos.xhtml"
                       rendered="#{sesionUsuario.puede('ingresos-egresos','VER')}"><i class="pi pi-arrow-right-arrow-left"></i> Ingresos/Egresos</h:outputLink>
         <h:outputLink styleClass="item" value="liquidaciones.xhtml"

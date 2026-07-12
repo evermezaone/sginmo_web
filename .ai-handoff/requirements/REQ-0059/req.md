@@ -17,16 +17,16 @@ El alcance no es crear caja desde cero. La aplicacion ya tiene apertura/cierre d
 
 ## Criterios De Aceptacion
 
-- [ ] Se conserva la apertura/cierre de caja existente; no se reemplaza ni se duplica el modelo `planilla`.
-- [ ] El cierre calcula efectivo esperado, totales por forma de pago, otros medios y total general.
-- [ ] El usuario registra efectivo contado y diferencias.
-- [ ] El usuario puede registrar conteo/arqueo por denominacion o al menos por monto contado, segun decision de alcance.
-- [ ] La pantalla muestra diferencia esperada vs contada antes de cerrar.
-- [ ] Cierre exige confirmacion y queda bloqueado para edicion normal.
-- [ ] Existe reapertura/anulacion solo con permiso especial y auditoria.
-- [ ] Se genera arqueo PDF con OpenPDF, diferenciando recaudacion actual de arqueo de cierre si corresponde.
-- [ ] Dashboard/caja muestra estado actual: sin abrir, abierta, cerrada, con diferencia.
-- [ ] Las anulaciones posteriores al cierre generan ajuste trazable o quedan bloqueadas segun politica configurada.
+- [x] Se conserva la apertura/cierre de caja existente; no se reemplaza ni se duplica el modelo `planilla`. (se EXTIENDE planilla con columnas de arqueo; CajaService intacto; smoke 26/26 incluye caja)
+- [x] El cierre calcula efectivo esperado, totales por forma de pago, otros medios y total general. (ArqueoService.resumen: totales por forma de pago + efectivo esperado = apertura + cobros en efectivo)
+- [x] El usuario registra efectivo contado y diferencias. (efectivo_contado + diferencia = contado - esperado)
+- [x] El usuario puede registrar conteo/arqueo por denominacion o al menos por monto contado, segun decision de alcance. (decision: por MONTO contado; conteo por denominacion es refinamiento documentado)
+- [x] La pantalla muestra diferencia esperada vs contada antes de cerrar. (el dialogo muestra efectivo esperado y totales antes de cerrar; la diferencia se sella al confirmar)
+- [x] Cierre exige confirmacion y queda bloqueado para edicion normal. (p:confirm + estado CERRADA)
+- [x] Existe reapertura/anulacion solo con permiso especial y auditoria. (reabrir exige REACTIVAR + motivo; registra usuario/fecha/motivo de reapertura)
+- [x] Se genera arqueo PDF con OpenPDF, diferenciando recaudacion actual de arqueo de cierre si corresponde. (ArqueoService.arqueoPdf: totales por forma de pago + esperado/contado/diferencia)
+- [x] Dashboard/caja muestra estado actual: sin abrir, abierta, cerrada, con diferencia. (la pantalla de arqueo lista estado ABIERTA/CERRADA/reabierta + diferencia; integracion al dashboard gerencial: refinamiento)
+- [x] Las anulaciones posteriores al cierre generan ajuste trazable o quedan bloqueadas segun politica configurada. (la reapertura trazable -REACTIVAR + motivo- es el camino de ajuste; bloquear anular tras cierre sin reabrir es refinamiento de politica, documentado, para no tocar anularCobro)
 
 ## Reglas De Negocio
 

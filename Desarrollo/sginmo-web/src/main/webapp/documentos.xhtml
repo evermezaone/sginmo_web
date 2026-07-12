@@ -33,7 +33,7 @@
                 </div>
             </f:facet>
             <p:column headerText="Fecha" style="width:8rem;">
-                <h:outputText value="#{d.fechaCreacion}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                <h:outputText value="#{d.fechaCreacion}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/></h:outputText>
             </p:column>
             <p:column headerText="Tipo" style="width:8rem;"><p:tag value="#{d.tipo}"/></p:column>
             <p:column headerText="Entidad" style="width:9rem;">
@@ -43,7 +43,7 @@
             <p:column headerText="Archivo"><h:outputText value="#{d.nombreOriginal}"/></p:column>
             <p:column headerText="Vence" style="width:8rem;">
                 <h:outputText value="#{d.fechaVencimiento}" rendered="#{not empty d.fechaVencimiento}">
-                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    <f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/>
                 </h:outputText>
             </p:column>
             <p:column headerText="Estado" style="width:7rem; text-align:center;">

@@ -1,0 +1,103 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{arqueoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Arqueo de caja</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:dataTable id="tabla" var="p" value="#{arqueoBean.planillas}" paginator="true" rows="12"
+                     emptyMessage="No hay planillas de caja">
+            <p:column headerText="Nro" style="width:6rem;"><h:outputText value="#{p.id}"/></p:column>
+            <p:column headerText="Apertura" style="width:8rem;">
+                <h:outputText value="#{p.fechaApertura}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+            </p:column>
+            <p:column headerText="Estado" style="width:7rem; text-align:center;">
+                <p:tag value="#{p.estado}" severity="#{p.estado eq 'ABIERTA' ? 'warning' : 'success'}"/>
+                <p:tag value="reabierta" severity="danger" rendered="#{p.reabierta}" style="margin-left:.3rem;"/>
+            </p:column>
+            <p:column headerText="Cobrado" style="width:9rem; text-align:right;">
+                <h:outputText value="#{p.montoCobro}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Diferencia" style="width:9rem; text-align:right;">
+                <h:outputText value="#{p.diferencia}" rendered="#{not empty p.diferencia}"
+                              styleClass="#{p.diferencia lt 0 ? 'txt-alerta' : ''}">
+                    <f:convertNumber groupingUsed="true" maxFractionDigits="0"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Acciones" style="width:12rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-calculator" title="Arqueo y cerrar" styleClass="ui-button-flat"
+                                 rendered="#{p.estado eq 'ABIERTA' and sesionUsuario.puede('caja','EDITAR')}"
+                                 actionListener="#{arqueoBean.abrirArqueo(p)}" update=":frmArqueo" oncomplete="PF('dlgArqueo').show()"/>
+                <p:commandButton icon="pi pi-file-pdf" title="Arqueo PDF" styleClass="ui-button-flat" ajax="false"
+                                 rendered="#{sesionUsuario.puede('caja','EXPORTAR')}">
+                    <p:fileDownload value="#{arqueoBean.arqueoPdf(p)}"/>
+                </p:commandButton>
+                <p:commandButton icon="pi pi-lock-open" title="Reabrir" styleClass="ui-button-flat"
+                                 rendered="#{p.estado eq 'CERRADA' and sesionUsuario.puede('caja','REACTIVAR')}"
+                                 actionListener="#{arqueoBean.prepararReapertura(p)}" update=":frmReabrir" oncomplete="PF('dlgReabrir').show()"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Arqueo de cierre" widgetVar="dlgArqueo" modal="true" resizable="false"
+              responsive="true" width="560" dynamic="true" closeOnEscape="true">
+        <h:form id="frmArqueo">
+            <p:messages id="msjA" showDetail="true" closable="true"/>
+            <ui:fragment rendered="#{not empty arqueoBean.resumen}">
+                <p>Planilla #{arqueoBean.seleccionada.id} · Apertura
+                    <h:outputText value="#{arqueoBean.resumen.montoApertura}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p>
+                <table class="tp" style="width:100%; border-collapse:collapse; margin:.5rem 0;">
+                    <thead><tr><th style="text-align:left;">Forma de pago</th><th style="text-align:right;">Total</th></tr></thead>
+                    <tbody>
+                        <ui:repeat value="#{arqueoBean.resumen.lineas}" var="l">
+                            <tr><td>#{l.forma}</td><td style="text-align:right;"><h:outputText value="#{l.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td></tr>
+                        </ui:repeat>
+                    </tbody>
+                </table>
+                <p><strong>Efectivo esperado:</strong>
+                    <h:outputText value="#{arqueoBean.resumen.efectivoEsperado}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                    (apertura + cobros en efectivo)</p>
+                <div class="fila-2">
+                    <div class="campo"><label>Efectivo contado *</label>
+                        <p:inputNumber value="#{arqueoBean.efectivoContado}" decimalPlaces="0" style="width:100%;"/></div>
+                    <div class="campo"><label>Observacion</label>
+                        <p:inputText value="#{arqueoBean.observacion}" maxlength="300" style="width:100%;"/></div>
+                </div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgArqueo').hide()" styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Cerrar caja" icon="pi pi-check" actionListener="#{arqueoBean.cerrar()}"
+                                     update="msjA :frmLista:tabla :frmLista:mensajes">
+                        <p:confirm header="Confirmar cierre" message="Cerrar la caja con arqueo? Queda bloqueada para edicion normal." icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+
+    <p:dialog header="Reabrir caja" widgetVar="dlgReabrir" modal="true" resizable="false" width="480" dynamic="true">
+        <h:form id="frmReabrir">
+            <p:messages id="msjR" closable="true"/>
+            <ui:fragment rendered="#{not empty arqueoBean.seleccionada}">
+                <div class="campo"><label>Motivo de reapertura *</label>
+                    <p:inputTextarea value="#{arqueoBean.motivoReapertura}" rows="3" style="width:100%;" maxlength="250"/></div>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cancelar" type="button" onclick="PF('dlgReabrir').hide()" styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
+                    <p:commandButton value="Reabrir" icon="pi pi-lock-open" styleClass="ui-button-danger"
+                                     actionListener="#{arqueoBean.reabrir()}" update="msjR :frmLista:tabla :frmLista:mensajes"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+
+    <p:confirmDialog global="true" showEffect="fade">
+        <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes"/>
+        <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+    </p:confirmDialog>
+</ui:define>
+</ui:composition>

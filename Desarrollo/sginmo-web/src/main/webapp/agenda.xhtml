@@ -38,7 +38,7 @@
             </f:facet>
             <p:column headerText="Fecha" sortBy="#{e.fechaEvento}" style="width:8rem;">
                 <h:outputText value="#{e.fechaEvento}">
-                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    <f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/>
                 </h:outputText>
             </p:column>
             <p:column headerText="Tipo" style="width:8rem;">

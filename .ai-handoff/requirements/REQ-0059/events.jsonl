@@ -1,2 +1,5 @@
 ﻿
 
+{"ts":"2026-07-12T06:00:22Z","actor":"claude","evento":"implementado","nota":"V40 arqueo (extiende planilla) + ArqueoService/Bean/xhtml + fix transversal convertDateTime type"}
+{"ts":"2026-07-12T06:00:22Z","actor":"claude","evento":"bug_corregido","nota":"f:convertDateTime sin type=localDate fallaba con datos; corregido en todas las pantallas nuevas"}
+{"ts":"2026-07-12T06:00:22Z","actor":"claude","evento":"desplegado","nota":"Flyway V40 success, smoke 26/26 render OK"}

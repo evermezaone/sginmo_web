@@ -55,6 +55,24 @@ public class Planilla extends Auditable implements Serializable {
     @Column(name = "estado", length = 10, nullable = false)
     private String estado = "ABIERTA";
 
+    // ── REQ-0059: arqueo y cierre controlado ──
+    @Column(name = "efectivo_esperado", precision = 15, scale = 2)
+    private BigDecimal efectivoEsperado;
+    @Column(name = "efectivo_contado", precision = 15, scale = 2)
+    private BigDecimal efectivoContado;
+    @Column(name = "diferencia", precision = 15, scale = 2)
+    private BigDecimal diferencia;
+    @Column(name = "observacion_cierre", length = 300)
+    private String observacionCierre;
+    @Column(name = "reabierta")
+    private Boolean reabierta = Boolean.FALSE;
+    @Column(name = "usuario_reapertura", length = 20)
+    private String usuarioReapertura;
+    @Column(name = "fecha_reapertura")
+    private LocalDateTime fechaReapertura;
+    @Column(name = "motivo_reapertura", length = 250)
+    private String motivoReapertura;
+
     public Long getId() { return id; }
     public Long getTenant() { return tenant; }
     public void setTenant(Long v) { this.tenant = v; }
@@ -78,6 +96,23 @@ public class Planilla extends Auditable implements Serializable {
     public void setMontoCobro(BigDecimal v) { this.montoCobro = v; }
     public String getEstado() { return estado; }
     public void setEstado(String v) { this.estado = v; }
+
+    public BigDecimal getEfectivoEsperado() { return efectivoEsperado; }
+    public void setEfectivoEsperado(BigDecimal v) { this.efectivoEsperado = v; }
+    public BigDecimal getEfectivoContado() { return efectivoContado; }
+    public void setEfectivoContado(BigDecimal v) { this.efectivoContado = v; }
+    public BigDecimal getDiferencia() { return diferencia; }
+    public void setDiferencia(BigDecimal v) { this.diferencia = v; }
+    public String getObservacionCierre() { return observacionCierre; }
+    public void setObservacionCierre(String v) { this.observacionCierre = v; }
+    public Boolean getReabierta() { return reabierta; }
+    public void setReabierta(Boolean v) { this.reabierta = v; }
+    public String getUsuarioReapertura() { return usuarioReapertura; }
+    public void setUsuarioReapertura(String v) { this.usuarioReapertura = v; }
+    public LocalDateTime getFechaReapertura() { return fechaReapertura; }
+    public void setFechaReapertura(LocalDateTime v) { this.fechaReapertura = v; }
+    public String getMotivoReapertura() { return motivoReapertura; }
+    public void setMotivoReapertura(String v) { this.motivoReapertura = v; }
 
     @Override
     public boolean equals(Object o) {
