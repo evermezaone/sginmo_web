@@ -1,0 +1,125 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{moraBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Mora y cobranza</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:dataTable id="tabla" var="c" value="#{moraBean.cartera}" paginator="true" rows="15"
+                     emptyMessage="Sin cartera vencida">
+            <f:facet name="header">
+                <div class="barra-tabla" style="gap:.5rem; flex-wrap:wrap; align-items:flex-end;">
+                    <div class="campo"><label>Dias mora ≥</label>
+                        <p:inputNumber value="#{moraBean.diasMin}" decimalPlaces="0" style="width:6rem;"/></div>
+                    <div class="campo"><label>Saldo ≥</label>
+                        <p:inputNumber value="#{moraBean.montoMin}" decimalPlaces="0" style="width:8rem;"/></div>
+                    <div class="campo"><label>Moneda</label>
+                        <p:selectOneMenu value="#{moraBean.monedaId}" style="width:10rem;">
+                            <f:selectItem itemLabel="Todas" itemValue="#{null}"/>
+                            <f:selectItems value="#{moraBean.monedas}" var="m" itemLabel="#{m.descripcion}" itemValue="#{m.id}"/>
+                        </p:selectOneMenu></div>
+                    <p:commandButton value="Buscar" icon="pi pi-search" action="#{moraBean.buscar()}" update="tabla"/>
+                    <span style="flex:1"></span>
+                    <p:commandButton value="CSV" icon="pi pi-file" rendered="#{sesionUsuario.puede('cobranza','EXPORTAR')}" ajax="false">
+                        <p:dataExporter type="csv" target="tabla" fileName="cartera_vencida"/>
+                    </p:commandButton>
+                </div>
+            </f:facet>
+            <p:column headerText="Operacion" style="width:7rem;"><h:outputText value="#{c.operacion}"/></p:column>
+            <p:column headerText="Cliente"><h:outputText value="#{c.clienteNombre}"/></p:column>
+            <p:column headerText="Cuota" style="width:5rem;"><h:outputText value="#{c.numeroCuota}"/></p:column>
+            <p:column headerText="Vencimiento" style="width:8rem;">
+                <h:outputText value="#{c.fechaVencimiento}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+            </p:column>
+            <p:column headerText="Dias" style="width:5rem; text-align:right;">
+                <span style="color:#e63946; font-weight:600;">#{c.diasMora}</span>
+            </p:column>
+            <p:column headerText="Saldo" style="width:9rem; text-align:right;">
+                <h:outputText value="#{c.saldo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Mora" style="width:9rem; text-align:right;">
+                <h:outputText value="#{c.mora}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Accion" style="width:6rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-briefcase" title="Gestionar" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('cobranza','EDITAR')}"
+                                 actionListener="#{moraBean.gestionar(c)}"
+                                 update=":frmG" oncomplete="PF('dlgG').show()"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Gestion de cobranza" widgetVar="dlgG" modal="true" resizable="false"
+              responsive="true" width="720" dynamic="true" closeOnEscape="true">
+        <h:form id="frmG">
+            <p:messages id="msjG" showDetail="true" closable="true"/>
+            <ui:fragment rendered="#{not empty moraBean.seleccionada}">
+                <p style="margin:.2rem 0 .8rem;">
+                    <strong>#{moraBean.seleccionada.clienteNombre}</strong> ·
+                    Operacion #{moraBean.seleccionada.operacion} · Cuota #{moraBean.seleccionada.numeroCuota} ·
+                    #{moraBean.seleccionada.diasMora} dias de mora
+                </p>
+                <p:tabView>
+                    <p:tab title="Gestiones">
+                        <p:dataTable var="g" value="#{moraBean.gestiones}" emptyMessage="Sin gestiones" rows="5" paginator="true">
+                            <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{g.fecha}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                            <p:column headerText="Resultado" style="width:8rem;">#{g.resultado}</p:column>
+                            <p:column headerText="Comentario">#{g.comentario}</p:column>
+                            <p:column headerText="Prox. accion" style="width:9rem;">#{g.proximaAccion}</p:column>
+                        </p:dataTable>
+                        <div class="fila-2" style="margin-top:.8rem;">
+                            <div class="campo"><label>Resultado *</label>
+                                <p:selectOneMenu value="#{moraBean.gestion.resultado}">
+                                    <f:selectItems value="#{moraBean.resultados}" var="r" itemLabel="#{r}" itemValue="#{r}"/>
+                                </p:selectOneMenu></div>
+                            <div class="campo"><label>Proxima fecha</label>
+                                <p:datePicker value="#{moraBean.gestion.proximaFecha}" pattern="dd/MM/yyyy" showIcon="true"/></div>
+                        </div>
+                        <div class="campo"><label>Comentario</label>
+                            <p:inputTextarea value="#{moraBean.gestion.comentario}" rows="2" style="width:100%;" maxlength="500"/></div>
+                        <div class="campo"><label>Proxima accion</label>
+                            <p:inputText value="#{moraBean.gestion.proximaAccion}" style="width:100%;" maxlength="250"/></div>
+                        <p:commandButton value="Registrar gestion" icon="pi pi-plus"
+                                         actionListener="#{moraBean.guardarGestion()}" update="frmG"/>
+                    </p:tab>
+                    <p:tab title="Promesas de pago">
+                        <p:dataTable var="pp" value="#{moraBean.promesas}" emptyMessage="Sin promesas" rows="5" paginator="true">
+                            <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{pp.fechaPromesa}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                            <p:column headerText="Monto" style="width:9rem; text-align:right;"><h:outputText value="#{pp.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                            <p:column headerText="Estado" style="width:8rem;"><p:tag value="#{pp.estado}" severity="#{pp.estado eq 'CUMPLIDA' ? 'success' : (pp.estado eq 'INCUMPLIDA' ? 'danger' : 'warning')}"/></p:column>
+                            <p:column headerText="Accion" style="width:11rem;" exportable="false">
+                                <p:commandButton value="Cumplida" styleClass="ui-button-flat" rendered="#{pp.estado eq 'PENDIENTE'}"
+                                                 actionListener="#{moraBean.cambiarEstadoPromesa(pp,'CUMPLIDA')}" update="frmG"/>
+                                <p:commandButton value="Incumplida" styleClass="ui-button-flat" rendered="#{pp.estado eq 'PENDIENTE'}"
+                                                 actionListener="#{moraBean.cambiarEstadoPromesa(pp,'INCUMPLIDA')}" update="frmG"/>
+                            </p:column>
+                        </p:dataTable>
+                        <div class="fila-2" style="margin-top:.8rem;">
+                            <div class="campo"><label>Fecha promesa *</label>
+                                <p:datePicker value="#{moraBean.promesa.fechaPromesa}" pattern="dd/MM/yyyy" showIcon="true"/></div>
+                            <div class="campo"><label>Monto *</label>
+                                <p:inputNumber value="#{moraBean.promesa.monto}" decimalPlaces="0" style="width:100%;"/></div>
+                        </div>
+                        <div class="campo"><label>Comentario</label>
+                            <p:inputText value="#{moraBean.promesa.comentario}" style="width:100%;" maxlength="500"/></div>
+                        <p:commandButton value="Registrar promesa" icon="pi pi-plus"
+                                         actionListener="#{moraBean.guardarPromesa()}" update="frmG"/>
+                        <p style="color:#9ca3af; font-size:.82rem; margin-top:.4rem;">
+                            La promesa no es un pago ni cambia el estado de la cuota. Las promesas vencidas aparecen en la Agenda.
+                        </p>
+                    </p:tab>
+                </p:tabView>
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cerrar" type="button" onclick="PF('dlgG').hide()" styleClass="ui-button-secondary"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

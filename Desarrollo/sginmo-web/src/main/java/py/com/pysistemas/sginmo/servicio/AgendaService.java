@@ -160,5 +160,17 @@ public class AgendaService {
           + "  AND o.fecha_fin_contrato BETWEEN current_date AND current_date + :dias "
           + "ON CONFLICT (tenant, tipo, origen_tabla, origen_id) WHERE origen_id IS NOT NULL DO NOTHING")
           .setParameter("dias", DIAS_ALERTA).executeUpdate();
+
+        // REQ-0057: promesas de pago incumplidas (PENDIENTE con fecha vencida) -> alerta en la agenda.
+        // Idempotente (dedup por origen). Solo lee promesa_pago; no modifica la promesa ni la cuota.
+        em.createNativeQuery(
+            "INSERT INTO agenda_evento (tenant, tipo, titulo, descripcion, fecha_evento, prioridad, "
+          + "  estado, origen_tabla, origen_id, operacion, usuario_creacion, fecha_creacion) "
+          + "SELECT pp.tenant, 'PROMESA', 'Promesa de pago incumplida', "
+          + "  'Promesa por ' || pp.monto || ' vencio el ' || pp.fecha_promesa, pp.fecha_promesa, 'ALTA', "
+          + "  'PENDIENTE', 'promesa_pago', pp.promesa_pago, pp.operacion, 'sistema', now() "
+          + "FROM promesa_pago pp WHERE pp.estado = 'PENDIENTE' AND pp.fecha_promesa < current_date "
+          + "ON CONFLICT (tenant, tipo, origen_tabla, origen_id) WHERE origen_id IS NOT NULL DO NOTHING")
+          .executeUpdate();
     }
 }

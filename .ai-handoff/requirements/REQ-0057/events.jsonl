@@ -1,2 +1,4 @@
 ﻿
 
+{"ts":"2026-07-12T04:57:58Z","actor":"claude","evento":"implementado","nota":"V38 gestion_cobranza + promesa_pago + MoraService (cartera via f_mora_cuota) + agenda promesas vencidas"}
+{"ts":"2026-07-12T04:57:58Z","actor":"claude","evento":"desplegado","nota":"Flyway V38 success, smoke 24/24 render OK"}
