@@ -1,2 +1,4 @@
 ﻿
 
+{"ts":"2026-07-12T05:25:08Z","actor":"claude","evento":"implementado","nota":"V39 pantalla + ComprobanteService.reciboCobro (OpenPDF, sin Jasper) + pantalla comprobantes"}
+{"ts":"2026-07-12T05:25:08Z","actor":"claude","evento":"desplegado","nota":"Flyway V39 success, smoke 25/25 render OK"}

@@ -1,0 +1,51 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{comprobanteBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Recibos y comprobantes</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:dataTable id="tabla" var="c" value="#{comprobanteBean.cobros}" paginator="true" rows="15"
+                     emptyMessage="No hay cobros registrados">
+            <f:facet name="header">
+                <div class="barra-tabla" style="gap:.5rem; align-items:center;">
+                    <span style="flex:1"></span>
+                    <p:selectOneMenu value="#{comprobanteBean.filtroEstado}" style="width:11rem;">
+                        <f:selectItem itemLabel="Todos los estados" itemValue="#{null}"/>
+                        <f:selectItems value="#{comprobanteBean.estados}" var="s" itemLabel="#{s}" itemValue="#{s}"/>
+                        <p:ajax event="change" listener="#{comprobanteBean.buscar()}" update="tabla"/>
+                    </p:selectOneMenu>
+                </div>
+            </f:facet>
+            <p:column headerText="Nro" style="width:7rem;"><h:outputText value="#{c.cobro}"/></p:column>
+            <p:column headerText="Fecha" style="width:8rem;">
+                <h:outputText value="#{c.fecha}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+            </p:column>
+            <p:column headerText="Cliente"><h:outputText value="#{c.cliente}"/></p:column>
+            <p:column headerText="Moneda" style="width:8rem;"><h:outputText value="#{c.moneda}"/></p:column>
+            <p:column headerText="Monto" style="width:10rem; text-align:right;">
+                <h:outputText value="#{c.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Estado" style="width:7rem; text-align:center;">
+                <p:tag value="#{c.estado}" severity="#{c.estado eq 'ACTIVO' ? 'success' : 'danger'}"/>
+            </p:column>
+            <p:column headerText="Recibo" style="width:7rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-file-pdf" title="Recibo PDF" styleClass="ui-button-flat" ajax="false"
+                                 rendered="#{sesionUsuario.puede('comprobantes','EXPORTAR')}">
+                    <p:fileDownload value="#{comprobanteBean.reciboCobro(c)}"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+        <p style="color:#9ca3af; font-size:.85rem; margin-top:.5rem;">
+            Recibos generados con OpenPDF (sin JasperReports). El recibo se regenera desde el cobro
+            registrado (reimpresion trazable por numero, fecha y usuario emisor).
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>
