@@ -1,0 +1,69 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{rolPlantillaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Plantillas de roles</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <div class="barra-tabla" style="gap:.6rem; flex-wrap:wrap; align-items:flex-end;">
+            <div class="campo"><label>Plantilla</label>
+                <p:selectOneMenu value="#{rolPlantillaBean.plantillaId}" style="width:16rem;">
+                    <f:selectItem itemLabel="Elegir..." itemValue="#{null}"/>
+                    <f:selectItems value="#{rolPlantillaBean.plantillas}" var="p" itemLabel="#{p.codigo} — #{p.descripcion}" itemValue="#{p.id}"/>
+                </p:selectOneMenu></div>
+            <div class="campo"><label>Grupo destino</label>
+                <p:selectOneMenu value="#{rolPlantillaBean.grupoId}" style="width:16rem;">
+                    <f:selectItem itemLabel="Elegir..." itemValue="#{null}"/>
+                    <f:selectItems value="#{rolPlantillaBean.grupos}" var="g" itemLabel="#{g.codigo} — #{g.descripcion}" itemValue="#{g.id}"/>
+                </p:selectOneMenu></div>
+            <p:commandButton value="Ver diferencias" icon="pi pi-search" action="#{rolPlantillaBean.verDiff()}" update="frm"/>
+        </div>
+
+        <h:panelGroup rendered="#{not empty rolPlantillaBean.diff}" layout="block" style="margin-top:1rem;">
+            <div class="fila-2">
+                <div>
+                    <h3 style="color:#2a9d8f;">Se agregarian (#{rolPlantillaBean.diff.agregar.size()})</h3>
+                    <ul>
+                        <ui:repeat value="#{rolPlantillaBean.diff.agregar}" var="a"><li>#{a}</li></ui:repeat>
+                    </ul>
+                    <p style="color:#9ca3af;" rendered="#{empty rolPlantillaBean.diff.agregar}">Nada para agregar.</p>
+                </div>
+                <div>
+                    <h3 style="color:#e63946;">Se quitarian si reemplaza (#{rolPlantillaBean.diff.quitar.size()})</h3>
+                    <ul>
+                        <ui:repeat value="#{rolPlantillaBean.diff.quitar}" var="q"><li>#{q}</li></ui:repeat>
+                    </ul>
+                    <p style="color:#9ca3af;" rendered="#{empty rolPlantillaBean.diff.quitar}">Nada extra en el grupo.</p>
+                </div>
+            </div>
+            <div style="margin-top:.8rem; display:flex; gap:.6rem; align-items:center;">
+                <p:selectBooleanCheckbox value="#{rolPlantillaBean.reemplazar}"/>
+                <span>Reemplazar (dejar el grupo EXACTAMENTE igual a la plantilla; quita lo que no este)</span>
+            </div>
+            <div style="margin-top:.6rem;">
+                <p:commandButton value="Aplicar al grupo" icon="pi pi-check"
+                                 rendered="#{sesionUsuario.puede('grupos','EDITAR')}"
+                                 action="#{rolPlantillaBean.aplicar()}" update="frm">
+                    <p:confirm header="Confirmar" message="Aplicar la plantilla al grupo? Los cambios impactan la autorizacion real (backend)." icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </div>
+        </h:panelGroup>
+
+        <p style="color:#9ca3af; font-size:.85rem; margin-top:1rem;">
+            Aplicar una plantilla solo escribe permisos de grupo (autorizacion real del backend). Nunca
+            cambia el perfil del usuario ni concede SUPERADMIN. Sin "Reemplazar", solo agrega (no borra ajustes).
+        </p>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Si" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+</ui:define>
+</ui:composition>

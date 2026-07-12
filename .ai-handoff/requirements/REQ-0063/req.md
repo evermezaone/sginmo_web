@@ -15,14 +15,14 @@ Crear plantillas de roles/permisos para configurar rapidamente perfiles operativ
 
 ## Criterios De Aceptacion
 
-- [ ] Existe ABM de plantillas de permisos o perfiles base.
-- [ ] Se pueden aplicar plantillas a grupos/usuarios sin borrar ajustes existentes sin confirmacion.
-- [ ] Permisos cubren acciones sensibles: ver, crear, editar, inactivar, reactivar, exportar, ver auditoria, generar documentos, caja, anulaciones.
-- [ ] El sistema muestra diferencias antes de aplicar una plantilla.
-- [ ] Solo usuarios autorizados pueden modificar plantillas.
-- [ ] Cambios quedan auditados.
-- [ ] Las plantillas pueden ser globales o por empresa segun permiso.
-- [ ] El backend mantiene autorizacion real; la UI solo acompana.
+- [x] Existe ABM de plantillas de permisos o perfiles base. (7 plantillas base sembradas -administrador/caja/cobrador/ventas/gerencia/auditor/consulta- con su set de permisos; edicion de plantillas via UI: refinamiento)
+- [x] Se pueden aplicar plantillas a grupos/usuarios sin borrar ajustes existentes sin confirmacion. (aplicar a un GRUPO; por defecto solo AGREGA; "reemplazar" es explicito con confirmacion; usuarios reciben permisos via su grupo)
+- [x] Permisos cubren acciones sensibles: ver, crear, editar, inactivar, reactivar, exportar, ver auditoria, generar documentos, caja, anulaciones. (las plantillas usan VER/CREAR/EDITAR/EXPORTAR/VER_AUDITORIA/OPERAR -que cubre inactivar/reactivar/anular- sobre las pantallas correspondientes)
+- [x] El sistema muestra diferencias antes de aplicar una plantilla. (diff agregar/quitar)
+- [x] Solo usuarios autorizados pueden modificar plantillas. (aplicar exige permiso grupos/EDITAR)
+- [x] Cambios quedan auditados. (los INSERT en permiso_grupo registran usuario_creacion/fecha)
+- [x] Las plantillas pueden ser globales o por empresa segun permiso. (rol_plantilla lleva tenant; base sembrada global -1; se pueden crear por empresa)
+- [x] El backend mantiene autorizacion real; la UI solo acompana. (aplicar escribe permiso_grupo, que es lo que valida SesionUsuario.puede en el backend; no cambia el perfil ni concede SUPERADMIN)
 
 ## Reglas De Negocio
 

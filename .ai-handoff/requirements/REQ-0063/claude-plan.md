@@ -1,28 +1,33 @@
-﻿# REQ-0063 - Plan De Implementacion
+# REQ-0063 - Plan De Implementacion
 
 **Estado:** APROBADO_PARA_DESARROLLO
-**Fecha:** 2026-07-11
+**Fecha:** 2026-07-12
 
 ## Estrategia
 
-[Plan tecnico]
+Plantillas = set de (pantalla, accion). Aplicar a un grupo escribe permiso_grupo (autorizacion real).
+Diff antes de aplicar. 7 perfiles base sembrados. Nunca toca el perfil del usuario.
 
 ## Archivos A Modificar
 
 | Archivo | Cambio |
 |---|---|
-| [archivo] | [descripcion] |
+| V44__roles_plantilla.sql | 2 tablas + seed + RLS + pantalla |
+| servicio/RolPlantillaService.java | NUEVO — diff/aplicar |
+| web/RolPlantillaBean.java + webapp/roles-plantilla.xhtml | NUEVOS |
+| WEB-INF/plantilla.xhtml + smoke | menu + cobertura |
 
 ## Pruebas Previstas
 
-- [ ] Prueba 1
-- [ ] Prueba 2
+- [ ] Build OK
+- [ ] V44 rollback (tablas + seed + pantalla)
+- [ ] Deploy + smoke
+- [ ] Autorizacion real (permiso_grupo) + no superadmin
 
 ## Riesgos
 
-[Riesgos de implementacion]
+- Seguridad: mitigado (escribe permiso_grupo, no perfil; aislamiento por tenant).
 
 ## Cambios De Datos
 
-Sin cambios.
-
+V44 crea rol_plantilla + rol_plantilla_permiso + seed + pantalla.
