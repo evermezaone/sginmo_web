@@ -1,0 +1,2 @@
+{"ts":"2026-07-12T17:05:00Z","actor":"claude","evento":"implementado","nota":"V49 pantalla rentabilidad; RentabilidadService (ingresos/egresos por tipo via articulo.aplicacion, neto, margen, deposito como pasivo, ranking de activos); RentabilidadBean + rentabilidad.xhtml"}
+{"ts":"2026-07-12T17:05:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; Flyway V49; smoke 33/33 (rentabilidad 200)"}

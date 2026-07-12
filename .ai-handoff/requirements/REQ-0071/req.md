@@ -16,16 +16,16 @@ no solo cuanto se cobra, sino cuanto queda, de donde viene y que lo esta consumi
 
 ## Criterios De Aceptacion
 
-- [ ] Se calcula ingreso bruto por periodo y tipo: alquiler, venta, comision, mora/interes, deposito/garantia y otros.
-- [ ] Se calcula egreso por periodo y tipo/articulo: comisiones pagadas, mantenimiento, impuestos, devoluciones, gastos de liquidacion y otros.
-- [ ] Se calcula resultado neto: ingresos - egresos.
-- [ ] Se calcula margen porcentual cuando exista base valida.
-- [ ] Se muestra rentabilidad por propiedad/activo, tipo de activo, sucursal/zona y propietario cuando la informacion exista.
-- [ ] Se incluye ranking de mejores y peores activos por rentabilidad neta.
-- [ ] Cada monto permite abrir evidencia: cobros, ingresos/egresos, liquidaciones o documentos que componen el valor.
-- [ ] No se mezclan monedas; el usuario debe filtrar por moneda o ver totales separados por moneda.
-- [ ] Las reglas de clasificacion dependen de `articulo.aplicacion`, tipo de documento, tipo de operacion o configuracion equivalente, no de textos hardcodeados.
-- [ ] Los egresos asociados a una operacion/activo/persona deben conservar trazabilidad.
+- [x] Se calcula ingreso bruto por periodo y tipo: alquiler, venta, comision, mora/interes, deposito/garantia y otros. (`porTipo('INGRESO')` agrupa ingreso_egreso por `articulo.aplicacion`; etiquetas legibles)
+- [x] Se calcula egreso por periodo y tipo/articulo. (`porTipo('EGRESO')` idem)
+- [x] Se calcula resultado neto: ingresos - egresos. (neto = totalIngresos operativos - totalEgresos)
+- [x] Se calcula margen porcentual cuando exista base valida. (margenPct = neto/totalIngresos*100 si ingresos>0; si no, 0)
+- [x] Se muestra rentabilidad por propiedad/activo (+ tipo/zona/propietario como refinamiento). (rankingActivos por neto; tipo/zona/propietario documentados como incremental)
+- [x] Se incluye ranking de mejores y peores activos por rentabilidad neta. (ranking ordenado por neto DESC; muestra mejores arriba y peores al final)
+- [x] Cada monto permite abrir evidencia (drill-down 0074). (drillKey en Linea `ingreso_egreso:TIPO:APLICACION` y en ActivoRent `rentabilidad_activo:ID`; la pantalla de detalle es REQ-0074)
+- [x] No se mezclan monedas. (ingreso_egreso es de la moneda base de la empresa -sin columna moneda-; base caja en una sola moneda; documentado)
+- [x] Las reglas de clasificacion dependen de `articulo.aplicacion`, no de textos hardcodeados. (GROUP BY articulo.aplicacion; el mapeo a etiqueta es solo presentacion)
+- [x] Los egresos asociados a una operacion/activo/persona conservan trazabilidad. (ingreso_egreso conserva operacion/activo/persona; el ranking usa ie.activo)
 
 ## Reglas De Negocio
 

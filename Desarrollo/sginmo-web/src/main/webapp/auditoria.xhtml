@@ -17,8 +17,21 @@
             modulo y motivo. Solo muestra la empresa activa. No se exhiben secretos (contrasenas/tokens se enmascaran).
         </p>
 
-        <p:panelGrid columns="6" layout="grid" styleClass="ui-noborder"
-                     columnClasses="ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2">
+        <style>
+            .filtros-auditoria {
+                display: grid;
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: .45rem .75rem;
+                align-items: end;
+            }
+            @media (max-width: 900px) {
+                .filtros-auditoria { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            }
+            @media (max-width: 520px) {
+                .filtros-auditoria { grid-template-columns: 1fr; }
+            }
+        </style>
+        <div class="filtros-auditoria">
             <p:outputLabel for="fd" value="Desde"/>
             <p:outputLabel for="fh" value="Hasta"/>
             <p:outputLabel for="usr" value="Usuario"/>
@@ -34,7 +47,7 @@
             </p:selectOneMenu>
             <p:inputText id="cmp" value="#{auditoriaBean.campo}"/>
             <p:inputText id="ent" value="#{auditoriaBean.entidad}"/>
-        </p:panelGrid>
+        </div>
 
         <div style="margin:.6rem 0 1rem 0;">
             <p:commandButton value="Buscar" icon="pi pi-search" action="#{auditoriaBean.buscar}" update="frm:tabla frm:mensajes"/>

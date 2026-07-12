@@ -1,0 +1,67 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{rentabilidadBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Rentabilidad gerencial</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" life="4000"/>
+        <style>
+            .kpis { display:flex; flex-wrap:wrap; gap:1rem; margin:.4rem 0 1rem; }
+            .kpi { flex:1 1 9rem; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:1rem 1.1rem; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+            .kpi-val { font-size:1.5rem; font-weight:700; color:#1d3557; line-height:1.1; }
+            .kpi-lbl { color:#6c757d; font-size:.8rem; margin-top:.25rem; }
+            .cols { display:flex; flex-wrap:wrap; gap:1.5rem; }
+            .cols > div { flex:1 1 22rem; }
+        </style>
+
+        <div class="filtros" style="display:flex; gap:.8rem; align-items:end; margin-bottom:.6rem;">
+            <span><label>Desde</label><br/><p:datePicker value="#{rentabilidadBean.desde}" pattern="yyyy-MM-dd"/></span>
+            <span><label>Hasta</label><br/><p:datePicker value="#{rentabilidadBean.hasta}" pattern="yyyy-MM-dd"/></span>
+            <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{rentabilidadBean.recalcular}" update="frm"/>
+        </div>
+
+        <div class="kpis">
+            <div class="kpi"><div class="kpi-val"><h:outputText value="#{rentabilidadBean.resumen.totalIngresos}"><f:convertNumber pattern="#,##0"/></h:outputText></div><div class="kpi-lbl">Ingresos (base caja)</div></div>
+            <div class="kpi"><div class="kpi-val"><h:outputText value="#{rentabilidadBean.resumen.totalEgresos}"><f:convertNumber pattern="#,##0"/></h:outputText></div><div class="kpi-lbl">Egresos</div></div>
+            <div class="kpi"><div class="kpi-val" style="color:#{rentabilidadBean.resumen.neto.signum() lt 0 ? '#c62828' : '#2e7d32'}"><h:outputText value="#{rentabilidadBean.resumen.neto}"><f:convertNumber pattern="#,##0"/></h:outputText></div><div class="kpi-lbl">Resultado neto</div></div>
+            <div class="kpi"><div class="kpi-val">#{rentabilidadBean.resumen.margenPct}%</div><div class="kpi-lbl">Margen</div></div>
+            <div class="kpi"><div class="kpi-val"><h:outputText value="#{rentabilidadBean.resumen.totalDepositos}"><f:convertNumber pattern="#,##0"/></h:outputText></div><div class="kpi-lbl">Depositos/garantia (no rentab.)</div></div>
+        </div>
+
+        <div class="cols">
+            <div>
+                <h3>Ingresos por tipo</h3>
+                <p:dataTable var="l" value="#{rentabilidadBean.resumen.ingresos}" emptyMessage="Sin ingresos en el periodo">
+                    <p:column headerText="Tipo"><h:outputText value="#{l.etiqueta}"/> <p:tag value="pasivo" severity="warning" rendered="#{l.pasivo}"/></p:column>
+                    <p:column headerText="Monto" style="width:11rem; text-align:right;"><h:outputText value="#{l.monto}"><f:convertNumber pattern="#,##0"/></h:outputText></p:column>
+                </p:dataTable>
+            </div>
+            <div>
+                <h3>Egresos por tipo</h3>
+                <p:dataTable var="l" value="#{rentabilidadBean.resumen.egresos}" emptyMessage="Sin egresos en el periodo">
+                    <p:column headerText="Tipo"><h:outputText value="#{l.etiqueta}"/></p:column>
+                    <p:column headerText="Monto" style="width:11rem; text-align:right;"><h:outputText value="#{l.monto}"><f:convertNumber pattern="#,##0"/></h:outputText></p:column>
+                </p:dataTable>
+            </div>
+        </div>
+
+        <h3 style="margin-top:1.2rem;">Ranking de activos por rentabilidad neta</h3>
+        <p:dataTable var="a" value="#{rentabilidadBean.ranking}" paginator="true" rows="10" emptyMessage="Sin movimientos por activo">
+            <p:column headerText="Activo"><h:outputText value="#{a.nombre}"/></p:column>
+            <p:column headerText="Neto" style="width:12rem; text-align:right;">
+                <h:outputText value="#{a.neto}" style="color:#{a.neto.signum() lt 0 ? '#c62828' : '#2e7d32'}"><f:convertNumber pattern="#,##0"/></h:outputText>
+            </p:column>
+        </p:dataTable>
+        <p style="color:#9ca3af; font-size:.83rem;">
+            Base caja desde el ledger de ingresos/egresos (moneda base de la empresa; no mezcla monedas).
+            Clasificacion por aplicacion del articulo. El deposito/garantia es pasivo y no cuenta como rentabilidad.
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>
