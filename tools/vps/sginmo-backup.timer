@@ -1,0 +1,11 @@
+# REQ-0065 — Timer systemd diario (03:15) con recuperacion si el equipo estuvo apagado.
+[Unit]
+Description=Backup diario de SGInmo
+
+[Timer]
+OnCalendar=*-*-* 03:15:00
+Persistent=true
+Unit=sginmo-backup.service
+
+[Install]
+WantedBy=timers.target

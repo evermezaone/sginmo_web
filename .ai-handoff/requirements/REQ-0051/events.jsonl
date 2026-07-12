@@ -1,2 +1,4 @@
 ﻿
 
+{"ts":"2026-07-12T01:38:07Z","actor":"claude","evento":"implementado","nota":"SaludService/SaludBean/salud.xhtml + V32 + sello de build"}
+{"ts":"2026-07-12T01:38:07Z","actor":"claude","evento":"desplegado","nota":"deploy VPS, Flyway V32 success, smoke 19/19 render OK"}

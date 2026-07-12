@@ -48,7 +48,8 @@ PWD  = cfg("SMOKE_PASS")
 PANTALLAS = ["index", "personas", "activos", "operaciones", "caja", "articulos", "monedas",
              "impuestos", "formas-pago", "geografia", "empresas", "listas", "parametros",
              "usuarios", "grupos", "ingresos-egresos", "liquidaciones",
-             "plantillas-documentos"]  # REQ-0041
+             "plantillas-documentos",  # REQ-0041
+             "salud"]  # REQ-0051
 
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))

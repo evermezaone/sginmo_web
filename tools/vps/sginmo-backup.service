@@ -1,0 +1,15 @@
+# REQ-0065 — Unidad systemd (alternativa a cron). Instalar como servicio de
+# usuario:  ~/.config/systemd/user/sginmo-backup.service  (con enable-linger)
+# o de sistema en /etc/systemd/system/ si se dispone de sudo.
+[Unit]
+Description=Backup de SGInmo (PostgreSQL + archivos)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Ajustar la ruta al script desplegado en la VPS
+ExecStart=/home/edm/sginmo/bin/sginmo-backup.sh
+# La clave se lee del archivo protegido, no de la unidad
+Environment=SGINMO_BACKUP_ENV=/home/edm/sginmo/backup.env
+Nice=10
+IOSchedulingClass=idle

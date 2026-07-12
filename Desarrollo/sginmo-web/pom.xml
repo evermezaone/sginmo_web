@@ -18,6 +18,9 @@
 
   <properties>
     <failOnMissingWebXml>false</failOnMissingWebXml>
+    <!-- REQ-0051: sello de build para el panel de Salud (version/fecha/commit) -->
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+    <buildCommit>-</buildCommit>
   </properties>
 
   <dependencies>
@@ -72,6 +75,19 @@
 
   <build>
     <finalName>sginmo-web</finalName>
+    <resources>
+      <!-- REQ-0051: filtra solo build-info.properties (sello de version); el resto sin filtrar -->
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <excludes><exclude>build-info.properties</exclude></excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes><include>build-info.properties</include></includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>

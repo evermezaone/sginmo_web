@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0038, REQ-0039
-TS: 2026-07-09T22:55:40Z
+REQ: REQ-0051
+TS: 2026-07-12T01:38:23Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0038, REQ-0039. Ultimo derivado REQ-0038: obs259/260 corregidas: (259) listarIntegrantes filtra los integrantes por Usuario.tenant=actorTenant (ADMIN no ve integrantes de otros tenants ni en plantillas -1; SUPERADMIN todos); (260) el override 'operar como' se centraliza en SesionUsuario (unica fuente) y tenantActual() lo respeta, con TenantContext delegando -> services (interceptor @AislarTenant) Y ABM de seguridad usan el MISMO tenant efectivo; el tenant real -1 solo autoriza cambiar override. mvn -pl sginmo-web -am package EXIT 0.
+MENSAJE: [SGI] Cola de auditoria: REQ-0051. Ultimo derivado REQ-0051: Panel de Salud del sistema (solo lectura): DB+latencia, version/build/commit, Flyway, disco, memoria/uptime, ultimo backup. V32 registra pantalla. Build+deploy+smoke 19/19 OK. Backup (REQ-0065) tambien instalado y probado; schedule cron pendiente de OK del usuario.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
