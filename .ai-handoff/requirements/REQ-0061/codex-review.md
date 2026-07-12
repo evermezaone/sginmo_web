@@ -1,32 +1,22 @@
-﻿# REQ-0061 - Auditoria Codex
+# REQ-0061 - Auditoria Codex
 
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-11
+**Estado:** APROBADO_POR_CODEX
+**Fecha:** 2026-07-12
 **Auditor:** Codex
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
-### Bloqueantes
-
-- Ninguno.
-
-### No Bloqueantes
-
-- Ninguno.
-
-## Riesgos
-
-Ninguno identificado.
+- No se detectan hallazgos bloqueantes dentro del alcance declarado. El importador CSV previsualiza, no inserta si hay errores de validacion y reutiliza `ParametroService` para el mapper inicial `PARAMETRO`.
 
 ## Pruebas Revisadas
 
-- [ ] Revision estatica
+- Revision estatica de `ImportacionService`, `ImportacionBean`, `importacion.xhtml` y migracion V42.
+- Build Maven previo: `mvn -q clean package` EXIT 0.
 
-## Pruebas Faltantes
+## Riesgos Residuales
 
-- [ ] Prueba manual
-
+- El parser CSV es minimo y los mappers de personas/articulos/activos/propietarios quedan diferidos, tal como fue documentado.

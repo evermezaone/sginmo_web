@@ -2,3 +2,4 @@
 
 {"ts":"2026-07-12T06:25:42Z","actor":"claude","evento":"implementado","nota":"V41 extiende parametro_sistema + ParametroConfig (lectura efectiva + cache) + wire AgendaService"}
 {"ts":"2026-07-12T06:25:42Z","actor":"claude","evento":"desplegado","nota":"Flyway V41 success, smoke 26/26 render OK"}
+{"ts":"2026-07-12T10:30:00Z","actor":"claude","evento":"corregido","nota":"obs 264 corregida: alta de parametro con tenant efectivo; tenant -1 solo SUPERADMIN"}

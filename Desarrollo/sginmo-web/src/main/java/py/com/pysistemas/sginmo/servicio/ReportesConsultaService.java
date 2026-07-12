@@ -84,12 +84,28 @@ public class ReportesConsultaService {
         sql.append(" ORDER BY c.fecha");
         Query q = em.createNativeQuery(sql.toString()).setParameter("d", desde).setParameter("h", hasta);
         if (moneda != null) q.setParameter("mon", moneda);
-        BigDecimal total = BigDecimal.ZERO;
+        // Obs 265: NO se totaliza mezclando monedas. Con una sola moneda -> total unico; con "Todas" ->
+        // subtotal por moneda (nunca una suma agregada sin criterio de conversion).
+        java.util.LinkedHashMap<String, BigDecimal> porMoneda = new java.util.LinkedHashMap<>();
         for (Object[] f : filas(q)) {
-            BigDecimal m = dec(f[4]); total = total.add(m);
+            BigDecimal m = dec(f[4]);
+            String monNom = s(f[3]);
+            porMoneda.merge(monNom.isBlank() ? "(sin moneda)" : monNom, m, BigDecimal::add);
             r.filas.add(new String[]{ fecha(f[0]), s(f[1]), s(f[2]), s(f[3]), GS.format(m) });
         }
-        r.total = "Total: " + GS.format(total);
+        if (moneda != null) {
+            BigDecimal total = porMoneda.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+            r.total = "Total: " + GS.format(total);
+        } else {
+            StringBuilder sb = new StringBuilder("Totales por moneda: ");
+            boolean first = true;
+            for (var e : porMoneda.entrySet()) {
+                if (!first) sb.append("   |   ");
+                sb.append(e.getKey()).append(": ").append(GS.format(e.getValue()));
+                first = false;
+            }
+            r.total = porMoneda.isEmpty() ? "Sin cobros en el periodo" : sb.toString();
+        }
         return r;
     }
 

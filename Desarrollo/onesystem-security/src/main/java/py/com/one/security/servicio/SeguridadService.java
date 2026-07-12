@@ -148,11 +148,16 @@ public class SeguridadService {
                 // si el historial no esta disponible, no se bloquea el cambio legitimo
             }
         }
+        // Obs 267: registrar el hash ANTERIOR (el que se retira) en el historial, ANTES de reemplazarlo.
+        // Asi la contrasena vieja queda en el historial real y no puede reutilizarse a futuro. El hash
+        // activo vive en usuario.password_hash y ya se valida arriba ("distinta de la actual"), de modo
+        // que la proteccion cubre la actual + las ultimas N retiradas.
+        String hashAnterior = u.getPasswordHash();
         u.setPasswordHash(hash(nueva));
         u.setDebeCambiarPassword(false);
         try {
             em.createNativeQuery("INSERT INTO password_historial (usuario, password_hash, fecha) VALUES (:u, :h, now())")
-                .setParameter("u", usuarioId).setParameter("h", u.getPasswordHash()).executeUpdate();
+                .setParameter("u", usuarioId).setParameter("h", hashAnterior).executeUpdate();
         } catch (RuntimeException ignore) {
             // el registro del historial no debe romper el cambio de contrasena
         }

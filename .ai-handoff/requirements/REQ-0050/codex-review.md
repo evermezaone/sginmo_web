@@ -1,32 +1,17 @@
-﻿# REQ-0050 - Auditoria Codex
-
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-11
-**Auditor:** Codex
+# REQ-0050 - Codex Review
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+APROBADO_POR_CODEX.
 
-## Hallazgos
+## Revision
 
-### Bloqueantes
+- `PlantillaDocumentoMotor.variablesDisponibles()` define el catalogo cerrado de variables.
+- `PlantillaDocumentoService.variablesDisponibles()` expone el mismo catalogo al bean.
+- `plantillas-documentos.xhtml` muestra selector de variables y boton Insertar.
+- El JavaScript inserta `{{variable}}` en la posicion del cursor, o al final cuando el cursor no esta disponible.
+- La validacion existente del motor sigue rechazando variables desconocidas al guardar.
 
-- Ninguno.
+## Verificacion
 
-### No Bloqueantes
-
-- Ninguno.
-
-## Riesgos
-
-Ninguno identificado.
-
-## Pruebas Revisadas
-
-- [ ] Revision estatica
-
-## Pruebas Faltantes
-
-- [ ] Prueba manual
-
+- `mvn -q clean package`: OK.

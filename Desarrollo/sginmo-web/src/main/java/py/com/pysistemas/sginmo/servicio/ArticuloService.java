@@ -36,6 +36,9 @@ public class ArticuloService {
     @jakarta.inject.Inject
     private py.com.pysistemas.sginmo.web.TenantContext tenant;
 
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 269: auditoria funcional visible
+
     // ── Consultas (paginacion lazy para p:dataTable) ──
 
     /** Rutas JPQL permitidas para ordenar (clave = field de la columna en la vista). */
@@ -132,18 +135,26 @@ public class ArticuloService {
 
     @Transactional
     public Articulo guardar(Articulo articulo) {
-        autorizacion.exigir("articulos", articulo.getId() == null ? "CREAR" : "EDITAR");
+        boolean nuevo = articulo.getId() == null;
+        autorizacion.exigir("articulos", nuevo ? "CREAR" : "EDITAR");
         aplicarPertenencia(articulo);
         validar(articulo);
+        Map<String, Object> antes = null;   // obs 269: snapshot para el diff de auditoria
+        if (!nuevo) {
+            Articulo o = em.find(Articulo.class, articulo.getId());
+            if (o != null) antes = snap(o);
+        }
         try {
             Articulo resultado;
-            if (articulo.getId() == null) {
+            if (nuevo) {
                 em.persist(articulo);
                 resultado = articulo;
             } else {
                 resultado = em.merge(articulo);
             }
             em.flush(); // fuerza el chequeo de @Version aca, para poder dar un mensaje claro
+            if (nuevo) auditoria.registrarAlta("articulo", resultado.getCodigo(), "articulos");
+            else if (antes != null) auditoria.registrarCambios("articulo", resultado.getCodigo(), "articulos", null, antes, snap(resultado));
             return resultado;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException(
@@ -166,10 +177,26 @@ public class ArticuloService {
                 || (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(tOrig) && tenant.esSuperadmin())))) {
             throw new NegocioException("El artículo pertenece a otra empresa");
         }
-        if ("ACTIVO".equals(estadoNuevo)) {
+        boolean reactivar = "ACTIVO".equals(estadoNuevo);
+        if (reactivar) {
             validar(a);   // reactivacion segura (regla 7): re-valida unicidades y reglas vigentes
         }
+        String estadoAnterior = a.getEstado();
         a.setEstado(estadoNuevo);
+        auditoria.registrar("articulo", a.getCodigo(),
+                reactivar ? AuditoriaFuncionalService.REACTIVAR : AuditoriaFuncionalService.INACTIVAR,
+                "articulos", "estado " + estadoAnterior + " -> " + estadoNuevo);
+    }
+
+    /** Snapshot de campos auditables del articulo (obs 269). */
+    private static Map<String, Object> snap(Articulo a) {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("codigo", a.getCodigo());
+        m.put("descripcion", a.getDescripcion());
+        m.put("aplicacion", a.getAplicacion());
+        m.put("clasificacion", a.getClasificacion());
+        m.put("estado", a.getEstado());
+        return m;
     }
 
     /** Visible al tenant: propio o global -1 (para leer/copiar). SUPERADMIN todo. */

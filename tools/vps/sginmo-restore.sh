@@ -109,10 +109,17 @@ PGPASSWORD="${PGPASSWORD:-}" "${PSQL_ADMIN[@]}" -c "CREATE DATABASE \"$TARGET\""
 log "Base temporal creada: $TARGET"
 
 # ── 2) Restaurar el dump (custom) ────────────────────────────────────────────
+# Obs 268: pg_restore devuelve exit != 0 cuando hubo ERRORES (no meras advertencias). Un restore
+# parcial NO puede terminar en OK: si el codigo de salida es distinto de 0, se falla el simulacro.
+set +e
 PGPASSWORD="${PGPASSWORD:-}" pg_restore --enable-row-security --no-owner --no-privileges \
-    -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$TARGET" "$DUMP" 2> >(tee -a "$LOG" >&2) || \
-    log "pg_restore reporto warnings (continua; se validan conteos)"
-log "pg_restore finalizado"
+    -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$TARGET" "$DUMP" 2> >(tee -a "$LOG" >&2)
+RESTORE_RC=$?
+set -e
+if [[ $RESTORE_RC -ne 0 ]]; then
+  fail "pg_restore devolvio error (rc=$RESTORE_RC): restore parcial/invalido, no se marca OK"
+fi
+log "pg_restore finalizado (rc=0)"
 
 # ── 3) Validaciones de integridad (con app.tenant=-1 = ve todos los tenants) ──
 q() { PGPASSWORD="${PGPASSWORD:-}" PGOPTIONS='-c app.tenant=-1' "${PSQL[@]}" -tAc "$1" 2>/dev/null || echo "ERR"; }
@@ -126,7 +133,11 @@ declare -a TABLAS=(usuario grupo persona operacion planilla cobro ingreso_egreso
 COUNTS="{"; SEP=""
 for t in "${TABLAS[@]}"; do
   c="$(q "SELECT count(*) FROM public.$t")"
-  [[ "$c" == "ERR" ]] && c="null"
+  # Obs 268: si una tabla critica no se puede consultar (faltante/corrupta), el simulacro FALLA;
+  # no se degrada a null ni se marca OK.
+  if [[ "$c" == "ERR" ]]; then
+    fail "no se pudo consultar la tabla critica '$t' en la base restaurada (restore incompleto)"
+  fi
   COUNTS="$COUNTS$SEP\"$t\":$c"; SEP=","
   log "conteo $t = $c"
 done

@@ -8,6 +8,7 @@ import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.catalogo.FormaPago;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,9 @@ public class FormaPagoService {
     /** Enforcement de permisos en la capa de servicio (obs 203 de Codex). */
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
+
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 269: auditoria funcional visible
 
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(fp) FROM FormaPago fp WHERE (:f = '' OR lower(fp.codigo) LIKE :like OR lower(fp.descripcion) LIKE :like)", Long.class);
@@ -55,16 +59,24 @@ public class FormaPagoService {
 
     @Transactional
     public FormaPago guardar(FormaPago fp) {
-        autorizacion.exigir("formas-pago", fp.getId() == null ? "CREAR" : "EDITAR");
+        boolean nuevo = fp.getId() == null;
+        autorizacion.exigir("formas-pago", nuevo ? "CREAR" : "EDITAR");
         validar(fp);
+        Map<String, Object> antes = null;   // obs 269: snapshot para el diff de auditoria
+        if (!nuevo) {
+            FormaPago o = em.find(FormaPago.class, fp.getId());
+            if (o != null) antes = snap(o);
+        }
         try {
             if (fp.isPorDefecto()) {
                 // "por defecto" es unico: se apaga en las demas
                 em.createQuery("UPDATE FormaPago x SET x.porDefecto = false WHERE x.porDefecto = true AND (:id IS NULL OR x.id <> :id)")
                     .setParameter("id", fp.getId()).executeUpdate();
             }
-            FormaPago r = fp.getId() == null ? persistir(fp) : em.merge(fp);
+            FormaPago r = nuevo ? persistir(fp) : em.merge(fp);
             em.flush();
+            if (nuevo) auditoria.registrarAlta("forma_pago", r.getCodigo(), "formas-pago");
+            else if (antes != null) auditoria.registrarCambios("forma_pago", r.getCodigo(), "formas-pago", null, antes, snap(r));
             return r;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException("La forma de pago fue modificada por otro usuario. Vuelva a abrir el diálogo y reintente.");
@@ -77,11 +89,27 @@ public class FormaPagoService {
 
     @Transactional
     public void cambiarEstado(Long id, String estadoNuevo) {
-        autorizacion.exigir("formas-pago", "ACTIVO".equals(estadoNuevo) ? "REACTIVAR" : "INACTIVAR");
+        boolean reactivar = "ACTIVO".equals(estadoNuevo);
+        autorizacion.exigir("formas-pago", reactivar ? "REACTIVAR" : "INACTIVAR");
         FormaPago fp = em.find(FormaPago.class, id);
         if (fp == null) throw new NegocioException("La forma de pago no existe");
-        if ("ACTIVO".equals(estadoNuevo)) validar(fp);
+        if (reactivar) validar(fp);
+        String estadoAnterior = fp.getEstado();
         fp.setEstado(estadoNuevo);
+        auditoria.registrar("forma_pago", fp.getCodigo(),
+                reactivar ? AuditoriaFuncionalService.REACTIVAR : AuditoriaFuncionalService.INACTIVAR,
+                "formas-pago", "estado " + estadoAnterior + " -> " + estadoNuevo);
+    }
+
+    /** Snapshot de campos auditables (obs 269). */
+    private static Map<String, Object> snap(FormaPago fp) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("codigo", fp.getCodigo());
+        m.put("descripcion", fp.getDescripcion());
+        m.put("estado", fp.getEstado());
+        m.put("porDefecto", fp.isPorDefecto());
+        m.put("dias", fp.getDias());
+        return m;
     }
 
     private void validar(FormaPago fp) {

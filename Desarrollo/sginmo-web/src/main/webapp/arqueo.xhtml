@@ -32,14 +32,14 @@
             </p:column>
             <p:column headerText="Acciones" style="width:12rem; text-align:center;" exportable="false">
                 <p:commandButton icon="pi pi-calculator" title="Arqueo y cerrar" styleClass="ui-button-flat"
-                                 rendered="#{p.estado eq 'ABIERTA' and sesionUsuario.puede('caja','EDITAR')}"
+                                 rendered="#{p.estado eq 'ABIERTA' and sesionUsuario.puede('arqueo','EDITAR')}"
                                  actionListener="#{arqueoBean.abrirArqueo(p)}" update=":frmArqueo" oncomplete="PF('dlgArqueo').show()"/>
                 <p:commandButton icon="pi pi-file-pdf" title="Arqueo PDF" styleClass="ui-button-flat" ajax="false"
-                                 rendered="#{sesionUsuario.puede('caja','EXPORTAR')}">
+                                 rendered="#{sesionUsuario.puede('arqueo','EXPORTAR')}">
                     <p:fileDownload value="#{arqueoBean.arqueoPdf(p)}"/>
                 </p:commandButton>
                 <p:commandButton icon="pi pi-lock-open" title="Reabrir" styleClass="ui-button-flat"
-                                 rendered="#{p.estado eq 'CERRADA' and sesionUsuario.puede('caja','REACTIVAR')}"
+                                 rendered="#{p.estado eq 'CERRADA' and sesionUsuario.puede('arqueo','REACTIVAR')}"
                                  actionListener="#{arqueoBean.prepararReapertura(p)}" update=":frmReabrir" oncomplete="PF('dlgReabrir').show()"/>
             </p:column>
         </p:dataTable>

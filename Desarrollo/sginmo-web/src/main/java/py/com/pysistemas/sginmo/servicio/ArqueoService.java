@@ -86,7 +86,7 @@ public class ArqueoService {
     /** Cierre controlado con arqueo: sella efectivo esperado/contado/diferencia y cierra la planilla. */
     @Transactional
     public void cerrarConArqueo(Long planillaId, BigDecimal efectivoContado, String observacion) {
-        autorizacion.exigir("caja", "EDITAR");
+        autorizacion.exigir("arqueo", "EDITAR");   // obs 263: permisos unificados a la pantalla arqueo/*
         Planilla p = em.find(Planilla.class, planillaId);
         if (p == null || !"ABIERTA".equals(p.getEstado())) {
             throw new NegocioException("La planilla no existe o no esta abierta");
@@ -109,7 +109,7 @@ public class ArqueoService {
     /** Reapertura excepcional: solo con permiso REACTIVAR + motivo; queda auditada. */
     @Transactional
     public void reabrir(Long planillaId, String motivo) {
-        autorizacion.exigir("caja", "REACTIVAR");
+        autorizacion.exigir("arqueo", "REACTIVAR");   // obs 263: reapertura sigue siendo privilegio aparte (no en plantilla CAJA base)
         if (motivo == null || motivo.isBlank()) throw new NegocioException("El motivo de reapertura es obligatorio");
         Planilla p = em.find(Planilla.class, planillaId);
         if (p == null || !"CERRADA".equals(p.getEstado())) {
@@ -125,7 +125,7 @@ public class ArqueoService {
 
     /** PDF de arqueo de cierre (OpenPDF). Requiere permiso EXPORTAR. */
     public byte[] arqueoPdf(Long planillaId) {
-        autorizacion.exigir("caja", "EXPORTAR");
+        autorizacion.exigir("arqueo", "EXPORTAR");   // obs 263: unificado a arqueo/*
         ResumenArqueo r = resumen(planillaId);
         Planilla p = r.planilla;
         var rep = pdf.iniciar(empresaNombre(), "ARQUEO DE CAJA", sesion.codigoUsuario(),

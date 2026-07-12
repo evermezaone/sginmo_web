@@ -2,3 +2,4 @@
 
 {"ts":"2026-07-12T03:26:26Z","actor":"claude","evento":"implementado","nota":"V35 estado documental de documento_generado + pantalla docs generados"}
 {"ts":"2026-07-12T03:26:26Z","actor":"claude","evento":"desplegado","nota":"Flyway V35 success, smoke 22/22 render OK"}
+{"ts":"2026-07-12T10:30:00Z","actor":"claude","evento":"corregido","nota":"obs 261 corregida: registrarFirma valida el adjunto firmado bajo RLS (existe/tenant/ACTIVO/misma operacion)"}

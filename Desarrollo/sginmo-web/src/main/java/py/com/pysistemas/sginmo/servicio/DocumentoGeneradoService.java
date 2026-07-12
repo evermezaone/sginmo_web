@@ -5,6 +5,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import py.com.one.core.NegocioException;
+import py.com.pysistemas.sginmo.dominio.documento.DocumentoAdjunto;
 import py.com.pysistemas.sginmo.dominio.documento.DocumentoGenerado;
 import py.com.pysistemas.sginmo.web.TenantContext;
 
@@ -89,6 +90,18 @@ public class DocumentoGeneradoService {
         DocumentoGenerado d = requerir(id);
         if ("ANULADO".equals(d.getEstadoDocumental())) {
             throw new NegocioException("El documento esta anulado");
+        }
+        // Obs 261 (aislamiento multiempresa): el adjunto firmado no se asigna a ciegas. Debe cargarse
+        // bajo @AislarTenant (RLS V34 -> solo el tenant actual lo ve), existir, estar ACTIVO y -si esta
+        // asociado a una operacion- corresponder a la misma operacion del documento. Asi un id de otra
+        // empresa (o inactivo) no puede quedar registrado como version firmada.
+        if (adjuntoFirmadoId == null) throw new NegocioException("Seleccione el adjunto firmado");
+        DocumentoAdjunto adj = em.find(DocumentoAdjunto.class, adjuntoFirmadoId);
+        if (adj == null) throw new NegocioException("El adjunto firmado no existe o no pertenece a su empresa");
+        if (!"ACTIVO".equals(adj.getEstado())) throw new NegocioException("El adjunto firmado no esta activo");
+        if ("OPERACION".equals(adj.getEntidadTipo()) && adj.getEntidadId() != null
+                && !adj.getEntidadId().equals(d.getOperacion())) {
+            throw new NegocioException("El adjunto firmado corresponde a otra operacion");
         }
         d.setAdjuntoFirmado(adjuntoFirmadoId);
         d.setEstadoDocumental("FIRMADO");

@@ -55,12 +55,25 @@ public class RolPlantillaService {
 
     private Set<String> permisosPlantilla(Long plantillaId) {
         Set<String> s = new LinkedHashSet<>();
+        // Obs 266 (aislamiento multiempresa): rol_plantilla_permiso NO tiene RLS; se lee via JOIN a
+        // rol_plantilla (que SI tiene RLS, V44) para que solo devuelva el detalle de una plantilla
+        // visible al tenant (global -1 o propia). El guard exigirPlantillaVisible refuerza con mensaje claro.
         @SuppressWarnings("unchecked")
         List<Object[]> f = em.createNativeQuery(
-            "SELECT pantalla, accion FROM rol_plantilla_permiso WHERE rol_plantilla=:p ORDER BY pantalla, accion")
+            "SELECT pp.pantalla, pp.accion FROM rol_plantilla_permiso pp"
+          + " JOIN rol_plantilla rp ON rp.rol_plantilla = pp.rol_plantilla"
+          + " WHERE pp.rol_plantilla=:p ORDER BY pp.pantalla, pp.accion")
             .setParameter("p", plantillaId).getResultList();
         for (Object[] r : f) s.add(r[0] + ":" + r[1]);
         return s;
+    }
+
+    /** Obs 266: la plantilla debe ser visible al tenant (global -1 o propia) segun la RLS de rol_plantilla. */
+    private void exigirPlantillaVisible(Long plantillaId) {
+        if (plantillaId == null) throw new NegocioException("Seleccione una plantilla");
+        Object v = em.createNativeQuery("SELECT 1 FROM rol_plantilla WHERE rol_plantilla=:p AND estado='ACTIVO'")
+                .setParameter("p", plantillaId).getResultStream().findFirst().orElse(null);
+        if (v == null) throw new NegocioException("La plantilla no existe o no pertenece a su empresa");
     }
 
     private Set<String> permisosGrupo(Long grupoId) {
@@ -75,6 +88,7 @@ public class RolPlantillaService {
 
     /** Diferencia entre lo que trae la plantilla y lo que ya tiene el grupo. */
     public Diff diff(Long plantillaId, Long grupoId) {
+        exigirPlantillaVisible(plantillaId);
         exigirGrupoDelTenant(grupoId);
         Diff d = new Diff();
         Set<String> plantilla = permisosPlantilla(plantillaId);
@@ -91,6 +105,7 @@ public class RolPlantillaService {
     @Transactional
     public void aplicar(Long plantillaId, Long grupoId, boolean reemplazar) {
         autorizacion.exigir("grupos", "EDITAR");
+        exigirPlantillaVisible(plantillaId);
         exigirGrupoDelTenant(grupoId);
         Set<String> plantilla = permisosPlantilla(plantillaId);
         Set<String> grupo = permisosGrupo(grupoId);

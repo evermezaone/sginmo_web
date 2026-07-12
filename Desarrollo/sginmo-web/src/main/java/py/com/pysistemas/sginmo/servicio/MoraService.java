@@ -9,6 +9,7 @@ import py.com.one.core.ErroresBd;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.dominio.cobranza.GestionCobranza;
 import py.com.pysistemas.sginmo.dominio.cobranza.PromesaPago;
+import py.com.pysistemas.sginmo.dominio.operacion.Operacion;
 import py.com.pysistemas.sginmo.web.TenantContext;
 
 import java.math.BigDecimal;
@@ -91,6 +92,9 @@ public class MoraService {
         autorizacion.exigir("cobranza", "EDITAR");
         Long emp = requerirEmpresa();
         if (g.getResultado() == null || g.getResultado().isBlank()) throw new NegocioException("El resultado es obligatorio");
+        // Obs 262 (aislamiento multiempresa): revalidar que operacion/cuota/cliente sean del tenant y coherentes.
+        Operacion op = validarPertenencia(g.getOperacion(), g.getCronogramaCuota(), g.getCliente());
+        if (g.getCliente() == null) g.setCliente(op.getCliente());
         g.setTenant(emp);
         if (g.getFecha() == null) g.setFecha(LocalDate.now());
         if (g.getResponsable() == null || g.getResponsable().isBlank()) g.setResponsable(sesion.codigoUsuario());
@@ -104,10 +108,38 @@ public class MoraService {
         Long emp = requerirEmpresa();
         if (p.getFechaPromesa() == null) throw new NegocioException("La fecha de promesa es obligatoria");
         if (p.getMonto() == null || p.getMonto().signum() <= 0) throw new NegocioException("El monto debe ser mayor a cero");
+        // Obs 262 (aislamiento multiempresa): revalidar que operacion/cuota/cliente sean del tenant y coherentes.
+        Operacion op = validarPertenencia(p.getOperacion(), p.getCronogramaCuota(), p.getCliente());
+        if (p.getCliente() == null) p.setCliente(op.getCliente());
         p.setTenant(emp);
         if (p.getEstado() == null || p.getEstado().isBlank()) p.setEstado("PENDIENTE");
         try { em.persist(p); em.flush(); return p; }
         catch (RuntimeException ex) { throw ErroresBd.traducir(ex); }
+    }
+
+    /**
+     * Obs 262: valida bajo @AislarTenant que la operacion exista y sea del tenant actual (RLS), que la
+     * cuota -si viene- pertenezca a esa operacion, y que el cliente -si viene- sea el de la operacion.
+     * Devuelve la operacion cargada (para completar el cliente coherente).
+     */
+    private Operacion validarPertenencia(Long operacionId, Long cronogramaCuotaId, Long clienteId) {
+        if (operacionId == null) throw new NegocioException("La operacion es obligatoria");
+        Operacion op = em.find(Operacion.class, operacionId);   // RLS: solo operaciones del tenant actual
+        if (op == null) throw new NegocioException("La operacion no existe o no pertenece a su empresa");
+        if (clienteId != null && !clienteId.equals(op.getCliente())) {
+            throw new NegocioException("El cliente no corresponde a la operacion");
+        }
+        if (cronogramaCuotaId != null) {
+            // El join contra operacion (con RLS) garantiza que la cuota sea de una operacion visible al tenant.
+            Number n = (Number) em.createNativeQuery(
+                "SELECT count(*) FROM cronograma_cuota cc JOIN operacion o ON o.operacion = cc.operacion"
+              + " WHERE cc.cronograma_cuota = :cc AND o.operacion = :op")
+                .setParameter("cc", cronogramaCuotaId).setParameter("op", operacionId).getSingleResult();
+            if (n == null || n.longValue() == 0) {
+                throw new NegocioException("La cuota no corresponde a la operacion");
+            }
+        }
+        return op;
     }
 
     /** Cierra/actualiza el estado de una promesa (CUMPLIDA cuando se cobro; INCUMPLIDA si venció). No toca la cuota. */

@@ -2,3 +2,4 @@
 
 {"ts":"2026-07-12T07:55:16Z","actor":"claude","evento":"implementado","nota":"V44 rol_plantilla + 7 perfiles base + RolPlantillaService (diff + aplicar a permiso_grupo)"}
 {"ts":"2026-07-12T07:55:16Z","actor":"claude","evento":"desplegado","nota":"Flyway V44 success, smoke 29/29 render OK"}
+{"ts":"2026-07-12T10:30:00Z","actor":"claude","evento":"corregido","nota":"obs 266 corregida: permisosPlantilla via JOIN a rol_plantilla (RLS) + exigirPlantillaVisible"}

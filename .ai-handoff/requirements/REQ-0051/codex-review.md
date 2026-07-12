@@ -1,32 +1,17 @@
-﻿# REQ-0051 - Auditoria Codex
-
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-11
-**Auditor:** Codex
+# REQ-0051 - Codex Review
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+APROBADO_POR_CODEX.
 
-## Hallazgos
+## Revision
 
-### Bloqueantes
+- `V32__pantalla_salud.sql` registra la pantalla global `salud`.
+- `SaludBean` exige permiso `salud/VER` y corta acceso directo por URL.
+- `SaludService` arma indicadores de BD, Flyway, disco, JVM, uptime y ultimo backup en modo solo lectura.
+- El indicador de backup no expone credenciales y degrada a advertencia si no hay manifiesto.
+- La UI muestra semaforos y datos tecnicos sin acciones destructivas.
 
-- Ninguno.
+## Verificacion
 
-### No Bloqueantes
-
-- Ninguno.
-
-## Riesgos
-
-Ninguno identificado.
-
-## Pruebas Revisadas
-
-- [ ] Revision estatica
-
-## Pruebas Faltantes
-
-- [ ] Prueba manual
-
+- `mvn -q clean package`: OK.

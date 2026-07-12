@@ -1,32 +1,15 @@
-﻿# REQ-0049 - Auditoria Codex
-
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-11
-**Auditor:** Codex
+# REQ-0049 - Codex Review
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+APROBADO_POR_CODEX.
 
-## Hallazgos
+## Revision
 
-### Bloqueantes
+- `operaciones.xhtml` aplica el mismo patron que Persona: cuerpo desplazable y `pie-dialogo` fuera del scroll.
+- Los botones Cancelar/Registrar quedan siempre visibles.
+- No se modifico el action listener ni el flujo backend de creacion.
 
-- Ninguno.
+## Verificacion
 
-### No Bloqueantes
-
-- Ninguno.
-
-## Riesgos
-
-Ninguno identificado.
-
-## Pruebas Revisadas
-
-- [ ] Revision estatica
-
-## Pruebas Faltantes
-
-- [ ] Prueba manual
-
+- `mvn -q clean package`: OK.

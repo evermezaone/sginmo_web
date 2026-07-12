@@ -26,6 +26,12 @@ public class ParametroService {
     @jakarta.inject.Inject
     private ParametroConfig parametroConfig;   // REQ-0060: invalidar cache al guardar
 
+    @jakarta.inject.Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;   // obs 264: alcance por empresa
+
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // obs 269: auditoria funcional visible
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(p) FROM ParametroSistema p WHERE (:f = '' OR lower(p.clave) LIKE :like OR lower(p.descripcion) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -57,9 +63,24 @@ public class ParametroService {
         }
         try {
             if (esNuevo) {
-                // V26: PK compuesta (tenant, clave). TODO(F6): el tenant de un parametro propio
-                // sale del contexto; por ahora los defaults viven en el tenant global -1.
-                if (parametro.getTenant() == null) parametro.setTenant(-1L);
+                // V26: PK compuesta (tenant, clave). Obs 264: el alta normal crea un OVERRIDE de la
+                // empresa activa (tenant efectivo); el default global (tenant -1) queda reservado al
+                // SUPERADMIN. Asi el ABM no pisa/crea defaults globales desde una empresa comun y se
+                // respeta la prioridad "valor de empresa sobre default global" (REQ-0060/ParametroConfig).
+                Long emp = tenant.actual();
+                Long objetivo = parametro.getTenant();
+                if (objetivo == null) {
+                    objetivo = (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp))
+                            ? py.com.pysistemas.sginmo.web.TenantContext.GLOBAL : emp;
+                }
+                if (py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(objetivo) && !tenant.esSuperadmin()) {
+                    throw new NegocioException("Solo un administrador global puede crear parametros por defecto. "
+                            + "Seleccione una empresa para crear un valor propio.");
+                }
+                if (!tenant.esSuperadmin() && emp != null && !emp.equals(objetivo)) {
+                    throw new NegocioException("No puede crear parametros de otra empresa");
+                }
+                parametro.setTenant(objetivo);
                 parametro.setClave(parametro.getClave().trim().toUpperCase());
                 var pk = new py.com.pysistemas.sginmo.dominio.catalogo.ParametroSistemaId(
                         parametro.getTenant(), parametro.getClave());
@@ -68,9 +89,21 @@ public class ParametroService {
                 }
                 em.persist(parametro);
             } else {
+                // obs 269: snapshot del valor previo para el diff de auditoria
+                ParametroSistema o = em.find(ParametroSistema.class,
+                        new py.com.pysistemas.sginmo.dominio.catalogo.ParametroSistemaId(
+                                parametro.getTenant(), parametro.getClave()));
+                java.util.Map<String, Object> antes = o == null ? null : snap(o);
                 parametro = em.merge(parametro);
+                em.flush();
+                if (antes != null) {
+                    auditoria.registrarCambios("parametro_sistema", parametro.getClave(), "parametros", null, antes, snap(parametro));
+                }
+                parametroConfig.invalidar();   // REQ-0060: refresca la config cacheada
+                return parametro;
             }
             em.flush();
+            auditoria.registrarAlta("parametro_sistema", parametro.getClave(), "parametros");   // obs 269
             parametroConfig.invalidar();   // REQ-0060: refresca la config cacheada
             return parametro;
         } catch (jakarta.persistence.OptimisticLockException e) {
@@ -78,5 +111,13 @@ public class ParametroService {
         } catch (jakarta.persistence.PersistenceException e) {
             throw ErroresBd.traducir(e);
         }
+    }
+
+    /** Snapshot de campos auditables del parametro (obs 269). */
+    private static java.util.Map<String, Object> snap(ParametroSistema p) {
+        java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("valor", p.getValor());
+        m.put("descripcion", p.getDescripcion());
+        return m;
     }
 }

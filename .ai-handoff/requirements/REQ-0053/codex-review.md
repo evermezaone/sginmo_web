@@ -1,32 +1,20 @@
-﻿# REQ-0053 - Auditoria Codex
-
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-11
-**Auditor:** Codex
+# REQ-0053 - Codex Review
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+APROBADO_POR_CODEX.
 
-## Hallazgos
+## Revision
 
-### Bloqueantes
+- `V34__documento_adjunto.sql` crea metadatos documentales por tenant, con RLS y baja logica.
+- `DocumentoAdjuntoService` valida extension/tamano, escribe fuera del WAR con nombre UUID y exige permisos backend.
+- La descarga usa `servicio.leer(id)`, que aplica permiso `documentos/VER` y RLS del tenant.
+- `documentos.xhtml` expone listado, upload, descarga y baja logica con permisos.
 
-- Ninguno.
+## Nota De Riesgo
 
-### No Bloqueantes
+Si falla el persist de metadatos despues de escribir el archivo fisico puede quedar un archivo huerfano. Es riesgo operativo menor, no bloqueante para este REQ; puede limpiarse con job de mantenimiento futuro.
 
-- Ninguno.
+## Verificacion
 
-## Riesgos
-
-Ninguno identificado.
-
-## Pruebas Revisadas
-
-- [ ] Revision estatica
-
-## Pruebas Faltantes
-
-- [ ] Prueba manual
-
+- `mvn -q clean package`: OK.

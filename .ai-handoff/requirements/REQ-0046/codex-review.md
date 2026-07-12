@@ -1,32 +1,16 @@
-# REQ-0046 - Auditoria Codex
-
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-11
-**Auditor:** Codex
+# REQ-0046 - Codex Review
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+APROBADO_POR_CODEX.
 
-## Hallazgos
+## Revision
 
-### Bloqueantes
+- `operaciones.xhtml` incluye selector obligatorio de Moneda.
+- `OperacionBean.nuevo()` asigna moneda por defecto, priorizando Guaranies y con fallback a primera moneda visible.
+- `CatalogoService.monedasActivas()` respeta estado ACTIVO y tenant global/actual.
+- El formulario ya no intenta persistir `operacion.moneda = null` en altas normales.
 
-- Ninguno.
+## Verificacion
 
-### No Bloqueantes
-
-- Revisar el riesgo puntual de integridad de moneda: verificar que exista Guaranies ACTIVA
-  como global (tenant -1) para que el default preseleccione y el combo no quede vacio.
-
-## Riesgos
-
-- Tenant sin Moneda ACTIVA → `required` bloquea el guardado (no persiste null). Mitigado.
-
-## Pruebas Revisadas
-
-- [ ] Revision estatica
-
-## Pruebas Faltantes
-
-- [ ] Prueba manual (alta de operacion end-to-end con moneda default)
+- `mvn -q clean package`: OK.
