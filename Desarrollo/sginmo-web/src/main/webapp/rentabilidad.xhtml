@@ -38,26 +38,68 @@
             <div>
                 <h3>Ingresos por tipo</h3>
                 <p:dataTable var="l" value="#{rentabilidadBean.resumen.ingresos}" emptyMessage="Sin ingresos en el periodo">
-                    <p:column headerText="Tipo"><h:outputText value="#{l.etiqueta}"/> <p:tag value="pasivo" severity="warning" rendered="#{l.pasivo}"/></p:column>
+                    <p:column headerText="Tipo">
+                        <h:link outcome="/dashboard-detalle" value="#{l.etiqueta}" title="Ver movimientos">
+                            <f:param name="clave" value="ingresos"/>
+                            <f:param name="aplic" value="#{l.aplicacion}"/>
+                            <f:param name="desde" value="#{rentabilidadBean.desde}"/>
+                            <f:param name="hasta" value="#{rentabilidadBean.hasta}"/>
+                        </h:link>
+                        <p:tag value="pasivo" severity="warning" rendered="#{l.pasivo}"/>
+                    </p:column>
                     <p:column headerText="Monto" style="width:11rem; text-align:right;"><h:outputText value="#{l.monto}"><f:convertNumber pattern="#,##0"/></h:outputText></p:column>
                 </p:dataTable>
             </div>
             <div>
                 <h3>Egresos por tipo</h3>
                 <p:dataTable var="l" value="#{rentabilidadBean.resumen.egresos}" emptyMessage="Sin egresos en el periodo">
-                    <p:column headerText="Tipo"><h:outputText value="#{l.etiqueta}"/></p:column>
+                    <p:column headerText="Tipo">
+                        <h:link outcome="/dashboard-detalle" value="#{l.etiqueta}" title="Ver movimientos">
+                            <f:param name="clave" value="egresos"/>
+                            <f:param name="aplic" value="#{l.aplicacion}"/>
+                            <f:param name="desde" value="#{rentabilidadBean.desde}"/>
+                            <f:param name="hasta" value="#{rentabilidadBean.hasta}"/>
+                        </h:link>
+                    </p:column>
                     <p:column headerText="Monto" style="width:11rem; text-align:right;"><h:outputText value="#{l.monto}"><f:convertNumber pattern="#,##0"/></h:outputText></p:column>
                 </p:dataTable>
             </div>
         </div>
 
-        <h3 style="margin-top:1.2rem;">Ranking de activos por rentabilidad neta</h3>
-        <p:dataTable var="a" value="#{rentabilidadBean.ranking}" paginator="true" rows="10" emptyMessage="Sin movimientos por activo">
-            <p:column headerText="Activo"><h:outputText value="#{a.nombre}"/></p:column>
-            <p:column headerText="Neto" style="width:12rem; text-align:right;">
-                <h:outputText value="#{a.neto}" style="color:#{a.neto.signum() lt 0 ? '#c62828' : '#2e7d32'}"><f:convertNumber pattern="#,##0"/></h:outputText>
-            </p:column>
-        </p:dataTable>
+        <div class="cols" style="margin-top:1.2rem;">
+            <div>
+                <h3>Mejores activos por rentabilidad neta</h3>
+                <p:dataTable var="a" value="#{rentabilidadBean.ranking}" emptyMessage="Sin movimientos por activo">
+                    <p:column headerText="Activo">
+                        <h:link outcome="/dashboard-detalle" value="#{a.nombre}" title="Ver ingresos/egresos del activo">
+                            <f:param name="clave" value="rentabilidad_activo"/>
+                            <f:param name="ref" value="#{a.activoId}"/>
+                            <f:param name="desde" value="#{rentabilidadBean.desde}"/>
+                            <f:param name="hasta" value="#{rentabilidadBean.hasta}"/>
+                        </h:link>
+                    </p:column>
+                    <p:column headerText="Neto" style="width:11rem; text-align:right;">
+                        <h:outputText value="#{a.neto}" style="color:#{a.neto.signum() lt 0 ? '#c62828' : '#2e7d32'}"><f:convertNumber pattern="#,##0"/></h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </div>
+            <div>
+                <h3>Peores activos por rentabilidad neta</h3>
+                <p:dataTable var="a" value="#{rentabilidadBean.rankingPeores}" emptyMessage="Sin movimientos por activo">
+                    <p:column headerText="Activo">
+                        <h:link outcome="/dashboard-detalle" value="#{a.nombre}" title="Ver ingresos/egresos del activo">
+                            <f:param name="clave" value="rentabilidad_activo"/>
+                            <f:param name="ref" value="#{a.activoId}"/>
+                            <f:param name="desde" value="#{rentabilidadBean.desde}"/>
+                            <f:param name="hasta" value="#{rentabilidadBean.hasta}"/>
+                        </h:link>
+                    </p:column>
+                    <p:column headerText="Neto" style="width:11rem; text-align:right;">
+                        <h:outputText value="#{a.neto}" style="color:#{a.neto.signum() lt 0 ? '#c62828' : '#2e7d32'}"><f:convertNumber pattern="#,##0"/></h:outputText>
+                    </p:column>
+                </p:dataTable>
+            </div>
+        </div>
         <p style="color:#9ca3af; font-size:.83rem;">
             Base caja desde el ledger de ingresos/egresos (moneda base de la empresa; no mezcla monedas).
             Clasificacion por aplicacion del articulo. El deposito/garantia es pasivo y no cuenta como rentabilidad.

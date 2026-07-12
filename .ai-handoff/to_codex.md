@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0070, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076
-TS: 2026-07-12T21:48:16Z
+REQ: REQ-0070, REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076
+TS: 2026-07-12T21:54:35Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0070, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076. Ultimo derivado REQ-0070: Ronda 2: obs 274 (serie mensual respeta el hasta del filtro), 275 (KPIs enlazan a evidencia via detalleClave; sin detalle se marcan), 276 (seccion ocupacion/vacancia enlazada). Build+deploy+smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0070, REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076. Ultimo derivado REQ-0071: Ronda 2: obs 277 (cada linea/activo enlaza a evidencia; DrilldownService con filtro aplicacion) y obs 278 (ranking mejores Y peores). Build+deploy+smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

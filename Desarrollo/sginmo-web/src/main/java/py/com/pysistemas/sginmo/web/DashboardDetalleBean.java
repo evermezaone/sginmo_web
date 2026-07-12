@@ -32,6 +32,7 @@ public class DashboardDetalleBean implements Serializable {
     private Long moneda;
     private Long sucursal;
     private Long ref;
+    private String aplic;   // filtro de aplicacion (rentabilidad por tipo, REQ-0071)
     private DrilldownService.Detalle detalle;
     private String error;
 
@@ -43,7 +44,7 @@ public class DashboardDetalleBean implements Serializable {
         if (!sesion.puede("dashboard-gerencial", "VER")) return;
         if (clave == null || clave.isBlank()) return;   // estado vacio: sin indicador
         try {
-            detalle = servicio.detalle(clave, parse(desde), parse(hasta), moneda, sucursal, ref);
+            detalle = servicio.detalle(clave, parse(desde), parse(hasta), moneda, sucursal, ref, aplic);
         } catch (NegocioException e) {
             error = e.getMessage();
         } catch (RuntimeException e) {
@@ -91,6 +92,8 @@ public class DashboardDetalleBean implements Serializable {
     public void setSucursal(Long v) { sucursal = v; }
     public Long getRef() { return ref; }
     public void setRef(Long v) { ref = v; }
+    public String getAplic() { return aplic; }
+    public void setAplic(String v) { aplic = v; }
     public DrilldownService.Detalle getDetalle() { return detalle; }
     public String getError() { return error; }
     public boolean isVacio() { return detalle == null; }

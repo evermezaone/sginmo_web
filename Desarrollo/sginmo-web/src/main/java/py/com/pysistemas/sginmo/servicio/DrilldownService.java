@@ -45,6 +45,11 @@ public class DrilldownService {
 
     /** Evidencia de una clave del dashboard con filtros tipados (anti-injection: solo whitelist). */
     public Detalle detalle(String clave, LocalDate desde, LocalDate hasta, Long moneda, Long sucursal, Long refId) {
+        return detalle(clave, desde, hasta, moneda, sucursal, refId, null);
+    }
+
+    /** Variante con filtro de aplicacion (para el drill de rentabilidad por tipo, REQ-0071 obs 277). */
+    public Detalle detalle(String clave, LocalDate desde, LocalDate hasta, Long moneda, Long sucursal, Long refId, String aplicacion) {
         String[] permiso = PERMISO.get(clave);
         if (permiso == null) throw new NegocioException("Indicador de detalle no valido");
         // Permiso del modulo origen (no basta ver dashboard).
@@ -52,14 +57,15 @@ public class DrilldownService {
         Detalle d = new Detalle();
         d.clave = clave;
         d.generado = java.time.LocalDateTime.now().format(FMT_TS);
-        d.filtros = filtrosDesc(desde, hasta, moneda, sucursal, refId);
+        d.filtros = filtrosDesc(desde, hasta, moneda, sucursal, refId)
+                + (aplicacion != null && !aplicacion.isBlank() ? "   |   Tipo: " + aplicacion : "");
         Long emp = tenant.actual();
         if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) { d.titulo = "Sin empresa"; return d; }
         switch (clave) {
             case "cobros" -> cobros(d, desde, hasta, moneda, sucursal);
             case "mora" -> mora(d, hasta, moneda, sucursal);
-            case "ingresos" -> ingEgr(d, "INGRESO", desde, hasta);
-            case "egresos" -> ingEgr(d, "EGRESO", desde, hasta);
+            case "ingresos" -> ingEgr(d, "INGRESO", desde, hasta, aplicacion);
+            case "egresos" -> ingEgr(d, "EGRESO", desde, hasta, aplicacion);
             case "ocupacion" -> propiedades(d, hasta, true);
             case "vacancia" -> propiedades(d, hasta, false);
             case "rentabilidad_activo" -> rentabilidadActivo(d, refId, desde, hasta);
@@ -101,14 +107,18 @@ public class DrilldownService {
         for (Object[] f : rows(q)) d.filas.add(new String[]{ s(f[0]), s(f[1]), s(f[2]), fecha(f[3]), s(f[4]), gs(f[5]) });
     }
 
-    private void ingEgr(Detalle d, String tipo, LocalDate desde, LocalDate hasta) {
-        d.titulo = ("INGRESO".equals(tipo) ? "Ingresos" : "Egresos") + " del periodo";
+    private void ingEgr(Detalle d, String tipo, LocalDate desde, LocalDate hasta, String aplicacion) {
+        d.titulo = ("INGRESO".equals(tipo) ? "Ingresos" : "Egresos") + " del periodo"
+                + (aplicacion != null && !aplicacion.isBlank() ? " - " + aplicacion : "");
         d.columnas = new String[]{"Fecha", "Tipo/aplicacion", "Articulo", "Monto", "Observacion"};
+        boolean filtraApl = aplicacion != null && !aplicacion.isBlank();
         Query q = em.createNativeQuery(
             "SELECT ie.fecha, COALESCE(art.aplicacion,'OTROS'), art.descripcion, ie.monto, ie.observacion"
           + " FROM ingreso_egreso ie LEFT JOIN articulo art ON art.articulo=ie.articulo"
-          + " WHERE ie.tipo=:t AND ie.estado='CANCELADO' AND ie.fecha BETWEEN :d AND :h ORDER BY ie.fecha")
+          + " WHERE ie.tipo=:t AND ie.estado='CANCELADO' AND ie.fecha BETWEEN :d AND :h"
+          + (filtraApl ? " AND COALESCE(art.aplicacion,'OTROS') = :apl" : "") + " ORDER BY ie.fecha")
             .setParameter("t", tipo).setParameter("d", desde).setParameter("h", hasta);
+        if (filtraApl) q.setParameter("apl", aplicacion);
         for (Object[] f : rows(q)) d.filas.add(new String[]{ fecha(f[0]), s(f[1]), s(f[2]), gs(f[3]), s(f[4]) });
     }
 

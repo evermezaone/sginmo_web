@@ -26,7 +26,8 @@ public class RentabilidadBean implements Serializable {
     private LocalDate desde;
     private LocalDate hasta;
     private RentabilidadService.Resumen resumen;
-    private List<RentabilidadService.ActivoRent> ranking;
+    private List<RentabilidadService.ActivoRent> ranking;        // mejores
+    private List<RentabilidadService.ActivoRent> rankingPeores;  // obs 278: peores
 
     @PostConstruct
     public void iniciar() {
@@ -43,11 +44,13 @@ public class RentabilidadBean implements Serializable {
 
     public void recalcular() {
         resumen = servicio.resumen(desde, hasta);
-        ranking = servicio.rankingActivos(desde, hasta, 20);
+        ranking = servicio.rankingActivos(desde, hasta, 10, false);
+        rankingPeores = servicio.rankingActivos(desde, hasta, 10, true);
     }
 
     public RentabilidadService.Resumen getResumen() { return resumen; }
     public List<RentabilidadService.ActivoRent> getRanking() { return ranking; }
+    public List<RentabilidadService.ActivoRent> getRankingPeores() { return rankingPeores; }
     public LocalDate getDesde() { return desde; }
     public void setDesde(LocalDate desde) { this.desde = desde; }
     public LocalDate getHasta() { return hasta; }

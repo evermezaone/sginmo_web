@@ -79,8 +79,17 @@ public class RentabilidadService {
         return out;
     }
 
-    /** Ranking de activos por rentabilidad neta (ingresos operativos - egresos) del periodo. */
+    /** Ranking de activos por rentabilidad neta del periodo. Mejores (DESC) o peores (ASC). */
     public List<ActivoRent> rankingActivos(LocalDate desde, LocalDate hasta, int limite) {
+        return rankingActivos(desde, hasta, limite, false);
+    }
+
+    /**
+     * Obs 278: ranking de activos por rentabilidad neta. Con {@code peores=false} devuelve los mejores
+     * (neto DESC); con {@code peores=true} los peores (neto ASC), asi gerencia ve ambos extremos y no se
+     * ocultan los activos deficitarios por el limite.
+     */
+    public List<ActivoRent> rankingActivos(LocalDate desde, LocalDate hasta, int limite, boolean peores) {
         autorizacion.exigir(PANTALLA, "VER");
         List<ActivoRent> out = new ArrayList<>();
         Long emp = tenant.actual();
@@ -92,7 +101,7 @@ public class RentabilidadService {
           + " FROM ingreso_egreso ie JOIN activo a ON a.activo = ie.activo"
           + " LEFT JOIN articulo art ON art.articulo = ie.articulo"
           + " WHERE ie.estado='CANCELADO' AND ie.fecha BETWEEN :d AND :h"
-          + " GROUP BY a.activo, a.nombre ORDER BY neto DESC")
+          + " GROUP BY a.activo, a.nombre ORDER BY neto " + (peores ? "ASC" : "DESC"))
             .setParameter("d", desde).setParameter("h", hasta).setMaxResults(Math.max(1, limite));
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
