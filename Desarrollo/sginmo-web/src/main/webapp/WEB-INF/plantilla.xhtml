@@ -76,6 +76,8 @@
         <a class="item" href="index.xhtml"><i class="pi pi-home"></i> Inicio</a>
         <h:outputLink styleClass="item" value="dashboard-gerencial.xhtml"
                       rendered="#{sesionUsuario.puede('dashboard-gerencial','VER')}"><i class="pi pi-chart-bar"></i> Dashboard gerencial</h:outputLink>
+        <h:outputLink styleClass="item" value="ocupacion.xhtml"
+                      rendered="#{sesionUsuario.puede('ocupacion','VER')}"><i class="pi pi-home"></i> Ocupacion</h:outputLink>
         <h:outputLink styleClass="item" value="reportes.xhtml"
                       rendered="#{sesionUsuario.puede('reportes','VER')}"><i class="pi pi-file-export"></i> Reportes</h:outputLink>
 

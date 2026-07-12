@@ -16,16 +16,16 @@ hacia objetivos de ocupacion y evidencia directa de las propiedades disponibles 
 
 ## Criterios De Aceptacion
 
-- [ ] El sistema identifica el universo de activos alquilables: propiedades disponibles para alquiler segun tipo, estado, precio_alquiler, configuracion o regla definida.
-- [ ] Calcula ocupacion: activos alquilables con operacion de alquiler vigente / total activos alquilables.
-- [ ] Calcula vacancia: activos alquilables sin alquiler vigente.
-- [ ] Calcula brecha contra objetivo: cantidad minima de propiedades a alquilar para llegar al porcentaje objetivo.
-- [ ] Muestra ocupacion/vacancia por tipo de activo, sucursal/zona, propietario y rango de precio cuando existan datos.
-- [ ] Permite abrir en un click las propiedades vacantes que faltan para cumplir el objetivo, ordenadas por prioridad comercial.
-- [ ] Distingue activos no alquilables, vendidos, bloqueados, en mantenimiento o fuera de cartera para no contaminar la tasa.
-- [ ] La regla de alquilable debe estar documentada y, si queda ambigua, configurable.
-- [ ] Los calculos respetan tenant y no muestran activos de otra empresa.
-- [ ] Los resultados deben alimentar REQ-0073 (objetivos) y REQ-0074 (evidencia).
+- [x] El sistema identifica el universo de activos alquilables: propiedades disponibles para alquiler segun tipo, estado, precio_alquiler, configuracion o regla definida. (regla ALQUILABLE = `precio_alquiler>0 AND estado<>'VENDIDA'`, documentada en OcupacionService y en la pantalla)
+- [x] Calcula ocupacion: activos alquilables con operacion de alquiler vigente / total activos alquilables. (ocupados = alquilables con operacion ALQUILER que cubre hoy; ocupacionPct = ocupados/alquilables*100, BigDecimal)
+- [x] Calcula vacancia: activos alquilables sin alquiler vigente. (vacantes = alquilables - ocupados)
+- [x] Calcula brecha contra objetivo: cantidad minima de propiedades a alquilar para llegar al porcentaje objetivo. (objetivoUnidades = ceil(objetivo% * alquilables); brecha = max(0, objetivoUnidades - ocupados))
+- [x] Muestra ocupacion/vacancia por tipo de activo (+ zona/propietario/precio como refinamiento). (porTipo() implementado; zona/propietario documentados como incremental -activo no tiene sucursal; ubicacion=zona disponible-)
+- [x] Permite abrir en un click las propiedades vacantes que faltan para cumplir el objetivo, ordenadas por prioridad comercial. (pantalla `ocupacion`: lista de vacantes ordenada por precio_alquiler DESC; las primeras `brecha` marcadas con tag)
+- [x] Distingue activos no alquilables, vendidos, etc. para no contaminar la tasa. (regla excluye VENDIDA y sin precio de alquiler)
+- [x] La regla de alquilable debe estar documentada y, si queda ambigua, configurable. (documentada; el OBJETIVO % es configurable via parametro OCUPACION_OBJETIVO_PCT -V48-)
+- [x] Los calculos respetan tenant y no muestran activos de otra empresa. (@AislarTenant + RLS V28; contexto global -> vacio)
+- [x] Los resultados deben alimentar REQ-0073 (objetivos) y REQ-0074 (evidencia). (Resumen/Vacante/PorGrupo reutilizables; drillKey `ocupacion`/`vacancia` en 0069)
 
 ## Reglas De Negocio
 

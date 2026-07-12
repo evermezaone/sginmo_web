@@ -1,0 +1,2 @@
+{"ts":"2026-07-12T16:45:00Z","actor":"claude","evento":"implementado","nota":"V48 (param OCUPACION_OBJETIVO_PCT + pantalla ocupacion); OcupacionService (resumen/vacantes/porTipo, regla alquilable, brecha al objetivo); OcupacionBean + ocupacion.xhtml con lista clicable de vacantes"}
+{"ts":"2026-07-12T16:45:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; Flyway V48; smoke 32/32 (ocupacion 200 tras corregir p:panelGrid columns=5 -> flex)"}

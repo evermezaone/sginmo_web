@@ -1,0 +1,72 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{ocupacionBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Ocupacion y vacancia</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" life="4000"/>
+
+        <style>
+            .kpis { display:flex; flex-wrap:wrap; gap:1rem; margin:.4rem 0 1rem; }
+            .kpi { flex:1 1 8rem; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:1rem 1.1rem; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+            .kpi-val { font-size:1.7rem; font-weight:700; color:#1d3557; line-height:1.1; }
+            .kpi-lbl { color:#6c757d; font-size:.8rem; margin-top:.25rem; }
+        </style>
+        <div class="kpis">
+            <div class="kpi"><div class="kpi-val">#{ocupacionBean.resumen.alquilables}</div><div class="kpi-lbl">Alquilables</div></div>
+            <div class="kpi"><div class="kpi-val">#{ocupacionBean.resumen.ocupados}</div><div class="kpi-lbl">Ocupados</div></div>
+            <div class="kpi">
+                <div class="kpi-val">#{ocupacionBean.resumen.ocupacionPct}%</div>
+                <div class="kpi-lbl">Ocupacion (objetivo #{ocupacionBean.resumen.objetivoPct}%)</div>
+            </div>
+            <div class="kpi"><div class="kpi-val">#{ocupacionBean.resumen.vacantes}</div><div class="kpi-lbl">Vacantes</div></div>
+            <div class="kpi">
+                <div class="kpi-val" style="color:#{ocupacionBean.resumen.cumpleObjetivo ? '#2e7d32' : '#c62828'}">#{ocupacionBean.resumen.brecha}</div>
+                <div class="kpi-lbl">
+                    <h:outputText value="Objetivo cumplido" rendered="#{ocupacionBean.resumen.cumpleObjetivo}"/>
+                    <h:outputText value="Faltan alquilar para llegar al #{ocupacionBean.resumen.objetivoPct}%"
+                                  rendered="#{not ocupacionBean.resumen.cumpleObjetivo}"/>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="margin-top:1.4rem;">Ocupacion por tipo de activo</h3>
+        <p:dataTable var="g" value="#{ocupacionBean.porTipo}" emptyMessage="Sin activos alquilables">
+            <p:column headerText="Tipo"><h:outputText value="#{g.grupo}"/></p:column>
+            <p:column headerText="Alquilables" style="width:9rem; text-align:right;"><h:outputText value="#{g.alquilables}"/></p:column>
+            <p:column headerText="Ocupados" style="width:9rem; text-align:right;"><h:outputText value="#{g.ocupados}"/></p:column>
+            <p:column headerText="Vacantes" style="width:9rem; text-align:right;"><h:outputText value="#{g.vacantes}"/></p:column>
+            <p:column headerText="Ocupacion %" style="width:9rem; text-align:right;"><h:outputText value="#{g.ocupacionPct}%"/></p:column>
+        </p:dataTable>
+
+        <h3 style="margin-top:1.4rem;">
+            Propiedades vacantes (prioridad comercial) &#8212; las primeras #{ocupacionBean.resumen.brecha} cierran la brecha
+        </h3>
+        <p:dataTable id="vac" var="v" value="#{ocupacionBean.vacantes}" rowIndexVar="ix" paginator="true" rows="15"
+                     emptyMessage="No hay propiedades vacantes">
+            <p:column headerText="" style="width:2.5rem; text-align:center;">
+                <p:tag value="!" severity="danger" rendered="#{ocupacionBean.enBrecha(ix)}"
+                       title="Dentro de la brecha hacia el objetivo"/>
+            </p:column>
+            <p:column headerText="Propiedad"><h:outputText value="#{v.nombre}"/></p:column>
+            <p:column headerText="Tipo" style="width:12rem;"><h:outputText value="#{v.tipo}"/></p:column>
+            <p:column headerText="Direccion"><h:outputText value="#{v.direccion}"/></p:column>
+            <p:column headerText="Precio alquiler" style="width:11rem; text-align:right;">
+                <h:outputText value="#{v.precioAlquiler}">
+                    <f:convertNumber pattern="#,##0"/>
+                </h:outputText>
+            </p:column>
+        </p:dataTable>
+        <p style="color:#9ca3af; font-size:.83rem;">
+            Regla de alquilable: activo con precio de alquiler &gt; 0 y no vendido. El objetivo (%) se configura
+            en Parametros (OCUPACION_OBJETIVO_PCT). Solo se muestran propiedades de su empresa.
+        </p>
+    </h:form>
+</ui:define>
+</ui:composition>
