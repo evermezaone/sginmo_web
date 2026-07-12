@@ -16,6 +16,19 @@ public final class ErroresBd {
     public static NegocioException traducir(RuntimeException excepcion) {
         Throwable causa = excepcion;
         while (causa != null) {
+            // REQ-0076: los RAISE EXCEPTION del motor (PL/pgSQL, SQLState P0001) son mensajes de NEGOCIO
+            // deliberados (ej. "No hay timbrado ACTIVO..."); se muestran tal cual en vez de fallar en
+            // silencio. Solo P0001 (raise_exception), nunca un error tecnico crudo.
+            if (causa instanceof java.sql.SQLException sql && "P0001".equals(sql.getSQLState())) {
+                String m = sql.getMessage();
+                if (m != null && !m.isBlank()) {
+                    // psql suele anteponer "ERROR: "; se limpia y se corta a una linea.
+                    m = m.replaceFirst("(?i)^error:\\s*", "").trim();
+                    int nl = m.indexOf('\n');
+                    if (nl > 0) m = m.substring(0, nl).trim();
+                    return new NegocioException(m);
+                }
+            }
             if (causa.getClass().getName().contains("ConstraintViolation")) {
                 String mensaje = causa.getMessage() == null ? "" : causa.getMessage().toLowerCase();
                 if (mensaje.contains("foreign key") || mensaje.contains("violates foreign")) {

@@ -121,6 +121,11 @@ public class OperacionBean implements Serializable {
             org.primefaces.PrimeFaces.current().ajax().update("frmLista:tabla", "frmLista:mensajes");
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo registrar", e.getMessage());
+        } catch (RuntimeException e) {
+            // REQ-0076: ningun fallo debe quedar silencioso. Un error tecnico (p.ej. reintento con la
+            // entidad ya persistida en un intento previo) se muestra y se pide reabrir el dialogo limpio.
+            aviso(FacesMessage.SEVERITY_ERROR, "No se pudo registrar la operación",
+                    "Ocurrió un error al registrar. Cierre el diálogo y vuelva a abrir 'Nueva operación' para reintentar.");
         }
     }
 

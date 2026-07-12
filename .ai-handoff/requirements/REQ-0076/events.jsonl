@@ -1,0 +1,3 @@
+{"ts":"2026-07-12T19:44:48.344Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"BUG alta de operacion: falla silenciosa y timbrado interno DINT faltante"}
+{"ts":"2026-07-12T20:10:00Z","actor":"claude","evento":"implementado","nota":"ErroresBd surface RAISE P0001; crearDocumentoInterno autoprovisiona rango interno DINT/OP por tenant (no fiscal); OperacionBean.crear captura RuntimeException (sin fallas silenciosas)"}
+{"ts":"2026-07-12T20:10:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy; smoke 36/36; columnas rango_comprobante verificadas por migraciones"}

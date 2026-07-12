@@ -36,7 +36,7 @@
                             required="true" requiredMessage="Ingrese su contraseña" maxlength="60" toggleMask="true"/>
             </div>
             <p:commandButton id="btnEntrar" widgetVar="btnEntrar" value="Ingresar" icon="pi pi-sign-in"
-                             action="#{loginBean.entrar()}" update="frmLogin" style="width:100%;"/>
+                             action="#{loginBean.entrar()}" ajax="false" style="width:100%;"/>
             <p:defaultCommand target="btnEntrar"/>
         </h:form>
     </div>

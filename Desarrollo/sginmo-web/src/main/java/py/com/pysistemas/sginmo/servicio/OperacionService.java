@@ -244,6 +244,17 @@ public class OperacionService {
     /** Documento interno (DINT) ENTRADA: numerado por f_siguiente_numero, detalle unico. */
     private Long crearDocumentoInterno(Operacion op, BigDecimal monto, String concepto) {
         String usr = usuarioAuditoria();
+        // REQ-0076: el documento interno (DINT/OP) respalda la cuenta corriente del cronograma; es de
+        // uso INTERNO, no fiscal, por lo que no requiere un timbrado real. Si la empresa aun no tiene un
+        // rango interno para DINT/OP, se autoprovisiona uno amplio (asi el alta de operacion no falla por
+        // "No hay timbrado ACTIVO"). Idempotente y aislado por tenant (RLS).
+        em.createNativeQuery(
+            "INSERT INTO rango_comprobante (tenant, tipo, serie, numero_desde, numero_actual, numero_hasta,"
+          + " estado, usuario_creacion, fecha_creacion)"
+          + " SELECT :emp, 'DINT', 'OP', 1, 1, 999999999, 'ACTIVO', 'sistema', now()"
+          + " WHERE NOT EXISTS (SELECT 1 FROM rango_comprobante rc WHERE rc.tenant = :emp"
+          + "   AND rc.tipo = 'DINT' AND rc.serie = 'OP' AND rc.estado = 'ACTIVO')")
+            .setParameter("emp", op.getTenant()).executeUpdate();
         Object num = em.createNativeQuery("SELECT f_siguiente_numero(:emp, 'DINT', 'OP')")
             .setParameter("emp", op.getTenant()).getSingleResult();
         em.createNativeQuery(
