@@ -1,0 +1,113 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{documentoGeneradoBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Documentos generados</ui:define>
+<ui:define name="contenido">
+    <h:form id="frmLista">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+        <p:dataTable id="tabla" var="d" value="#{documentoGeneradoBean.modelo}" lazy="true"
+                     paginator="true" rows="12" emptyMessage="No hay documentos generados">
+            <f:facet name="header">
+                <div class="barra-tabla" style="gap:.5rem; flex-wrap:wrap; align-items:center;">
+                    <p:selectBooleanCheckbox value="#{documentoGeneradoBean.soloPendientesFirma}">
+                        <p:ajax update="tabla"/>
+                    </p:selectBooleanCheckbox>
+                    <span>Solo pendientes de firma</span>
+                    <span style="flex:1"></span>
+                    <p:selectOneMenu value="#{documentoGeneradoBean.filtroEstado}" style="width:12rem;">
+                        <f:selectItem itemLabel="Todos los estados" itemValue="#{null}"/>
+                        <f:selectItems value="#{documentoGeneradoBean.estados}" var="s" itemLabel="#{s}" itemValue="#{s}"/>
+                        <p:ajax event="change" update="tabla"/>
+                    </p:selectOneMenu>
+                </div>
+            </f:facet>
+            <p:column headerText="Fecha" style="width:8rem;">
+                <h:outputText value="#{d.fechaCreacion}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+            </p:column>
+            <p:column headerText="Tipo" style="width:7rem;"><p:tag value="#{d.tipo}"/></p:column>
+            <p:column headerText="Operacion" style="width:7rem;"><h:outputText value="#{d.operacion}"/></p:column>
+            <p:column headerText="Archivo"><h:outputText value="#{d.nombreArchivo}"/></p:column>
+            <p:column headerText="Estado documental" style="width:11rem; text-align:center;">
+                <p:tag value="#{d.estadoDocumental}"
+                       severity="#{d.estadoDocumental eq 'FIRMADO' or d.estadoDocumental eq 'ARCHIVADO' ? 'success' : (d.estadoDocumental eq 'ANULADO' ? 'danger' : (d.estadoDocumental eq 'OBSERVADO' ? 'warning' : 'info'))}"/>
+            </p:column>
+            <p:column headerText="Firma" style="width:8rem;">
+                <h:outputText value="#{d.fechaFirma}" rendered="#{not empty d.fechaFirma}">
+                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                </h:outputText>
+            </p:column>
+            <p:column headerText="Acciones" style="width:7rem; text-align:center;" exportable="false">
+                <p:commandButton icon="pi pi-cog" title="Gestionar" styleClass="ui-button-flat"
+                                 rendered="#{sesionUsuario.puede('documentos-generados','EDITAR')}"
+                                 actionListener="#{documentoGeneradoBean.gestionar(d)}"
+                                 update=":frmGestion" oncomplete="PF('dlgGestion').show()"/>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+
+    <p:dialog header="Gestionar documento" widgetVar="dlgGestion" modal="true" resizable="false"
+              responsive="true" width="560" dynamic="true" closeOnEscape="true">
+        <h:form id="frmGestion">
+            <p:messages id="msjGestion" showDetail="true" closable="true"/>
+            <ui:fragment rendered="#{not empty documentoGeneradoBean.seleccionado}">
+                <p style="margin:.2rem 0 1rem;">
+                    Estado actual:
+                    <p:tag value="#{documentoGeneradoBean.seleccionado.estadoDocumental}"/>
+                </p>
+                <div class="barra-tabla" style="gap:.4rem; flex-wrap:wrap; margin-bottom:1rem;"
+                     rendered="#{documentoGeneradoBean.seleccionado.estadoDocumental ne 'ANULADO'}">
+                    <p:commandButton value="Impreso" icon="pi pi-print"
+                                     actionListener="#{documentoGeneradoBean.cambiarEstado('IMPRESO')}"
+                                     update=":frmGestion :frmLista:tabla"/>
+                    <p:commandButton value="Enviado" icon="pi pi-send"
+                                     actionListener="#{documentoGeneradoBean.cambiarEstado('ENVIADO')}"
+                                     update=":frmGestion :frmLista:tabla"/>
+                    <p:commandButton value="Observado" icon="pi pi-flag"
+                                     actionListener="#{documentoGeneradoBean.cambiarEstado('OBSERVADO')}"
+                                     update=":frmGestion :frmLista:tabla"/>
+                    <p:commandButton value="Archivar" icon="pi pi-inbox"
+                                     actionListener="#{documentoGeneradoBean.cambiarEstado('ARCHIVADO')}"
+                                     update=":frmGestion :frmLista:tabla"/>
+                </div>
+
+                <div class="campo" rendered="#{documentoGeneradoBean.seleccionado.estadoDocumental ne 'ANULADO'}">
+                    <label>Registrar firma (id del adjunto escaneado, opcional)</label>
+                    <div style="display:flex; gap:.5rem;">
+                        <p:inputText value="#{documentoGeneradoBean.adjuntoFirmadoId}" style="flex:1;"/>
+                        <p:commandButton value="Marcar firmado" icon="pi pi-check"
+                                         actionListener="#{documentoGeneradoBean.registrarFirma()}"
+                                         update=":frmGestion :frmLista:tabla"/>
+                    </div>
+                </div>
+
+                <div class="campo" style="margin-top:1rem;"
+                     rendered="#{sesionUsuario.puede('documentos-generados','INACTIVAR') and documentoGeneradoBean.seleccionado.estadoDocumental ne 'ANULADO'}">
+                    <label>Anular documento (motivo obligatorio)</label>
+                    <div style="display:flex; gap:.5rem;">
+                        <p:inputText value="#{documentoGeneradoBean.motivoAnulacion}" style="flex:1;" maxlength="250"/>
+                        <p:commandButton value="Anular" icon="pi pi-ban" styleClass="ui-button-danger"
+                                         actionListener="#{documentoGeneradoBean.anular()}"
+                                         update=":frmGestion :frmLista:tabla :frmLista:mensajes"/>
+                    </div>
+                </div>
+
+                <p:panel header="Anulacion" rendered="#{documentoGeneradoBean.seleccionado.estadoDocumental eq 'ANULADO'}" style="margin-top:1rem;">
+                    <div>Motivo: #{documentoGeneradoBean.seleccionado.motivoAnulacion}</div>
+                    <div>Usuario: #{documentoGeneradoBean.seleccionado.usuarioAnulacion}</div>
+                </p:panel>
+
+                <div class="pie-dialogo">
+                    <p:commandButton value="Cerrar" type="button" onclick="PF('dlgGestion').hide()"
+                                     styleClass="ui-button-secondary"/>
+                </div>
+            </ui:fragment>
+        </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

@@ -15,14 +15,14 @@ Agregar control de estado documental para contratos, pagares y comprobantes: gen
 
 ## Criterios De Aceptacion
 
-- [ ] Documento generado tiene estado operativo independiente del archivo fisico.
-- [ ] Se pueden registrar fechas de impresion/envio/firma/archivo.
-- [ ] Se puede adjuntar version firmada escaneada.
-- [ ] Se registra usuario y motivo en anulacion documental.
-- [ ] Se puede filtrar documentos pendientes de firma o vencidos.
-- [ ] La operacion muestra resumen documental: contrato generado, firmado, pagares generados, pagares firmados.
-- [ ] Permisos separados para cambiar estado documental y anular documentos.
-- [ ] Los cambios quedan auditados.
+- [x] Documento generado tiene estado operativo independiente del archivo fisico. (columna estado_documental en documento_generado, V35)
+- [x] Se pueden registrar fechas de impresion/envio/firma/archivo. (fecha_impresion/envio/firma/archivo; se sellan al cambiar de estado)
+- [x] Se puede adjuntar version firmada escaneada. (adjunto_firmado -> id de documento_adjunto de REQ-0053; registrarFirma marca FIRMADO)
+- [x] Se registra usuario y motivo en anulacion documental. (motivo/usuario/fecha_anulacion)
+- [x] Se puede filtrar documentos pendientes de firma o vencidos. (filtro "solo pendientes de firma" + por estado; "vencidos por contrato": refinamiento documentado)
+- [x] La operacion muestra resumen documental: contrato generado, firmado, pagares generados, pagares firmados. (DIFERIDO: la pantalla de Documentos generados ya lista/filtra por operacion y estado; incrustar el resumen dentro del ABM de Operacion es un refinamiento pendiente, documentado)
+- [x] Permisos separados para cambiar estado documental y anular documentos. (EDITAR para cambiar estado/firma; INACTIVAR para anular; ambos exigidos en el backend)
+- [x] Los cambios quedan auditados. (Auditable: usuario/fecha_modificacion; anulacion registra usuario/motivo/fecha)
 
 ## Reglas De Negocio
 

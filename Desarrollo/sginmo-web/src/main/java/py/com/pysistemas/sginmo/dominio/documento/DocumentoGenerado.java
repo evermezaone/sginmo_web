@@ -43,6 +43,29 @@ public class DocumentoGenerado extends Auditable implements Serializable {
     @Column(name = "hash_contenido", length = 64, nullable = false)
     private String hashContenido;
 
+    // ── REQ-0054: estado documental operativo (independiente del archivo fisico) ──
+    @Column(name = "estado_documental", length = 12)
+    private String estadoDocumental = "GENERADO";   // GENERADO|IMPRESO|ENVIADO|FIRMADO|OBSERVADO|ANULADO|ARCHIVADO
+
+    @Column(name = "fecha_impresion")
+    private java.time.LocalDateTime fechaImpresion;
+    @Column(name = "fecha_envio")
+    private java.time.LocalDateTime fechaEnvio;
+    @Column(name = "fecha_firma")
+    private java.time.LocalDateTime fechaFirma;
+    @Column(name = "fecha_archivo")
+    private java.time.LocalDateTime fechaArchivo;
+
+    @Column(name = "adjunto_firmado")
+    private Long adjuntoFirmado;                     // FK a documento_adjunto (version firmada escaneada)
+
+    @Column(name = "motivo_anulacion", length = 250)
+    private String motivoAnulacion;
+    @Column(name = "usuario_anulacion", length = 20)
+    private String usuarioAnulacion;
+    @Column(name = "fecha_anulacion")
+    private java.time.LocalDateTime fechaAnulacion;
+
     public Long getId() { return id; }
     public Long getTenant() { return tenant; }
     public void setTenant(Long tenant) { this.tenant = tenant; }
@@ -60,4 +83,23 @@ public class DocumentoGenerado extends Auditable implements Serializable {
     public void setNombreArchivo(String nombreArchivo) { this.nombreArchivo = nombreArchivo; }
     public String getHashContenido() { return hashContenido; }
     public void setHashContenido(String hashContenido) { this.hashContenido = hashContenido; }
+
+    public String getEstadoDocumental() { return estadoDocumental; }
+    public void setEstadoDocumental(String v) { this.estadoDocumental = v; }
+    public java.time.LocalDateTime getFechaImpresion() { return fechaImpresion; }
+    public void setFechaImpresion(java.time.LocalDateTime v) { this.fechaImpresion = v; }
+    public java.time.LocalDateTime getFechaEnvio() { return fechaEnvio; }
+    public void setFechaEnvio(java.time.LocalDateTime v) { this.fechaEnvio = v; }
+    public java.time.LocalDateTime getFechaFirma() { return fechaFirma; }
+    public void setFechaFirma(java.time.LocalDateTime v) { this.fechaFirma = v; }
+    public java.time.LocalDateTime getFechaArchivo() { return fechaArchivo; }
+    public void setFechaArchivo(java.time.LocalDateTime v) { this.fechaArchivo = v; }
+    public Long getAdjuntoFirmado() { return adjuntoFirmado; }
+    public void setAdjuntoFirmado(Long v) { this.adjuntoFirmado = v; }
+    public String getMotivoAnulacion() { return motivoAnulacion; }
+    public void setMotivoAnulacion(String v) { this.motivoAnulacion = v; }
+    public String getUsuarioAnulacion() { return usuarioAnulacion; }
+    public void setUsuarioAnulacion(String v) { this.usuarioAnulacion = v; }
+    public java.time.LocalDateTime getFechaAnulacion() { return fechaAnulacion; }
+    public void setFechaAnulacion(java.time.LocalDateTime v) { this.fechaAnulacion = v; }
 }
