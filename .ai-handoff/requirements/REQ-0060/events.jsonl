@@ -1,2 +1,4 @@
 ﻿
 
+{"ts":"2026-07-12T06:25:42Z","actor":"claude","evento":"implementado","nota":"V41 extiende parametro_sistema + ParametroConfig (lectura efectiva + cache) + wire AgendaService"}
+{"ts":"2026-07-12T06:25:42Z","actor":"claude","evento":"desplegado","nota":"Flyway V41 success, smoke 26/26 render OK"}

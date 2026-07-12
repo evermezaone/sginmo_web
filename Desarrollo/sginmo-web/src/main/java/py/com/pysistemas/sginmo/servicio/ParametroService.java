@@ -23,6 +23,9 @@ public class ParametroService {
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
 
+    @jakarta.inject.Inject
+    private ParametroConfig parametroConfig;   // REQ-0060: invalidar cache al guardar
+
     public long contar(String filtro) {
         var q = em.createQuery("SELECT COUNT(p) FROM ParametroSistema p WHERE (:f = '' OR lower(p.clave) LIKE :like OR lower(p.descripcion) LIKE :like)", Long.class);
         filtroGlobal(q, filtro);
@@ -68,6 +71,7 @@ public class ParametroService {
                 parametro = em.merge(parametro);
             }
             em.flush();
+            parametroConfig.invalidar();   // REQ-0060: refresca la config cacheada
             return parametro;
         } catch (jakarta.persistence.OptimisticLockException e) {
             throw new NegocioException("El parámetro fue modificado por otro usuario. Vuelva a abrir el diálogo y reintente.");

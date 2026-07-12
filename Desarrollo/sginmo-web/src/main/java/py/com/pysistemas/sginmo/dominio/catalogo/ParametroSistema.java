@@ -32,6 +32,21 @@ public class ParametroSistema extends Auditable implements Serializable {
     @Column(name = "descripcion", length = 180, nullable = false)
     private String descripcion;
 
+    // ── REQ-0060: metadatos de parametrizacion avanzada ──
+    @Column(name = "tipo", length = 12)
+    private String tipo = "STRING";     // STRING|ENTERO|DECIMAL|BOOLEAN|FECHA
+    @Column(name = "grupo", length = 40)
+    private String grupo;
+    @Column(name = "valor_defecto", length = 120)
+    private String valorDefecto;
+
+    public String getTipo() { return tipo; }
+    public void setTipo(String tipo) { this.tipo = tipo; }
+    public String getGrupo() { return grupo; }
+    public void setGrupo(String grupo) { this.grupo = grupo; }
+    public String getValorDefecto() { return valorDefecto; }
+    public void setValorDefecto(String v) { this.valorDefecto = v; }
+
     /** true si el valor es sensible (clave/contrasena): se enmascara en la grilla. */
     public boolean isSensible() {
         return clave != null && (clave.contains("CLAVE") || clave.contains("PASS"));

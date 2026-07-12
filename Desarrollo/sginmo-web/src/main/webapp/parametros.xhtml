@@ -30,6 +30,9 @@
             <p:column headerText="Clave" style="width:16rem; white-space:nowrap;" toggleable="false">
                 <h:outputText value="#{par.clave}" style="font-family:monospace;"/>
             </p:column>
+            <p:column headerText="Grupo" style="width:9rem;">
+                <p:tag value="#{empty par.grupo ? 'General' : par.grupo}"/>
+            </p:column>
             <p:column headerText="Valor" style="width:14rem;">
                 <h:outputText value="#{par.sensible ? '••••••••' : par.valor}"/>
             </p:column>

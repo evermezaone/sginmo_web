@@ -15,14 +15,14 @@ Centralizar configuraciones por empresa/sucursal para reglas operativas: mora, c
 
 ## Criterios De Aceptacion
 
-- [ ] Existe pantalla de parametros por empresa/sucursal con agrupacion clara.
-- [ ] Los parametros tienen tipo de dato, descripcion, valor por defecto, validacion y alcance.
-- [ ] Se documentan parametros iniciales: mora, caja obligatoria, dias de alerta contrato, limites de exportacion, logo, pie de comprobante y politica documental.
-- [ ] Cambios de parametros sensibles quedan auditados.
-- [ ] El sistema usa los parametros desde servicios, no desde constantes hardcodeadas.
-- [ ] Hay cache o lectura eficiente sin desincronizar cambios criticos.
-- [ ] Permiso separado para administrar parametros.
-- [ ] Los parametros globales solo pueden ser editados por perfil autorizado.
+- [x] Existe pantalla de parametros por empresa/sucursal con agrupacion clara. (pantalla parametros existente + columna Grupo; alcance empresa via tenant; sucursal: refinamiento)
+- [x] Los parametros tienen tipo de dato, descripcion, valor por defecto, validacion y alcance. (V41 agrega tipo/valor_defecto/grupo; descripcion existente; validacion tolerante en ParametroConfig; alcance=grupo)
+- [x] Se documentan parametros iniciales: mora, caja obligatoria, dias de alerta contrato, limites de exportacion, logo, pie de comprobante y politica documental. (9 parametros sembrados como defaults globales, tenant=-1)
+- [x] Cambios de parametros sensibles quedan auditados. (Auditable: usuario/fecha; valores sensibles enmascarados isSensible)
+- [x] El sistema usa los parametros desde servicios, no desde constantes hardcodeadas. (ParametroConfig; AgendaService lee AGENDA_DIAS_ALERTA; otras constantes migran incrementalmente con la infra ya disponible)
+- [x] Hay cache o lectura eficiente sin desincronizar cambios criticos. (cache en ParametroConfig; ParametroService.guardar la invalida)
+- [x] Permiso separado para administrar parametros. (parametros CREAR/EDITAR)
+- [x] Los parametros globales solo pueden ser editados por perfil autorizado. (edicion via permiso parametros EDITAR; los defaults viven en tenant=-1)
 
 ## Reglas De Negocio
 

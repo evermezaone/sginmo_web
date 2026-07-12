@@ -39,6 +39,9 @@ public class AgendaService {
     @jakarta.inject.Inject
     private TenantContext tenant;
 
+    @jakarta.inject.Inject
+    private ParametroConfig parametros;   // REQ-0060: dias de alerta desde parametros, no constante
+
     // ── Lectura (LazyDataModel) ──
 
     private StringBuilder base(String filtro, String tipo, String estado, String responsable) {
@@ -135,6 +138,7 @@ public class AgendaService {
     public void generarAutomaticos() {
         Long emp = tenant.actual();
         if (emp == null || TenantContext.GLOBAL.equals(emp)) return;
+        int diasAlerta = parametros.entero("AGENDA_DIAS_ALERTA", DIAS_ALERTA);   // REQ-0060
 
         // Cuotas PENDIENTE por vencer o vencidas (la cuota se aisla por JOIN a operacion).
         em.createNativeQuery(
@@ -147,7 +151,7 @@ public class AgendaService {
           + "FROM cronograma_cuota cc JOIN operacion o ON o.operacion = cc.operacion "
           + "WHERE cc.estado = 'PENDIENTE' AND cc.fecha_vencimiento <= current_date + :dias "
           + "ON CONFLICT (tenant, tipo, origen_tabla, origen_id) WHERE origen_id IS NOT NULL DO NOTHING")
-          .setParameter("dias", DIAS_ALERTA).executeUpdate();
+          .setParameter("dias", diasAlerta).executeUpdate();
 
         // Contratos VIGENTE proximos a vencer.
         em.createNativeQuery(
@@ -159,7 +163,7 @@ public class AgendaService {
           + "FROM operacion o WHERE o.estado = 'VIGENTE' AND o.fecha_fin_contrato IS NOT NULL "
           + "  AND o.fecha_fin_contrato BETWEEN current_date AND current_date + :dias "
           + "ON CONFLICT (tenant, tipo, origen_tabla, origen_id) WHERE origen_id IS NOT NULL DO NOTHING")
-          .setParameter("dias", DIAS_ALERTA).executeUpdate();
+          .setParameter("dias", diasAlerta).executeUpdate();
 
         // REQ-0057: promesas de pago incumplidas (PENDIENTE con fecha vencida) -> alerta en la agenda.
         // Idempotente (dedup por origen). Solo lee promesa_pago; no modifica la promesa ni la cuota.
