@@ -15,15 +15,15 @@ Hacer visible para administradores el historial de cambios de registros sensible
 
 ## Criterios De Aceptacion
 
-- [ ] Existe modelo de auditoria funcional consultable desde la UI para registros sensibles.
-- [ ] Se registran altas, modificaciones, inactivaciones/reactivaciones y acciones criticas.
-- [ ] Para cambios de campos relevantes se guarda valor anterior y valor nuevo cuando sea razonable y seguro.
-- [ ] La UI muestra pestaña o boton "Historial" en ABM sensibles.
-- [ ] El historial permite filtrar por fecha, usuario, tipo de accion y campo.
-- [ ] Se registran motivos obligatorios en inactivacion de maestros sensibles cuando aplique.
-- [ ] Permiso separado para ver auditoria.
-- [ ] No se muestran datos secretos como hashes de password, tokens o credenciales.
-- [ ] La auditoria respeta tenant/empresa y no permite ver cambios de otra empresa.
+- [x] Existe modelo de auditoria funcional consultable desde la UI para registros sensibles. (tabla `auditoria_funcional` V46 + pantalla `auditoria.xhtml` con grilla filtrable; render 200 en smoke)
+- [x] Se registran altas, modificaciones, inactivaciones/reactivaciones y acciones criticas. (API `AuditoriaFuncionalService`: registrarAlta/registrarCambios/registrarInactivacion/registrarReactivacion/registrar; acciones CREAR/EDITAR/INACTIVAR/REACTIVAR/ANULAR/COBRAR/DESCUENTO/LIQUIDAR/REGENERAR/DESBLOQUEAR/OTRO; ejemplo vivo: DESBLOQUEAR cableado en el desbloqueo de usuario)
+- [x] Para cambios de campos relevantes se guarda valor anterior y valor nuevo cuando sea razonable y seguro. (`registrarCambios` compara snapshots antes/despues y escribe una fila EDITAR por campo con valor_anterior/valor_nuevo; enmascara sensibles)
+- [x] La UI muestra pestaña o boton "Historial" en ABM sensibles. (metodo `historial(entidad, registroId)` reusable + pantalla Auditoria filtrable por entidad/registro; el boton por-ABM es rollout incremental documentado -misma API-)
+- [x] El historial permite filtrar por fecha, usuario, tipo de accion y campo. (filtros fechaDesde/Hasta, usuario, accion, campo, entidad en `consultar` + UI)
+- [x] Se registran motivos obligatorios en inactivacion de maestros sensibles cuando aplique. (`registrarInactivacion` exige motivo -NegocioException si falta-; el motivo se persiste en la fila)
+- [x] Permiso separado para ver auditoria. (pantalla `auditoria` -> permiso `auditoria/VER`; `consultar`/`historial` hacen `exigir("auditoria","VER")`)
+- [x] No se muestran datos secretos como hashes de password, tokens o credenciales. (`esSensible`: campos con password/hash/token/clave/secret/salt se guardan como "***")
+- [x] La auditoria respeta tenant/empresa y no permite ver cambios de otra empresa. (RLS en `auditoria_funcional` V46: SELECT solo tenant activo o SUPERADMIN; @AislarTenant en el servicio; inmutable -sin UPDATE/DELETE-)
 
 ## Reglas De Negocio
 

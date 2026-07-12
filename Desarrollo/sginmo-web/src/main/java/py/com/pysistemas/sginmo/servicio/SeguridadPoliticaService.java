@@ -25,6 +25,8 @@ public class SeguridadPoliticaService {
     private py.com.one.security.servicio.Autorizacion autorizacion;
     @jakarta.inject.Inject
     private py.com.one.security.web.SesionUsuario sesion;
+    @jakarta.inject.Inject
+    private AuditoriaFuncionalService auditoria;   // REQ-0067: auditoria funcional visible
 
     /** Politicas de seguridad configurables (parametros del grupo Seguridad). */
     public List<Fila> politicas() {
@@ -63,6 +65,9 @@ public class SeguridadPoliticaService {
             "INSERT INTO login_evento (usuario_codigo, exito, causa, fecha) VALUES (:u, true, :c, now())")
             .setParameter("u", cod.toString())
             .setParameter("c", "desbloqueo por " + sesion.codigoUsuario()).executeUpdate();
+        // REQ-0067: auditoria funcional visible del desbloqueo (accion sensible sobre un usuario).
+        auditoria.registrar("usuario", cod, AuditoriaFuncionalService.DESBLOQUEAR, "seguridad",
+                "Desbloqueo manual por " + sesion.codigoUsuario());
     }
 
     /** Auditoria de accesos reciente (cap 100). */

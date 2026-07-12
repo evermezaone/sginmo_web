@@ -140,6 +140,8 @@
                       rendered="#{sesionUsuario.puede('roles-plantilla','VER')}"><i class="pi pi-sitemap"></i> Plantillas de roles</h:outputLink>
         <h:outputLink styleClass="item" value="seguridad.xhtml"
                       rendered="#{sesionUsuario.puede('seguridad','VER')}"><i class="pi pi-lock"></i> Seguridad</h:outputLink>
+        <h:outputLink styleClass="item" value="auditoria.xhtml"
+                      rendered="#{sesionUsuario.puede('auditoria','VER')}"><i class="pi pi-history"></i> Auditoria funcional</h:outputLink>
 
         <div class="pie">
             ONEsystem-security<br/>WildFly 40 · PrimeFaces 15

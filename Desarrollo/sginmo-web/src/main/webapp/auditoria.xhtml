@@ -1,0 +1,62 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{auditoriaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Auditoria funcional</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+        <p style="color:#9ca3af; font-size:.83rem;">
+            Historial de cambios de registros sensibles: quien cambio que, valor anterior/nuevo, fecha,
+            modulo y motivo. Solo muestra la empresa activa. No se exhiben secretos (contrasenas/tokens se enmascaran).
+        </p>
+
+        <p:panelGrid columns="6" layout="grid" styleClass="ui-noborder"
+                     columnClasses="ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2,ui-g-12 ui-md-2">
+            <p:outputLabel for="fd" value="Desde"/>
+            <p:outputLabel for="fh" value="Hasta"/>
+            <p:outputLabel for="usr" value="Usuario"/>
+            <p:outputLabel for="acc" value="Accion"/>
+            <p:outputLabel for="cmp" value="Campo"/>
+            <p:outputLabel for="ent" value="Entidad"/>
+
+            <p:datePicker id="fd" value="#{auditoriaBean.fechaDesde}" pattern="yyyy-MM-dd" showButtonBar="true"/>
+            <p:datePicker id="fh" value="#{auditoriaBean.fechaHasta}" pattern="yyyy-MM-dd" showButtonBar="true"/>
+            <p:inputText id="usr" value="#{auditoriaBean.usuario}"/>
+            <p:selectOneMenu id="acc" value="#{auditoriaBean.accion}">
+                <f:selectItems value="#{auditoriaBean.acciones}"/>
+            </p:selectOneMenu>
+            <p:inputText id="cmp" value="#{auditoriaBean.campo}"/>
+            <p:inputText id="ent" value="#{auditoriaBean.entidad}"/>
+        </p:panelGrid>
+
+        <div style="margin:.6rem 0 1rem 0;">
+            <p:commandButton value="Buscar" icon="pi pi-search" action="#{auditoriaBean.buscar}" update="frm:tabla frm:mensajes"/>
+            <p:commandButton value="Limpiar" icon="pi pi-times" styleClass="ui-button-secondary" style="margin-left:.4rem;"
+                             action="#{auditoriaBean.limpiar}" update="frm" process="@this"/>
+        </div>
+
+        <p:dataTable id="tabla" var="a" value="#{auditoriaBean.resultados}" paginator="true" rows="20"
+                     emptyMessage="Sin registros de auditoria" rowsPerPageTemplate="20,50,100">
+            <p:column headerText="Fecha" style="width:11rem;"><h:outputText value="#{a.fecha}"/></p:column>
+            <p:column headerText="Usuario" style="width:10rem;"><h:outputText value="#{a.usuario}"/></p:column>
+            <p:column headerText="Entidad" style="width:9rem;"><h:outputText value="#{a.entidad}"/></p:column>
+            <p:column headerText="Registro" style="width:7rem;"><h:outputText value="#{a.registro}"/></p:column>
+            <p:column headerText="Accion" style="width:8rem; text-align:center;">
+                <p:tag value="#{a.accion}"/>
+            </p:column>
+            <p:column headerText="Campo" style="width:10rem;"><h:outputText value="#{a.campo}"/></p:column>
+            <p:column headerText="Valor anterior"><h:outputText value="#{a.valorAnterior}"/></p:column>
+            <p:column headerText="Valor nuevo"><h:outputText value="#{a.valorNuevo}"/></p:column>
+            <p:column headerText="Modulo" style="width:9rem;"><h:outputText value="#{a.modulo}"/></p:column>
+            <p:column headerText="Motivo"><h:outputText value="#{a.motivo}"/></p:column>
+        </p:dataTable>
+    </h:form>
+</ui:define>
+</ui:composition>

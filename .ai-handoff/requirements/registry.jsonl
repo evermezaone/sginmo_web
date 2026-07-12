@@ -58,4 +58,4 @@
 {"req": "REQ-0064", "titulo": "Politicas de seguridad: contrasenas, sesiones y bloqueo", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
 {"req": "REQ-0065", "titulo": "Backup automatico PostgreSQL, archivos y configuracion VPS", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-12T00:00:00-04:00", "ts_actualizado": "2026-07-12T00:00:00-04:00"}
 {"req": "REQ-0066", "titulo": "Restore probado, simulacro de recuperacion y runbook operativo", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-12T00:00:00-04:00", "ts_actualizado": "2026-07-12T00:00:00-04:00"}
-{"req": "REQ-0067", "titulo": "Auditoria funcional visible por registro sensible", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-12T00:00:00-04:00", "ts_actualizado": "2026-07-12T00:00:00-04:00"}
+{"req": "REQ-0067", "titulo": "Auditoria funcional visible por registro sensible", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-12T00:00:00-04:00", "ts_actualizado": "2026-07-12T00:00:00-04:00"}
