@@ -1,0 +1,108 @@
+<ui:composition template="/WEB-INF/portal.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{portalBean.verificarAcceso()}"/>
+</f:metadata>
+
+<ui:define name="acciones">
+    <h:form>
+        <span style="margin-right:1rem;">#{portalBean.nombreUsuario}</span>
+        <p:commandLink action="#{portalBean.salir()}" style="color:#e6fffb;"><i class="pi pi-sign-out"></i> Salir</p:commandLink>
+    </h:form>
+</ui:define>
+
+<ui:define name="contenido">
+    <div class="tarjetas-portal">
+        <div class="card-p">
+            <div class="n #{portalBean.resumen.deudaVencida gt 0 ? 'alerta' : ''}">
+                <h:outputText value="#{portalBean.resumen.deudaVencida}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </div>
+            <div class="t">Deuda vencida (Gs.)</div>
+        </div>
+        <div class="card-p">
+            <div class="n">
+                <h:outputText value="#{portalBean.resumen.proximaCuota}" rendered="#{not empty portalBean.resumen.proximaCuota}">
+                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                </h:outputText>
+                <h:outputText value="—" rendered="#{empty portalBean.resumen.proximaCuota}"/>
+            </div>
+            <div class="t">Proxima cuota</div>
+        </div>
+        <div class="card-p">
+            <div class="n">
+                <h:outputText value="#{portalBean.resumen.totalPagado}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </div>
+            <div class="t">Total pagado (Gs.)</div>
+        </div>
+        <div class="card-p">
+            <div class="n">#{portalBean.resumen.operaciones}</div>
+            <div class="t">Operaciones</div>
+        </div>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Mis cuotas</h3>
+        <table class="tp">
+            <thead><tr><th>Operacion</th><th>Cuota</th><th>Vencimiento</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead>
+            <tbody>
+                <ui:repeat value="#{portalBean.cuotas}" var="c">
+                    <tr>
+                        <td>#{c.operacion}</td>
+                        <td>#{c.numero}</td>
+                        <td><h:outputText value="#{c.vencimiento}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText></td>
+                        <td><h:outputText value="#{c.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                        <td><h:outputText value="#{c.saldo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                        <td>#{c.estado}</td>
+                    </tr>
+                </ui:repeat>
+            </tbody>
+        </table>
+        <p style="color:#9ca3af;" rendered="#{empty portalBean.cuotas}">Sin cuotas registradas.</p>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Mis pagos</h3>
+        <table class="tp">
+            <thead><tr><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead>
+            <tbody>
+                <ui:repeat value="#{portalBean.pagos}" var="pg">
+                    <tr>
+                        <td><h:outputText value="#{pg.fecha}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText></td>
+                        <td><h:outputText value="#{pg.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                        <td>#{pg.estado}</td>
+                    </tr>
+                </ui:repeat>
+            </tbody>
+        </table>
+        <p style="color:#9ca3af;" rendered="#{empty portalBean.pagos}">Sin pagos registrados.</p>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Mis documentos</h3>
+        <h:form>
+            <table class="tp">
+                <thead><tr><th>Tipo</th><th>Descripcion</th><th>Archivo</th><th></th></tr></thead>
+                <tbody>
+                    <ui:repeat value="#{portalBean.documentos}" var="doc">
+                        <tr>
+                            <td>#{doc.tipo}</td>
+                            <td>#{doc.descripcion}</td>
+                            <td>#{doc.nombre}</td>
+                            <td style="text-align:right;">
+                                <p:commandButton icon="pi pi-download" title="Descargar" ajax="false" styleClass="ui-button-flat">
+                                    <p:fileDownload value="#{portalBean.descargar(doc)}"/>
+                                </p:commandButton>
+                            </td>
+                        </tr>
+                    </ui:repeat>
+                </tbody>
+            </table>
+            <p style="color:#9ca3af;" rendered="#{empty portalBean.documentos}">Sin documentos habilitados.</p>
+        </h:form>
+    </div>
+</ui:define>
+</ui:composition>

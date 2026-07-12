@@ -4,6 +4,10 @@
                 xmlns:f="jakarta.faces.core"
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="primefaces">
+<f:metadata>
+    <!-- REQ-0055: un usuario de portal no debe ver el panel administrativo -->
+    <f:viewAction action="#{inicioBean.guardPortal()}"/>
+</f:metadata>
 <ui:define name="titulo">Inicio</ui:define>
 <ui:define name="estilos">
     <style>

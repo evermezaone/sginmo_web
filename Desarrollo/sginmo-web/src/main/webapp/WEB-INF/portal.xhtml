@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:f="jakarta.faces.core">
+<f:view contentType="text/html" encoding="UTF-8">
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Mi cuenta - SGInmo</title>
+    <h:outputStylesheet library="primefaces" name="primeicons/primeicons.css"/>
+    <style>
+        body { margin:0; font-family: system-ui, Arial, sans-serif; background:#f4f6f9; color:#1f2937; }
+        .portal-top { background:#0f766e; color:#fff; padding:.9rem 1rem; display:flex; align-items:center; gap:.6rem; }
+        .portal-top .marca { font-weight:600; font-size:1.05rem; flex:1; }
+        .portal-top a { color:#e6fffb; text-decoration:none; }
+        .portal-wrap { max-width:900px; margin:0 auto; padding:1rem; }
+        .tarjetas-portal { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.8rem; margin:.5rem 0 1.2rem; }
+        .card-p { background:#fff; border-radius:10px; padding:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+        .card-p .n { font-size:1.5rem; font-weight:700; }
+        .card-p .n.alerta { color:#dc2626; }
+        .card-p .t { color:#6b7280; font-size:.85rem; margin-top:.2rem; }
+        .seccion-p { background:#fff; border-radius:10px; padding:1rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+        .seccion-p h3 { margin:.1rem 0 .8rem; font-size:1rem; }
+        table.tp { width:100%; border-collapse:collapse; font-size:.9rem; }
+        table.tp th, table.tp td { text-align:left; padding:.45rem .4rem; border-bottom:1px solid #eef0f3; }
+        table.tp th { color:#6b7280; font-weight:600; }
+        @media (max-width:520px) { .portal-wrap { padding:.6rem; } table.tp { font-size:.82rem; } }
+    </style>
+</h:head>
+<h:body>
+    <div class="portal-top">
+        <i class="pi pi-user"></i>
+        <span class="marca">Mi cuenta</span>
+        <ui:insert name="acciones"/>
+    </div>
+    <div class="portal-wrap">
+        <ui:insert name="contenido"/>
+    </div>
+</h:body>
+</f:view>
+</html>

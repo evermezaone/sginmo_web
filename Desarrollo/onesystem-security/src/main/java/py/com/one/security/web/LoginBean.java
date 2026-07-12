@@ -31,8 +31,12 @@ public class LoginBean {
             ((HttpServletRequest) ctx.getRequest()).changeSessionId();
             sesion.iniciar(usuario, seguridadService.permisosDe(usuario.getId()));
             // alta o reseteo de contrasena: se exige cambiarla antes de usar el sistema
-            return usuario.isDebeCambiar()
-                    ? "/cambiar-password?faces-redirect=true"
+            if (usuario.isDebeCambiar()) {
+                return "/cambiar-password?faces-redirect=true";
+            }
+            // REQ-0055: los usuarios de portal no entran al panel administrativo.
+            return "PORTAL".equals(usuario.getPerfil())
+                    ? "/portal/inicio?faces-redirect=true"
                     : "/index?faces-redirect=true";
         } catch (NegocioException e) {
             FacesContext.getCurrentInstance().addMessage(null,

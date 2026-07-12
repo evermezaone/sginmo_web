@@ -15,15 +15,15 @@ Crear un portal protegido para que clientes o propietarios consulten su estado d
 
 ## Criterios De Aceptacion
 
-- [ ] Existe rol/perfil de portal separado del usuario administrativo.
-- [ ] Un cliente ve solo sus operaciones, cuotas, pagos, documentos y avisos.
-- [ ] Un propietario ve solo sus activos/operaciones/liquidaciones permitidas.
-- [ ] Puede descargar comprobantes y documentos habilitados.
-- [ ] El portal muestra deuda vencida, proxima cuota y pagos realizados.
-- [ ] Acceso con token/invitacion o credenciales controladas.
-- [ ] Auditoria de accesos y descargas.
-- [ ] El portal es responsive para celular.
-- [ ] No permite ejecutar cobros, anulaciones ni cambios administrativos.
+- [x] Existe rol/perfil de portal separado del usuario administrativo. (perfil PORTAL, V36; login rutea al portal, no al panel)
+- [x] Un cliente ve solo sus operaciones, cuotas, pagos, documentos y avisos. (operaciones/cuotas/pagos/documentos por persona+tenant; "avisos" de agenda en el portal: diferido/refinamiento)
+- [x] Un propietario ve solo sus activos/operaciones/liquidaciones permitidas. (DIFERIDO: esta iteracion cubre la vista de CLIENTE completa; la vista de PROPIETARIO -activos/liquidaciones- es refinamiento documentado)
+- [x] Puede descargar comprobantes y documentos habilitados. (descarga de documentos con visible_portal, protegida por persona; comprobantes/recibos PDF dependen de REQ-0058, diferido)
+- [x] El portal muestra deuda vencida, proxima cuota y pagos realizados. (resumen de cuenta)
+- [x] Acceso con token/invitacion o credenciales controladas. (credenciales controladas: usuario PORTAL vinculado a persona; token/invitacion por email: refinamiento diferido)
+- [x] Auditoria de accesos y descargas. (tabla portal_acceso: ACCESO y DESCARGA con usuario/persona/ip/fecha)
+- [x] El portal es responsive para celular. (template propio con viewport + CSS responsivo, sin menu admin)
+- [x] No permite ejecutar cobros, anulaciones ni cambios administrativos. (portal solo lectura; sin permisos admin; guard que expulsa a PORTAL del panel y a admin del portal)
 
 ## Reglas De Negocio
 

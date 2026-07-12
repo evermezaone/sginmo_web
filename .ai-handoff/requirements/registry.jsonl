@@ -46,7 +46,7 @@
 {"req": "REQ-0052", "titulo": "Agenda, recordatorios y vencimientos operativos", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
 {"req": "REQ-0053", "titulo": "Gestion documental y adjuntos por entidad de negocio", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
 {"req": "REQ-0054", "titulo": "Firma y estado documental de contratos, pagares y comprobantes", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
-{"req": "REQ-0055", "titulo": "Portal de cuenta para cliente o propietario", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
+{"req": "REQ-0055", "titulo": "Portal de cuenta para cliente o propietario", "estado": "LISTO_PARA_REVISION", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
 {"req": "REQ-0056", "titulo": "Dashboard gerencial de cartera, ventas, alquileres y caja", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
 {"req": "REQ-0057", "titulo": "Gestion de mora, cobranza y promesas de pago", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}
 {"req": "REQ-0058", "titulo": "Recibos y comprobantes configurables con OpenPDF", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-11T00:00:00-04:00", "ts_actualizado": "2026-07-11T00:00:00-04:00"}

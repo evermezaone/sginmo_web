@@ -63,6 +63,15 @@ public class InicioBean implements Serializable {
         saldoPorCobrar = k.saldoPorCobrar;
     }
 
+    /** REQ-0055: si el usuario es de portal, no ve el panel administrativo. */
+    public String guardPortal() {
+        if (sesion != null && sesion.isLogueado() && sesion.getUsuario() != null
+                && "PORTAL".equals(sesion.getUsuario().getPerfil())) {
+            return "/portal/inicio?faces-redirect=true";
+        }
+        return null;
+    }
+
     public long getActivosLibres() { return activosLibres; }
     public long getActivosOcupados() { return activosOcupados; }
     public long getActivosVendidos() { return activosVendidos; }
