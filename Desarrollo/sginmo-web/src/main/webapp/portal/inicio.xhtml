@@ -11,6 +11,9 @@
 <ui:define name="acciones">
     <h:form>
         <span style="margin-right:1rem;">#{portalBean.nombreUsuario}</span>
+        <h:link outcome="/portal/transferencia" style="color:#e6fffb; margin-right:1rem;" rendered="#{portalBean.esCliente}">
+            <i class="pi pi-send"></i> Informar transferencia
+        </h:link>
         <p:commandLink action="#{portalBean.salir()}" style="color:#e6fffb;"><i class="pi pi-sign-out"></i> Salir</p:commandLink>
     </h:form>
 </ui:define>

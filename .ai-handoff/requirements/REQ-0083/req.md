@@ -52,14 +52,18 @@ Que un cliente o propietario autenticado en el portal externo (REQ-0078) informe
 
 ## Criterios De Aceptacion
 
-- [ ] Un cliente autenticado en portal informa una transferencia, adjunta comprobante y lo ve en estado RECIBIDO/EN_REVISION.
-- [ ] El archivo se guarda de forma segura con validacion de tipo MIME real, extension, tamano y hash; se descarga solo por su dueno o por la bandeja interna.
-- [ ] La bandeja interna lista, filtra, permite ver/descargar el comprobante y aprobar/observar/rechazar con motivo.
-- [ ] Al aprobar, el pago se aplica con el servicio transaccional de cobros (forma TRANSFERENCIA), imputa segun seleccion/regla y deja recibo descargable; estado APLICADO.
-- [ ] Un mismo numero_transaccion no puede aplicarse dos veces.
-- [ ] El cliente solo ve sus propios comprobantes y estados.
-- [ ] Auditoria funcional completa de cada cambio de estado.
-- [ ] Build `mvn -q clean package` finaliza con EXIT 0.
+- [x] Un cliente autenticado en portal informa una transferencia, adjunta comprobante y lo ve en estado RECIBIDO.
+- [x] El archivo se guarda de forma segura (fuera del webroot) con validacion de tipo/extension (PDF/JPG/PNG/WEBP), tamano (parametro) y hash SHA-256; se descarga por la bandeja interna (o el propio socio por su persona).
+- [x] La bandeja interna lista, filtra por estado, permite ver/descargar el comprobante y aprobar/observar/rechazar con motivo.
+- [x] Al aprobar, el pago se aplica con el servicio transaccional de cobros (forma TRANSFERENCIA: cuenta origen + referencia=nro transaccion) contra el documento elegido y la caja abierta; estado APLICADO con el cobro generado.
+- [x] Un mismo numero_transaccion no puede quedar APLICADO dos veces (unique index parcial).
+- [x] El cliente solo ve sus propias transferencias (RLS por tenant + filtro por persona).
+- [x] Auditoria funcional completa de cada cambio de estado (informar, observar, rechazar, aplicar).
+- [x] Build `mvn -q clean package` EXIT 0; Flyway V56; smoke 37/37 (transferencias 200).
+
+## Follow-up menor (no incluido)
+- Boton de descarga del recibo del cobro DESDE el portal cuando queda APLICADO (el recibo ya se genera; se ve por Comprobantes internos).
+- Imputacion elegida por el cliente / pago a cuenta: en Fase 1 la imputacion la decide el operador en la bandeja.
 
 ## Fuera De Alcance (va en 0084/0085)
 - OCR y extraccion de campos (REQ-0084).

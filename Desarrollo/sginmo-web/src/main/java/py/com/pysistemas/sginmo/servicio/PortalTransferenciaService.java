@@ -1,0 +1,305 @@
+package py.com.pysistemas.sginmo.servicio;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import py.com.one.core.NegocioException;
+
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * REQ-0083 (Fase 1) - Informar transferencia desde el portal + bandeja operativa + aplicacion.
+ * El socio informa una transferencia y adjunta el comprobante (RECIBIDO). Un usuario interno la revisa
+ * en la bandeja y, si es valida, la APLICA reutilizando el motor de cobros (forma TRANSFERENCIA), o la
+ * OBSERVA/RECHAZA con motivo. Sin OCR ni conciliacion bancaria (Fases 2/3). @AislarTenant + RLS.
+ */
+@ApplicationScoped
+@AislarTenant
+@Transactional
+public class PortalTransferenciaService {
+
+    @PersistenceContext(unitName = "sginmoPU")
+    private EntityManager em;
+
+    @Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+    @Inject
+    private py.com.one.security.servicio.Autorizacion autorizacion;
+    @Inject
+    private py.com.one.security.web.SesionUsuario sesion;
+    @Inject
+    private AuditoriaFuncionalService auditoria;
+    @Inject
+    private CajaService cajaService;
+    @Inject
+    private CatalogoService catalogoService;
+    @Inject
+    private ParametroConfig parametros;
+
+    public static final String PANTALLA = "transferencias";
+
+    private Path baseDir() {
+        String dir = System.getenv("SGINMO_ARCHIVOS_DIR");
+        if (dir == null || dir.isBlank()) dir = System.getProperty("user.home", ".") + "/sginmo/archivos";
+        return Path.of(dir);
+    }
+
+    // ── Portal (socio) ─────────────────────────────────────────────────────────
+
+    /** El socio informa una transferencia y adjunta el comprobante. Devuelve el id creado. */
+    public Long informar(Long persona, Datos d, byte[] archivo, String nombreArchivo, String mime) {
+        if (persona == null) throw new NegocioException("Sesion invalida");
+        if (d == null || d.importe == null || d.importe.signum() <= 0) throw new NegocioException("Indique el importe de la transferencia");
+        if (archivo == null || archivo.length == 0) throw new NegocioException("Adjunte el comprobante de la transferencia");
+        int maxMb = Math.max(1, parametros.entero("PORTAL_TRANSF_TAMANO_MAX_MB", 8));
+        if (archivo.length > (long) maxMb * 1024 * 1024) throw new NegocioException("El comprobante supera el maximo de " + maxMb + " MB");
+        String ext = extensionValida(nombreArchivo, mime);
+        if (ext == null) throw new NegocioException("Formato no permitido. Use PDF, JPG, PNG o WEBP");
+
+        Long t = tenant.actual();
+        String fisico = "trf_" + java.util.UUID.randomUUID().toString().replace("-", "") + ext;
+        try {
+            Path dir = baseDir().resolve(String.valueOf(t));
+            Files.createDirectories(dir);
+            Files.write(dir.resolve(fisico), archivo);
+        } catch (Exception e) {
+            throw new NegocioException("No se pudo guardar el comprobante");
+        }
+        String hash = sha256(archivo);
+
+        Object id = em.createNativeQuery(
+            "INSERT INTO portal_pago_transferencia (tenant, persona, estado, importe, moneda, fecha_transferencia,"
+          + " banco_origen, cuenta_origen, cuenta_destino, numero_transaccion, observacion_cliente, documento,"
+          + " archivo_nombre, archivo_fisico, archivo_mime, archivo_hash, archivo_tamano)"
+          + " VALUES (:t,:p,'RECIBIDO',:imp,:mon,:fec,:bo,:co,:cd,:nt,:obs,:doc,:an,:af,:am,:ah,:at)"
+          + " RETURNING portal_pago_transferencia")
+            .setParameter("t", t).setParameter("p", persona).setParameter("imp", d.importe).setParameter("mon", d.moneda)
+            .setParameter("fec", d.fecha == null ? null : java.sql.Date.valueOf(d.fecha))
+            .setParameter("bo", recorta(d.bancoOrigen, 80)).setParameter("co", recorta(d.cuentaOrigen, 40))
+            .setParameter("cd", recorta(d.cuentaDestino, 40)).setParameter("nt", recorta(d.numeroTransaccion, 60))
+            .setParameter("obs", recorta(d.observacion, 300)).setParameter("doc", d.documento)
+            .setParameter("an", recorta(nombreArchivo, 255)).setParameter("af", fisico)
+            .setParameter("am", recorta(mime, 120)).setParameter("ah", hash).setParameter("at", (long) archivo.length)
+            .getSingleResult();
+        Long nuevo = ((Number) id).longValue();
+        auditar(nuevo, AuditoriaFuncionalService.CREAR, "transferencia informada por el socio");
+        return nuevo;
+    }
+
+    /** Transferencias informadas por el socio (para el portal). */
+    public List<Fila> mias(Long persona) {
+        List<Fila> out = new ArrayList<>();
+        if (persona == null) return out;
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery(
+            "SELECT portal_pago_transferencia, fecha, importe, estado, numero_transaccion, motivo_revision, cobro"
+          + " FROM portal_pago_transferencia WHERE persona = :p ORDER BY fecha DESC")
+            .setParameter("p", persona).getResultList();
+        for (Object[] f : rows) out.add(fila(f));
+        return out;
+    }
+
+    // ── Bandeja (interno) ───────────────────────────────────────────────────────
+
+    /** Bandeja operativa: transferencias del tenant, opcionalmente filtradas por estado. */
+    public List<Fila> bandeja(String estado) {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Fila> out = new ArrayList<>();
+        String cond = (estado != null && !estado.isBlank()) ? " AND estado = :e" : "";
+        var q = em.createNativeQuery(
+            "SELECT t.portal_pago_transferencia, t.fecha, t.importe, t.estado, t.numero_transaccion, t.motivo_revision,"
+          + " t.cobro, p.nombre, t.banco_origen, t.persona, t.documento, t.moneda, t.cuenta_origen"
+          + " FROM portal_pago_transferencia t LEFT JOIN persona p ON p.persona = t.persona"
+          + " WHERE 1=1" + cond + " ORDER BY CASE t.estado WHEN 'RECIBIDO' THEN 1 WHEN 'EN_REVISION' THEN 2"
+          + " WHEN 'OBSERVADO' THEN 3 ELSE 4 END, t.fecha DESC");
+        if (!cond.isEmpty()) q.setParameter("e", estado);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        for (Object[] f : rows) {
+            Fila x = fila(f);
+            x.cliente = (String) f[7];
+            x.bancoOrigen = (String) f[8];
+            x.persona = f[9] == null ? null : ((Number) f[9]).longValue();
+            x.documento = f[10] == null ? null : ((Number) f[10]).longValue();
+            x.moneda = f[11] == null ? null : ((Number) f[11]).longValue();
+            x.cuentaOrigen = (String) f[12];
+            out.add(x);
+        }
+        return out;
+    }
+
+    public Fila porId(Long id) {
+        autorizacion.exigir(PANTALLA, "VER");
+        var rows = bandeja(null);
+        return rows.stream().filter(r -> r.id.equals(id)).findFirst().orElse(null);
+    }
+
+    /** Observa la transferencia con motivo visible para el socio. */
+    public void observar(Long id, String motivo) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        if (motivo == null || motivo.isBlank()) throw new NegocioException("Indique el motivo de la observacion");
+        cambiarEstado(id, "OBSERVADO", motivo);
+    }
+
+    /** Rechaza la transferencia con motivo visible para el socio. */
+    public void rechazar(Long id, String motivo) {
+        autorizacion.exigir(PANTALLA, "INACTIVAR");
+        if (motivo == null || motivo.isBlank()) throw new NegocioException("Indique el motivo del rechazo");
+        cambiarEstado(id, "RECHAZADO", motivo);
+    }
+
+    private void cambiarEstado(Long id, String estado, String motivo) {
+        int n = em.createNativeQuery(
+            "UPDATE portal_pago_transferencia SET estado = :e, motivo_revision = :m, usuario_revision = :u,"
+          + " fecha_revision = now() WHERE portal_pago_transferencia = :id AND estado NOT IN ('APLICADO','RECHAZADO')")
+            .setParameter("e", estado).setParameter("m", recorta(motivo, 300))
+            .setParameter("u", sesion.codigoUsuario()).setParameter("id", id).executeUpdate();
+        if (n == 0) throw new NegocioException("La transferencia no existe o ya fue cerrada");
+        auditar(id, AuditoriaFuncionalService.EDITAR, estado + (motivo == null ? "" : ": " + motivo));
+    }
+
+    /**
+     * Aprueba y APLICA la transferencia: genera el cobro reutilizando el motor de caja (forma TRANSFERENCIA)
+     * contra el documento indicado y la planilla abierta. Marca APLICADO y guarda el cobro generado.
+     */
+    /** Forma de pago TRANSFERENCIA (codigo TRF) del catalogo de formas de pago. */
+    public Long idFormaTransferencia() {
+        try {
+            Object r = em.createNativeQuery("SELECT forma_pago FROM forma_pago WHERE codigo = 'TRF' LIMIT 1").getSingleResult();
+            return r == null ? null : ((Number) r).longValue();
+        } catch (RuntimeException e) { return null; }
+    }
+
+    public void aprobar(Long id, Long documentoId, Long planillaId, Long formaPagoId, String emisor, Long monedaId) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        if (formaPagoId == null) formaPagoId = idFormaTransferencia();
+        Object[] t = (Object[]) em.createNativeQuery(
+            "SELECT persona, importe, estado, numero_transaccion, cuenta_origen FROM portal_pago_transferencia"
+          + " WHERE portal_pago_transferencia = :id").setParameter("id", id).getSingleResult();
+        Long persona = ((Number) t[0]).longValue();
+        BigDecimal importe = (BigDecimal) t[1];
+        String estado = (String) t[2];
+        String numero = (String) t[3];
+        String cuentaOrigen = (String) t[4];
+        if (!"RECIBIDO".equals(estado) && !"EN_REVISION".equals(estado) && !"OBSERVADO".equals(estado))
+            throw new NegocioException("La transferencia ya fue cerrada");
+        if (documentoId == null) throw new NegocioException("Elija el documento/cuota a imputar");
+        if (planillaId == null) throw new NegocioException("No hay una caja abierta para aplicar el cobro");
+
+        // Aplica el cobro con el motor de caja (forma TRANSFERENCIA: cuenta = cuenta origen, referencia = nro transaccion).
+        long cobroId = cajaService.cobrar(documentoId, planillaId, formaPagoId, persona, importe, monedaId,
+                sesion.codigoUsuario(), emisor == null ? null : String.valueOf(emisor), null, null, null,
+                cuentaOrigen, null, numero, null, null, null, null, null, null);
+
+        em.createNativeQuery(
+            "UPDATE portal_pago_transferencia SET estado='APLICADO', cobro = :c, documento = :doc,"
+          + " usuario_revision = :u, fecha_revision = now() WHERE portal_pago_transferencia = :id")
+            .setParameter("c", cobroId).setParameter("doc", documentoId)
+            .setParameter("u", sesion.codigoUsuario()).setParameter("id", id).executeUpdate();
+        auditar(id, AuditoriaFuncionalService.EDITAR, "APLICADO (cobro " + cobroId + ", doc " + documentoId + ")");
+    }
+
+    /** Descarga del comprobante (bandeja interna, con permiso; o el propio socio por su persona). */
+    public Descarga descargar(Long id, Long personaPropia) {
+        Object[] r;
+        try {
+            r = (Object[]) em.createNativeQuery(
+                "SELECT archivo_nombre, archivo_fisico, archivo_mime, tenant, persona FROM portal_pago_transferencia"
+              + " WHERE portal_pago_transferencia = :id").setParameter("id", id).getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            throw new NegocioException("El comprobante no existe");
+        }
+        Long persona = ((Number) r[4]).longValue();
+        boolean esPropia = personaPropia != null && personaPropia.equals(persona);
+        if (!esPropia) autorizacion.exigir(PANTALLA, "VER");
+        String nombre = (String) r[0];
+        String fisico = (String) r[1];
+        String mime = r[2] == null ? "application/octet-stream" : (String) r[2];
+        Long t = ((Number) r[3]).longValue();
+        if (fisico == null) throw new NegocioException("La transferencia no tiene comprobante");
+        try {
+            byte[] datos = Files.readAllBytes(baseDir().resolve(String.valueOf(t)).resolve(fisico));
+            return new Descarga(nombre, mime, datos);
+        } catch (Exception e) {
+            throw new NegocioException("No se pudo leer el comprobante");
+        }
+    }
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+
+    private Fila fila(Object[] f) {
+        Fila x = new Fila();
+        x.id = ((Number) f[0]).longValue();
+        x.fecha = f[1] instanceof java.sql.Timestamp ts ? ts.toLocalDateTime().toLocalDate()
+                : (f[1] instanceof java.time.LocalDateTime l ? l.toLocalDate() : (f[1] instanceof java.time.OffsetDateTime o ? o.toLocalDate() : null));
+        x.importe = (BigDecimal) f[2];
+        x.estado = (String) f[3];
+        x.numeroTransaccion = (String) f[4];
+        x.motivoRevision = (String) f[5];
+        x.cobro = f[6] == null ? null : ((Number) f[6]).longValue();
+        return x;
+    }
+
+    private void auditar(Long id, String accion, String detalle) {
+        try { auditoria.registrar("portal_pago_transferencia", id, accion, PANTALLA, detalle); }
+        catch (RuntimeException ignore) { }
+    }
+
+    private static String extensionValida(String nombre, String mime) {
+        String n = nombre == null ? "" : nombre.toLowerCase();
+        String m = mime == null ? "" : mime.toLowerCase();
+        if (n.endsWith(".pdf") || m.contains("pdf")) return ".pdf";
+        if (n.endsWith(".jpg") || n.endsWith(".jpeg") || m.contains("jpeg")) return ".jpg";
+        if (n.endsWith(".png") || m.contains("png")) return ".png";
+        if (n.endsWith(".webp") || m.contains("webp")) return ".webp";
+        return null;
+    }
+
+    private static String sha256(byte[] datos) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] h = md.digest(datos);
+            StringBuilder sb = new StringBuilder(64);
+            for (byte b : h) sb.append(String.format("%02x", b));
+            return sb.toString();
+        } catch (Exception e) { return null; }
+    }
+
+    private static String recorta(String s, int max) { return s == null ? null : (s.length() <= max ? s : s.substring(0, max)); }
+
+    // ── DTOs ──
+    public static class Datos {
+        public BigDecimal importe; public Long moneda; public LocalDate fecha;
+        public String bancoOrigen, cuentaOrigen, cuentaDestino, numeroTransaccion, observacion; public Long documento;
+    }
+    public static class Fila {
+        public Long id, cobro, persona, documento, moneda;
+        public LocalDate fecha; public BigDecimal importe;
+        public String estado, numeroTransaccion, motivoRevision, cliente, bancoOrigen, cuentaOrigen;
+        public Long getId() { return id; }
+        public Long getCobro() { return cobro; }
+        public Long getPersona() { return persona; }
+        public Long getDocumento() { return documento; }
+        public Long getMoneda() { return moneda; }
+        public LocalDate getFecha() { return fecha; }
+        public BigDecimal getImporte() { return importe; }
+        public String getEstado() { return estado; }
+        public String getNumeroTransaccion() { return numeroTransaccion; }
+        public String getMotivoRevision() { return motivoRevision; }
+        public String getCliente() { return cliente; }
+        public String getBancoOrigen() { return bancoOrigen; }
+        public String getCuentaOrigen() { return cuentaOrigen; }
+    }
+    public static class Descarga {
+        public final String nombre, contentType; public final byte[] datos;
+        public Descarga(String nombre, String contentType, byte[] datos) { this.nombre = nombre; this.contentType = contentType; this.datos = datos; }
+    }
+}

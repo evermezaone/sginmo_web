@@ -1,0 +1,105 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{transferenciaBandejaBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Transferencias informadas</ui:define>
+<ui:define name="contenido">
+    <h:form id="frm">
+        <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+        <div style="display:flex; gap:.6rem; align-items:end; margin-bottom:.7rem;">
+            <div class="campo" style="margin:0;">
+                <label>Estado</label>
+                <p:selectOneMenu value="#{transferenciaBandejaBean.filtroEstado}" style="width:12rem;">
+                    <f:selectItem itemLabel="Todos" itemValue="#{null}"/>
+                    <f:selectItems value="#{transferenciaBandejaBean.estados}"/>
+                    <p:ajax listener="#{transferenciaBandejaBean.cargar()}" update="tabla"/>
+                </p:selectOneMenu>
+            </div>
+            <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{transferenciaBandejaBean.cargar()}" update="tabla"/>
+        </div>
+
+        <p:dataTable id="tabla" var="t" value="#{transferenciaBandejaBean.lista}" paginator="true" rows="15"
+                     emptyMessage="Sin transferencias informadas">
+            <p:column headerText="Fecha" style="width:9rem;">
+                <h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+            </p:column>
+            <p:column headerText="Cliente"><h:outputText value="#{t.cliente}"/></p:column>
+            <p:column headerText="Banco"><h:outputText value="#{t.bancoOrigen}"/></p:column>
+            <p:column headerText="Nro."><h:outputText value="#{t.numeroTransaccion}"/></p:column>
+            <p:column headerText="Importe" style="width:9rem; text-align:right;">
+                <h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Estado" style="width:8rem; text-align:center;">
+                <p:tag value="#{t.estado}"
+                       severity="#{t.estado eq 'APLICADO' ? 'success' : (t.estado eq 'RECHAZADO' ? 'danger' : (t.estado eq 'OBSERVADO' ? 'warning' : 'info'))}"/>
+            </p:column>
+            <p:column headerText="Acciones" style="width:9rem; text-align:center;">
+                <p:commandButton icon="pi pi-download" title="Ver comprobante" styleClass="ui-button-flat" ajax="false"
+                                 rendered="#{sesionUsuario.puede('transferencias','VER')}">
+                    <p:fileDownload value="#{transferenciaBandejaBean.descargar(t)}"/>
+                </p:commandButton>
+                <p:commandButton icon="pi pi-check-square" title="Revisar / Aplicar" styleClass="ui-button-flat"
+                                 rendered="#{t.estado ne 'APLICADO' and t.estado ne 'RECHAZADO' and sesionUsuario.puede('transferencias','EDITAR')}"
+                                 action="#{transferenciaBandejaBean.seleccionar(t)}" update="frm:dlg" oncomplete="PF('dlgRev').show()"/>
+            </p:column>
+        </p:dataTable>
+
+        <p:dialog id="dlg" header="Revisar transferencia" widgetVar="dlgRev" modal="true" width="560" showEffect="fade">
+            <h:panelGroup rendered="#{not empty transferenciaBandejaBean.seleccionada}" layout="block">
+                <p style="margin:.2rem 0;">
+                    <strong>#{transferenciaBandejaBean.seleccionada.cliente}</strong> —
+                    <h:outputText value="#{transferenciaBandejaBean.seleccionada.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                    · #{transferenciaBandejaBean.seleccionada.bancoOrigen}
+                    · Nro. #{transferenciaBandejaBean.seleccionada.numeroTransaccion}
+                </p>
+
+                <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:.6rem .7rem; margin-bottom:.6rem;">
+                    <strong style="color:#166534; font-size:.85rem;">Aplicar el pago</strong>
+                    <div class="campo" style="margin:.4rem 0 0;">
+                        <label>Documento / cuota a imputar *</label>
+                        <p:selectOneMenu value="#{transferenciaBandejaBean.documentoSel}" style="width:100%;">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{transferenciaBandejaBean.documentos}" var="d"
+                                           itemLabel="#{d[1]} #{d[2]}-#{d[3]} · saldo #{d[6]}" itemValue="#{d[0]}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo" style="margin:.4rem 0 0;">
+                        <label>Emisor / banco</label>
+                        <p:selectOneMenu value="#{transferenciaBandejaBean.emisorSel}" style="width:100%;">
+                            <f:selectItem itemLabel="(sin especificar)" itemValue="#{null}"/>
+                            <f:selectItems value="#{transferenciaBandejaBean.emisores}" var="em" itemLabel="#{em.descripcion}" itemValue="#{em.codigo}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <p:commandButton value="Aprobar y aplicar" icon="pi pi-check" style="margin-top:.5rem;"
+                                     action="#{transferenciaBandejaBean.aprobar()}" update="frm"
+                                     oncomplete="if(!args.validationFailed) PF('dlgRev').hide()">
+                        <p:confirm header="Confirmar" message="¿Aplicar el pago? Se genera el cobro e imputa el documento." icon="pi pi-exclamation-triangle"/>
+                    </p:commandButton>
+                </div>
+
+                <div class="campo">
+                    <label>Motivo (para observar o rechazar)</label>
+                    <p:inputTextarea value="#{transferenciaBandejaBean.motivo}" rows="2" maxlength="300" style="width:100%;"/>
+                </div>
+                <div style="text-align:right;">
+                    <p:commandButton value="Observar" icon="pi pi-exclamation-circle" styleClass="ui-button-warning" style="margin-right:.4rem;"
+                                     action="#{transferenciaBandejaBean.observar()}" update="frm" oncomplete="PF('dlgRev').hide()"/>
+                    <p:commandButton value="Rechazar" icon="pi pi-times" styleClass="ui-button-danger"
+                                     action="#{transferenciaBandejaBean.rechazar()}" update="frm" oncomplete="PF('dlgRev').hide()"/>
+                </div>
+            </h:panelGroup>
+        </p:dialog>
+
+        <p:confirmDialog global="true" showEffect="fade">
+            <p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes"/>
+            <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
+        </p:confirmDialog>
+    </h:form>
+</ui:define>
+</ui:composition>

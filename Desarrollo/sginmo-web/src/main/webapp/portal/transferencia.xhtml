@@ -1,0 +1,71 @@
+<ui:composition template="/WEB-INF/portal.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{portalTransferenciaBean.verificarAcceso()}"/>
+</f:metadata>
+
+<ui:define name="acciones">
+    <h:form>
+        <span style="margin-right:1rem;">#{portalTransferenciaBean.nombre}</span>
+        <h:link value="Volver a mi cuenta" outcome="/portal/inicio" style="color:#e6fffb;"/>
+    </h:form>
+</ui:define>
+
+<ui:define name="contenido">
+    <div class="seccion-p">
+        <h3>Informar transferencia</h3>
+        <p style="color:#6b7280; font-size:.85rem; margin-top:0;">
+            Cargue los datos de su transferencia y adjunte el comprobante. Un operador la revisara y aplicara a su cuenta.
+        </p>
+        <h:form enctype="multipart/form-data">
+            <p:growl id="msj" showDetail="true" life="5000"/>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.7rem;">
+                <div><label>Importe *</label><br/>
+                    <p:inputNumber value="#{portalTransferenciaBean.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/></div>
+                <div><label>Fecha de la transferencia</label><br/>
+                    <p:datePicker value="#{portalTransferenciaBean.fecha}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                <div><label>Banco de origen</label><br/>
+                    <p:inputText value="#{portalTransferenciaBean.bancoOrigen}" maxlength="80" style="width:100%;"/></div>
+                <div><label>Cuenta de origen (o últimos dígitos)</label><br/>
+                    <p:inputText value="#{portalTransferenciaBean.cuentaOrigen}" maxlength="40" style="width:100%;"/></div>
+                <div><label>Nro. de operación / transacción</label><br/>
+                    <p:inputText value="#{portalTransferenciaBean.numeroTransaccion}" maxlength="60" style="width:100%;"/></div>
+            </div>
+            <div style="margin-top:.6rem;"><label>Observación</label><br/>
+                <p:inputTextarea value="#{portalTransferenciaBean.observacion}" rows="2" maxlength="300" style="width:100%;"/></div>
+            <div style="margin-top:.6rem;">
+                <label>Comprobante (PDF, JPG, PNG o WEBP) *</label><br/>
+                <p:fileUpload value="#{portalTransferenciaBean.comprobante}" mode="simple" skinSimple="true"
+                              accept=".pdf,.jpg,.jpeg,.png,.webp"/>
+            </div>
+            <div style="margin-top:.8rem;">
+                <p:commandButton value="Informar transferencia" icon="pi pi-send" ajax="false"
+                                 action="#{portalTransferenciaBean.informar}"/>
+            </div>
+        </h:form>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Mis transferencias informadas</h3>
+        <table class="tp">
+            <thead><tr><th>Fecha</th><th>Importe</th><th>Nro.</th><th>Estado</th><th>Observación</th></tr></thead>
+            <tbody>
+                <ui:repeat value="#{portalTransferenciaBean.mias}" var="t">
+                    <tr>
+                        <td><h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
+                        <td><h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                        <td>#{t.numeroTransaccion}</td>
+                        <td>#{t.estado}</td>
+                        <td>#{t.motivoRevision}</td>
+                    </tr>
+                </ui:repeat>
+            </tbody>
+        </table>
+        <p style="color:#9ca3af;" rendered="#{empty portalTransferenciaBean.mias}">Aún no informó transferencias.</p>
+    </div>
+</ui:define>
+</ui:composition>

@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0086, REQ-0087, REQ-0088, REQ-0089
-TS: 2026-07-13T21:32:30Z
+REQ: REQ-0083, REQ-0086, REQ-0087, REQ-0088, REQ-0089
+TS: 2026-07-13T21:51:01Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0086, REQ-0087, REQ-0088, REQ-0089. Ultimo derivado REQ-0087: Reestructura de activos: combo GENERAR (LOTES/CASAS-DPTOS) con formulario dinamico, V55 campos detallados (superficie/dimensiones/cochera/m2/medida/ANDE/ESSAP), tipos filtrados. Adjuntos y combos dedicados como follow-up. Deploy VPS + Flyway V55 + smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0083, REQ-0086, REQ-0087, REQ-0088, REQ-0089. Ultimo derivado REQ-0083: Fase 1: informar transferencia + adjuntar comprobante en el portal + bandeja operativa interna + aplicacion (aprobar aplica el cobro con el motor de caja, forma TRANSFERENCIA). RLS + anti-doble-aplicacion. Deploy VPS + Flyway V56 + smoke 37/37. OCR y banco en 0084/0085.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
