@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0077
-TS: 2026-07-13T01:15:19Z
+REQ: REQ-0073, REQ-0074, REQ-0075, REQ-0076, REQ-0077
+TS: 2026-07-13T01:44:10Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0077. Ultimo derivado REQ-0077: BUG detalle de operacion: se quito el required de JSF de txtMotivoResc que hacia fallar TODAS las acciones (los botones de impresion son ajax=false y hacen submit completo); la obligatoriedad del motivo queda en el servicio finalizar(). Build+deploy+smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0073, REQ-0074, REQ-0075, REQ-0076, REQ-0077. Ultimo derivado REQ-0076: Numerador interno DINT/OP: se desactivan rangos activos agotados antes de numerar. Alta de operacion OK. Deploy VPS.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

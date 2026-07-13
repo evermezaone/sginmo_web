@@ -112,19 +112,92 @@ public class ObjetivoService {
         if ("ocupacion".equals(o.indicador)) {
             o.faltanUnidades = ocupacion.resumen().getBrecha();
         }
+        o.drillClave = drillDe(o.indicador);   // obs 286: evidencia por indicador
     }
 
     private BigDecimal valorActual(Objetivo o) {
+        LocalDate[] r = rangoPeriodo(o);   // obs 283: rango segun el periodo del objetivo
+        LocalDate d = r[0], h = r[1];
         return switch (o.indicador) {
-            case "ocupacion" -> ocupacion.resumen().getOcupacionPct();
+            case "ocupacion" -> ocupacion.resumen().getOcupacionPct();          // snapshot (a hoy)
             case "vacancia_maxima" -> BigDecimal.valueOf(ocupacion.resumen().getVacantes());
-            case "cobro_mensual" -> metricas.valorMesActual(DashboardMetricasService.COBROS, o.moneda, o.alcanceSucursal());
-            case "mora_maxima" -> metricas.valorMesActual(DashboardMetricasService.MORA, o.moneda, o.alcanceSucursal());
-            case "contratos_nuevos" -> metricas.valorMesActual(DashboardMetricasService.CONTRATOS_NUEVOS, null, o.alcanceSucursal());
-            case "rentabilidad_minima" -> rentabilidad.resumen(inicioMes(), LocalDate.now()).getNeto();
-            case "egresos_maximos" -> rentabilidad.resumen(inicioMes(), LocalDate.now()).getTotalEgresos();
+            case "cobro_mensual" -> metricas.valorEnRango(DashboardMetricasService.COBROS, d, h, o.moneda, o.alcanceSucursal());
+            case "mora_maxima" -> metricas.valorEnRango(DashboardMetricasService.MORA, d, h, o.moneda, o.alcanceSucursal());
+            case "contratos_nuevos" -> metricas.valorEnRango(DashboardMetricasService.CONTRATOS_NUEVOS, d, h, null, o.alcanceSucursal());
+            case "rentabilidad_minima" -> rentabilidad.resumen(d, h).getNeto();
+            case "egresos_maximos" -> rentabilidad.resumen(d, h).getTotalEgresos();
             default -> BigDecimal.ZERO;
         };
+    }
+
+    /** obs 283: rango [desde, hasta] segun el periodo del objetivo (MENSUAL/TRIMESTRAL/ANUAL/PERSONALIZADO). */
+    private LocalDate[] rangoPeriodo(Objetivo o) {
+        LocalDate hoy = LocalDate.now();
+        String per = o.periodo == null ? "MENSUAL" : o.periodo;
+        LocalDate desde = switch (per) {
+            case "TRIMESTRAL" -> hoy.withDayOfMonth(1).minusMonths((hoy.getMonthValue() - 1) % 3);
+            case "ANUAL" -> hoy.withDayOfYear(1);
+            case "PERSONALIZADO" -> o.vigenciaDesde != null ? o.vigenciaDesde : hoy.withDayOfMonth(1);
+            default -> hoy.withDayOfMonth(1);   // MENSUAL
+        };
+        LocalDate hasta = "PERSONALIZADO".equals(per) && o.vigenciaHasta != null && o.vigenciaHasta.isBefore(hoy)
+                ? o.vigenciaHasta : hoy;
+        return new LocalDate[]{desde, hasta};
+    }
+
+    /** obs 286: clave de evidencia (whitelist REQ-0074) por indicador; null si no tiene detalle. */
+    private static String drillDe(String indicador) {
+        return switch (indicador) {
+            case "ocupacion" -> "ocupacion";
+            case "vacancia_maxima" -> "vacancia";
+            case "cobro_mensual" -> "cobros";
+            case "mora_maxima" -> "mora";
+            case "egresos_maximos" -> "egresos";
+            default -> null;   // rentabilidad_minima / contratos_nuevos: sin detalle directo
+        };
+    }
+
+    /** obs 285: historial de mediciones del objetivo. */
+    public List<Medicion> mediciones(Long id) {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Medicion> out = new ArrayList<>();
+        Query q = em.createNativeQuery(
+            "SELECT periodo_desde, periodo_hasta, valor, cumplimiento_pct, semaforo, fecha"
+          + " FROM objetivo_medicion WHERE objetivo=:o ORDER BY fecha DESC").setParameter("o", id).setMaxResults(60);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        for (Object[] f : rows) {
+            Medicion m = new Medicion();
+            m.periodoDesde = f[0] == null ? null : ((java.sql.Date) f[0]).toLocalDate();
+            m.periodoHasta = f[1] == null ? null : ((java.sql.Date) f[1]).toLocalDate();
+            m.valor = dec(f[2]); m.cumplimientoPct = f[3] == null ? null : dec(f[3]); m.semaforo = str(f[4]);
+            m.fecha = f[5] == null ? "" : fmtTs(f[5]);
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** obs 284: sucursales del tenant para el alcance SUCURSAL del ABM. */
+    public List<Suc> sucursales() {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Suc> out = new ArrayList<>();
+        Long emp = tenant.actual();
+        if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return out;
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery(
+            "SELECT sucursal, descripcion FROM sucursal WHERE estado='ACTIVO' AND tenant=:t ORDER BY descripcion")
+            .setParameter("t", emp).getResultList();
+        for (Object[] f : rows) out.add(new Suc(((Number) f[0]).longValue(), str(f[1])));
+        return out;
+    }
+
+    private static String fmtTs(Object o) {
+        java.time.LocalDateTime dt;
+        if (o instanceof java.time.OffsetDateTime odt) dt = odt.toLocalDateTime();
+        else if (o instanceof java.sql.Timestamp ts) dt = ts.toLocalDateTime();
+        else if (o instanceof java.time.LocalDateTime l) dt = l;
+        else return o.toString();
+        return dt.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 
     // ── ABM (permisos separados + auditoria) ───────────────────────────────────
@@ -182,11 +255,12 @@ public class ObjetivoService {
         autorizacion.exigir(PANTALLA, "EDITAR");
         Objetivo o = porId(id);
         if (o == null) throw new NegocioException("El objetivo no existe");
+        LocalDate[] r = rangoPeriodo(o);   // obs 283: el historial usa el rango del periodo del objetivo
         em.createNativeQuery(
             "INSERT INTO objetivo_medicion (tenant, objetivo, periodo_desde, periodo_hasta, valor, cumplimiento_pct, semaforo, fecha)"
           + " VALUES (:t,:o,:pd,:ph,:val,:cmp,:sem, now())")
             .setParameter("t", tenant.actual()).setParameter("o", id)
-            .setParameter("pd", inicioMes()).setParameter("ph", LocalDate.now())
+            .setParameter("pd", r[0]).setParameter("ph", r[1])
             .setParameter("val", o.valorActual).setParameter("cmp", o.cumplimientoPct).setParameter("sem", o.semaforo)
             .executeUpdate();
     }
@@ -230,6 +304,30 @@ public class ObjetivoService {
                 "contratos_nuevos", "egresos_maximos", "vacancia_maxima");
     }
 
+    /** obs 284: alcances IMPLEMENTADOS (no se ofrecen tipo/zona/propietario/responsable, que no tienen efecto). */
+    public static List<String> alcances() { return List.of("EMPRESA", "SUCURSAL"); }
+
+    /** DTO de medicion historica (obs 285). */
+    public static class Medicion {
+        public LocalDate periodoDesde, periodoHasta;
+        public BigDecimal valor = BigDecimal.ZERO, cumplimientoPct;
+        public String semaforo, fecha;
+        public LocalDate getPeriodoDesde() { return periodoDesde; }
+        public LocalDate getPeriodoHasta() { return periodoHasta; }
+        public BigDecimal getValor() { return valor; }
+        public BigDecimal getCumplimientoPct() { return cumplimientoPct; }
+        public String getSemaforo() { return semaforo; }
+        public String getFecha() { return fecha; }
+    }
+
+    /** DTO de sucursal para el ABM (obs 284). */
+    public static class Suc {
+        public final Long id; public final String nombre;
+        public Suc(Long id, String nombre) { this.id = id; this.nombre = nombre; }
+        public Long getId() { return id; }
+        public String getNombre() { return nombre; }
+    }
+
     // ── DTO ──
 
     public static class Objetivo {
@@ -239,8 +337,10 @@ public class ObjetivoService {
         public LocalDate vigenciaDesde, vigenciaHasta;
         // Calculados:
         public BigDecimal valorActual = BigDecimal.ZERO, brecha = BigDecimal.ZERO, cumplimientoPct;
-        public String semaforo = "OK";
+        public String semaforo = "OK", drillClave;
         public long faltanUnidades;
+        public String getDrillClave() { return drillClave; }
+        public boolean isTieneEvidencia() { return drillClave != null; }
 
         public Long alcanceSucursal() { return "SUCURSAL".equals(alcance) ? alcanceRef : null; }
 

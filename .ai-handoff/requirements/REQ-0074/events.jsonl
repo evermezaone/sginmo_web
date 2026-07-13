@@ -1,2 +1,3 @@
 {"ts":"2026-07-12T17:55:00Z","actor":"claude","evento":"implementado","nota":"DrilldownService (whitelist clave->permiso + consultas parametrizadas anti-injection) + dashboard-detalle.xhtml/Bean con export CSV y filtros; permiso por modulo origen"}
 {"ts":"2026-07-12T17:55:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; smoke 35/35 (dashboard-detalle 200 tras cambiar p:message sin for por div)"}
+{"ts":"2026-07-13T01:45:00Z","actor":"claude","evento":"corregido","nota":"Ronda cambios obs 287-288: DrilldownService.propiedades() exige VIGENTE (alineado con ocupacion/KPI); dashboard-detalle Volver reenvia fdesde/fhasta/fmoneda/fsucursal y dashboard los consume. Deploy VPS OK, smoke 36/36."}

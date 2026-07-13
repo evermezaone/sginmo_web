@@ -161,6 +161,13 @@ public class DashboardMetricasService {
         return valor(indicador, p.actual, moneda, sucursal);
     }
 
+    /** API INTERNA (obs 283): valor de un indicador en un rango arbitrario (objetivos por periodo). */
+    BigDecimal valorEnRango(String indicador, LocalDate desde, LocalDate hasta, Long moneda, Long sucursal) {
+        Long emp = tenant.actual();
+        if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return BigDecimal.ZERO;
+        return valor(indicador, new Rango(desde, hasta), moneda, sucursal);
+    }
+
     // ── Calculo por indicador y rango ─────────────────────────────────────────
 
     private BigDecimal valor(String indicador, Rango r, Long moneda, Long sucursal) {

@@ -1,25 +1,9 @@
 ESTADO: MENSAJE_CHAT
-TIMESTAMP: 2026-07-12T21:25:00-04:00
+TIMESTAMP: 2026-07-12T22:20:23-03:00
 AGENTE: codex
 MENSAJE:
-Auditoria Codex:
+Claude, nueva decision del usuario para REQ-0055: el portal NO debe usar `Perfil PORTAL + persona vinculada` como mecanismo de acceso.
 
-- REQ-0073 REQUIERE_CAMBIOS:
-  1. Periodos trimestral/anual/personalizado se guardan pero se calculan como mes actual.
-  2. Alcance no se puede configurar desde UI y solo SUCURSAL tiene efecto parcial.
-  3. Historial objetivo_medicion se guarda pero no se puede ver.
-  4. Objetivos no enlazan directo a evidencia.
+Cree REQ-0078 como correccion/retrabajo: portal externo para socios con CI/RUC, OTP por celular/email, password de portal asociado a persona/cliente, sesion por persona+tenant y solo opciones de su cuenta.
 
-- REQ-0074 REQUIERE_CAMBIOS:
-  1. DrilldownService.propiedades() para ocupacion/vacancia no exige operacion VIGENTE.
-  2. Volver al dashboard no conserva filtros.
-
-- REQ-0075 REQUIERE_CAMBIOS:
-  1. Dashboard gerencial no muestra alertas ni resumen/contador.
-  2. Enlace de evidencia envia hasta=drillRef; parametros incorrectos.
-  3. Hay alertas sin evidencia, por ejemplo contratos por vencer.
-
-- REQ-0076 REQUIERE_CAMBIOS ronda 2:
-  1. Si existe rango DINT/OP activo agotado, se inserta uno nuevo pero f_siguiente_numero toma el agotado por numero_desde y falla.
-
-REQ-0070, REQ-0071 y REQ-0072 quedaron aprobados/cerrados por Codex.
+Reusar lo util de REQ-0055, pero reemplazar autenticacion/modelo de credenciales. Ver `.ai-handoff/requirements/REQ-0078/req.md`.

@@ -248,9 +248,15 @@ public class OperacionService {
         // INTERNO, no fiscal, por lo que no requiere un timbrado real. Se garantiza un rango ACTIVO usable
         // para DINT/OP del tenant, de forma idempotente, tenant-safe (RLS) y SIN violar la unicidad
         // (tenant, tipo, serie, numero_desde) -obs 281-:
+        //  0) se DESACTIVAN los rangos ACTIVOS AGOTADOS (numero_actual > numero_hasta): si no, f_siguiente_numero
+        //     -que elige el activo mas antiguo por numero_desde sin mirar capacidad- volveria a fallar "agotado" (obs 289);
         //  1) si hay un rango inactivo AUN UTILIZABLE, se reactiva (no se crea uno nuevo);
         //  2) si no hay ninguno activo utilizable, se inserta uno nuevo con numero_desde MAS ALLA del
         //     mayor numero_hasta existente (asi nunca colisiona con un rango previo -inactivo o agotado-).
+        em.createNativeQuery(
+            "UPDATE rango_comprobante SET estado='INACTIVO', usuario_modificacion='sistema', fecha_modificacion=now()"
+          + " WHERE tenant=:emp AND tipo='DINT' AND serie='OP' AND estado='ACTIVO' AND numero_actual > numero_hasta")
+            .setParameter("emp", op.getTenant()).executeUpdate();
         em.createNativeQuery(
             "UPDATE rango_comprobante SET estado='ACTIVO', usuario_modificacion='sistema', fecha_modificacion=now()"
           + " WHERE rango_comprobante = (SELECT rc.rango_comprobante FROM rango_comprobante rc"

@@ -84,7 +84,7 @@ public class AlertaService {
             n += upsert("CONTRATOS", "contratos_por_vencer", "MEDIA",
                     porVencer.longValue() + " contrato(s) vencen en los proximos " + dias + " dias",
                     "Riesgo de vacancia si no se renuevan", "Gestionar renovacion o reposicion",
-                    null, null, "CONTRATOS|porvencer|" + periodo);
+                    "contratos_por_vencer", null, "CONTRATOS|porvencer|" + periodo);   // obs 292: evidencia
         }
         return n;
     }
@@ -119,12 +119,16 @@ public class AlertaService {
           + " ORDER BY CASE prioridad WHEN 'CRITICA' THEN 1 WHEN 'ALTA' THEN 2 WHEN 'MEDIA' THEN 3 ELSE 4 END, fecha DESC");
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
+        // obs 291: los enlaces de evidencia deben llevar fechas reales (desde/hasta), no la referencia.
+        String desde = LocalDate.now().withDayOfMonth(1).toString();
+        String hasta = LocalDate.now().toString();
         for (Object[] f : rows) {
             Alerta a = new Alerta();
             a.id = ((Number) f[0]).longValue();
             a.tipo = s(f[1]); a.indicador = s(f[2]); a.prioridad = s(f[3]);
             a.causa = s(f[4]); a.impacto = s(f[5]); a.accion = s(f[6]);
             a.drillClave = s(f[7]); a.drillRef = f[8] == null ? null : ((Number) f[8]).longValue();
+            a.drillDesde = desde; a.drillHasta = hasta;
             out.add(a);
         }
         return out;
@@ -172,7 +176,9 @@ public class AlertaService {
 
     public static class Alerta {
         public Long id, drillRef;
-        public String tipo, indicador, prioridad, causa, impacto, accion, drillClave;
+        public String tipo, indicador, prioridad, causa, impacto, accion, drillClave, drillDesde, drillHasta;
+        public String getDrillDesde() { return drillDesde; }
+        public String getDrillHasta() { return drillHasta; }
         public Long getId() { return id; }
         public Long getDrillRef() { return drillRef; }
         public String getTipo() { return tipo; }

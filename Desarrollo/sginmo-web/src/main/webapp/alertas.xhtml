@@ -28,7 +28,9 @@
             <p:column headerText="Acciones" style="width:15rem; text-align:center;">
                 <h:link outcome="/dashboard-detalle" rendered="#{a.tieneEvidencia}" styleClass="ui-button ui-button-flat" title="Ver evidencia">
                     <f:param name="clave" value="#{a.drillClave}"/>
-                    <f:param name="hasta" value="#{a.drillRef}"/>
+                    <f:param name="desde" value="#{a.drillDesde}"/>
+                    <f:param name="hasta" value="#{a.drillHasta}"/>
+                    <f:param name="ref" value="#{a.drillRef}"/>
                     <i class="pi pi-search"></i>
                 </h:link>
                 <p:commandButton icon="pi pi-check" title="Marcar revisada" styleClass="ui-button-flat"

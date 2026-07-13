@@ -56,6 +56,17 @@
                 <p:commandButton icon="pi pi-check" title="Reactivar" styleClass="ui-button-flat"
                                  rendered="#{o.estado eq 'INACTIVO' and sesionUsuario.puede('objetivos','REACTIVAR')}"
                                  actionListener="#{objetivoBean.reactivar(o)}" update="frm"/>
+                <p:commandButton icon="pi pi-history" title="Ver historial de mediciones" styleClass="ui-button-flat"
+                                 action="#{objetivoBean.verHistorial(o)}" update="frm:dlgHist"
+                                 oncomplete="PF('dlgHist').show()"/>
+                <h:link outcome="dashboard-detalle" title="Ver evidencia" rendered="#{o.tieneEvidencia}"
+                        styleClass="ui-button ui-button-flat" style="padding:.25rem .4rem;">
+                    <i class="pi pi-search"/>
+                    <f:param name="clave" value="#{o.drillClave}"/>
+                    <f:param name="hasta" value="#{objetivoBean.hoy}"/>
+                    <f:param name="sucursal" value="#{o.alcanceRef}"/>
+                    <f:param name="moneda" value="#{o.moneda}"/>
+                </h:link>
             </p:column>
         </p:dataTable>
 
@@ -97,11 +108,58 @@
                         </p:selectOneMenu>
                     </div>
                 </div>
+                <div style="display:flex; gap:.6rem;">
+                    <div class="campo" style="flex:1;"><label>Alcance</label><br/>
+                        <p:selectOneMenu value="#{objetivoBean.edicion.alcance}" style="width:100%;">
+                            <f:selectItems value="#{objetivoBean.alcances}"/>
+                            <p:ajax update="@this celSuc"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="campo" style="flex:1;"><h:panelGroup id="celSuc">
+                        <label>Sucursal (si alcance=SUCURSAL)</label><br/>
+                        <p:selectOneMenu value="#{objetivoBean.edicion.alcanceRef}" style="width:100%;"
+                                         disabled="#{objetivoBean.edicion.alcance ne 'SUCURSAL'}">
+                            <f:selectItem itemLabel="(toda la empresa)" itemValue="#{null}"/>
+                            <f:selectItems value="#{objetivoBean.sucursales}" var="s" itemLabel="#{s.nombre}" itemValue="#{s.id}"/>
+                        </p:selectOneMenu>
+                    </h:panelGroup></div>
+                </div>
+                <div style="display:flex; gap:.6rem;" rendered="#{objetivoBean.edicion.periodo eq 'PERSONALIZADO'}">
+                    <div class="campo" style="flex:1;"><label>Vigencia desde</label><br/>
+                        <p:datePicker value="#{objetivoBean.edicion.vigenciaDesde}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                    <div class="campo" style="flex:1;"><label>Vigencia hasta</label><br/>
+                        <p:datePicker value="#{objetivoBean.edicion.vigenciaHasta}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                </div>
                 <div style="margin-top:.8rem; text-align:right;">
                     <p:commandButton value="Guardar" icon="pi pi-save" action="#{objetivoBean.guardar}"
                                      update="frm" oncomplete="if (!args.validationFailed &amp;&amp; #{not objetivoBean.editando}) PF('dlgObj').hide()"/>
                 </div>
             </h:panelGroup>
+        </p:dialog>
+
+        <p:dialog id="dlgHist" header="Historial de mediciones" widgetVar="dlgHist" modal="true" width="640" showEffect="fade">
+            <p style="color:#6c757d; font-size:.85rem; margin:.2rem 0 .6rem;">
+                <h:outputText value="#{objetivoBean.historialDe.descripcion}"/>
+            </p>
+            <p:dataTable var="m" value="#{objetivoBean.historial}" emptyMessage="Sin mediciones registradas"
+                         paginator="true" rows="12">
+                <p:column headerText="Periodo" style="width:12rem;">
+                    <h:outputText value="#{m.periodoDesde}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                    <h:outputText value=" a "/>
+                    <h:outputText value="#{m.periodoHasta}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                </p:column>
+                <p:column headerText="Valor" style="width:8rem; text-align:right;">
+                    <h:outputText value="#{m.valor}"><f:convertNumber pattern="#,##0.##"/></h:outputText>
+                </p:column>
+                <p:column headerText="Cumplim." style="width:7rem; text-align:right;">
+                    <h:outputText value="#{m.cumplimientoPct}#{m.cumplimientoPct ne null ? '%' : 'n/a'}"/>
+                </p:column>
+                <p:column headerText="Semaforo" style="width:8rem; text-align:center;">
+                    <p:tag value="#{m.semaforo}"
+                           severity="#{m.semaforo eq 'OK' ? 'success' : (m.semaforo eq 'ADVERTENCIA' ? 'warning' : 'danger')}"/>
+                </p:column>
+                <p:column headerText="Registrada" style="width:10rem;"><h:outputText value="#{m.fecha}"/></p:column>
+            </p:dataTable>
         </p:dialog>
 
         <p style="color:#9ca3af; font-size:.83rem;">

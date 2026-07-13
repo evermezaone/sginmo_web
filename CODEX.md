@@ -27,6 +27,8 @@ CALL sp_siguiente_accion_agente('SGI', 'codex');
 
 Routine MySQL access uses the runner flow: write SQL into `mysql_runner.sql`, run `mysql --defaults-extra-file=.\tmp_my.cnf --batch --raw --execute="source mysql_runner.sql"`, then rename to `mysqlYYYYMMDDHHmmss.sql`.
 
+User decision (2026-07-12): this project already authorizes the established runner access to the coordination DB. Codex must not ask the user again for permission just to read or update the coordination DB when using this runner flow. Never run ad-hoc inline SQL outside the runner.
+
 "leer buzon" (or similar) = full audit command, not status-only: take the lowest pending `LISTO_PARA_REVISION` REQ, audit it, write `codex-review.md`, register observations, derive in DB.
 
 If a recurring mailbox loop/heartbeat is active and `sp_siguiente_accion_agente('SGI','codex')` returns no rows because the project has reached the current maximum/last REQ and there are no pending REQs for Codex, stop/delete the loop instead of continuing empty polling. Report that the loop was stopped because there are no remaining requirements to audit.

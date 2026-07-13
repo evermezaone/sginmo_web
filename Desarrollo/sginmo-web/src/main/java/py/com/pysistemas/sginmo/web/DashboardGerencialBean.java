@@ -29,6 +29,7 @@ public class DashboardGerencialBean implements Serializable {
     @Inject private transient DashboardGerencialService servicio;
     @Inject private transient DashboardMetricasService metricas;
     @Inject private transient RentabilidadService rentabilidad;
+    @Inject private transient py.com.pysistemas.sginmo.servicio.AlertaService alertaServicio;   // REQ-0075 obs 290
     @Inject private transient CatalogoService catalogoService;
     @Inject private SesionUsuario sesion;
 
@@ -47,6 +48,7 @@ public class DashboardGerencialBean implements Serializable {
     private String distDataJson = "[]";
     private String distColoresJson = "[]";
     private boolean hayDistribucion;
+    private List<py.com.pysistemas.sginmo.servicio.AlertaService.Alerta> alertas = java.util.List.of();   // obs 290
 
     @PostConstruct
     public void iniciar() {
@@ -61,18 +63,31 @@ public class DashboardGerencialBean implements Serializable {
                     .map(py.com.pysistemas.sginmo.dominio.catalogo.Moneda::getId)
                     .findFirst().orElse(monedas.get(0).getId());
         }
-        recalcular();
+        // El calculo se hace en aplicarParametros() (viewAction), luego de que los view params (obs 288)
+        // hayan podido sobreescribir desde/hasta/moneda/sucursal.
     }
 
     public String verificarAcceso() {
         return sesion.puede(PANTALLA, "VER") ? null : "/index?faces-redirect=true";
     }
 
+    /** obs 288: se ejecuta tras aplicar los view params; recalcula con los filtros efectivos. */
+    public void aplicarParametros() {
+        if (sesion.puede(PANTALLA, "VER")) recalcular();
+    }
+
     public void recalcular() {
         kpis = servicio.kpis(desde, hasta, monedaId, sucursalId);
         comparativos = metricas.comparativos(hasta, monedaId, sucursalId);
+        // obs 290: alertas abiertas (solo si el usuario tiene permiso del modulo).
+        alertas = sesion.puede("alertas", "VER") ? alertaServicio.listar() : java.util.List.of();
         construirGraficos();
     }
+
+    public List<py.com.pysistemas.sginmo.servicio.AlertaService.Alerta> getAlertas() { return alertas; }
+    public boolean isHayAlertas() { return alertas != null && !alertas.isEmpty(); }
+    public long getAlertasCriticas() { return alertas.stream().filter(a -> "CRITICA".equals(a.getPrioridad())).count(); }
+    public int getAlertasTotal() { return alertas == null ? 0 : alertas.size(); }
 
     private void construirGraficos() {
         // obs 274: la serie termina en el mes de 'hasta' (el filtro de periodo), no en hoy.

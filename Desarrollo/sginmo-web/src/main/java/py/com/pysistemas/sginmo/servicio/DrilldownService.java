@@ -31,7 +31,8 @@ public class DrilldownService {
         "egresos", new String[]{"ingresos-egresos", "VER"},
         "ocupacion", new String[]{"ocupacion", "VER"},
         "vacancia", new String[]{"ocupacion", "VER"},
-        "rentabilidad_activo", new String[]{"rentabilidad", "VER"});
+        "rentabilidad_activo", new String[]{"rentabilidad", "VER"},
+        "contratos_por_vencer", new String[]{"operaciones", "VER"});
 
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
@@ -40,6 +41,8 @@ public class DrilldownService {
     private py.com.pysistemas.sginmo.web.TenantContext tenant;
     @jakarta.inject.Inject
     private py.com.one.security.servicio.Autorizacion autorizacion;
+    @jakarta.inject.Inject
+    private ParametroConfig parametros;
 
     public boolean claveValida(String clave) { return clave != null && PERMISO.containsKey(clave); }
 
@@ -69,6 +72,7 @@ public class DrilldownService {
             case "ocupacion" -> propiedades(d, hasta, true);
             case "vacancia" -> propiedades(d, hasta, false);
             case "rentabilidad_activo" -> rentabilidadActivo(d, refId, desde, hasta);
+            case "contratos_por_vencer" -> contratosPorVencer(d);
             default -> throw new NegocioException("Indicador de detalle no valido");
         }
         return d;
@@ -130,7 +134,7 @@ public class DrilldownService {
             "SELECT a.nombre, COALESCE(te.descripcion,'-'), COALESCE(a.direccion,''), a.precio_alquiler"
           + " FROM activo a LEFT JOIN entidad te ON te.entidad=a.tipo"
           + " WHERE a.precio_alquiler > 0 AND a.estado <> 'VENDIDA' AND a.activo " + cond + " ("
-          + "   SELECT DISTINCT o.activo FROM operacion o WHERE o.tipo_operacion='ALQUILER'"
+          + "   SELECT DISTINCT o.activo FROM operacion o WHERE o.tipo_operacion='ALQUILER' AND o.estado='VIGENTE'"   /* obs 287: alinear con el KPI */
           + "     AND o.fecha_inicio_contrato <= :h AND (o.fecha_finalizacion IS NULL OR o.fecha_finalizacion > :h))"
           + " ORDER BY a.precio_alquiler DESC, a.nombre")
             .setParameter("h", hasta);
@@ -147,6 +151,20 @@ public class DrilldownService {
           + " WHERE ie.activo=:a AND ie.estado='CANCELADO' AND ie.fecha BETWEEN :d AND :h ORDER BY ie.fecha")
             .setParameter("a", refId).setParameter("d", desde).setParameter("h", hasta);
         for (Object[] f : rows(q)) d.filas.add(new String[]{ fecha(f[0]), s(f[1]), s(f[2]), gs(f[3]) });
+    }
+
+    /** Evidencia de contratos por vencer (operaciones vigentes con fin de contrato proximo). */
+    private void contratosPorVencer(Detalle d) {
+        int dias = Math.max(1, parametros.entero("CONTRATOS_AVISO_DIAS", 30));
+        d.titulo = "Contratos por vencer (proximos " + dias + " dias)";
+        d.columnas = new String[]{"Operacion", "Cliente", "Activo", "Fin de contrato"};
+        Query q = em.createNativeQuery(
+            "SELECT o.operacion, vp.nombre, a.nombre, o.fecha_fin_contrato FROM operacion o"
+          + " LEFT JOIN v_persona vp ON vp.persona=o.cliente LEFT JOIN activo a ON a.activo=o.activo"
+          + " WHERE o.estado='VIGENTE' AND o.fecha_fin_contrato IS NOT NULL"
+          + " AND o.fecha_fin_contrato BETWEEN current_date AND current_date + (:d || ' days')::interval"
+          + " ORDER BY o.fecha_fin_contrato").setParameter("d", dias);
+        for (Object[] f : rows(q)) d.filas.add(new String[]{ s(f[0]), s(f[1]), s(f[2]), fecha(f[3]) });
     }
 
     private String filtrosDesc(LocalDate desde, LocalDate hasta, Long moneda, Long sucursal, Long refId) {

@@ -6,6 +6,12 @@
                 xmlns:p="primefaces">
 <f:metadata>
     <f:viewAction action="#{dashboardGerencialBean.verificarAcceso()}"/>
+    <!-- obs 288: recibir los filtros al volver desde el detalle -->
+    <f:viewParam name="fdesde" value="#{dashboardGerencialBean.desde}"><f:convertDateTime type="localDate" pattern="yyyy-MM-dd"/></f:viewParam>
+    <f:viewParam name="fhasta" value="#{dashboardGerencialBean.hasta}"><f:convertDateTime type="localDate" pattern="yyyy-MM-dd"/></f:viewParam>
+    <f:viewParam name="fmoneda" value="#{dashboardGerencialBean.monedaId}"/>
+    <f:viewParam name="fsucursal" value="#{dashboardGerencialBean.sucursalId}"/>
+    <f:viewAction action="#{dashboardGerencialBean.aplicarParametros()}"/>
 </f:metadata>
 <ui:define name="titulo">Dashboard gerencial</ui:define>
 <ui:define name="contenido">
@@ -33,6 +39,24 @@
                 </p:selectOneMenu></div>
             <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{dashboardGerencialBean.recalcular()}" update="frm"/>
         </div>
+
+        <!-- obs 290: alertas gerenciales abiertas con acceso a alertas.xhtml -->
+        <h:panelGroup layout="block" rendered="#{dashboardGerencialBean.hayAlertas}"
+                      style="margin:1rem 0; border:1px solid #f5c2c7; background:#fff5f5; border-radius:8px; padding:.8rem 1rem;">
+            <div style="display:flex; align-items:center; gap:.8rem; flex-wrap:wrap;">
+                <i class="pi pi-bell" style="color:#c62828; font-size:1.3rem;"></i>
+                <strong style="color:#1d3557;">#{dashboardGerencialBean.alertasTotal} alerta(s) abierta(s)</strong>
+                <p:tag value="#{dashboardGerencialBean.alertasCriticas} criticas" severity="danger"
+                       rendered="#{dashboardGerencialBean.alertasCriticas gt 0}"/>
+                <span style="color:#6c757d; font-size:.85rem;">
+                    <ui:repeat value="#{dashboardGerencialBean.alertas}" var="al" varStatus="st">
+                        <h:outputText value="#{al.causa}#{st.index lt 2 and st.index lt dashboardGerencialBean.alertasTotal-1 ? ' · ' : ''}" rendered="#{st.index lt 2}"/>
+                    </ui:repeat>
+                </span>
+                <p:button value="Ver alertas" icon="pi pi-arrow-right" outcome="alertas" style="margin-left:auto;"
+                          rendered="#{sesionUsuario.puede('alertas','VER')}"/>
+            </div>
+        </h:panelGroup>
 
         <h3 style="margin:1rem 0 .3rem; color:#1d3557;">Resumen ejecutivo (comparativo)</h3>
         <div class="kpis-g">

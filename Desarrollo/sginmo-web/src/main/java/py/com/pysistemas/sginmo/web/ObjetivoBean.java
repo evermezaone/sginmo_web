@@ -31,12 +31,21 @@ public class ObjetivoBean implements Serializable {
     private List<ObjetivoService.Objetivo> objetivos;
     private ObjetivoService.Objetivo edicion;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Moneda> monedas;
+    private List<ObjetivoService.Suc> sucursales;                 // obs 284
+    private List<ObjetivoService.Medicion> historial;             // obs 285
+    private ObjetivoService.Objetivo historialDe;
 
     @PostConstruct
     public void iniciar() {
         if (!sesion.puede(PANTALLA, "VER")) return;
         monedas = catalogoService.monedasActivas();
+        sucursales = servicio.sucursales();
         recargar();
+    }
+
+    public void verHistorial(ObjetivoService.Objetivo o) {
+        historialDe = o;
+        historial = servicio.mediciones(o.getId());
     }
 
     public String verificarAcceso() {
@@ -98,5 +107,10 @@ public class ObjetivoBean implements Serializable {
     public List<String> getUnidades() { return List.of("PORCENTAJE", "MONTO", "CANTIDAD"); }
     public List<String> getSentidos() { return List.of("MINIMO", "MAXIMO"); }
     public List<String> getPeriodos() { return List.of("MENSUAL", "TRIMESTRAL", "ANUAL", "PERSONALIZADO"); }
+    public List<String> getAlcances() { return ObjetivoService.alcances(); }
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Moneda> getMonedas() { return monedas; }
+    public List<ObjetivoService.Suc> getSucursales() { return sucursales; }
+    public List<ObjetivoService.Medicion> getHistorial() { return historial; }
+    public ObjetivoService.Objetivo getHistorialDe() { return historialDe; }
+    public String getHoy() { return java.time.LocalDate.now().toString(); }   // obs 286 - hasta para el enlace de evidencia
 }

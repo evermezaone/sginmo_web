@@ -38,7 +38,12 @@
                     <p:fileDownload value="#{dashboardDetalleBean.csv}"/>
                 </p:commandButton>
                 <p:button value="Volver al dashboard" icon="pi pi-arrow-left" outcome="dashboard-gerencial"
-                          styleClass="ui-button-secondary" style="margin-left:.4rem;"/>
+                          styleClass="ui-button-secondary" style="margin-left:.4rem;">
+                    <f:param name="fdesde" value="#{dashboardDetalleBean.desde}"/>
+                    <f:param name="fhasta" value="#{dashboardDetalleBean.hasta}"/>
+                    <f:param name="fmoneda" value="#{dashboardDetalleBean.moneda}"/>
+                    <f:param name="fsucursal" value="#{dashboardDetalleBean.sucursal}"/>
+                </p:button>
             </div>
             <p:dataTable var="fila" value="#{dashboardDetalleBean.detalle.filas}" paginator="true" rows="25"
                          emptyMessage="Sin registros para los filtros aplicados">
