@@ -160,7 +160,7 @@ public class PersonaBean implements Serializable {
             } else {
                 personaService.guardarJuridica(seleccionado, juridica, datosEmpresa, tenant);
             }
-            guardarRolesPendientes();
+            reconciliarRoles();
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Persona creada" : "Persona actualizada", seleccionado.getNombre());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgPersona').hide()");
             org.primefaces.PrimeFaces.current().ajax().update("frmLista:tabla", "frmLista:mensajes");
@@ -180,28 +180,27 @@ public class PersonaBean implements Serializable {
         }
     }
 
+    /**
+     * REQ-0089: agregar/quitar rol es DIFERIDO — solo modifica la lista en memoria; la persistencia
+     * (insertar los nuevos y dar de baja los desmarcados) ocurre al Guardar, via reconciliarRoles.
+     * Asi los cambios de rol en la edicion se guardan realmente.
+     */
     public void agregarRol() {
         try {
             if (nuevoRol == null || nuevoRol.isBlank()) {
                 throw new NegocioException("Elija el rol");
             }
-            if (seleccionado.getId() == null) {
-                Long rolId = catalogoService.idOpcion("ROLES_PERSONA", nuevoRol);
-                if (rolId == null) throw new NegocioException("El rol '" + nuevoRol + "' no existe en el catalogo");
-                if (rolesPersona.stream().anyMatch(r -> rolId.equals(r.getRol()))) {
-                    throw new NegocioException("La persona ya tiene ese rol");
-                }
-                var temporal = new PersonaRol();
-                temporal.setRol(rolId);
-                temporal.setTenant(tenantActual());
-                var copia = new java.util.ArrayList<>(rolesPersona);
-                copia.add(temporal);
-                rolesPersona = copia;
-                nuevoRol = null;
-                return;
+            Long rolId = catalogoService.idOpcion("ROLES_PERSONA", nuevoRol);
+            if (rolId == null) throw new NegocioException("El rol '" + nuevoRol + "' no existe en el catalogo");
+            if (rolesPersona.stream().anyMatch(r -> rolId.equals(r.getRol()))) {
+                throw new NegocioException("La persona ya tiene ese rol");
             }
-            personaService.agregarRol(seleccionado.getId(), nuevoRol);
-            rolesPersona = personaService.rolesDe(seleccionado.getId());
+            var nuevo = new PersonaRol();
+            nuevo.setRol(rolId);
+            nuevo.setTenant(tenantActual());
+            var copia = new java.util.ArrayList<>(rolesPersona);
+            copia.add(nuevo);
+            rolesPersona = copia;
             nuevoRol = null;
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo agregar el rol", e.getMessage());
@@ -209,35 +208,21 @@ public class PersonaBean implements Serializable {
     }
 
     public void quitarRol(PersonaRol rol) {
-        try {
-            if (rol == null) return;
-            if (rol.getId() == null) {
-                rolesPersona = rolesPersona.stream()
-                    .filter(r -> !java.util.Objects.equals(r.getRol(), rol.getRol()))
-                    .toList();
-                return;
-            }
-            personaService.quitarRol(rol.getId());
-            rolesPersona = personaService.rolesDe(seleccionado.getId());
-        } catch (NegocioException e) {
-            aviso(FacesMessage.SEVERITY_WARN, "No se pudo quitar el rol", e.getMessage());
-        }
+        if (rol == null) return;
+        rolesPersona = rolesPersona.stream()
+            .filter(r -> !java.util.Objects.equals(r.getRol(), rol.getRol()))
+            .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
     }
 
-    private void guardarRolesPendientes() {
+    /** REQ-0089: al guardar, reconcilia los roles de la persona con la lista editada (inserta nuevos, baja desmarcados). */
+    private void reconciliarRoles() {
         if (seleccionado.getId() == null) return;
-        var pendientes = rolesPersona.stream()
-            .filter(r -> r.getId() == null)
+        var rolIds = rolesPersona.stream()
             .map(PersonaRol::getRol)
+            .filter(java.util.Objects::nonNull)
+            .distinct()
             .toList();
-        for (Long rolId : pendientes) {
-            String codigo = roles.stream()
-                .filter(r -> r.getId().equals(rolId))
-                .map(Entidad::getCodigo)
-                .findFirst()
-                .orElseThrow(() -> new NegocioException("El rol seleccionado ya no existe"));
-            personaService.agregarRol(seleccionado.getId(), codigo);
-        }
+        personaService.reconciliarRoles(seleccionado.getId(), rolIds);
         rolesPersona = personaService.rolesDe(seleccionado.getId());
     }
 

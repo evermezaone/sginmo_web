@@ -293,4 +293,45 @@ public class PersonaService {
         // activos y reportes que ya lo referencian). Se puede reactivar con agregarRol.
         r.setEstado("INACTIVO");
     }
+
+    /**
+     * REQ-0089: reconcilia los roles ACTIVOS de la persona EN EL TENANT actual contra la lista deseada
+     * (los ids de rol que quedaron en el ABM al guardar). Inserta/reactiva los que faltan y da de baja
+     * logica (INACTIVO) los activos que ya no estan. Preserva el historial y respeta pertenencia/tenant.
+     */
+    @Transactional
+    public void reconciliarRoles(Long personaId, java.util.List<Long> rolesDeseados) {
+        autorizacion.exigir("personas", "EDITAR");
+        if (personaId == null) return;
+        if (!perteneceAlTenant(personaId)) {
+            throw new NegocioException("La persona no pertenece a la cartera de la empresa");
+        }
+        Long t = tenant.actual();
+        java.util.Set<Long> deseados = rolesDeseados == null ? java.util.Set.of()
+                : new java.util.HashSet<>(rolesDeseados);
+        // Roles existentes (activos e inactivos) de la persona en este tenant.
+        List<PersonaRol> actuales = em.createQuery(
+                "SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.tenant = :t", PersonaRol.class)
+            .setParameter("p", personaId).setParameter("t", t).getResultList();
+        java.util.Set<Long> yaExisten = new java.util.HashSet<>();
+        for (PersonaRol r : actuales) {
+            yaExisten.add(r.getRol());
+            boolean debeEstar = deseados.contains(r.getRol());
+            if (debeEstar && !"ACTIVO".equals(r.getEstado())) {
+                r.setEstado("ACTIVO");                 // reactiva preservando historial
+            } else if (!debeEstar && "ACTIVO".equals(r.getEstado())) {
+                r.setEstado("INACTIVO");               // baja logica de los desmarcados
+            }
+        }
+        // Inserta los roles nuevos que no tenia ningun registro previo en este tenant.
+        for (Long rolId : deseados) {
+            if (rolId == null || yaExisten.contains(rolId)) continue;
+            var nr = new PersonaRol();
+            nr.setPersona(personaId);
+            nr.setRol(rolId);
+            nr.setTenant(t);
+            nr.setEstado("ACTIVO");
+            em.persist(nr);
+        }
+    }
 }

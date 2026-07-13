@@ -1,0 +1,2 @@
+{"ts":"2026-07-13T18:05:00Z","actor":"claude","evento":"implementado","nota":"REQ-0089 fix roles no persisten al editar persona: PersonaService.reconciliarRoles (insert/reactivar + baja logica INACTIVO por tenant) y PersonaBean con agregar/quitar rol diferidos que reconcilian al guardar (reemplaza guardarRolesPendientes que solo insertaba)"}
+{"ts":"2026-07-13T18:06:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; smoke 36/36 (personas 200)"}
