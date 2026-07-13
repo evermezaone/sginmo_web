@@ -45,7 +45,9 @@
                 </div>
             </p:panel>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+            <!-- REQ-0081: layout responsive — en pantallas angostas los paneles se apilan y la grilla
+                 de cobros usa el ancho completo (antes quedaba a media pantalla y truncaba columnas). -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:1rem;">
                 <!-- Registrar cobro -->
                 <p:panel header="Registrar cobro">
                     <div class="campo">
@@ -198,13 +200,16 @@
                             </h:panelGroup>
                         </div>
                     </ui:fragment>
-                    <p:dataTable var="cb" value="#{cajaBean.cobros}" paginator="true" rows="10" emptyMessage="Aún no hay cobros">
-                        <p:column headerText="#" style="width:4rem;"><h:outputText value="#{cb[0]}"/></p:column>
-                        <p:column headerText="Cliente"><h:outputText value="#{cb[2]}"/></p:column>
-                        <p:column headerText="Monto" style="text-align:right;"><h:outputText value="#{cb[3]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
-                        <p:column headerText="Forma"><h:outputText value="#{cb[4]}"/></p:column>
-                        <p:column headerText="Estado" style="width:6rem; text-align:center;"><p:tag value="#{cb[5]}" severity="#{cb[5] eq 'ACTIVO' ? 'success' : 'danger'}"/></p:column>
-                        <p:column style="width:6rem; text-align:center;">
+                    <div style="overflow-x:auto;">
+                    <p:dataTable var="cb" value="#{cajaBean.cobros}" paginator="true" rows="10" emptyMessage="Aún no hay cobros"
+                                 style="min-width:34rem;">
+                        <p:column headerText="#" style="width:3.5rem; white-space:nowrap;"><h:outputText value="#{cb[0]}"/></p:column>
+                        <p:column headerText="Fecha" style="width:6rem; white-space:nowrap;"><h:outputText value="#{cb[1]}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                        <p:column headerText="Cliente" style="min-width:8rem;"><h:outputText value="#{cb[2]}"/></p:column>
+                        <p:column headerText="Monto" style="width:8rem; text-align:right; white-space:nowrap;"><h:outputText value="#{cb[3]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                        <p:column headerText="Forma" style="min-width:6rem;"><h:outputText value="#{cb[4]}"/></p:column>
+                        <p:column headerText="Estado" style="width:6rem; text-align:center; white-space:nowrap;"><p:tag value="#{cb[5]}" severity="#{cb[5] eq 'ACTIVO' ? 'success' : 'danger'}"/></p:column>
+                        <p:column headerText="Acciones" style="width:6rem; text-align:center; white-space:nowrap;">
                             <p:commandButton icon="pi pi-print" title="Recibo PDF" styleClass="ui-button-flat" ajax="false"
                                              rendered="#{sesionUsuario.puede('caja','EXPORTAR')}"
                                              actionListener="#{descargaBean.recibo(cb[0])}"/>
@@ -216,6 +221,7 @@
                             </p:commandButton>
                         </p:column>
                     </p:dataTable>
+                    </div>
                 </p:panel>
             </div>
         </ui:fragment>

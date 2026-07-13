@@ -1,0 +1,2 @@
+{"ts":"2026-07-13T11:36:00Z","actor":"claude","evento":"implementado","nota":"REQ-0081 legibilidad grilla cobros en caja.xhtml: layout de paneles responsive (auto-fit minmax 360px), tabla de cobros en contenedor overflow-x:auto con min-width, anchos y white-space:nowrap por columna, y nueva columna Fecha (type=localDate)"}
+{"ts":"2026-07-13T11:36:30Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; smoke 36/36 (caja 200)"}
