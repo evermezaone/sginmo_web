@@ -45,6 +45,11 @@ public class PortalLoginBean implements Serializable {
         return sesion.isAutenticado() ? "/portal/inicio?faces-redirect=true" : null;
     }
 
+    /** Entrada del portal por la URL de carpeta (/portal/): manda a la cuenta o al login. */
+    public String entrada() {
+        return sesion.isAutenticado() ? "/portal/inicio?faces-redirect=true" : "/portal/login?faces-redirect=true";
+    }
+
     /** La pagina de clave requiere una identidad validada por OTP pendiente de definir password. */
     public String verificarClave() {
         if (sesion.isAutenticado()) return "/portal/inicio?faces-redirect=true";

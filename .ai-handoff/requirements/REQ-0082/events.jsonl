@@ -1,0 +1,2 @@
+{"ts":"2026-07-13T12:05:00Z","actor":"claude","evento":"implementado","nota":"REQ-0082 fix entrada portal: nuevo portal/index.xhtml (welcome-file de /portal/) con viewAction PortalLoginBean.entrada() que redirige a portal/login (o portal/inicio si hay sesion). Antes /portal/ daba index.xhtml Not Found"}
+{"ts":"2026-07-13T12:05:30Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; GET /portal/ y /portal/index.xhtml -> 302 a login; smoke 36/36"}
