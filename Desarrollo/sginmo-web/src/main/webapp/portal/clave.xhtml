@@ -1,0 +1,28 @@
+<ui:composition template="/WEB-INF/portal-acceso.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{portalLoginBean.verificarClave()}"/>
+</f:metadata>
+<ui:define name="contenido">
+    <h1>Definir contrasena</h1>
+    <p class="sub">Cree la contrasena con la que ingresara al portal. Minimo 8 caracteres.</p>
+    <h:form id="frm">
+        <div class="acc-msg"><p:messages showDetail="true" closable="true"/></div>
+        <div class="campo-a">
+            <label for="frm:n1">Nueva contrasena</label>
+            <p:password id="n1" value="#{portalLoginBean.nueva}" feedback="true" toggleMask="true"
+                        promptLabel="Ingrese" weakLabel="Debil" goodLabel="Aceptable" strongLabel="Fuerte"/>
+        </div>
+        <div class="campo-a">
+            <label for="frm:n2">Repetir contrasena</label>
+            <p:password id="n2" value="#{portalLoginBean.repetir}" feedback="false" toggleMask="true"/>
+        </div>
+        <p:commandButton value="Guardar e ingresar" icon="pi pi-save" styleClass="acc-btn" ajax="false"
+                         action="#{portalLoginBean.guardarClave}"/>
+    </h:form>
+</ui:define>
+</ui:composition>

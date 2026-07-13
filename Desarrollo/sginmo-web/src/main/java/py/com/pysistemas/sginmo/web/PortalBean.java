@@ -7,14 +7,17 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.model.DefaultStreamedContent;
 import org.primefaces.model.StreamedContent;
-import py.com.one.security.web.SesionUsuario;
 import py.com.pysistemas.sginmo.servicio.PortalService;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.util.List;
 
-/** REQ-0055 - Portal de cuenta del cliente (solo lectura). Aisla por la persona del usuario logueado. */
+/**
+ * REQ-0055/REQ-0078 - Portal de cuenta del socio (solo lectura). La identidad proviene de la
+ * {@link PortalSesion} externa (CI/RUC + OTP + password), NO del usuario administrativo ni de
+ * usuario.perfil='PORTAL'. Todas las consultas se aislan por la persona autenticada.
+ */
 @Named
 @ViewScoped
 public class PortalBean implements Serializable {
@@ -23,11 +26,13 @@ public class PortalBean implements Serializable {
     private transient PortalService portal;
 
     @Inject
-    private SesionUsuario sesion;
+    private transient py.com.pysistemas.sginmo.servicio.PortalAuthService auth;
+
+    @Inject
+    private PortalSesion sesion;
 
     private Long persona;
     private Long tenant;
-    private String usuario;
     private transient String ip;
 
     private PortalService.ResumenCuenta resumen;
@@ -37,30 +42,21 @@ public class PortalBean implements Serializable {
 
     @PostConstruct
     public void iniciar() {
-        if (!esPortal()) return;
-        persona = sesion.getUsuario().getPersona();
-        tenant = sesion.tenantUsuario();
-        usuario = sesion.codigoUsuario();
+        if (!sesion.isAutenticado()) return;
+        persona = sesion.getPersona();
+        tenant = sesion.getTenant();
         ip = ipCliente();
         resumen = portal.resumen(persona);
         cuotas = portal.cuotas(persona);
         pagos = portal.pagos(persona);
         documentos = portal.documentos(persona);
-        try { portal.registrarAcceso(tenant, usuario, persona, "ACCESO", "portal/inicio", ip); }
+        try { portal.registrarAcceso(tenant, "portal", persona, "ACCESO", "portal/inicio", ip); }
         catch (RuntimeException ignore) { /* la auditoria no bloquea el portal */ }
     }
 
-    /** Solo usuarios con perfil PORTAL y persona vinculada. Admins van al panel; anonimos, al login. */
+    /** Solo socios autenticados por el portal externo; si no, al login publico del portal. */
     public String verificarAcceso() {
-        if (sesion == null || !sesion.isLogueado()) return "/login?faces-redirect=true";
-        if (!esPortal()) return "/index?faces-redirect=true";
-        if (sesion.getUsuario().getPersona() == null) return "/login?faces-redirect=true";
-        return null;
-    }
-
-    private boolean esPortal() {
-        return sesion != null && sesion.isLogueado() && sesion.getUsuario() != null
-                && "PORTAL".equals(sesion.getUsuario().getPerfil());
+        return sesion.isAutenticado() ? null : "/portal/login?faces-redirect=true";
     }
 
     public StreamedContent descargar(PortalService.FilaDoc d) {
@@ -69,13 +65,18 @@ public class PortalBean implements Serializable {
                 .name(d.getNombre())
                 .contentType("application/octet-stream")
                 .stream(() -> {
-                    PortalService.Descarga dd = portal.descargar(id, persona, tenant, usuario, ip);
+                    PortalService.Descarga dd = portal.descargar(id, persona, tenant, "portal", ip);
                     return new ByteArrayInputStream(dd.datos);
                 })
                 .build();
     }
 
-    public String salir() { return sesion.cerrarSesion(); }
+    public String salir() {
+        try { auth.auditarLogout(tenant, persona, ip, null); } catch (RuntimeException ignore) { }
+        sesion.cerrar();
+        FacesContext.getCurrentInstance().getExternalContext().invalidateSession();
+        return "/portal/login?faces-redirect=true";
+    }
 
     private String ipCliente() {
         try {
@@ -92,5 +93,7 @@ public class PortalBean implements Serializable {
     public List<PortalService.FilaCuota> getCuotas() { return cuotas; }
     public List<PortalService.FilaPago> getPagos() { return pagos; }
     public List<PortalService.FilaDoc> getDocumentos() { return documentos; }
-    public String getNombreUsuario() { return usuario; }
+    public String getNombreUsuario() { return sesion.getNombre(); }
+    public boolean isEsPropietario() { return sesion.isEsPropietario(); }
+    public boolean isEsCliente() { return sesion.isEsCliente(); }
 }

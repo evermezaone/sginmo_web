@@ -34,8 +34,12 @@ public class FiltroAutenticacion implements Filter {
         boolean esLogin = uri.endsWith("/login.xhtml");
         boolean esRecurso = uri.contains("/jakarta.faces.resource/");
         boolean esCambioPassword = uri.endsWith("/cambiar-password.xhtml");
+        // Portal externo de socios (REQ-0078): rutas /portal/** son PUBLICAS respecto del login
+        // administrativo; su propia sesion (PortalSesion) y el viewAction de cada pagina controlan
+        // el acceso del socio. Asi el socio nunca pasa por el login de empleados.
+        boolean esPortal = uri.contains("/portal/");
 
-        if (esLogin || esRecurso) {
+        if (esLogin || esRecurso || esPortal) {
             cadena.doFilter(solicitud, respuesta);
             return;
         }

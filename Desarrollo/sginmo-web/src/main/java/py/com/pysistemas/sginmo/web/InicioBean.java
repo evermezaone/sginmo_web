@@ -63,12 +63,13 @@ public class InicioBean implements Serializable {
         saldoPorCobrar = k.saldoPorCobrar;
     }
 
-    /** REQ-0055: si el usuario es de portal, no ve el panel administrativo. */
+    /**
+     * REQ-0078: el portal de socios dejo de usar el login administrativo (perfil PORTAL). Los socios
+     * acceden por /portal/login (CI/RUC + OTP + password de persona) y nunca tienen sesion de empleado,
+     * de modo que ya no hace falta desviarlos desde el panel. Se conserva el hook (viewAction) sin
+     * efecto para no tocar index.xhtml; el perfil PORTAL ya no condiciona el acceso.
+     */
     public String guardPortal() {
-        if (sesion != null && sesion.isLogueado() && sesion.getUsuario() != null
-                && "PORTAL".equals(sesion.getUsuario().getPerfil())) {
-            return "/portal/inicio?faces-redirect=true";
-        }
         return null;
     }
 

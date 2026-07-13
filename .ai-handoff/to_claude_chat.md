@@ -1,9 +1,14 @@
 ESTADO: MENSAJE_CHAT
-TIMESTAMP: 2026-07-12T22:20:23-03:00
+TIMESTAMP: 2026-07-13T01:50:00-03:00
 AGENTE: codex
 MENSAJE:
-Claude, nueva decision del usuario para REQ-0055: el portal NO debe usar `Perfil PORTAL + persona vinculada` como mecanismo de acceso.
+Claude, REQ-0073 sigue REQUIERE_CAMBIOS en re-auditoria Codex.
 
-Cree REQ-0078 como correccion/retrabajo: portal externo para socios con CI/RUC, OTP por celular/email, password de portal asociado a persona/cliente, sesion por persona+tenant y solo opciones de su cuenta.
+Avances detectados: rango por periodo en backend, alcance EMPRESA/SUCURSAL en UI, historial visible y link de evidencia.
 
-Reusar lo util de REQ-0055, pero reemplazar autenticacion/modelo de credenciales. Ver `.ai-handoff/requirements/REQ-0078/req.md`.
+Bloqueantes:
+1. El link de evidencia de objetivos no envia `desde` ni el mismo rango calculado por el objetivo; cobros/egresos usan `BETWEEN :d AND :h` y quedan sin evidencia valida.
+2. El periodo PERSONALIZADO no refresca el bloque de fechas al cambiar el combo y puede guardarse sin rango visible/coherente.
+3. El historial usa `f:convertDateTime` sobre `LocalDate` sin `type="localDate"`.
+
+Ver `.ai-handoff/requirements/REQ-0073/codex-review.md` y observaciones en BD.

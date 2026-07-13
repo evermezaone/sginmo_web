@@ -29,12 +29,25 @@ public class TenantContext implements Serializable {
     @Inject
     private SesionUsuario sesion;
 
+    /**
+     * REQ-0078: sesion del portal externo. Cuando NO hay login administrativo pero SI un socio
+     * autenticado en el portal, el tenant efectivo es el de su empresa, de modo que los services
+     * @AislarTenant (via el interceptor) acoten la RLS a esa empresa. El portal jamas ve -1.
+     */
+    @Inject
+    private PortalSesion portal;
+
     private boolean sinSesion() {
         return sesion == null || !sesion.isLogueado() || sesion.getUsuario() == null;
     }
 
+    private boolean portalActivo() {
+        return sinSesion() && portal != null && portal.isAutenticado();
+    }
+
     /** Tenant REAL del usuario logueado (sin override); null si no hay sesion. SUPERADMIN = -1. */
     public Long tenantUsuario() {
+        if (portalActivo()) return portal.getTenant();
         return sinSesion() ? null : sesion.tenantUsuario();
     }
 
@@ -48,6 +61,7 @@ public class TenantContext implements Serializable {
      * los services (via el interceptor @AislarTenant) Y los ABM de seguridad usan el MISMO valor.
      */
     public Long actual() {
+        if (portalActivo()) return portal.getTenant();
         return sinSesion() ? null : sesion.tenantActual();
     }
 

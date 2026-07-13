@@ -22,27 +22,27 @@ Reemplazar el mecanismo interno de acceso del `REQ-0055` por un portal externo d
 
 ## Criterios De Aceptacion
 
-- [ ] Existe una pantalla publica de acceso al portal separada del login administrativo.
-- [ ] El socio ingresa CI/RUC o documento equivalente; el sistema busca una persona activa del tenant con rol CLIENTE y/o PROPIETARIO.
-- [ ] Si la persona no existe, esta inactiva, no pertenece al tenant o no tiene rol habilitado para portal, el mensaje debe ser generico y no revelar si el documento existe.
-- [ ] El sistema envia un OTP al celular y/o email registrado de la persona, segun disponibilidad y configuracion.
-- [ ] El OTP tiene expiracion configurable, limite de reintentos y bloqueo temporal ante abusos.
-- [ ] El OTP se almacena hasheado o de forma no reutilizable; nunca debe quedar el codigo plano persistido.
-- [ ] En el primer acceso exitoso con OTP, el socio debe definir o cambiar su password de portal.
-- [ ] El password de portal queda asociado a la persona/cliente, con hash fuerte tipo bcrypt/PBKDF2/Argon2; nunca reversible ni en texto plano.
-- [ ] En accesos posteriores, el socio puede entrar con CI/RUC + password de portal.
-- [ ] Existe flujo de recuperacion de password con OTP, sin intervencion de usuario administrativo.
-- [ ] La sesion del portal se identifica por persona, tenant y roles comerciales, no por `usuario.perfil='PORTAL'`.
-- [ ] El perfil `PORTAL` en la tabla `usuario` no debe ser requisito para que un socio use el portal.
-- [ ] El portal muestra solo informacion de la persona autenticada: cuotas, pagos, deuda, documentos, operaciones y liquidaciones permitidas segun sea cliente o propietario.
-- [ ] Un cliente no puede ver datos de otros clientes, propietarios o tenants aunque altere URLs, IDs o parametros.
-- [ ] Un propietario solo puede ver sus activos, operaciones, liquidaciones y documentos permitidos; no puede ver informacion de otros propietarios.
-- [ ] El portal no expone menu administrativo ni permite ejecutar cobros, anulaciones, ediciones, bajas, configuraciones ni operaciones internas.
-- [ ] Todos los endpoints/servicios del portal validan persona+tenant en backend; no alcanza con ocultar controles en JSF.
-- [ ] Los documentos solo se pueden descargar si estan marcados como visibles para portal y pertenecen a la persona autenticada o a sus operaciones/activos permitidos.
-- [ ] Queda auditoria de solicitud de OTP, validacion OTP, login, cambio de password, logout y descargas, con persona, tenant, IP, user-agent y fecha/hora.
-- [ ] La pantalla es responsive para celular y no depende de estar previamente logueado al sistema administrativo.
-- [ ] Los textos y parametros de envio OTP son configurables por empresa/sucursal cuando aplique.
+- [x] Existe una pantalla publica de acceso al portal separada del login administrativo.
+- [x] El socio ingresa CI/RUC o documento equivalente; el sistema busca una persona activa del tenant con rol CLIENTE y/o PROPIETARIO.
+- [x] Si la persona no existe, esta inactiva, no pertenece al tenant o no tiene rol habilitado para portal, el mensaje debe ser generico y no revelar si el documento existe.
+- [x] El sistema envia un OTP al celular y/o email registrado de la persona, segun disponibilidad y configuracion.
+- [x] El OTP tiene expiracion configurable, limite de reintentos y bloqueo temporal ante abusos.
+- [x] El OTP se almacena hasheado o de forma no reutilizable; nunca debe quedar el codigo plano persistido.
+- [x] En el primer acceso exitoso con OTP, el socio debe definir o cambiar su password de portal.
+- [x] El password de portal queda asociado a la persona/cliente, con hash fuerte tipo bcrypt/PBKDF2/Argon2; nunca reversible ni en texto plano.
+- [x] En accesos posteriores, el socio puede entrar con CI/RUC + password de portal.
+- [x] Existe flujo de recuperacion de password con OTP, sin intervencion de usuario administrativo.
+- [x] La sesion del portal se identifica por persona, tenant y roles comerciales, no por `usuario.perfil='PORTAL'`.
+- [x] El perfil `PORTAL` en la tabla `usuario` no debe ser requisito para que un socio use el portal.
+- [x] El portal muestra solo informacion de la persona autenticada: cuotas, pagos, deuda, documentos, operaciones y liquidaciones permitidas segun sea cliente o propietario.
+- [x] Un cliente no puede ver datos de otros clientes, propietarios o tenants aunque altere URLs, IDs o parametros.
+- [x] Un propietario solo puede ver sus activos, operaciones, liquidaciones y documentos permitidos; no puede ver informacion de otros propietarios.
+- [x] El portal no expone menu administrativo ni permite ejecutar cobros, anulaciones, ediciones, bajas, configuraciones ni operaciones internas.
+- [x] Todos los endpoints/servicios del portal validan persona+tenant en backend; no alcanza con ocultar controles en JSF.
+- [x] Los documentos solo se pueden descargar si estan marcados como visibles para portal y pertenecen a la persona autenticada o a sus operaciones/activos permitidos.
+- [x] Queda auditoria de solicitud de OTP, validacion OTP, login, cambio de password, logout y descargas, con persona, tenant, IP, user-agent y fecha/hora.
+- [x] La pantalla es responsive para celular y no depende de estar previamente logueado al sistema administrativo.
+- [x] Los textos y parametros de envio OTP son configurables por empresa/sucursal cuando aplique.
 
 ## Modelo De Datos Esperado
 
