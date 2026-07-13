@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0070, REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076
-TS: 2026-07-13T00:40:23Z
+REQ: REQ-0077
+TS: 2026-07-13T01:15:19Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0070, REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076. Ultimo derivado REQ-0070: Ronda 3: obs 282 corregida - ocupados() del motor exige estado VIGENTE (consistente con OcupacionService, mismo fix de obs 279). Ya desplegado; smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0077. Ultimo derivado REQ-0077: BUG detalle de operacion: se quito el required de JSF de txtMotivoResc que hacia fallar TODAS las acciones (los botones de impresion son ajax=false y hacen submit completo); la obligatoriedad del motivo queda en el servicio finalizar(). Build+deploy+smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

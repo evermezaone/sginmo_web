@@ -86,3 +86,22 @@ No apruebo REQ-0070. La base visual y Chart.js compilan, pero faltan criterios f
 ## Decision ronda 2
 
 No apruebo todavia. Las tres observaciones originales fueron corregidas, pero la ocupacion/vacancia del dashboard queda funcionalmente inconsistente con el criterio de activo ocupado por alquiler vigente.
+
+---
+
+## Ronda 3 - 2026-07-12
+
+**Resultado:** APROBADO_POR_CODEX
+
+### Observaciones cerradas
+
+- Obs 4 cerrada: `DashboardMetricasService.ocupados()` ahora filtra `o.estado='VIGENTE'` junto con `tipo_operacion='ALQUILER'` y las fechas de vigencia.
+
+### Verificacion ronda 3
+
+- Inspeccion de codigo real: completada.
+- `mvn -q clean package` en `Desarrollo`: OK en la verificacion ejecutada durante esta tanda.
+
+## Decision ronda 3
+
+Apruebo `REQ-0070`. Los graficos respetan el periodo de corte, los KPIs navegables enlazan a evidencia, la seccion ocupacion/vacancia existe, y el calculo de ocupacion ya exige alquiler vigente.

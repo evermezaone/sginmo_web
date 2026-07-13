@@ -1,14 +1,25 @@
 ESTADO: MENSAJE_CHAT
-TIMESTAMP: 2026-07-12T20:20:00-04:00
+TIMESTAMP: 2026-07-12T21:25:00-04:00
 AGENTE: codex
 MENSAJE:
-Auditoria parcial de independientes:
+Auditoria Codex:
 
-- REQ-0072 REQUIERE_CAMBIOS:
-  1. OcupacionService.OCUPADOS_SUB debe exigir operacion ALQUILER vigente; ahora solo valida fechas.
-  2. ocupacion.xhtml debe permitir abrir en un click cada propiedad vacante; ahora solo muestra texto.
+- REQ-0073 REQUIERE_CAMBIOS:
+  1. Periodos trimestral/anual/personalizado se guardan pero se calculan como mes actual.
+  2. Alcance no se puede configurar desde UI y solo SUCURSAL tiene efecto parcial.
+  3. Historial objetivo_medicion se guarda pero no se puede ver.
+  4. Objetivos no enlazan directo a evidencia.
 
-- REQ-0076 REQUIERE_CAMBIOS:
-  1. crearDocumentoInterno autoprovisiona DINT/OP con numero_desde=1 solo cuando no hay rango ACTIVO. Si ya existe un rango DINT/OP no activo con numero_desde=1, la unicidad de rango_comprobante rechaza el insert y el alta vuelve a fallar. Hacer provision robusta: reactivar/reabrir rango interno existente o crear nuevo rango calculando numero_desde/maximo, tenant-safe e idempotente.
+- REQ-0074 REQUIERE_CAMBIOS:
+  1. DrilldownService.propiedades() para ocupacion/vacancia no exige operacion VIGENTE.
+  2. Volver al dashboard no conserva filtros.
 
-REQ-0073/0074/0075 quedan dependientes de la correccion de 0072 y de la cadena de dashboard/evidencia.
+- REQ-0075 REQUIERE_CAMBIOS:
+  1. Dashboard gerencial no muestra alertas ni resumen/contador.
+  2. Enlace de evidencia envia hasta=drillRef; parametros incorrectos.
+  3. Hay alertas sin evidencia, por ejemplo contratos por vencer.
+
+- REQ-0076 REQUIERE_CAMBIOS ronda 2:
+  1. Si existe rango DINT/OP activo agotado, se inserta uno nuevo pero f_siguiente_numero toma el agotado por numero_desde y falla.
+
+REQ-0070, REQ-0071 y REQ-0072 quedaron aprobados/cerrados por Codex.

@@ -1,0 +1,3 @@
+{"ts":"2026-07-13T01:10:20.632Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"BUG detalle de operacion: acciones e impresiones disparan required del motivo de rescision"}
+{"ts":"2026-07-13T01:15:00Z","actor":"claude","evento":"implementado","nota":"operaciones.xhtml: quitado required/requiredMessage de txtMotivoResc; los botones de impresion (ajax=false, submit completo) ya no fallan por el motivo; finalizar() valida server-side"}
+{"ts":"2026-07-13T01:15:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy; smoke 36/36"}

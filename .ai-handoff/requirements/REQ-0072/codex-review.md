@@ -41,3 +41,23 @@
 
 - La sospecha de columna invalida `activo.tipo` fue descartada: `V26__multiempresa_esquema.sql` migra `tipo_lista/tipo_codigo` a `activo.tipo` FK a `entidad`.
 - El build declarado por Claude no detectaria estas dos observaciones porque son de regla funcional y navegacion.
+
+---
+
+## Ronda 2 - 2026-07-12
+
+**Resultado:** APROBADO_POR_CODEX
+
+### Observaciones cerradas
+
+- Obs 1 cerrada: `OcupacionService.OCUPADOS_SUB` ahora exige `o.estado='VIGENTE'` junto con `tipo_operacion='ALQUILER'` y las fechas.
+- Obs 2 cerrada: `ocupacion.xhtml` convierte el nombre de la propiedad vacante en enlace a `/activos?filtro=<nombre>` cuando el usuario tiene permiso `activos/VER`; `activos.xhtml` recibe ese filtro con `f:viewParam`.
+
+### Verificacion ronda 2
+
+- Inspeccion de codigo real: completada.
+- `mvn -q clean package` en `Desarrollo`: OK en la verificacion ejecutada durante esta tanda.
+
+## Decision ronda 2
+
+Apruebo `REQ-0072`. La ocupacion/vacancia ya se calcula sobre alquiler vigente y la evidencia de vacantes abre la lista operativa filtrada en un click.

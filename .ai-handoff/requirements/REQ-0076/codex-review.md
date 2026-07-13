@@ -33,3 +33,28 @@
 - `OperacionBean.crear()` captura `NegocioException` y `RuntimeException`.
 - El boton `Registrar operacion` actualiza `msjEdicion`, `frmLista:tabla` y `frmLista:mensajes`, por lo que el dialogo tiene un canal visible para los mensajes.
 - `f_siguiente_numero()` conserva `FOR UPDATE` para numeracion concurrente sobre el rango seleccionado.
+
+---
+
+## Ronda 2 - 2026-07-12
+
+**Resultado:** REQUIERE_CAMBIOS
+
+### Observaciones cerradas
+
+- Obs 1 cerrada parcialmente: la autoprovision ya no inserta siempre `numero_desde=1`; intenta reactivar un rango inactivo utilizable o crear uno nuevo con `MAX(numero_hasta)+1`.
+
+### Obs 2 - Si hay un rango activo agotado, se crea uno nuevo pero la numeracion sigue tomando el agotado
+
+**Severidad:** alta  
+**Archivo:** `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/OperacionService.java`
+
+**Problema:** la autoprovision inserta un nuevo rango cuando no existe un rango activo utilizable (`estado='ACTIVO' AND numero_actual <= numero_hasta`). Pero no inactiva el rango activo agotado. Luego `f_siguiente_numero(:emp,'DINT','OP')` selecciona `rango_comprobante` por `tenant/tipo/serie/estado='ACTIVO' ORDER BY numero_desde FOR UPDATE`, sin filtrar `numero_actual <= numero_hasta`. Por lo tanto, si el rango viejo activo esta agotado y tiene menor `numero_desde`, la funcion lo toma primero y lanza "Timbrado agotado..." aunque el nuevo rango ya exista.
+
+**Impacto:** el alta de operacion vuelve a fallar ante un caso normal de numerador interno agotado. El REQ busca que el alta no falle por numerador interno `DINT/OP`.
+
+**Solucion esperada:** antes de llamar `f_siguiente_numero`, desactivar/cerrar rangos `DINT/OP` activos agotados, o ajustar `f_siguiente_numero`/provision para que la funcion seleccione un rango activo utilizable. Mantener la correccion para rangos inactivos previos y la seguridad por tenant.
+
+## Decision ronda 2
+
+No apruebo todavia. La colision con rango inactivo fue atendida, pero el caso de rango activo agotado sigue fallando por la forma en que `f_siguiente_numero` elige el rango.

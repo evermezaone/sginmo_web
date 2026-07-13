@@ -204,9 +204,11 @@
                     </p:tab>
                     <p:tab title="Finalizar / Rescindir" rendered="#{sesionUsuario.puede('operaciones','EDITAR')}">
                         <div class="campo"><label>Motivo *</label>
+                            <!-- REQ-0077: SIN required de JSF. Los botones de impresion (ajax=false) hacen submit
+                                 completo del form; un required aca fallaba en CUALQUIER accion. El motivo lo valida
+                                 el servicio finalizar() (NegocioException), que solo aplica al finalizar. -->
                             <p:inputTextarea id="txtMotivoResc" value="#{operacionBean.rescisionMotivo}" rows="2" style="width:100%;" maxlength="500"
-                                             required="true" label="Motivo"
-                                             requiredMessage="El motivo de la finalización/rescisión es obligatorio"/></div>
+                                             label="Motivo"/></div>
                         <p:commandButton value="Finalizar operación" icon="pi pi-flag" styleClass="ui-button-danger"
                                          process="@this txtMotivoResc"
                                          actionListener="#{operacionBean.finalizar()}"
