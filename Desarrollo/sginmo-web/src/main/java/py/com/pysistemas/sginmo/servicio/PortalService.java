@@ -96,6 +96,92 @@ public class PortalService {
         return out;
     }
 
+    // ── Vista de PROPIETARIO (REQ-0078 obs 300): activos, operaciones, liquidaciones y documentos
+    //    del propietario, filtrados por persona (dueño) + tenant (RLS). Nunca ve datos ajenos. ──
+
+    /** Activos (propiedades) de los que la persona es propietaria. */
+    public List<FilaActivo> activosPropietario(Long persona) {
+        List<FilaActivo> out = new ArrayList<>();
+        if (persona == null) return out;
+        @SuppressWarnings("unchecked")
+        List<Object[]> filas = em.createNativeQuery(
+            "SELECT a.activo, a.nombre, a.estado FROM activo a"
+          + " JOIN activo_propietario ap ON ap.activo = a.activo"
+          + " WHERE ap.propietario = :p ORDER BY a.nombre").setParameter("p", persona).getResultList();
+        for (Object[] f : filas) {
+            FilaActivo a = new FilaActivo();
+            a.id = ((Number) f[0]).longValue();
+            a.nombre = (String) f[1]; a.estado = (String) f[2];
+            out.add(a);
+        }
+        return out;
+    }
+
+    /** Operaciones realizadas sobre los activos del propietario. */
+    public List<FilaOperacion> operacionesPropietario(Long persona) {
+        List<FilaOperacion> out = new ArrayList<>();
+        if (persona == null) return out;
+        @SuppressWarnings("unchecked")
+        List<Object[]> filas = em.createNativeQuery(
+            "SELECT o.operacion, o.tipo_operacion, o.fecha_operacion, o.estado, a.nombre"
+          + " FROM operacion o JOIN activo a ON a.activo = o.activo"
+          + " JOIN activo_propietario ap ON ap.activo = o.activo"
+          + " WHERE ap.propietario = :p ORDER BY o.fecha_operacion DESC").setParameter("p", persona).getResultList();
+        for (Object[] f : filas) {
+            FilaOperacion o = new FilaOperacion();
+            o.id = ((Number) f[0]).longValue();
+            o.tipo = (String) f[1];
+            o.fecha = ((java.sql.Date) f[2]).toLocalDate();
+            o.estado = (String) f[3]; o.activo = (String) f[4];
+            out.add(o);
+        }
+        return out;
+    }
+
+    /** Liquidaciones de las operaciones sobre los activos del propietario. */
+    public List<FilaLiquidacion> liquidacionesPropietario(Long persona) {
+        List<FilaLiquidacion> out = new ArrayList<>();
+        if (persona == null) return out;
+        @SuppressWarnings("unchecked")
+        List<Object[]> filas = em.createNativeQuery(
+            "SELECT l.liquidacion, l.fecha, l.total_garantia, l.total_gastos, l.saldo, a.nombre"
+          + " FROM liquidacion l JOIN operacion o ON o.operacion = l.operacion"
+          + " JOIN activo a ON a.activo = o.activo"
+          + " JOIN activo_propietario ap ON ap.activo = o.activo"
+          + " WHERE ap.propietario = :p ORDER BY l.fecha DESC").setParameter("p", persona).getResultList();
+        for (Object[] f : filas) {
+            FilaLiquidacion l = new FilaLiquidacion();
+            l.id = ((Number) f[0]).longValue();
+            l.fecha = ((java.sql.Date) f[1]).toLocalDate();
+            l.totalGarantia = dec(f[2]); l.totalGastos = dec(f[3]); l.saldo = dec(f[4]);
+            l.activo = (String) f[5];
+            out.add(l);
+        }
+        return out;
+    }
+
+    /** Documentos habilitados para el portal, de los activos/operaciones del propietario. */
+    public List<FilaDoc> documentosPropietario(Long persona) {
+        List<FilaDoc> out = new ArrayList<>();
+        if (persona == null) return out;
+        @SuppressWarnings("unchecked")
+        List<Object[]> filas = em.createNativeQuery(
+            "SELECT documento_adjunto, tipo, descripcion, nombre_original FROM documento_adjunto"
+          + " WHERE visible_portal = true AND estado='ACTIVO' AND ("
+          + "   (entidad_tipo='PERSONA' AND entidad_id=:p) OR"
+          + "   (entidad_tipo='ACTIVO' AND entidad_id IN (SELECT activo FROM activo_propietario WHERE propietario=:p)) OR"
+          + "   (entidad_tipo='OPERACION' AND entidad_id IN (SELECT o.operacion FROM operacion o"
+          + "        JOIN activo_propietario ap ON ap.activo=o.activo WHERE ap.propietario=:p)))"
+          + " ORDER BY fecha_creacion DESC").setParameter("p", persona).getResultList();
+        for (Object[] f : filas) {
+            FilaDoc d = new FilaDoc();
+            d.id = ((Number) f[0]).longValue();
+            d.tipo = (String) f[1]; d.descripcion = (String) f[2]; d.nombre = (String) f[3];
+            out.add(d);
+        }
+        return out;
+    }
+
     /** Documentos habilitados para el portal, vinculados a la persona o a sus operaciones. */
     public List<FilaDoc> documentos(Long persona) {
         List<FilaDoc> out = new ArrayList<>();
@@ -138,7 +224,11 @@ public class PortalService {
             "SELECT nombre_original, content_type, nombre_fisico, tenant FROM documento_adjunto d"
           + " WHERE d.documento_adjunto=:id AND d.visible_portal=true AND d.estado='ACTIVO' AND ("
           + "   (d.entidad_tipo='PERSONA' AND d.entidad_id=:p) OR"
-          + "   (d.entidad_tipo='OPERACION' AND d.entidad_id IN (SELECT operacion FROM operacion WHERE cliente=:p)))")
+          + "   (d.entidad_tipo='OPERACION' AND d.entidad_id IN (SELECT operacion FROM operacion WHERE cliente=:p)) OR"
+          // obs 300: tambien los documentos del propietario (sus activos y las operaciones sobre ellos).
+          + "   (d.entidad_tipo='ACTIVO' AND d.entidad_id IN (SELECT activo FROM activo_propietario WHERE propietario=:p)) OR"
+          + "   (d.entidad_tipo='OPERACION' AND d.entidad_id IN (SELECT o.operacion FROM operacion o"
+          + "        JOIN activo_propietario ap ON ap.activo=o.activo WHERE ap.propietario=:p)))")
             .setParameter("id", docId).setParameter("p", persona).getResultList();
         if (filas.isEmpty()) throw new NegocioException("El documento no esta disponible para su cuenta");
         Object[] f = filas.get(0);
@@ -189,6 +279,29 @@ public class PortalService {
         public String getTipo() { return tipo; }
         public String getDescripcion() { return descripcion; }
         public String getNombre() { return nombre; }
+    }
+    public static class FilaActivo {
+        public Long id; public String nombre, estado;
+        public Long getId() { return id; }
+        public String getNombre() { return nombre; }
+        public String getEstado() { return estado; }
+    }
+    public static class FilaOperacion {
+        public Long id; public LocalDate fecha; public String tipo, estado, activo;
+        public Long getId() { return id; }
+        public LocalDate getFecha() { return fecha; }
+        public String getTipo() { return tipo; }
+        public String getEstado() { return estado; }
+        public String getActivo() { return activo; }
+    }
+    public static class FilaLiquidacion {
+        public Long id; public LocalDate fecha; public BigDecimal totalGarantia, totalGastos, saldo; public String activo;
+        public Long getId() { return id; }
+        public LocalDate getFecha() { return fecha; }
+        public BigDecimal getTotalGarantia() { return totalGarantia; }
+        public BigDecimal getTotalGastos() { return totalGastos; }
+        public BigDecimal getSaldo() { return saldo; }
+        public String getActivo() { return activo; }
     }
     public static class Descarga {
         public final String nombre, contentType; public final byte[] datos;

@@ -68,6 +68,14 @@ public class PortalAuthService {
             auditar(tenant, null, "SOLICITUD_OTP", "doc:" + documento.trim(), ip, ua);
             return null;   // silencioso: no revela inexistencia
         }
+        // obs 301: sin email ni telefono no hay canal de entrega; se audita y NO se genera un OTP
+        // que el socio nunca podria recibir (ademas evita OTPs "usables" no entregados).
+        String canal = (p.email != null && !p.email.isBlank()) ? "EMAIL"
+                     : (p.telefono != null && !p.telefono.isBlank()) ? "SMS" : null;
+        if (canal == null) {
+            auditar(tenant, p.id, "SOLICITUD_OTP", "sin-canal", ip, ua);
+            return null;   // comportamiento uniforme con "no encontrado" (no revela)
+        }
         // Invalida OTP previos no usados (uno activo a la vez).
         em.createNativeQuery("UPDATE portal_otp SET usado = true WHERE tenant = :t AND persona = :p AND usado = false")
             .setParameter("t", tenant).setParameter("p", p.id).executeUpdate();
@@ -75,8 +83,6 @@ public class PortalAuthService {
         int largo = Math.max(4, Math.min(8, paramInt(tenant, "PORTAL_OTP_LARGO", 6)));
         int expira = paramInt(tenant, "PORTAL_OTP_EXPIRA_MIN", 10);
         String codigo = generarCodigo(largo);
-        String canal = (p.email != null && !p.email.isBlank()) ? "EMAIL"
-                     : (p.telefono != null && !p.telefono.isBlank()) ? "SMS" : null;
 
         em.createNativeQuery(
             "INSERT INTO portal_otp (tenant, persona, codigo_hash, proposito, canal, expira_en)"
@@ -174,8 +180,10 @@ public class PortalAuthService {
               + " FROM persona_portal_credencial WHERE tenant = :t AND persona = :p")
                 .setParameter("t", tenant).setParameter("p", p.id).getSingleResult();
         } catch (NoResultException e) {
+            // obs 299: no revelar que el documento existe pero no tiene credencial; el detalle
+            // queda solo en auditoria. El usuario tiene el enlace "Primer ingreso" siempre visible.
             auditar(tenant, p.id, "LOGIN_FALLIDO", "sin-credencial", ip, ua);
-            throw new NegocioException("Aun no definio su contrasena. Use 'Primer ingreso' para crearla.");
+            throw new NegocioException(GENERICO);
         }
         String hash = (String) cred[0];
         boolean bloqueado = Boolean.TRUE.equals(cred[3]);

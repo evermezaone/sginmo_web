@@ -79,9 +79,14 @@ Build OK; Flyway V52 (schema v52); smoke 36/36; prueba funcional en VPS de login
 
 ## Limitaciones Conocidas
 
-- Envio de OTP por SMS: modelo y canal preparados (columna canal), sin gateway integrado (queda auditado); email via SMTP_* existente.
-- Vista de propietario: reutiliza las consultas del REQ-0055 (cuenta del socio); ampliar el detalle de activos/liquidaciones del propietario es incremental.
+- Envio de OTP por SMS: modelo y canal preparados (columna canal), sin gateway integrado; si no hay email ni telefono NO se genera OTP (se audita 'sin-canal', obs 301). Email via SMTP_* existente.
 - La empresa se elige en el login (no hay subdominio por empresa); resuelve el tenant sin ambiguedad multi-tenant.
+
+## Ronda 2 (obs 299-301)
+
+- obs299 (anti-enumeracion): loginPassword() devuelve mensaje generico cuando la persona existe pero no tiene credencial; el detalle 'sin-credencial' queda solo en auditoria.
+- obs300 (propietario): PortalService expone activosPropietario/operacionesPropietario/liquidacionesPropietario/documentosPropietario (por persona+tenant, RLS); descargar() autoriza tambien docs de ACTIVO/OPERACION del propietario; PortalBean carga por rol y portal/inicio.xhtml muestra 'Como cliente' y 'Como propietario'.
+- obs301 (OTP sin canal): solicitarOtp() no inserta portal_otp si la persona no tiene email ni telefono; audita 'sin-canal' y retorna (comportamiento uniforme, no revela).
 
 ## Riesgos Conocidos
 

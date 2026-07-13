@@ -16,6 +16,8 @@
 </ui:define>
 
 <ui:define name="contenido">
+  <h:panelGroup layout="block" rendered="#{portalBean.esCliente}">
+    <h2 style="font-size:1.05rem; margin:.2rem 0 .6rem; color:#0f766e;" rendered="#{portalBean.esPropietario}">Como cliente</h2>
     <div class="tarjetas-portal">
         <div class="card-p">
             <div class="n #{portalBean.resumen.deudaVencida gt 0 ? 'alerta' : ''}">
@@ -104,5 +106,85 @@
             <p style="color:#9ca3af;" rendered="#{empty portalBean.documentos}">Sin documentos habilitados.</p>
         </h:form>
     </div>
+  </h:panelGroup>
+
+  <h:panelGroup layout="block" rendered="#{portalBean.esPropietario}">
+    <h2 style="font-size:1.05rem; margin:1rem 0 .6rem; color:#0f766e;">Como propietario</h2>
+
+    <div class="seccion-p">
+        <h3>Mis propiedades</h3>
+        <table class="tp">
+            <thead><tr><th>Propiedad</th><th>Estado</th></tr></thead>
+            <tbody>
+                <ui:repeat value="#{portalBean.activos}" var="ac">
+                    <tr><td>#{ac.nombre}</td><td>#{ac.estado}</td></tr>
+                </ui:repeat>
+            </tbody>
+        </table>
+        <p style="color:#9ca3af;" rendered="#{empty portalBean.activos}">Sin propiedades registradas.</p>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Operaciones sobre mis propiedades</h3>
+        <table class="tp">
+            <thead><tr><th>Operacion</th><th>Propiedad</th><th>Tipo</th><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody>
+                <ui:repeat value="#{portalBean.operaciones}" var="op">
+                    <tr>
+                        <td>#{op.id}</td>
+                        <td>#{op.activo}</td>
+                        <td>#{op.tipo}</td>
+                        <td><h:outputText value="#{op.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
+                        <td>#{op.estado}</td>
+                    </tr>
+                </ui:repeat>
+            </tbody>
+        </table>
+        <p style="color:#9ca3af;" rendered="#{empty portalBean.operaciones}">Sin operaciones registradas.</p>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Liquidaciones</h3>
+        <table class="tp">
+            <thead><tr><th>Fecha</th><th>Propiedad</th><th>Garantia</th><th>Gastos</th><th>Saldo</th></tr></thead>
+            <tbody>
+                <ui:repeat value="#{portalBean.liquidaciones}" var="lq">
+                    <tr>
+                        <td><h:outputText value="#{lq.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
+                        <td>#{lq.activo}</td>
+                        <td><h:outputText value="#{lq.totalGarantia}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                        <td><h:outputText value="#{lq.totalGastos}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                        <td><h:outputText value="#{lq.saldo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
+                    </tr>
+                </ui:repeat>
+            </tbody>
+        </table>
+        <p style="color:#9ca3af;" rendered="#{empty portalBean.liquidaciones}">Sin liquidaciones registradas.</p>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Documentos de mis propiedades</h3>
+        <h:form>
+            <table class="tp">
+                <thead><tr><th>Tipo</th><th>Descripcion</th><th>Archivo</th><th></th></tr></thead>
+                <tbody>
+                    <ui:repeat value="#{portalBean.documentosPropietario}" var="doc">
+                        <tr>
+                            <td>#{doc.tipo}</td>
+                            <td>#{doc.descripcion}</td>
+                            <td>#{doc.nombre}</td>
+                            <td style="text-align:right;">
+                                <p:commandButton icon="pi pi-download" title="Descargar" ajax="false" styleClass="ui-button-flat">
+                                    <p:fileDownload value="#{portalBean.descargar(doc)}"/>
+                                </p:commandButton>
+                            </td>
+                        </tr>
+                    </ui:repeat>
+                </tbody>
+            </table>
+            <p style="color:#9ca3af;" rendered="#{empty portalBean.documentosPropietario}">Sin documentos habilitados.</p>
+        </h:form>
+    </div>
+  </h:panelGroup>
 </ui:define>
 </ui:composition>

@@ -39,6 +39,11 @@ public class PortalBean implements Serializable {
     private List<PortalService.FilaCuota> cuotas;
     private List<PortalService.FilaPago> pagos;
     private List<PortalService.FilaDoc> documentos;
+    // Vista de propietario (obs 300).
+    private List<PortalService.FilaActivo> activos = List.of();
+    private List<PortalService.FilaOperacion> operaciones = List.of();
+    private List<PortalService.FilaLiquidacion> liquidaciones = List.of();
+    private List<PortalService.FilaDoc> documentosPropietario = List.of();
 
     @PostConstruct
     public void iniciar() {
@@ -46,10 +51,20 @@ public class PortalBean implements Serializable {
         persona = sesion.getPersona();
         tenant = sesion.getTenant();
         ip = ipCliente();
-        resumen = portal.resumen(persona);
-        cuotas = portal.cuotas(persona);
-        pagos = portal.pagos(persona);
-        documentos = portal.documentos(persona);
+        // Vista de cliente (si tiene rol CLIENTE).
+        if (sesion.isEsCliente()) {
+            resumen = portal.resumen(persona);
+            cuotas = portal.cuotas(persona);
+            pagos = portal.pagos(persona);
+            documentos = portal.documentos(persona);
+        }
+        // Vista de propietario (obs 300): sus activos, operaciones, liquidaciones y documentos.
+        if (sesion.isEsPropietario()) {
+            activos = portal.activosPropietario(persona);
+            operaciones = portal.operacionesPropietario(persona);
+            liquidaciones = portal.liquidacionesPropietario(persona);
+            documentosPropietario = portal.documentosPropietario(persona);
+        }
         try { portal.registrarAcceso(tenant, "portal", persona, "ACCESO", "portal/inicio", ip); }
         catch (RuntimeException ignore) { /* la auditoria no bloquea el portal */ }
     }
@@ -96,4 +111,8 @@ public class PortalBean implements Serializable {
     public String getNombreUsuario() { return sesion.getNombre(); }
     public boolean isEsPropietario() { return sesion.isEsPropietario(); }
     public boolean isEsCliente() { return sesion.isEsCliente(); }
+    public List<PortalService.FilaActivo> getActivos() { return activos; }
+    public List<PortalService.FilaOperacion> getOperaciones() { return operaciones; }
+    public List<PortalService.FilaLiquidacion> getLiquidaciones() { return liquidaciones; }
+    public List<PortalService.FilaDoc> getDocumentosPropietario() { return documentosPropietario; }
 }
