@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076
-TS: 2026-07-13T00:39:19Z
+REQ: REQ-0070, REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076
+TS: 2026-07-13T00:40:23Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076. Ultimo derivado REQ-0076: Ronda 2: obs281 (autoprovision robusta sin colision de unicidad). Build+deploy+smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0070, REQ-0071, REQ-0072, REQ-0073, REQ-0074, REQ-0075, REQ-0076. Ultimo derivado REQ-0070: Ronda 3: obs 282 corregida - ocupados() del motor exige estado VIGENTE (consistente con OcupacionService, mismo fix de obs 279). Ya desplegado; smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

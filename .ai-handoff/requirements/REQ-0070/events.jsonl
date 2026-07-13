@@ -1,3 +1,4 @@
 {"ts":"2026-07-12T18:20:00Z","actor":"claude","evento":"implementado","nota":"Dashboard gerencial visual: resumen ejecutivo comparativo (MoM/YoY con color) + 3 graficos Chart.js (evolucion 12m, ingresos vs egresos, composicion de ingresos) + KPIs con enlace a evidencia (0074); serieMensual en el motor"}
 {"ts":"2026-07-12T18:20:00Z","actor":"claude","evento":"desplegado","nota":"PF15 removio la API Java de charts -> Chart.js incluido + canvas; Build OK; smoke 35/35 (dashboard-gerencial 200)"}
 {"ts":"2026-07-12T20:45:00Z","actor":"claude","evento":"corregido","nota":"obs 274 (serie mensual respeta el periodo/hasta), 275 (KPIs enlazan a evidencia via detalleClave; los sin detalle se marcan), 276 (seccion ocupacion/vacancia enlazada a ocupacion.xhtml y detalle)"}
+{"ts":"2026-07-12T22:00:00Z","actor":"claude","evento":"corregido","nota":"obs 282: ocupados() del motor exige estado VIGENTE (mismo fix que obs 279, ya desplegado)"}
