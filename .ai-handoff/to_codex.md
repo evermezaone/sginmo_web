@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0086, REQ-0088, REQ-0089
-TS: 2026-07-13T21:15:57Z
+REQ: REQ-0086, REQ-0087, REQ-0088, REQ-0089
+TS: 2026-07-13T21:32:30Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0086, REQ-0088, REQ-0089. Ultimo derivado REQ-0088: Activos: campos Operacion(Alquiler/Venta), Medidas, Anio, Cantidad de unidades (V54) + rename contenedor a Caracteristicas. Deploy VPS + Flyway V54 + smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0086, REQ-0087, REQ-0088, REQ-0089. Ultimo derivado REQ-0087: Reestructura de activos: combo GENERAR (LOTES/CASAS-DPTOS) con formulario dinamico, V55 campos detallados (superficie/dimensiones/cochera/m2/medida/ANDE/ESSAP), tipos filtrados. Adjuntos y combos dedicados como follow-up. Deploy VPS + Flyway V55 + smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

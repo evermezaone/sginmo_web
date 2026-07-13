@@ -66,6 +66,11 @@ public class ActivoBean implements Serializable {
     private Long ciudad;
     private Long barrio;
 
+    // REQ-0087: combo GENERAR (LOTES / CASAS_DPTOS) que cambia el formulario en el alta.
+    private String generarTipo = "LOTES";
+    private Long tipoLoteId;
+    private Long tipoLoteamientoId;
+
     // Generacion masiva de lotes (REQ-0015)
     private Long loteContenedor;
     private List<Activo> loteamientos = java.util.List.of();
@@ -78,6 +83,8 @@ public class ActivoBean implements Serializable {
     @PostConstruct
     public void iniciar() {
         tipos = catalogoService.opciones("TIPOS_ACTIVO");
+        tipoLoteId = catalogoService.idOpcion("TIPOS_ACTIVO", "LOTE");
+        tipoLoteamientoId = catalogoService.idOpcion("TIPOS_ACTIVO", "LOTEAMIENTO");
         propietariosPosibles = personaService.porRol("PROPIETARIO");
         paises = geografiaService.porNivel("PAIS");
         loteamientos = activoService.loteamientos();
@@ -107,11 +114,49 @@ public class ActivoBean implements Serializable {
     public void nuevo() {
         if (!sesion.puede(PANTALLA, "CREAR")) return;
         seleccionado = new Activo();
+        generarTipo = "LOTES";   // REQ-0087: por defecto GENERAR=LOTES (generacion masiva)
         atributos = java.util.List.of();
         propietarios = java.util.List.of();
         nuevoPropietario = null;
         limpiarUbicacion();
         soloLectura = false; tabActivo = 0;
+    }
+
+    /** Cambio del combo GENERAR (solo afecta el alta); resetea el tipo si pasa a CASAS/DPTOS. */
+    public void generarTipoCambiado() {
+        if ("CASAS_DPTOS".equals(generarTipo) && seleccionado != null) {
+            seleccionado.setTipo(null);
+        }
+    }
+
+    // REQ-0087: modos de formulario segun alta/edicion y tipo.
+    public boolean isEsNuevo() { return seleccionado != null && seleccionado.getId() == null; }
+    public boolean isEsLote() {
+        return seleccionado != null && seleccionado.getTipo() != null && seleccionado.getTipo().equals(tipoLoteId);
+    }
+    /** Alta con GENERAR=LOTES: generacion masiva de lotes. */
+    public boolean isModoGenerarLotes() { return isEsNuevo() && "LOTES".equals(generarTipo); }
+    /** Edicion de un lote existente: formulario detallado de LOTE. */
+    public boolean isModoLoteDetalle() { return !isEsNuevo() && isEsLote(); }
+    /** Alta CASAS/DPTOS o edicion de algo que no es lote: formulario detallado de casa/dpto. */
+    public boolean isModoCasaDpto() {
+        return (isEsNuevo() && "CASAS_DPTOS".equals(generarTipo)) || (!isEsNuevo() && !isEsLote());
+    }
+
+    /** Tipos para casa/dpto: todas las opciones menos Lote y Loteamiento. */
+    public List<Entidad> getTiposCasasDptos() {
+        return tipos.stream()
+            .filter(t -> !t.getId().equals(tipoLoteId) && !t.getId().equals(tipoLoteamientoId))
+            .toList();
+    }
+    public List<Integer> getCocheras() { return java.util.List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10); }
+    /** Tipos que ofrece el combo del formulario: excluye Lote/Loteamiento en casa/dpto; completo en lote-detalle. */
+    public List<Entidad> getTiposFormulario() { return isModoCasaDpto() ? getTiposCasasDptos() : tipos; }
+
+    /** Boton unico de guardado del dialogo: en alta con GENERAR=LOTES genera masivamente; si no, guarda el activo. */
+    public void guardarDialogo() {
+        if (isModoGenerarLotes()) generarLotes();
+        else guardar();
     }
 
     public void editar(Activo activo) {
@@ -276,7 +321,8 @@ public class ActivoBean implements Serializable {
             loteamientos = activoService.loteamientos();
             loteContenedor = null; loteManzana = null; loteDesde = 1; loteCantidad = 10;
             lotePrecio = java.math.BigDecimal.ZERO; loteComision = java.math.BigDecimal.ZERO;
-            org.primefaces.PrimeFaces.current().executeScript("PF('dlgLotes').hide()");
+            // REQ-0087: puede invocarse desde el dialogo de lotes o desde el dialogo unificado de activo.
+            org.primefaces.PrimeFaces.current().executeScript("try{PF('dlgLotes').hide()}catch(e){} try{PF('dlgActivo').hide()}catch(e){}");
             org.primefaces.PrimeFaces.current().ajax().update("frmLista:tabla", "frmLista:mensajes");
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudieron generar los lotes", e.getMessage());
@@ -321,6 +367,8 @@ public class ActivoBean implements Serializable {
     public Long getBarrio() { return barrio; }
     public void setBarrio(Long barrio) { this.barrio = barrio; }
 
+    public String getGenerarTipo() { return generarTipo; }
+    public void setGenerarTipo(String v) { this.generarTipo = v; }
     public Long getLoteContenedor() { return loteContenedor; }
     public void setLoteContenedor(Long v) { this.loteContenedor = v; }
     public List<Activo> getLoteamientos() { return loteamientos; }

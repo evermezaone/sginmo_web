@@ -1,1 +1,2 @@
-
+{"ts":"2026-07-13T18:29:00Z","actor":"claude","evento":"implementado","nota":"REQ-0087 reestructura activos: combo GENERAR (LOTES/CASAS_DPTOS) con formulario dinamico; V55 columnas superficie/dimensiones_linderos/cochera/m2_construccion/medida/ande_*/essap_*; ActivoBean con modos (generar-lotes, lote-detalle, casa-dpto), tiposFormulario (excluye Lote/Loteamiento en casa), cocheras 1..10, guardarDialogo; activos.xhtml con generacion masiva embebida + secciones lote y casa/servicios ANDE/ESSAP. Adjuntos y combos dedicados quedan como follow-up"}
+{"ts":"2026-07-13T18:30:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; Flyway V55 (schema v55); smoke 36/36 (activos 200)"}

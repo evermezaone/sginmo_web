@@ -102,7 +102,44 @@
         <h:form id="frmEdicion">
             <p:messages id="msjEdicion" showDetail="true" skipDetailIfEqualsSummary="true" closable="true"/>
             <ui:fragment rendered="#{not empty activoBean.seleccionado}">
-                <p:tabView id="tabs" widgetVar="wtabsAct" activeIndex="#{activoBean.tabActivo}">
+                <!-- REQ-0087: combo GENERAR (solo en alta) que alterna generacion masiva de lotes / formulario detallado -->
+                <h:panelGroup layout="block" rendered="#{activoBean.esNuevo}" styleClass="campo" style="margin-bottom:.6rem;">
+                    <label>GENERAR:</label>
+                    <p:selectOneMenu value="#{activoBean.generarTipo}" style="width:16rem;">
+                        <f:selectItem itemLabel="LOTES" itemValue="LOTES"/>
+                        <f:selectItem itemLabel="CASAS / DPTOS" itemValue="CASAS_DPTOS"/>
+                        <p:ajax listener="#{activoBean.generarTipoCambiado()}" update="frmEdicion"/>
+                    </p:selectOneMenu>
+                </h:panelGroup>
+
+                <!-- Alta con GENERAR=LOTES: generacion masiva (misma logica que el dialogo de lotes) -->
+                <h:panelGroup layout="block" rendered="#{activoBean.modoGenerarLotes}">
+                    <div class="campo">
+                        <label>Loteamiento contenedor *</label>
+                        <p:selectOneMenu value="#{activoBean.loteContenedor}" label="Loteamiento" filter="true" filterMatchMode="contains" style="width:100%;">
+                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                            <f:selectItems value="#{activoBean.loteamientos}" var="lc" itemLabel="#{lc.nombre}" itemValue="#{lc.id}"/>
+                        </p:selectOneMenu>
+                    </div>
+                    <div class="fila-3">
+                        <div class="campo"><label>Manzana</label>
+                            <p:inputText value="#{activoBean.loteManzana}" label="Manzana" maxlength="20"/></div>
+                        <div class="campo"><label>Numerar desde *</label>
+                            <p:inputNumber value="#{activoBean.loteDesde}" label="Desde" decimalPlaces="0" minValue="1"/></div>
+                        <div class="campo"><label>Cantidad * (máx. 500)</label>
+                            <p:inputNumber value="#{activoBean.loteCantidad}" label="Cantidad" decimalPlaces="0" minValue="1" maxValue="500"/></div>
+                    </div>
+                    <div class="fila-2">
+                        <div class="campo"><label>Precio de venta por lote (Gs.)</label>
+                            <p:inputNumber value="#{activoBean.lotePrecio}" label="Precio" decimalPlaces="0" thousandSeparator="." decimalSeparator=","/></div>
+                        <div class="campo"><label>Comisión venta (%)</label>
+                            <p:inputNumber value="#{activoBean.loteComision}" label="Comisión" decimalPlaces="2" minValue="0" maxValue="100"/></div>
+                    </div>
+                    <p style="color:#6c757d; font-size:.8rem;">Crea lotes hijos del contenedor numerados correlativamente; omite los que ya existan.</p>
+                </h:panelGroup>
+
+                <p:tabView id="tabs" widgetVar="wtabsAct" activeIndex="#{activoBean.tabActivo}"
+                           rendered="#{not activoBean.modoGenerarLotes}">
                     <p:tab title="Datos">
                         <div class="fila-2">
                             <div class="campo">
@@ -152,9 +189,9 @@
                             <div class="campo">
                                 <label>Tipo *</label>
                                 <p:selectOneMenu value="#{activoBean.seleccionado.tipo}" required="true" label="Tipo"
-                                                 disabled="#{activoBean.soloLectura}" requiredMessage="El tipo es obligatorio">
+                                                 disabled="#{activoBean.soloLectura or activoBean.modoLoteDetalle}" requiredMessage="El tipo es obligatorio">
                                     <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
-                                    <f:selectItems value="#{activoBean.tipos}" var="tp" itemLabel="#{tp.descripcion}" itemValue="#{tp.id}"/>
+                                    <f:selectItems value="#{activoBean.tiposFormulario}" var="tp" itemLabel="#{tp.descripcion}" itemValue="#{tp.id}"/>
                                     <p:ajax listener="#{activoBean.tipoCambiado()}" update="tabs:tblAtributos"/>
                                 </p:selectOneMenu>
                             </div>
@@ -224,6 +261,54 @@
                                                disabled="#{activoBean.soloLectura}" decimalPlaces="2" minValue="0" maxValue="100"/>
                             </div>
                         </div>
+
+                        <!-- REQ-0087: DATOS LOTE (solo al editar un lote existente) -->
+                        <h:panelGroup layout="block" rendered="#{activoBean.modoLoteDetalle}">
+                            <h4 style="margin:.8rem 0 .3rem; color:#457b9d;">Datos del lote</h4>
+                            <div class="fila-2">
+                                <div class="campo"><label>Superficie (m²)</label>
+                                    <p:inputNumber value="#{activoBean.seleccionado.superficie}" label="Superficie"
+                                                   disabled="#{activoBean.soloLectura}" decimalPlaces="2" minValue="0"/></div>
+                                <div class="campo"><label>Dimensiones y linderos</label>
+                                    <p:inputText value="#{activoBean.seleccionado.dimensionesLinderos}" label="Dimensiones y linderos"
+                                                 disabled="#{activoBean.soloLectura}" maxlength="250" style="width:100%;"/></div>
+                            </div>
+                        </h:panelGroup>
+
+                        <!-- REQ-0087: DATOS CASA/DPTO + SERVICIOS -->
+                        <h:panelGroup layout="block" rendered="#{activoBean.modoCasaDpto}">
+                            <h4 style="margin:.8rem 0 .3rem; color:#457b9d;">Datos inmobiliaria</h4>
+                            <div class="fila-3">
+                                <div class="campo"><label>Cochera</label>
+                                    <p:selectOneMenu value="#{activoBean.seleccionado.cochera}" label="Cochera" disabled="#{activoBean.soloLectura}">
+                                        <f:selectItem itemLabel="(sin cochera)" itemValue="#{null}"/>
+                                        <f:selectItems value="#{activoBean.cocheras}" var="co" itemLabel="#{co}" itemValue="#{co}"/>
+                                    </p:selectOneMenu></div>
+                                <div class="campo"><label>M² de construcción</label>
+                                    <p:inputNumber value="#{activoBean.seleccionado.m2Construccion}" label="M2 construccion"
+                                                   disabled="#{activoBean.soloLectura}" decimalPlaces="2" minValue="0"/></div>
+                                <div class="campo"><label>Medida</label>
+                                    <p:inputText value="#{activoBean.seleccionado.medida}" label="Medida"
+                                                 disabled="#{activoBean.soloLectura}" maxlength="120"/></div>
+                            </div>
+                            <h4 style="margin:.8rem 0 .3rem; color:#457b9d;">Datos servicios</h4>
+                            <div class="fila-2">
+                                <div class="campo"><label>ANDE — Medidor</label>
+                                    <p:inputText value="#{activoBean.seleccionado.andeMedidor}" label="ANDE Medidor"
+                                                 disabled="#{activoBean.soloLectura}" maxlength="40"/></div>
+                                <div class="campo"><label>ANDE — NIS</label>
+                                    <p:inputText value="#{activoBean.seleccionado.andeNis}" label="ANDE NIS"
+                                                 disabled="#{activoBean.soloLectura}" maxlength="40"/></div>
+                            </div>
+                            <div class="fila-2">
+                                <div class="campo"><label>ESSAP — Nro. Medidor</label>
+                                    <p:inputText value="#{activoBean.seleccionado.essapMedidor}" label="ESSAP Medidor"
+                                                 disabled="#{activoBean.soloLectura}" maxlength="40"/></div>
+                                <div class="campo"><label>ESSAP — Cuenta corriente</label>
+                                    <p:inputText value="#{activoBean.seleccionado.essapCtaCte}" label="ESSAP Cta Cte"
+                                                 disabled="#{activoBean.soloLectura}" maxlength="40"/></div>
+                            </div>
+                        </h:panelGroup>
                     </p:tab>
 
                     <p:tab title="Catastro">
@@ -287,9 +372,9 @@
                 <div class="pie-dialogo">
                     <p:commandButton value="Cancelar" type="button" onclick="PF('dlgActivo').hide()"
                                      styleClass="ui-button-secondary" style="margin-right:.5rem;"/>
-                    <p:commandButton value="Guardar" icon="pi pi-save" rendered="#{!activoBean.soloLectura}"
-                                     actionListener="#{activoBean.guardar()}"
-                                     update="msjEdicion tabs :frmLista:tabla :frmLista:mensajes"/>
+                    <p:commandButton value="#{activoBean.modoGenerarLotes ? 'Generar' : 'Guardar'}" icon="pi pi-save" rendered="#{!activoBean.soloLectura}"
+                                     actionListener="#{activoBean.guardarDialogo()}"
+                                     update="frmEdicion :frmLista:tabla :frmLista:mensajes"/>
                 </div>
             </ui:fragment>
         </h:form>

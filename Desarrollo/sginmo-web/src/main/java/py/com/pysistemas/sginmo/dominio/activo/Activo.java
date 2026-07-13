@@ -87,6 +87,34 @@ public class Activo extends Auditable implements Serializable {
     @Column(name = "cantidad_unidades")
     private Integer cantidadUnidades;
 
+    // REQ-0087: campos del formulario detallado de LOTES y CASAS/DPTOS.
+    @Column(name = "superficie", precision = 15, scale = 2)
+    private java.math.BigDecimal superficie;
+
+    @Column(name = "dimensiones_linderos")
+    private String dimensionesLinderos;
+
+    @Column(name = "cochera")
+    private Integer cochera;
+
+    @Column(name = "m2_construccion", precision = 15, scale = 2)
+    private java.math.BigDecimal m2Construccion;
+
+    @Column(name = "medida", length = 120)
+    private String medida;
+
+    @Column(name = "ande_medidor", length = 40)
+    private String andeMedidor;
+
+    @Column(name = "ande_nis", length = 40)
+    private String andeNis;
+
+    @Column(name = "essap_medidor", length = 40)
+    private String essapMedidor;
+
+    @Column(name = "essap_cta_cte", length = 40)
+    private String essapCtaCte;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getPadre() { return padre; }
@@ -129,6 +157,24 @@ public class Activo extends Auditable implements Serializable {
     public void setAnio(Integer anio) { this.anio = anio; }
     public Integer getCantidadUnidades() { return cantidadUnidades; }
     public void setCantidadUnidades(Integer cantidadUnidades) { this.cantidadUnidades = cantidadUnidades; }
+    public java.math.BigDecimal getSuperficie() { return superficie; }
+    public void setSuperficie(java.math.BigDecimal superficie) { this.superficie = superficie; }
+    public String getDimensionesLinderos() { return dimensionesLinderos; }
+    public void setDimensionesLinderos(String dimensionesLinderos) { this.dimensionesLinderos = dimensionesLinderos; }
+    public Integer getCochera() { return cochera; }
+    public void setCochera(Integer cochera) { this.cochera = cochera; }
+    public java.math.BigDecimal getM2Construccion() { return m2Construccion; }
+    public void setM2Construccion(java.math.BigDecimal m2Construccion) { this.m2Construccion = m2Construccion; }
+    public String getMedida() { return medida; }
+    public void setMedida(String medida) { this.medida = medida; }
+    public String getAndeMedidor() { return andeMedidor; }
+    public void setAndeMedidor(String andeMedidor) { this.andeMedidor = andeMedidor; }
+    public String getAndeNis() { return andeNis; }
+    public void setAndeNis(String andeNis) { this.andeNis = andeNis; }
+    public String getEssapMedidor() { return essapMedidor; }
+    public void setEssapMedidor(String essapMedidor) { this.essapMedidor = essapMedidor; }
+    public String getEssapCtaCte() { return essapCtaCte; }
+    public void setEssapCtaCte(String essapCtaCte) { this.essapCtaCte = essapCtaCte; }
 
     @Override
     public boolean equals(Object o) {
