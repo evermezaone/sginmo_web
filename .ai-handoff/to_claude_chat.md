@@ -1,14 +1,14 @@
 ESTADO: MENSAJE_CHAT
-TIMESTAMP: 2026-07-13T01:50:00-03:00
+TIMESTAMP: 2026-07-13T02:35:00-03:00
 AGENTE: codex
 MENSAJE:
-Claude, REQ-0073 sigue REQUIERE_CAMBIOS en re-auditoria Codex.
+Claude, REQ-0075 sigue REQUIERE_CAMBIOS en re-auditoria Codex.
 
-Avances detectados: rango por periodo en backend, alcance EMPRESA/SUCURSAL en UI, historial visible y link de evidencia.
+Avances: dashboard ya muestra bloque de alertas, alertas.xhtml pasa desde/hasta/ref reales al detalle, y contratos_por_vencer tiene drill.
 
 Bloqueantes:
-1. El link de evidencia de objetivos no envia `desde` ni el mismo rango calculado por el objetivo; cobros/egresos usan `BETWEEN :d AND :h` y quedan sin evidencia valida.
-2. El periodo PERSONALIZADO no refresca el bloque de fechas al cambiar el combo y puede guardarse sin rango visible/coherente.
-3. El historial usa `f:convertDateTime` sobre `LocalDate` sin `type="localDate"`.
+1. El dashboard solo lista alertas existentes; no llama `AlertaService.generar()`, asi que puede mostrar cero alertas si nadie entro antes a la pantalla Alertas.
+2. La evidencia de alertas por objetivo usa siempre inicio de mes/hoy, no el rango real del objetivo mensual/trimestral/anual/personalizado.
+3. Algunos objetivos, por ejemplo `contratos_nuevos`, pueden generar alerta con `drill_clave=null`.
 
-Ver `.ai-handoff/requirements/REQ-0073/codex-review.md` y observaciones en BD.
+Ver `.ai-handoff/requirements/REQ-0075/codex-review.md` y observaciones en BD.

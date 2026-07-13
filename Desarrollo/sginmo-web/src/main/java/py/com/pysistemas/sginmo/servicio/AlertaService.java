@@ -51,27 +51,35 @@ public class AlertaService {
         String periodo = LocalDate.now().withDayOfMonth(1).toString().substring(0, 7);   // YYYY-MM
         int n = 0;
 
+        LocalDate inicioMes = LocalDate.now().withDayOfMonth(1);
+        LocalDate hoy = LocalDate.now();
+
         // 1) Objetivos en riesgo/incumplidos (REQ-0073).
         for (ObjetivoService.Objetivo o : objetivos.listar(true)) {
             if ("OK".equals(o.getSemaforo())) continue;
+            String drill = drillDeIndicador(o.getIndicador());
+            // obs 298: no generamos alertas accionables sin evidencia; el objetivo sigue visible en su pantalla.
+            if (drill == null) continue;
             boolean critico = "CRITICO".equals(o.getSemaforo());
             String causa = "Objetivo '" + o.getDescripcion() + "': actual " + o.getValorActual()
                     + " vs meta " + o.getMeta() + " (" + o.getSemaforo() + ")";
             String impacto = "ocupacion".equals(o.getIndicador()) && o.getFaltanUnidades() > 0
                     ? "Faltan " + o.getFaltanUnidades() + " propiedades para el objetivo" : "Brecha: " + o.getBrecha();
             String accion = accionObjetivo(o.getIndicador());
-            String drill = drillDeIndicador(o.getIndicador());
+            // obs 297: la evidencia usa el MISMO rango que disparo la alerta (rangoPeriodo del objetivo).
+            LocalDate od = parseIso(o.getRangoDesde(), inicioMes);
+            LocalDate oh = parseIso(o.getRangoHasta(), hoy);
             n += upsert("OBJETIVO", o.getIndicador(), critico ? "CRITICA" : "ALTA", causa, impacto, accion,
-                    drill, null, "OBJETIVO|" + o.getId() + "|" + periodo);
+                    drill, null, od, oh, "OBJETIVO|" + o.getId() + "|" + periodo);
         }
 
         // 2) Rentabilidad negativa del mes (regla fija).
-        BigDecimal neto = rentabilidad.resumen(LocalDate.now().withDayOfMonth(1), LocalDate.now()).getNeto();
+        BigDecimal neto = rentabilidad.resumen(inicioMes, hoy).getNeto();
         if (neto.signum() < 0) {
             n += upsert("RENTABILIDAD", "rentabilidad", "CRITICA",
                     "Rentabilidad neta negativa en el mes: " + neto.toPlainString(),
                     "Los egresos superan a los ingresos operativos", "Revisar egresos y cobros del periodo",
-                    "egresos", null, "RENTABILIDAD|neto|" + periodo);
+                    "egresos", null, inicioMes, hoy, "RENTABILIDAD|neto|" + periodo);
         }
 
         // 3) Contratos por vencer en los proximos N dias (parametro configurable).
@@ -84,25 +92,27 @@ public class AlertaService {
             n += upsert("CONTRATOS", "contratos_por_vencer", "MEDIA",
                     porVencer.longValue() + " contrato(s) vencen en los proximos " + dias + " dias",
                     "Riesgo de vacancia si no se renuevan", "Gestionar renovacion o reposicion",
-                    "contratos_por_vencer", null, "CONTRATOS|porvencer|" + periodo);   // obs 292: evidencia
+                    "contratos_por_vencer", null, null, null, "CONTRATOS|porvencer|" + periodo);   // obs 292: evidencia
         }
         return n;
     }
 
     /** Inserta la alerta si no existe una ABIERTA con el mismo hash (dedup). Devuelve 1 si inserto. */
     private int upsert(String tipo, String indicador, String prioridad, String causa, String impacto,
-                       String accion, String drill, Long drillRef, String hash) {
+                       String accion, String drill, Long drillRef, LocalDate drillDesde, LocalDate drillHasta,
+                       String hash) {
         long existe = ((Number) em.createNativeQuery(
             "SELECT COUNT(*) FROM alerta_gerencial WHERE hash_dedup=:h AND estado='ABIERTA'")
             .setParameter("h", hash).getSingleResult()).longValue();
         if (existe > 0) return 0;
         em.createNativeQuery(
             "INSERT INTO alerta_gerencial (tenant, tipo, indicador, prioridad, causa, impacto, accion_sugerida,"
-          + " drill_clave, drill_ref, hash_dedup, estado, fecha) VALUES"
-          + " (:t,:tipo,:ind,:pri,:causa,:imp,:acc,:drill,:dref,:hash,'ABIERTA', now())")
+          + " drill_clave, drill_ref, drill_desde, drill_hasta, hash_dedup, estado, fecha) VALUES"
+          + " (:t,:tipo,:ind,:pri,:causa,:imp,:acc,:drill,:dref,:dd,:dh,:hash,'ABIERTA', now())")
             .setParameter("t", tenant.actual()).setParameter("tipo", tipo).setParameter("ind", indicador)
             .setParameter("pri", prioridad).setParameter("causa", recorta(causa, 300)).setParameter("imp", recorta(impacto, 300))
             .setParameter("acc", recorta(accion, 300)).setParameter("drill", drill).setParameter("dref", drillRef)
+            .setParameter("dd", drillDesde).setParameter("dh", drillHasta)
             .setParameter("hash", hash).executeUpdate();
         return 1;
     }
@@ -114,21 +124,23 @@ public class AlertaService {
         Long emp = tenant.actual();
         if (emp == null || py.com.pysistemas.sginmo.web.TenantContext.GLOBAL.equals(emp)) return out;
         Query q = em.createNativeQuery(
-            "SELECT alerta_gerencial, tipo, indicador, prioridad, causa, impacto, accion_sugerida, drill_clave, drill_ref, fecha"
+            "SELECT alerta_gerencial, tipo, indicador, prioridad, causa, impacto, accion_sugerida, drill_clave, drill_ref,"
+          + " drill_desde, drill_hasta, fecha"
           + " FROM alerta_gerencial WHERE estado='ABIERTA'"
           + " ORDER BY CASE prioridad WHEN 'CRITICA' THEN 1 WHEN 'ALTA' THEN 2 WHEN 'MEDIA' THEN 3 ELSE 4 END, fecha DESC");
         @SuppressWarnings("unchecked")
         List<Object[]> rows = q.getResultList();
-        // obs 291: los enlaces de evidencia deben llevar fechas reales (desde/hasta), no la referencia.
-        String desde = LocalDate.now().withDayOfMonth(1).toString();
-        String hasta = LocalDate.now().toString();
+        // obs 291/297: la evidencia lleva el rango REAL guardado por alerta; si falta, cae al mes actual.
+        String mesDesde = LocalDate.now().withDayOfMonth(1).toString();
+        String hoy = LocalDate.now().toString();
         for (Object[] f : rows) {
             Alerta a = new Alerta();
             a.id = ((Number) f[0]).longValue();
             a.tipo = s(f[1]); a.indicador = s(f[2]); a.prioridad = s(f[3]);
             a.causa = s(f[4]); a.impacto = s(f[5]); a.accion = s(f[6]);
             a.drillClave = s(f[7]); a.drillRef = f[8] == null ? null : ((Number) f[8]).longValue();
-            a.drillDesde = desde; a.drillHasta = hasta;
+            a.drillDesde = f[9] != null ? isoDate(f[9]) : mesDesde;
+            a.drillHasta = f[10] != null ? isoDate(f[10]) : hoy;
             out.add(a);
         }
         return out;
@@ -167,12 +179,25 @@ public class AlertaService {
             case "cobro_mensual" -> "cobros";
             case "mora_maxima" -> "mora";
             case "egresos_maximos", "rentabilidad_minima" -> "egresos";
+            case "contratos_nuevos" -> "contratos_nuevos";   // obs 298: evidencia para contratos nuevos
             default -> null;
         };
     }
 
     private static String s(Object o) { return o == null ? "" : o.toString(); }
     private static String recorta(String s, int max) { return s == null ? null : (s.length() <= max ? s : s.substring(0, max)); }
+
+    /** ISO (yyyy-MM-dd) desde un valor de columna DATE, para el enlace de evidencia. */
+    private static String isoDate(Object o) {
+        if (o instanceof java.sql.Date sd) return sd.toLocalDate().toString();
+        if (o instanceof LocalDate ld) return ld.toString();
+        return o.toString();
+    }
+    /** Parsea un ISO (yyyy-MM-dd) del rango del objetivo; cae al valor por defecto si es nulo/invalido. */
+    private static LocalDate parseIso(String iso, LocalDate porDefecto) {
+        try { return (iso == null || iso.isBlank()) ? porDefecto : LocalDate.parse(iso.trim()); }
+        catch (RuntimeException e) { return porDefecto; }
+    }
 
     public static class Alerta {
         public Long id, drillRef;

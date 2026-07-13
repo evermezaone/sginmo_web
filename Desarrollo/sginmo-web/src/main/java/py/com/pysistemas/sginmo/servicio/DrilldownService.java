@@ -32,7 +32,8 @@ public class DrilldownService {
         "ocupacion", new String[]{"ocupacion", "VER"},
         "vacancia", new String[]{"ocupacion", "VER"},
         "rentabilidad_activo", new String[]{"rentabilidad", "VER"},
-        "contratos_por_vencer", new String[]{"operaciones", "VER"});
+        "contratos_por_vencer", new String[]{"operaciones", "VER"},
+        "contratos_nuevos", new String[]{"operaciones", "VER"});
 
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
@@ -73,6 +74,7 @@ public class DrilldownService {
             case "vacancia" -> propiedades(d, hasta, false);
             case "rentabilidad_activo" -> rentabilidadActivo(d, refId, desde, hasta);
             case "contratos_por_vencer" -> contratosPorVencer(d);
+            case "contratos_nuevos" -> contratosNuevos(d, desde, hasta, sucursal);
             default -> throw new NegocioException("Indicador de detalle no valido");
         }
         return d;
@@ -165,6 +167,20 @@ public class DrilldownService {
           + " AND o.fecha_fin_contrato BETWEEN current_date AND current_date + (:d || ' days')::interval"
           + " ORDER BY o.fecha_fin_contrato").setParameter("d", dias);
         for (Object[] f : rows(q)) d.filas.add(new String[]{ s(f[0]), s(f[1]), s(f[2]), fecha(f[3]) });
+    }
+
+    /** Evidencia de contratos nuevos del periodo (mismo criterio que la metrica CONTRATOS_NUEVOS). */
+    private void contratosNuevos(Detalle d, LocalDate desde, LocalDate hasta, Long sucursal) {
+        d.titulo = "Contratos nuevos del periodo";
+        d.columnas = new String[]{"Operacion", "Fecha", "Cliente", "Activo", "Tipo"};
+        String suc = sucursal != null ? " AND o.sucursal = :suc" : "";
+        Query q = em.createNativeQuery(
+            "SELECT o.operacion, o.fecha_operacion, vp.nombre, a.nombre, o.tipo_operacion FROM operacion o"
+          + " LEFT JOIN v_persona vp ON vp.persona=o.cliente LEFT JOIN activo a ON a.activo=o.activo"
+          + " WHERE o.fecha_operacion BETWEEN :d AND :h" + suc
+          + " ORDER BY o.fecha_operacion DESC").setParameter("d", desde).setParameter("h", hasta);
+        if (sucursal != null) q.setParameter("suc", sucursal);
+        for (Object[] f : rows(q)) d.filas.add(new String[]{ s(f[0]), fecha(f[1]), s(f[2]), s(f[3]), s(f[4]) });
     }
 
     private String filtrosDesc(LocalDate desde, LocalDate hasta, Long moneda, Long sucursal, Long refId) {

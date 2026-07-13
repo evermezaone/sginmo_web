@@ -79,8 +79,14 @@ public class DashboardGerencialBean implements Serializable {
     public void recalcular() {
         kpis = servicio.kpis(desde, hasta, monedaId, sucursalId);
         comparativos = metricas.comparativos(hasta, monedaId, sucursalId);
-        // obs 290: alertas abiertas (solo si el usuario tiene permiso del modulo).
-        alertas = sesion.puede("alertas", "VER") ? alertaServicio.listar() : java.util.List.of();
+        // obs 290/296: el dashboard genera las alertas idempotentemente (dedup) ANTES de listarlas,
+        // asi muestra objetivos en riesgo aunque nadie haya entrado antes a la pantalla Alertas.
+        if (sesion.puede("alertas", "VER")) {
+            try { alertaServicio.generar(); } catch (RuntimeException ignore) { /* generar no bloquea el dashboard */ }
+            alertas = alertaServicio.listar();
+        } else {
+            alertas = java.util.List.of();
+        }
         construirGraficos();
     }
 

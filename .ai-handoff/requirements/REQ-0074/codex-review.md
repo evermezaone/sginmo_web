@@ -1,48 +1,37 @@
 # REQ-0074 - Revision Codex
 
-**Fecha:** 2026-07-12  
+**Fecha:** 2026-07-13  
 **Auditor:** codex  
-**Resultado:** REQUIERE_CAMBIOS
+**Resultado:** APROBADO
 
 ## Alcance revisado
 
 - `.ai-handoff/requirements/REQ-0074/req.md`
-- `.ai-handoff/requirements/REQ-0074/claude-implementation.md`
 - `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/DrilldownService.java`
 - `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/web/DashboardDetalleBean.java`
 - `Desarrollo/sginmo-web/src/main/webapp/dashboard-detalle.xhtml`
+- `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/web/DashboardGerencialBean.java`
+- `Desarrollo/sginmo-web/src/main/webapp/dashboard-gerencial.xhtml`
 
-## Observaciones
+## Re-auditoria
 
-### Obs 1 - El detalle de ocupacion/vacancia no exige operacion vigente
+Las observaciones previas quedaron cerradas:
 
-**Severidad:** alta  
-**Archivo:** `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/DrilldownService.java`
+- `DrilldownService.propiedades()` ahora filtra la subconsulta de ocupacion/vacancia con `o.tipo_operacion='ALQUILER' AND o.estado='VIGENTE'` y fechas, alineado con la regla del KPI.
+- `dashboard-detalle.xhtml` reenvia filtros al volver al dashboard (`fdesde`, `fhasta`, `fmoneda`, `fsucursal`).
+- `dashboard-gerencial.xhtml` consume esos view params y `DashboardGerencialBean.aplicarParametros()` recalcula despues de aplicarlos.
 
-**Problema:** `propiedades()` arma la evidencia de `ocupacion`/`vacancia` con subconsulta de operaciones `ALQUILER` por fechas, pero no filtra `o.estado='VIGENTE'`.
+Se mantienen controles relevantes del REQ:
 
-**Impacto:** el detalle puede mostrar propiedades ocupadas/vacantes distinto al KPI y a la pantalla `ocupacion`, que ya fueron corregidos para exigir alquiler vigente. La evidencia deja de explicar exactamente el numero mostrado.
+- Whitelist fija de claves en `DrilldownService.PERMISO`.
+- Consultas parametrizadas, sin rutas/query libres.
+- Permiso del modulo origen por clave, ademas del acceso al dashboard.
+- CSV con titulo, filtros y fecha de generacion.
 
-**Solucion esperada:** alinear la subconsulta con la regla central de ocupacion: `tipo_operacion='ALQUILER' AND estado='VIGENTE'` mas fechas. Idealmente reutilizar una constante/servicio comun para no volver a divergir.
+## Verificacion
 
-### Obs 2 - Volver al dashboard no conserva filtros
-
-**Severidad:** media  
-**Archivo:** `Desarrollo/sginmo-web/src/main/webapp/dashboard-detalle.xhtml`
-
-**Problema:** el REQ exige poder volver al dashboard conservando filtros. El boton `Volver al dashboard` navega a `dashboard-gerencial` sin reenviar `desde`, `hasta`, `moneda` ni `sucursal`.
-
-**Impacto:** el usuario abre evidencia filtrada, vuelve, y pierde el contexto que explicaba ese detalle.
-
-**Solucion esperada:** reenviar los filtros relevantes como parametros o mantenerlos en estado de vista/preferencia. Si el dashboard aun no consume view params, agregar soporte coherente.
-
-## Validaciones que si cumplen
-
-- La entrada de detalle usa `clave` por whitelist fija.
-- Las consultas usan parametros tipados para filtros variables.
-- El servicio exige permiso del modulo origen por clave, no solo permiso de dashboard.
-- El CSV incluye titulo, filtros y fecha de generacion.
+- `mvn -q -pl sginmo-web -am clean package`: EXIT 0.
 
 ## Resultado
 
-No apruebo `REQ-0074` hasta alinear ocupacion/vacancia con alquiler vigente y preservar los filtros al volver.
+Apruebo `REQ-0074`. No quedan hallazgos bloqueantes en el alcance auditado.
