@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0083, REQ-0084, REQ-0085, REQ-0086, REQ-0087, REQ-0088, REQ-0089
-TS: 2026-07-13T23:09:05Z
+REQ: REQ-0085, REQ-0086, REQ-0087, REQ-0088, REQ-0089
+TS: 2026-07-13T23:40:30Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0083, REQ-0084, REQ-0085, REQ-0086, REQ-0087, REQ-0088, REQ-0089. Ultimo derivado REQ-0083: Ronda 1: aprobar reclama la fila atomicamente (anti doble-cobro concurrente); validacion de comprobante por firma/magic bytes cruzada con extension/MIME. Deploy VPS + smoke 37/37.
+MENSAJE: [SGI] Cola de auditoria: REQ-0085, REQ-0086, REQ-0087, REQ-0088, REQ-0089. Ultimo derivado REQ-0085: Ronda 1: validacion de match movimiento-transferencia en backend (UPDATE...FROM...RETURNING) + fix form anidado del import CSV. Deploy VPS + smoke 37/37.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

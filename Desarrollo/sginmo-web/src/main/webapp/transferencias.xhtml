@@ -30,36 +30,6 @@
         </div>
 
         <!-- REQ-0085: carga/importacion de movimientos bancarios -->
-        <p:dialog header="Movimientos bancarios" widgetVar="dlgMov" modal="true" width="560" showEffect="fade">
-            <h4 style="margin:.2rem 0 .5rem;">Registrar manual</h4>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.5rem;">
-                <div class="campo" style="margin:0;"><label>Banco</label>
-                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.banco}" maxlength="80" style="width:100%;"/></div>
-                <div class="campo" style="margin:0;"><label>Cuenta</label>
-                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.cuenta}" maxlength="40" style="width:100%;"/></div>
-                <div class="campo" style="margin:0;"><label>Fecha</label>
-                    <p:datePicker value="#{transferenciaBandejaBean.nuevoMov.fecha}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
-                <div class="campo" style="margin:0;"><label>Importe</label>
-                    <p:inputNumber value="#{transferenciaBandejaBean.nuevoMov.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/></div>
-                <div class="campo" style="margin:0;"><label>Referencia</label>
-                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.referencia}" maxlength="80" style="width:100%;"/></div>
-                <div class="campo" style="margin:0;"><label>Remitente</label>
-                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.remitente}" maxlength="120" style="width:100%;"/></div>
-            </div>
-            <p:commandButton value="Registrar movimiento" icon="pi pi-plus" style="margin-top:.5rem;"
-                             action="#{transferenciaBandejaBean.registrarMovimiento()}" update="frm"/>
-
-            <h4 style="margin:1rem 0 .3rem;">Importar CSV</h4>
-            <p style="color:#6c757d; font-size:.8rem; margin:0 0 .4rem;">
-                Formato por línea: <code>banco;cuenta;fecha(dd/MM/yyyy);importe;referencia;remitente</code>
-            </p>
-            <h:form enctype="multipart/form-data" style="display:inline;">
-                <p:fileUpload value="#{transferenciaBandejaBean.csvMovimientos}" mode="simple" skinSimple="true" accept=".csv,.txt"/>
-                <p:commandButton value="Importar" icon="pi pi-upload" ajax="false" style="margin-top:.4rem;"
-                                 action="#{transferenciaBandejaBean.importarCsv()}"/>
-            </h:form>
-        </p:dialog>
-
         <p:dataTable id="tabla" var="t" value="#{transferenciaBandejaBean.lista}" paginator="true" rows="15"
                      emptyMessage="Sin transferencias informadas">
             <p:column headerText="Fecha" style="width:9rem;">
@@ -174,5 +144,38 @@
             <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/>
         </p:confirmDialog>
     </h:form>
+
+    <!-- REQ-0085 (obs 307): dialogo de movimientos bancarios FUERA del form principal, con un unico form
+         multipart (sin formularios anidados). -->
+    <p:dialog header="Movimientos bancarios" widgetVar="dlgMov" modal="true" width="560" showEffect="fade">
+        <h:form id="frmMov" enctype="multipart/form-data">
+            <p:messages id="msjMov" showDetail="true" closable="true"/>
+            <h4 style="margin:.2rem 0 .5rem;">Registrar manual</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.5rem;">
+                <div class="campo" style="margin:0;"><label>Banco</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.banco}" maxlength="80" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Cuenta</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.cuenta}" maxlength="40" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Fecha</label>
+                    <p:datePicker value="#{transferenciaBandejaBean.nuevoMov.fecha}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Importe</label>
+                    <p:inputNumber value="#{transferenciaBandejaBean.nuevoMov.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Referencia</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.referencia}" maxlength="80" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Remitente</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.remitente}" maxlength="120" style="width:100%;"/></div>
+            </div>
+            <p:commandButton value="Registrar movimiento" icon="pi pi-plus" style="margin-top:.5rem;"
+                             action="#{transferenciaBandejaBean.registrarMovimiento()}" update="frmMov"/>
+
+            <h4 style="margin:1rem 0 .3rem;">Importar CSV</h4>
+            <p style="color:#6c757d; font-size:.8rem; margin:0 0 .4rem;">
+                Formato por línea: <code>banco;cuenta;fecha(dd/MM/yyyy);importe;referencia;remitente</code>
+            </p>
+            <p:fileUpload value="#{transferenciaBandejaBean.csvMovimientos}" mode="simple" skinSimple="true" accept=".csv,.txt"/>
+            <p:commandButton value="Importar" icon="pi pi-upload" ajax="false" style="margin-top:.4rem;"
+                             action="#{transferenciaBandejaBean.importarCsv()}"/>
+        </h:form>
+    </p:dialog>
 </ui:define>
 </ui:composition>

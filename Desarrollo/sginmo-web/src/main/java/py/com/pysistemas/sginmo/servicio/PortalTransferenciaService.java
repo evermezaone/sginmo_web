@@ -368,11 +368,24 @@ public class PortalTransferenciaService {
     public void conciliarYAplicar(Long transferenciaId, Long movimientoId, Long documentoId, Long planillaId,
                                   String emisor, Long monedaId) {
         autorizacion.exigir(PANTALLA, "EDITAR");
-        int n = em.createNativeQuery(
-            "UPDATE movimiento_bancario_importado SET estado_conciliacion='CONCILIADO', transferencia=:tr"
-          + " WHERE movimiento_bancario_importado = :m AND estado_conciliacion='PENDIENTE'")
-            .setParameter("tr", transferenciaId).setParameter("m", movimientoId).executeUpdate();
-        if (n == 0) throw new NegocioException("El movimiento bancario no existe o ya fue conciliado");
+        int tol = Math.max(0, parametros.entero("PORTAL_TRANSF_TOLERANCIA_DIAS", 2));
+        // obs 306: validar ATOMICAMENTE en el backend que el movimiento es candidato REAL de la transferencia
+        // (mismo importe + fecha con tolerancia + referencia/numero si ambos existen) antes de marcar CONCILIADO.
+        // El UPDATE ... FROM con RETURNING hace el match+claim en una sola operacion; 0 filas -> no corresponde.
+        @SuppressWarnings("unchecked")
+        List<Object[]> ok = em.createNativeQuery(
+            "UPDATE movimiento_bancario_importado m SET estado_conciliacion='CONCILIADO', transferencia = t.portal_pago_transferencia"
+          + " FROM portal_pago_transferencia t"
+          + " WHERE m.movimiento_bancario_importado = :m AND m.estado_conciliacion = 'PENDIENTE'"
+          + "   AND t.portal_pago_transferencia = :tr AND t.estado IN ('RECIBIDO','EN_REVISION','OBSERVADO')"
+          + "   AND m.importe = t.importe"
+          + "   AND (t.fecha_transferencia IS NULL OR m.fecha IS NULL OR abs(m.fecha - t.fecha_transferencia) <= :tol)"
+          + "   AND (t.numero_transaccion IS NULL OR m.referencia IS NULL OR m.referencia = t.numero_transaccion)"
+          + " RETURNING m.movimiento_bancario_importado")
+            .setParameter("m", movimientoId).setParameter("tr", transferenciaId).setParameter("tol", tol)
+            .getResultList();
+        if (ok.isEmpty())
+            throw new NegocioException("El movimiento no corresponde a la transferencia (importe/fecha/referencia) o ya fue conciliado");
         aprobar(transferenciaId, documentoId, planillaId, null, emisor, monedaId);
     }
 
