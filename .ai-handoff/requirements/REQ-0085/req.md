@@ -38,20 +38,29 @@ contrario deja el tramite en la bandeja para revision manual (Fase 1). Evita dob
 - Fuente de correos/avisos, umbral de confianza para autoaplicacion, monto maximo autoaplicable, tolerancia de
   fecha, cuentas receptoras por banco.
 
-## Decision Abierta (confirmar al iniciar)
+## Decision Tomada (fuente)
 
-- **Fuente bancaria:** arrancar con carga manual + importacion de archivo (sin credenciales del banco); IMAP/API
-  como extension posterior si el banco provee acceso.
+- **Carga manual + importacion de archivo CSV** (sin credenciales del banco), confirmado por el usuario. IMAP/API
+  queda como extension posterior (la columna `fuente` ya admite 'IMAP').
 
 ## Criterios De Aceptacion
 
-- [ ] Se importan/registran avisos bancarios y se normalizan en `movimiento_bancario_importado` (idempotente).
-- [ ] El sistema cruza comprobantes contra movimientos y sugiere candidatos.
-- [ ] No se aplica automaticamente ningun pago sin match bancario confirmado.
-- [ ] Con match confiable + umbrales, se autoaplica con el servicio de cobros y queda recibo.
-- [ ] Un mismo movimiento/numero de transaccion no se aplica dos veces.
-- [ ] Lo dudoso queda en bandeja con trazabilidad.
-- [ ] Build `mvn -q clean package` EXIT 0.
+- [x] Se registran (manual) e importan (CSV) avisos bancarios en `movimiento_bancario_importado`, idempotente por hash externo.
+- [x] En la bandeja, para una transferencia se muestran los movimientos candidatos (mismo importe + fecha con tolerancia + referencia si coincide).
+- [x] El pago se aplica al conciliar con un movimiento confirmado (o "Aprobar sin conciliar" como fallback manual explicito).
+- [x] Un mismo movimiento no se concilia dos veces (queda CONCILIADO, no reutilizable) y un numero_transaccion no se aplica dos veces (unique parcial de Fase 1).
+- [x] Lo no conciliado queda en la bandeja con su estado; auditoria por cambio de estado.
+- [x] Build `mvn -q clean package` EXIT 0; Flyway V58; smoke 37/37.
+
+## Nota de alcance (autoaplicacion)
+
+- La aplicacion SIEMPRE pasa por el motor de caja (requiere una caja abierta), por eso la "autoaplicacion por
+  umbral" es asistida por el operador (concilia+aplica desde la bandeja con la caja abierta), no un job desatendido.
+  Los parametros PORTAL_TRANSF_MONTO_MAX_AUTO / TOLERANCIA_DIAS quedan cargados para afinar el cruce/limites.
+
+## Dependencias
+
+- Depende de: REQ-0083 (Fase 1) y REQ-0084 (Fase 2).
 
 ## Dependencias
 

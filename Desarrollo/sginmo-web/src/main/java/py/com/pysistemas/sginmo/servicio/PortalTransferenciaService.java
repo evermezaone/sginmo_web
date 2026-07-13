@@ -257,6 +257,123 @@ public class PortalTransferenciaService {
         }
     }
 
+    // ── Conciliacion bancaria (REQ-0085 Fase 3) ────────────────────────────────
+
+    /** Registra manualmente un movimiento/aviso bancario. */
+    public void registrarMovimiento(Mov m) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        if (m == null || m.importe == null || m.importe.signum() <= 0) throw new NegocioException("Indique el importe del movimiento");
+        em.createNativeQuery(
+            "INSERT INTO movimiento_bancario_importado (tenant, fuente, banco, cuenta, fecha, importe, moneda,"
+          + " referencia, remitente, hash_externo, usuario_carga)"
+          + " VALUES (:t,'MANUAL',:b,:c,:f,:imp,:mon,:ref,:rem,:h,:u)")
+            .setParameter("t", tenant.actual()).setParameter("b", recorta(m.banco, 80)).setParameter("c", recorta(m.cuenta, 40))
+            .setParameter("f", m.fecha == null ? null : java.sql.Date.valueOf(m.fecha)).setParameter("imp", m.importe)
+            .setParameter("mon", m.moneda).setParameter("ref", recorta(m.referencia, 80)).setParameter("rem", recorta(m.remitente, 120))
+            .setParameter("h", m.referencia == null ? null : ("MAN:" + m.referencia + ":" + m.importe))
+            .setParameter("u", sesion.codigoUsuario()).executeUpdate();
+    }
+
+    /** Importa movimientos desde un archivo CSV: banco;cuenta;fecha(dd/MM/yyyy);importe;referencia;remitente. */
+    public int importarCsv(byte[] datos) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        if (datos == null || datos.length == 0) throw new NegocioException("Archivo vacio");
+        int n = 0;
+        String contenido = new String(datos, java.nio.charset.StandardCharsets.UTF_8);
+        for (String linea : contenido.split("\\r?\\n")) {
+            if (linea.isBlank() || linea.toLowerCase().startsWith("banco;")) continue;
+            String[] c = linea.split(";", -1);
+            if (c.length < 4) continue;
+            try {
+                java.time.LocalDate fecha = c[2].isBlank() ? null
+                        : java.time.LocalDate.parse(c[2].trim(), java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                BigDecimal imp = new BigDecimal(c[3].replace(".", "").replace(",", ".").trim());
+                String ref = c.length > 4 ? c[4].trim() : null;
+                String rem = c.length > 5 ? c[5].trim() : null;
+                String hash = "CSV:" + (ref == null || ref.isBlank() ? (c[0] + c[2] + c[3]) : ref);
+                em.createNativeQuery(
+                    "INSERT INTO movimiento_bancario_importado (tenant, fuente, banco, cuenta, fecha, importe,"
+                  + " referencia, remitente, hash_externo, usuario_carga)"
+                  + " VALUES (:t,'ARCHIVO',:b,:cu,:f,:imp,:ref,:rem,:h,:u)"
+                  + " ON CONFLICT (tenant, hash_externo) WHERE hash_externo IS NOT NULL DO NOTHING")
+                    .setParameter("t", tenant.actual()).setParameter("b", recorta(c[0].trim(), 80))
+                    .setParameter("cu", recorta(c[1].trim(), 40)).setParameter("f", fecha == null ? null : java.sql.Date.valueOf(fecha))
+                    .setParameter("imp", imp).setParameter("ref", recorta(ref, 80)).setParameter("rem", recorta(rem, 120))
+                    .setParameter("h", recorta(hash, 120)).setParameter("u", sesion.codigoUsuario()).executeUpdate();
+                n++;
+            } catch (RuntimeException ignore) { /* linea invalida: se omite */ }
+        }
+        return n;
+    }
+
+    public List<Mov> movimientos(String estado) {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Mov> out = new ArrayList<>();
+        String cond = (estado != null && !estado.isBlank()) ? " AND estado_conciliacion = :e" : "";
+        var q = em.createNativeQuery(
+            "SELECT movimiento_bancario_importado, banco, cuenta, fecha, importe, referencia, remitente,"
+          + " estado_conciliacion, transferencia FROM movimiento_bancario_importado WHERE 1=1" + cond
+          + " ORDER BY fecha DESC NULLS LAST, movimiento_bancario_importado DESC");
+        if (!cond.isEmpty()) q.setParameter("e", estado);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        for (Object[] f : rows) out.add(mov(f));
+        return out;
+    }
+
+    /** Movimientos PENDIENTES candidatos a conciliar con una transferencia (por importe + fecha con tolerancia). */
+    public List<Mov> candidatos(Long transferenciaId) {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Mov> out = new ArrayList<>();
+        Object[] t;
+        try {
+            t = (Object[]) em.createNativeQuery(
+                "SELECT importe, fecha_transferencia, banco_origen, numero_transaccion FROM portal_pago_transferencia"
+              + " WHERE portal_pago_transferencia = :id").setParameter("id", transferenciaId).getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) { return out; }
+        BigDecimal importe = (BigDecimal) t[0];
+        java.sql.Date fecha = (java.sql.Date) t[1];
+        String numero = (String) t[3];
+        int tol = Math.max(0, parametros.entero("PORTAL_TRANSF_TOLERANCIA_DIAS", 2));
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery(
+            "SELECT movimiento_bancario_importado, banco, cuenta, fecha, importe, referencia, remitente,"
+          + " estado_conciliacion, transferencia FROM movimiento_bancario_importado"
+          + " WHERE estado_conciliacion = 'PENDIENTE' AND importe = :imp"
+          + " AND (:fec IS NULL OR fecha IS NULL OR abs(fecha - :fec) <= :tol)"
+          + " AND (:num IS NULL OR referencia IS NULL OR referencia = :num)"
+          + " ORDER BY fecha DESC NULLS LAST")
+            .setParameter("imp", importe).setParameter("fec", fecha).setParameter("tol", tol)
+            .setParameter("num", numero).getResultList();
+        for (Object[] f : rows) out.add(mov(f));
+        return out;
+    }
+
+    /**
+     * Concilia la transferencia con un movimiento bancario CONFIRMADO y aplica el pago (reutiliza aprobar()).
+     * Anti-doble: el movimiento debe estar PENDIENTE; queda CONCILIADO y no se reutiliza.
+     */
+    public void conciliarYAplicar(Long transferenciaId, Long movimientoId, Long documentoId, Long planillaId,
+                                  String emisor, Long monedaId) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        int n = em.createNativeQuery(
+            "UPDATE movimiento_bancario_importado SET estado_conciliacion='CONCILIADO', transferencia=:tr"
+          + " WHERE movimiento_bancario_importado = :m AND estado_conciliacion='PENDIENTE'")
+            .setParameter("tr", transferenciaId).setParameter("m", movimientoId).executeUpdate();
+        if (n == 0) throw new NegocioException("El movimiento bancario no existe o ya fue conciliado");
+        aprobar(transferenciaId, documentoId, planillaId, null, emisor, monedaId);
+    }
+
+    private Mov mov(Object[] f) {
+        Mov m = new Mov();
+        m.id = ((Number) f[0]).longValue();
+        m.banco = (String) f[1]; m.cuenta = (String) f[2];
+        m.fecha = f[3] instanceof java.sql.Date d ? d.toLocalDate() : null;
+        m.importe = (BigDecimal) f[4]; m.referencia = (String) f[5]; m.remitente = (String) f[6];
+        m.estado = (String) f[7]; m.transferencia = f[8] == null ? null : ((Number) f[8]).longValue();
+        return m;
+    }
+
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private Fila fila(Object[] f) {
@@ -337,5 +454,27 @@ public class PortalTransferenciaService {
     public static class Descarga {
         public final String nombre, contentType; public final byte[] datos;
         public Descarga(String nombre, String contentType, byte[] datos) { this.nombre = nombre; this.contentType = contentType; this.datos = datos; }
+    }
+    /** REQ-0085: movimiento bancario importado (para carga y conciliacion). */
+    public static class Mov {
+        public Long id, moneda, transferencia;
+        public String banco, cuenta, referencia, remitente, estado;
+        public LocalDate fecha; public BigDecimal importe;
+        public Long getId() { return id; }
+        public String getBanco() { return banco; }
+        public String getCuenta() { return cuenta; }
+        public String getReferencia() { return referencia; }
+        public String getRemitente() { return remitente; }
+        public String getEstado() { return estado; }
+        public LocalDate getFecha() { return fecha; }
+        public BigDecimal getImporte() { return importe; }
+        public Long getTransferencia() { return transferencia; }
+        public void setBanco(String v) { banco = v; }
+        public void setCuenta(String v) { cuenta = v; }
+        public void setReferencia(String v) { referencia = v; }
+        public void setRemitente(String v) { remitente = v; }
+        public void setFecha(LocalDate v) { fecha = v; }
+        public void setImporte(BigDecimal v) { importe = v; }
+        public void setMoneda(Long v) { moneda = v; }
     }
 }

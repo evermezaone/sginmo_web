@@ -22,7 +22,43 @@
                 </p:selectOneMenu>
             </div>
             <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{transferenciaBandejaBean.cargar()}" update="tabla"/>
+            <span style="flex:1"></span>
+            <p:commandButton value="Movimientos bancarios" icon="pi pi-database" type="button"
+                             styleClass="ui-button-outlined"
+                             rendered="#{sesionUsuario.puede('transferencias','EDITAR')}"
+                             onclick="PF('dlgMov').show()"/>
         </div>
+
+        <!-- REQ-0085: carga/importacion de movimientos bancarios -->
+        <p:dialog header="Movimientos bancarios" widgetVar="dlgMov" modal="true" width="560" showEffect="fade">
+            <h4 style="margin:.2rem 0 .5rem;">Registrar manual</h4>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.5rem;">
+                <div class="campo" style="margin:0;"><label>Banco</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.banco}" maxlength="80" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Cuenta</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.cuenta}" maxlength="40" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Fecha</label>
+                    <p:datePicker value="#{transferenciaBandejaBean.nuevoMov.fecha}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Importe</label>
+                    <p:inputNumber value="#{transferenciaBandejaBean.nuevoMov.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Referencia</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.referencia}" maxlength="80" style="width:100%;"/></div>
+                <div class="campo" style="margin:0;"><label>Remitente</label>
+                    <p:inputText value="#{transferenciaBandejaBean.nuevoMov.remitente}" maxlength="120" style="width:100%;"/></div>
+            </div>
+            <p:commandButton value="Registrar movimiento" icon="pi pi-plus" style="margin-top:.5rem;"
+                             action="#{transferenciaBandejaBean.registrarMovimiento()}" update="frm"/>
+
+            <h4 style="margin:1rem 0 .3rem;">Importar CSV</h4>
+            <p style="color:#6c757d; font-size:.8rem; margin:0 0 .4rem;">
+                Formato por línea: <code>banco;cuenta;fecha(dd/MM/yyyy);importe;referencia;remitente</code>
+            </p>
+            <h:form enctype="multipart/form-data" style="display:inline;">
+                <p:fileUpload value="#{transferenciaBandejaBean.csvMovimientos}" mode="simple" skinSimple="true" accept=".csv,.txt"/>
+                <p:commandButton value="Importar" icon="pi pi-upload" ajax="false" style="margin-top:.4rem;"
+                                 action="#{transferenciaBandejaBean.importarCsv()}"/>
+            </h:form>
+        </p:dialog>
 
         <p:dataTable id="tabla" var="t" value="#{transferenciaBandejaBean.lista}" paginator="true" rows="15"
                      emptyMessage="Sin transferencias informadas">
@@ -92,10 +128,31 @@
                             <f:selectItems value="#{transferenciaBandejaBean.emisores}" var="em" itemLabel="#{em.descripcion}" itemValue="#{em.codigo}"/>
                         </p:selectOneMenu>
                     </div>
-                    <p:commandButton value="Aprobar y aplicar" icon="pi pi-check" style="margin-top:.5rem;"
+
+                    <!-- REQ-0085: movimientos bancarios candidatos (mismo importe y fecha con tolerancia) -->
+                    <h:panelGroup layout="block" style="margin-top:.5rem;">
+                        <label style="font-size:.82rem; color:#166534;">Movimientos bancarios candidatos</label>
+                        <p:dataTable var="mb" value="#{transferenciaBandejaBean.candidatos}" emptyMessage="Sin movimientos bancarios que coincidan"
+                                     style="margin-top:.2rem;">
+                            <p:column headerText="Fecha" style="width:6rem;"><h:outputText value="#{mb.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                            <p:column headerText="Banco"><h:outputText value="#{mb.banco}"/></p:column>
+                            <p:column headerText="Ref."><h:outputText value="#{mb.referencia}"/></p:column>
+                            <p:column headerText="Importe" style="text-align:right;"><h:outputText value="#{mb.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                            <p:column style="width:9rem; text-align:center;">
+                                <p:commandButton value="Conciliar" icon="pi pi-link" styleClass="ui-button-sm"
+                                                 action="#{transferenciaBandejaBean.conciliar(mb)}" update="frm"
+                                                 oncomplete="if(!args.validationFailed) PF('dlgRev').hide()">
+                                    <p:confirm header="Confirmar" message="¿Conciliar con este movimiento y aplicar el pago?" icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+                    </h:panelGroup>
+
+                    <p:commandButton value="Aprobar sin conciliar" icon="pi pi-check" style="margin-top:.5rem;"
+                                     styleClass="ui-button-outlined"
                                      action="#{transferenciaBandejaBean.aprobar()}" update="frm"
                                      oncomplete="if(!args.validationFailed) PF('dlgRev').hide()">
-                        <p:confirm header="Confirmar" message="¿Aplicar el pago? Se genera el cobro e imputa el documento." icon="pi pi-exclamation-triangle"/>
+                        <p:confirm header="Confirmar" message="¿Aplicar el pago SIN match bancario? Se genera el cobro e imputa el documento." icon="pi pi-exclamation-triangle"/>
                     </p:commandButton>
                 </div>
 
