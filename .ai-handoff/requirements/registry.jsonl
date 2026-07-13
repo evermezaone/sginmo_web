@@ -77,3 +77,4 @@
 {"req": "REQ-0083", "titulo": "Portal cliente: informar transferencia + adjuntar + bandeja + aplicacion (Fase 1)", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-13T15:20:00.000Z", "ts_actualizado": "2026-07-13T15:20:00.000Z"}
 {"req": "REQ-0084", "titulo": "Portal transferencias Fase 2: OCR y extraccion de campos del comprobante", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-13T15:20:00.000Z", "ts_actualizado": "2026-07-13T15:20:00.000Z"}
 {"req": "REQ-0085", "titulo": "Portal transferencias Fase 3: conciliacion bancaria y autoaplicacion", "estado": "NUEVO", "rama": "pendiente", "ts_creado": "2026-07-13T15:20:00.000Z", "ts_actualizado": "2026-07-13T15:20:00.000Z"}
+{"req":"REQ-0086","titulo":"Relay de correo por HTTP (endpoint PHP en Hostinger) para envio transaccional; VPS hace POST con token","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-13T19:24:34.149Z","ts_actualizado":"2026-07-13T19:24:34.149Z"}
