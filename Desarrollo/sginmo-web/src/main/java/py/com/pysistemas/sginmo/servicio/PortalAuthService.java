@@ -35,6 +35,10 @@ public class PortalAuthService {
     /** Mensaje unico para toda falla de acceso: no revela si el documento existe. */
     private static final String GENERICO =
         "No pudimos validar los datos. Verifique la empresa y el documento e intente nuevamente.";
+    /** Mensaje unico para toda falla de validacion de OTP (obs 303): no distingue documento
+     *  inexistente de codigo vencido/erroneo/sin-otp; el motivo real queda solo en auditoria. */
+    private static final String OTP_GENERICO =
+        "El codigo no es valido o expiro. Si lo necesita, solicite uno nuevo e intente otra vez.";
 
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
@@ -106,8 +110,10 @@ public class PortalAuthService {
         if (tenant == null || documento == null || codigo == null || codigo.isBlank())
             throw new NegocioException(GENERICO);
         fijarTenant(tenant);
+        // obs 303: mensaje externo uniforme en todas las ramas (documento inexistente, sin OTP,
+        // vencido, erroneo, max intentos); el motivo real solo va a auditoria.
         Persona p = buscarElegible(tenant, documento.trim());
-        if (p == null) { auditar(tenant, null, "OTP_FALLIDO", "sin-persona", ip, ua); throw new NegocioException(GENERICO); }
+        if (p == null) { auditar(tenant, null, "OTP_FALLIDO", "sin-persona", ip, ua); throw new NegocioException(OTP_GENERICO); }
 
         Object[] otp;
         try {
@@ -118,7 +124,7 @@ public class PortalAuthService {
                 .setParameter("t", tenant).setParameter("p", p.id).getSingleResult();
         } catch (NoResultException e) {
             auditar(tenant, p.id, "OTP_FALLIDO", "sin-otp-vigente", ip, ua);
-            throw new NegocioException("El codigo expiro o no es valido. Solicite uno nuevo.");
+            throw new NegocioException(OTP_GENERICO);
         }
         long otpId = ((Number) otp[0]).longValue();
         String hash = (String) otp[1];
@@ -129,13 +135,13 @@ public class PortalAuthService {
             em.createNativeQuery("UPDATE portal_otp SET usado = true, intentos = :i WHERE portal_otp = :id")
                 .setParameter("i", intentos).setParameter("id", otpId).executeUpdate();
             auditar(tenant, p.id, "OTP_FALLIDO", "max-intentos", ip, ua);
-            throw new NegocioException("Supero los intentos permitidos. Solicite un codigo nuevo.");
+            throw new NegocioException(OTP_GENERICO);
         }
         if (!BCrypt.checkpw(codigo.trim(), hash)) {
             em.createNativeQuery("UPDATE portal_otp SET intentos = :i WHERE portal_otp = :id")
                 .setParameter("i", intentos).setParameter("id", otpId).executeUpdate();
             auditar(tenant, p.id, "OTP_FALLIDO", "codigo-incorrecto", ip, ua);
-            throw new NegocioException("Codigo incorrecto.");
+            throw new NegocioException(OTP_GENERICO);
         }
         em.createNativeQuery("UPDATE portal_otp SET usado = true, intentos = :i WHERE portal_otp = :id")
             .setParameter("i", intentos).setParameter("id", otpId).executeUpdate();

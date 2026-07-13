@@ -107,7 +107,7 @@ public class PortalService {
         List<Object[]> filas = em.createNativeQuery(
             "SELECT a.activo, a.nombre, a.estado FROM activo a"
           + " JOIN activo_propietario ap ON ap.activo = a.activo"
-          + " WHERE ap.propietario = :p ORDER BY a.nombre").setParameter("p", persona).getResultList();
+          + " WHERE ap.propietario = :p AND ap.estado = 'ACTIVO' ORDER BY a.nombre").setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
             FilaActivo a = new FilaActivo();
             a.id = ((Number) f[0]).longValue();
@@ -126,7 +126,7 @@ public class PortalService {
             "SELECT o.operacion, o.tipo_operacion, o.fecha_operacion, o.estado, a.nombre"
           + " FROM operacion o JOIN activo a ON a.activo = o.activo"
           + " JOIN activo_propietario ap ON ap.activo = o.activo"
-          + " WHERE ap.propietario = :p ORDER BY o.fecha_operacion DESC").setParameter("p", persona).getResultList();
+          + " WHERE ap.propietario = :p AND ap.estado = 'ACTIVO' ORDER BY o.fecha_operacion DESC").setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
             FilaOperacion o = new FilaOperacion();
             o.id = ((Number) f[0]).longValue();
@@ -148,7 +148,7 @@ public class PortalService {
           + " FROM liquidacion l JOIN operacion o ON o.operacion = l.operacion"
           + " JOIN activo a ON a.activo = o.activo"
           + " JOIN activo_propietario ap ON ap.activo = o.activo"
-          + " WHERE ap.propietario = :p ORDER BY l.fecha DESC").setParameter("p", persona).getResultList();
+          + " WHERE ap.propietario = :p AND ap.estado = 'ACTIVO' ORDER BY l.fecha DESC").setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
             FilaLiquidacion l = new FilaLiquidacion();
             l.id = ((Number) f[0]).longValue();
@@ -169,9 +169,9 @@ public class PortalService {
             "SELECT documento_adjunto, tipo, descripcion, nombre_original FROM documento_adjunto"
           + " WHERE visible_portal = true AND estado='ACTIVO' AND ("
           + "   (entidad_tipo='PERSONA' AND entidad_id=:p) OR"
-          + "   (entidad_tipo='ACTIVO' AND entidad_id IN (SELECT activo FROM activo_propietario WHERE propietario=:p)) OR"
+          + "   (entidad_tipo='ACTIVO' AND entidad_id IN (SELECT activo FROM activo_propietario WHERE propietario=:p AND estado='ACTIVO')) OR"
           + "   (entidad_tipo='OPERACION' AND entidad_id IN (SELECT o.operacion FROM operacion o"
-          + "        JOIN activo_propietario ap ON ap.activo=o.activo WHERE ap.propietario=:p)))"
+          + "        JOIN activo_propietario ap ON ap.activo=o.activo WHERE ap.propietario=:p AND ap.estado='ACTIVO')))"
           + " ORDER BY fecha_creacion DESC").setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
             FilaDoc d = new FilaDoc();
@@ -226,9 +226,9 @@ public class PortalService {
           + "   (d.entidad_tipo='PERSONA' AND d.entidad_id=:p) OR"
           + "   (d.entidad_tipo='OPERACION' AND d.entidad_id IN (SELECT operacion FROM operacion WHERE cliente=:p)) OR"
           // obs 300: tambien los documentos del propietario (sus activos y las operaciones sobre ellos).
-          + "   (d.entidad_tipo='ACTIVO' AND d.entidad_id IN (SELECT activo FROM activo_propietario WHERE propietario=:p)) OR"
+          + "   (d.entidad_tipo='ACTIVO' AND d.entidad_id IN (SELECT activo FROM activo_propietario WHERE propietario=:p AND estado='ACTIVO')) OR"
           + "   (d.entidad_tipo='OPERACION' AND d.entidad_id IN (SELECT o.operacion FROM operacion o"
-          + "        JOIN activo_propietario ap ON ap.activo=o.activo WHERE ap.propietario=:p)))")
+          + "        JOIN activo_propietario ap ON ap.activo=o.activo WHERE ap.propietario=:p AND ap.estado='ACTIVO')))")
             .setParameter("id", docId).setParameter("p", persona).getResultList();
         if (filas.isEmpty()) throw new NegocioException("El documento no esta disponible para su cuenta");
         Object[] f = filas.get(0);

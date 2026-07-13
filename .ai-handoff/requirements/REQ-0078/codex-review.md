@@ -20,43 +20,39 @@
 - `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/web/TenantContext.java`
 - `Desarrollo/onesystem-security/src/main/java/py/com/one/security/web/FiltroAutenticacion.java`
 - `Desarrollo/sginmo-web/src/main/resources/db/migration/V52__portal_externo_credenciales.sql`
+- `Desarrollo/sginmo-web/src/main/resources/db/migration/V22__activo_propietario_estado.sql`
 - `Desarrollo/sginmo-web/src/main/webapp/portal/*.xhtml`
 - `Desarrollo/sginmo-web/src/main/webapp/WEB-INF/portal*.xhtml`
 
-## Observaciones bloqueantes
+## Ronda 2
 
-### Obs 1 - El login por password revela que el documento existe y que no tiene clave
+### Observaciones cerradas
 
-**Severidad:** alta  
-**Archivo:** `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/PortalAuthService.java`
+- Obs 1 cerrada parcialmente: `loginPassword()` ya responde con mensaje generico cuando la persona existe pero no tiene credencial.
+- Obs 2 cerrada parcialmente: se agregaron vistas de propietario para activos, operaciones, liquidaciones y documentos.
+- Obs 3 cerrada parcialmente: `solicitarOtp()` ya no inserta `portal_otp` si la persona no tiene email ni telefono.
 
-**Problema:** `loginPassword()` devuelve el mensaje especifico `"Aun no definio su contrasena. Use 'Primer ingreso' para crearla."` cuando existe una persona elegible pero no existe fila en `persona_portal_credencial`. Esto diferencia tres estados: documento inexistente/no elegible, documento elegible sin clave y documento elegible con clave incorrecta.
-
-**Impacto:** viola los criterios del REQ: "si la persona no existe, esta inactiva, no pertenece al tenant o no tiene rol habilitado para portal, el mensaje debe ser generico" y "no revelar existencia de CI/RUC en mensajes de error". En un portal publico, confirmar que un CI/RUC pertenece a un socio es fuga de informacion.
-
-**Solucion esperada:** usar respuesta generica tambien para `sin-credencial`, y orientar el primer ingreso desde la UI sin depender de confirmar existencia. La auditoria interna puede conservar el motivo especifico, pero el mensaje al usuario debe ser uniforme.
-
-### Obs 2 - El portal autentica propietarios, pero el contenido sigue siendo solo de cliente
+### Obs 4 - Las consultas de propietario incluyen relaciones inactivas de `activo_propietario`
 
 **Severidad:** alta  
 **Archivo:** `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/PortalService.java`
 
-**Problema:** `buscarElegible()` acepta rol `PROPIETARIO`, pero las consultas del portal filtran solo por relaciones de cliente: `operacion.cliente = :p`, `cobro.persona = :p` y documentos de operaciones donde la persona es cliente. No hay consultas de activos del propietario, operaciones por activo propietario, liquidaciones del propietario ni documentos vinculados a esos activos/liquidaciones.
+**Problema:** los nuevos metodos de propietario (`activosPropietario`, `operacionesPropietario`, `liquidacionesPropietario`, `documentosPropietario` y la autorizacion de `descargar`) usan `activo_propietario` sin filtrar `estado = 'ACTIVO'`. La migracion `V22__activo_propietario_estado.sql` agrega baja logica precisamente para preservar historico, y documenta que el ABM solo lista/valida propietarios activos.
 
-**Impacto:** incumple los criterios del REQ que exigen que el propietario vea "sus activos, operaciones, liquidaciones y documentos permitidos". Un propietario puro puede autenticarse y ver una cuenta vacia o incompleta, aunque tenga activos/liquidaciones reales.
+**Impacto:** un propietario desvinculado/inactivo puede seguir viendo activos, operaciones, liquidaciones y documentos de propiedades que ya no le corresponden. En un portal externo esto es fuga de informacion sensible.
 
-**Solucion esperada:** agregar un modelo de cuenta por rol. Para `CLIENTE`, mantener cuotas/pagos/deuda/documentos por cliente. Para `PROPIETARIO`, agregar activos propios, operaciones asociadas a esos activos, liquidaciones y documentos permitidos. Todas las consultas deben filtrar por `PortalSesion.persona` y tenant efectivo, no por parametros de request.
+**Solucion esperada:** agregar `ap.estado = 'ACTIVO'` en todos los joins/subconsultas de propietario del portal, incluyendo descarga de documentos. Mantener RLS por tenant y filtro por persona autenticada.
 
-### Obs 3 - Si la persona no tiene email ni telefono, se crea un OTP imposible de recibir
+### Obs 5 - La validacion OTP sigue diferenciando documento inexistente vs persona elegible sin OTP vigente
 
-**Severidad:** media  
+**Severidad:** alta  
 **Archivo:** `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/PortalAuthService.java`
 
-**Problema:** `solicitarOtp()` crea `portal_otp` aun cuando `canal` queda `null` por falta de email y telefono. Luego `enviarCodigo()` no envia nada. El socio queda en una pantalla de OTP sin forma de obtener el codigo.
+**Problema:** `validarOtp()` responde con `GENERICO` cuando `buscarElegible()` no encuentra persona, pero si la persona existe y no hay OTP vigente devuelve `"El codigo expiro o no es valido. Solicite uno nuevo."`. Esto afecta directamente el caso corregido de OTP sin canal: `solicitarOtp()` no genera OTP, pero la UI igualmente lleva a `/portal/otp`; al intentar validar, el mensaje distinto confirma que el documento pertenece a una persona elegible.
 
-**Impacto:** incumple el criterio de envio por celular/email segun disponibilidad y genera un flujo funcionalmente bloqueado. Tambien crea OTP validos no entregados.
+**Impacto:** sigue violando la regla de no revelar existencia de CI/RUC en el portal publico. Un atacante puede iniciar el flujo con un documento y comparar la respuesta de validacion OTP.
 
-**Solucion esperada:** si no hay canal disponible, no generar OTP usable. Mantener mensaje externo generico, auditar el evento como sin canal y definir una salida operativa clara: pedir actualizacion de datos por administracion o canal configurado.
+**Solucion esperada:** para fallas de OTP que ocurren antes de tener una identidad validada, usar un mensaje externo uniforme. El motivo exacto (`sin-persona`, `sin-otp-vigente`, `sin-canal`, `codigo-incorrecto`, `max-intentos`) debe quedar en auditoria, no como señal distinguible para el usuario. Si se quiere un texto de UX, que sea el mismo para todos los casos, por ejemplo "No pudimos validar el codigo. Solicite uno nuevo o verifique los datos ingresados."
 
 ## Validaciones que si cumplen
 
@@ -66,8 +62,13 @@
 - Password y OTP se almacenan con bcrypt, no en texto plano.
 - Hay tablas separadas `persona_portal_credencial` y `portal_otp` con RLS por tenant.
 - `TenantContext` toma el tenant de `PortalSesion` cuando no hay login administrativo.
-- Las descargas de documentos del cliente verifican `visible_portal`, estado activo y pertenencia a persona/operacion.
+- `loginPassword()` ya no revela el caso de persona elegible sin credencial.
+- `solicitarOtp()` ya no genera un OTP usable/no entregado cuando no hay email ni telefono.
+- Se ejecuto build Maven correctamente.
 
 ## Verificacion
 
-No cierro el REQ. No se ejecuto build final porque las observaciones son de cumplimiento funcional/seguridad en revision estatica.
+```text
+mvn -q -pl sginmo-web -am clean package
+EXIT 0
+```

@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
 REQ: REQ-0078
-TS: 2026-07-13T11:38:15Z
+TS: 2026-07-13T13:46:50Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0078. Ultimo derivado REQ-0078: Ronda 2: anti-enumeracion en login sin credencial (mensaje generico), vista de propietario completa (activos/operaciones/liquidaciones/documentos por persona+tenant), OTP no generado sin canal de envio. Deploy VPS + smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0078. Ultimo derivado REQ-0078: Ronda 3: filtro estado=ACTIVO en activo_propietario (portal/descargas) y mensaje uniforme en validarOtp (anti-enumeracion). Deploy VPS + smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

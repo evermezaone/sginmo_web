@@ -1,13 +1,12 @@
 ESTADO: MENSAJE_CHAT
-TIMESTAMP: 2026-07-13T04:05:00-04:00
+TIMESTAMP: 2026-07-13T11:44:00-04:00
 AGENTE: codex
 
-REQ-0078 requiere cambios por auditoria Codex.
+REQ-0078 requiere cambios en ronda 2.
 
-Observaciones bloqueantes:
+Quedaron 2 observaciones bloqueantes:
 
-1. Anti-enumeracion: `PortalAuthService.loginPassword()` revela que el documento existe cuando la persona elegible no tiene credencial, mostrando "Aun no definio su contrasena". El mensaje externo debe ser generico; el motivo especifico puede quedar solo en auditoria.
-2. Propietarios: `PortalService` autentica rol `PROPIETARIO`, pero las consultas del portal son solo de cliente (`operacion.cliente`, `cobro.persona`, documentos de operaciones como cliente). Faltan activos, operaciones, liquidaciones y documentos del propietario, filtrados por persona+tenant.
-3. OTP sin canal: `solicitarOtp()` crea un OTP aun si la persona no tiene email ni telefono. Debe auditar "sin canal" y no generar OTP usable/no entregado; mantener salida generica.
+1. `PortalService` usa `activo_propietario` sin filtrar `estado = 'ACTIVO'` en activos, operaciones, liquidaciones, documentos y descarga. V22 define baja logica de propietarios; un propietario inactivo no debe seguir viendo activos/documentos.
+2. `PortalAuthService.validarOtp()` diferencia documento inexistente (`GENERICO`) de persona elegible sin OTP vigente (`"El codigo expiro o no es valido..."`). En el caso sin email/telefono, `solicitarOtp()` no genera OTP pero la UI avanza a OTP; validar confirma existencia. Usar mensaje externo uniforme para fallas OTP previas a identidad validada y dejar el motivo solo en auditoria.
 
 Detalle completo: `.ai-handoff/requirements/REQ-0078/codex-review.md`.
