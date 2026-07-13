@@ -167,13 +167,37 @@
 
                 <!-- Cobros de la planilla -->
                 <p:panel header="Cobros de la planilla">
-                    <div class="campo" style="max-width:22rem; margin-bottom:.5rem;">
-                        <label>Motivo de anulación (obligatorio para anular)</label>
-                        <p:selectOneMenu value="#{cajaBean.motivoAnulacion}" label="Motivo de anulación">
-                            <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
-                            <f:selectItems value="#{cajaBean.motivosAnulacion}" var="ma" itemLabel="#{ma.descripcion}" itemValue="#{ma.codigo}"/>
-                        </p:selectOneMenu>
-                    </div>
+                    <!-- REQ-0079: la anulación está escondida. Se habilita a propósito con este control
+                         y solo queda disponible para el último cobro del día. -->
+                    <ui:fragment rendered="#{sesionUsuario.puede('caja','INACTIVAR')}">
+                        <div style="margin-bottom:.6rem;">
+                            <p:commandButton value="Anular último cobro…" icon="pi pi-shield"
+                                             styleClass="ui-button-flat ui-button-secondary" style="font-size:.82rem;"
+                                             rendered="#{!cajaBean.modoAnulacion}"
+                                             actionListener="#{cajaBean.alternarModoAnulacion()}" update="frm"/>
+                            <h:panelGroup rendered="#{cajaBean.modoAnulacion}" layout="block"
+                                          style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:.6rem .7rem;">
+                                <div style="display:flex; align-items:center; gap:.5rem; margin-bottom:.4rem;">
+                                    <i class="pi pi-exclamation-triangle" style="color:#dc2626;"></i>
+                                    <strong style="color:#b91c1c; font-size:.85rem;">Modo anulación activo</strong>
+                                    <span style="flex:1;"></span>
+                                    <p:commandLink value="Cancelar" styleClass="ui-button-flat"
+                                                   actionListener="#{cajaBean.alternarModoAnulacion()}" update="frm"/>
+                                </div>
+                                <p style="color:#7f1d1d; font-size:.78rem; margin:0 0 .5rem;">
+                                    Solo se puede anular el <strong>último cobro</strong> de la caja y solo si es <strong>de hoy</strong>.
+                                    Elija el motivo y presione la X roja en esa fila.
+                                </p>
+                                <div class="campo" style="max-width:22rem; margin:0;">
+                                    <label>Motivo de anulación (obligatorio)</label>
+                                    <p:selectOneMenu value="#{cajaBean.motivoAnulacion}" label="Motivo de anulación">
+                                        <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{cajaBean.motivosAnulacion}" var="ma" itemLabel="#{ma.descripcion}" itemValue="#{ma.codigo}"/>
+                                    </p:selectOneMenu>
+                                </div>
+                            </h:panelGroup>
+                        </div>
+                    </ui:fragment>
                     <p:dataTable var="cb" value="#{cajaBean.cobros}" paginator="true" rows="10" emptyMessage="Aún no hay cobros">
                         <p:column headerText="#" style="width:4rem;"><h:outputText value="#{cb[0]}"/></p:column>
                         <p:column headerText="Cliente"><h:outputText value="#{cb[2]}"/></p:column>
@@ -184,10 +208,11 @@
                             <p:commandButton icon="pi pi-print" title="Recibo PDF" styleClass="ui-button-flat" ajax="false"
                                              rendered="#{sesionUsuario.puede('caja','EXPORTAR')}"
                                              actionListener="#{descargaBean.recibo(cb[0])}"/>
+                            <!-- REQ-0079: la X solo aparece en modo anulación y solo para el último cobro del día. -->
                             <p:commandButton icon="pi pi-times" title="Anular" styleClass="ui-button-flat ui-button-danger"
-                                             rendered="#{cb[5] eq 'ACTIVO' and sesionUsuario.puede('caja','INACTIVAR')}"
+                                             rendered="#{cajaBean.modoAnulacion and cb[5] eq 'ACTIVO' and cb[0] eq cajaBean.cobroAnulableId and sesionUsuario.puede('caja','INACTIVAR')}"
                                              actionListener="#{cajaBean.anular(cb[0])}" update="frm">
-                                <p:confirm header="Confirmar" message="¿Anular este cobro? Se repone el saldo y las cuotas." icon="pi pi-exclamation-triangle"/>
+                                <p:confirm header="Confirmar anulación" message="¿Anular este cobro? Se repone el saldo y las cuotas. Esta acción queda auditada." icon="pi pi-exclamation-triangle"/>
                             </p:commandButton>
                         </p:column>
                     </p:dataTable>

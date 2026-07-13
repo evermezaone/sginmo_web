@@ -1,0 +1,2 @@
+{"ts":"2026-07-13T11:30:00Z","actor":"claude","evento":"implementado","nota":"REQ-0079 proteccion de anulacion de cobro: modo anulacion escondido en caja.xhtml (boton aparte, solo con permiso caja/INACTIVAR); la X solo aparece para el ultimo cobro ACTIVO y solo si es de hoy; CajaService.anularCobro re-valida en backend (ACTIVO + fecha=hoy + ultimo cobro ACTIVO de la planilla) ademas del motivo obligatorio y la auditoria ANULAR"}
+{"ts":"2026-07-13T11:30:30Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; smoke 36/36 (caja 200)"}

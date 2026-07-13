@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0078
-TS: 2026-07-13T13:46:50Z
+REQ: REQ-0079, REQ-0080
+TS: 2026-07-13T14:32:06Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0078. Ultimo derivado REQ-0078: Ronda 3: filtro estado=ACTIVO en activo_propietario (portal/descargas) y mensaje uniforme en validarOtp (anti-enumeracion). Deploy VPS + smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0079, REQ-0080. Ultimo derivado REQ-0080: Fix comprobantes 500: conversion de fecha tolerante (LocalDate/sql.Date) en ComprobanteService. Deploy VPS + smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

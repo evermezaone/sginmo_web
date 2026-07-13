@@ -1,0 +1,2 @@
+{"ts":"2026-07-13T11:32:00Z","actor":"claude","evento":"implementado","nota":"REQ-0080 fix bug comprobantes: ComprobanteService.aLocalDate() tolerante (LocalDate/sql.Date/Timestamp) en cobrosRecientes (l.66) y reciboCobro (l.95); Hibernate 7 devuelve columna date como LocalDate y el cast directo lanzaba ClassCastException al haber cobros"}
+{"ts":"2026-07-13T11:32:30Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; smoke 36/36 (comprobantes 200, antes 500)"}

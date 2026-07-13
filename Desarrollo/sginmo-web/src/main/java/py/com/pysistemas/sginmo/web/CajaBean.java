@@ -69,6 +69,9 @@ public class CajaBean implements Serializable {
     // Anulacion de cobro con motivo obligatorio (obs 227, fiel a P_ANULARCOBRO)
     private String motivoAnulacion;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> motivosAnulacion = java.util.List.of();
+    // REQ-0079: la anulacion queda escondida detras de un modo que el usuario habilita a proposito;
+    // ademas solo se ofrece para el ultimo cobro ACTIVO y solo si es de hoy (el backend lo re-valida).
+    private boolean modoAnulacion;
 
     @PostConstruct
     public void iniciar() {
@@ -178,12 +181,33 @@ public class CajaBean implements Serializable {
             cajaService.anularCobro(cobroId, sesion.codigoUsuario(), motivoAnulacion);
             aviso(FacesMessage.SEVERITY_INFO, "Cobro anulado", "Se repuso el saldo y las cuotas");
             motivoAnulacion = null;
+            modoAnulacion = false;   // REQ-0079: al anular se vuelve a esconder la opcion
             planilla = cajaService.planillaAbierta(contexto.getEmpresa().getId(), contexto.sucursal().getId());
             cobros = cajaService.cobrosDePlanilla(planilla.getId());
             if (clienteSel != null) documentos = cajaService.documentosPendientesDe(clienteSel);
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo anular", e.getMessage());
         }
+    }
+
+    /** REQ-0079: habilita/deshabilita el modo anulacion (control escondido). */
+    public void alternarModoAnulacion() { modoAnulacion = !modoAnulacion; }
+
+    /**
+     * REQ-0079: id del unico cobro anulable = el ultimo cobro ACTIVO de la planilla, y solo si es de
+     * HOY. Como {@code cobros} viene ordenado por id DESC, el primer ACTIVO es el mas reciente. Null si
+     * no hay ninguno anulable (el backend igual re-valida esta regla).
+     */
+    public Long getCobroAnulableId() {
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        for (Object[] cb : cobros) {
+            if ("ACTIVO".equals(cb[5])) {
+                java.time.LocalDate f = cb[1] instanceof java.sql.Date d ? d.toLocalDate()
+                        : (cb[1] instanceof java.time.LocalDate ld ? ld : null);
+                return (f != null && f.isEqual(hoy)) ? ((Number) cb[0]).longValue() : null;
+            }
+        }
+        return null;
     }
 
     private Long monedaLocal() {
@@ -230,6 +254,7 @@ public class CajaBean implements Serializable {
     public List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> getMotivosAnulacion() { return motivosAnulacion; }
     public String getMotivoAnulacion() { return motivoAnulacion; }
     public void setMotivoAnulacion(String v) { this.motivoAnulacion = v; }
+    public boolean isModoAnulacion() { return modoAnulacion; }
     public List<Persona> getCobradores() { return cobradores; }
     public List<Object[]> getNotasCredito() { return notasCredito; }
     public Long getDatoCobrador() { return datoCobrador; }

@@ -168,6 +168,33 @@ public class CajaService {
         if (motivoCodigo == null || motivoCodigo.isBlank()) {
             throw new NegocioException("Elija el motivo de la anulación");
         }
+        // REQ-0079: la anulación es una acción sensible y acotada. Se valida en el BACKEND (no basta
+        // con ocultar el botón): solo se puede anular el ÚLTIMO cobro ACTIVO de su planilla y solo si
+        // fue registrado HOY. Así no se anulan cobros antiguos ni intermedios por error o saltando la UI.
+        Object[] info;
+        try {
+            info = (Object[]) em.createNativeQuery(
+                "SELECT c.estado, c.fecha, c.planilla FROM cobro c WHERE c.cobro = :cob")
+                .setParameter("cob", cobroId).getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            throw new NegocioException("El cobro no existe");
+        }
+        String estado = (String) info[0];
+        java.time.LocalDate fecha = info[1] instanceof java.sql.Date d ? d.toLocalDate()
+                : (info[1] instanceof java.time.LocalDate ld ? ld : null);
+        Long planilla = ((Number) info[2]).longValue();
+        if (!"ACTIVO".equals(estado)) {
+            throw new NegocioException("El cobro ya no está activo");
+        }
+        if (fecha == null || !fecha.isEqual(java.time.LocalDate.now())) {
+            throw new NegocioException("Solo se puede anular un cobro registrado hoy");
+        }
+        long posteriores = ((Number) em.createNativeQuery(
+            "SELECT COUNT(*) FROM cobro WHERE planilla = :pla AND estado = 'ACTIVO' AND cobro > :cob")
+            .setParameter("pla", planilla).setParameter("cob", cobroId).getSingleResult()).longValue();
+        if (posteriores > 0) {
+            throw new NegocioException("Solo se puede anular el último cobro registrado de la caja");
+        }
         try {
             em.createNativeQuery("SELECT f_anular_cobro(:cob, :usr, :mot)")
                 .setParameter("cob", cobroId).setParameter("usr", usuario)

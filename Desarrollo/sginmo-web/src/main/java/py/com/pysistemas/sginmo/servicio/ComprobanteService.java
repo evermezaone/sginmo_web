@@ -63,7 +63,7 @@ public class ComprobanteService {
         for (Object[] f : filas) {
             FilaCobro fc = new FilaCobro();
             fc.cobro = ((Number) f[0]).longValue();
-            fc.fecha = ((java.sql.Date) f[1]).toLocalDate();
+            fc.fecha = aLocalDate(f[1]);   // REQ-0080: la columna date puede llegar como LocalDate (Hibernate 7)
             fc.monto = f[2] == null ? BigDecimal.ZERO : new BigDecimal(f[2].toString());
             fc.estado = (String) f[3];
             fc.cliente = (String) f[4];
@@ -92,7 +92,8 @@ public class ComprobanteService {
         String empresa = empresaNombre(emp);
         String usuario = sesion.codigoUsuario();
         String nro = String.valueOf(((Number) c[0]).longValue());
-        String fecha = c[1] == null ? "" : ((java.sql.Date) c[1]).toLocalDate().toString();
+        java.time.LocalDate fc = aLocalDate(c[1]);   // REQ-0080
+        String fecha = fc == null ? "" : fc.toString();
         String estado = (String) c[6];
 
         var r = pdf.iniciar(empresa, "RECIBO DE COBRO", usuario, "Comprobante Nro " + nro + " · " + fecha
@@ -134,6 +135,15 @@ public class ComprobanteService {
     }
 
     private static String str(Object o) { return o == null ? "" : o.toString(); }
+
+    /** REQ-0080: una columna DATE puede llegar como java.time.LocalDate (Hibernate 7) o java.sql.Date. */
+    private static java.time.LocalDate aLocalDate(Object o) {
+        if (o == null) return null;
+        if (o instanceof java.time.LocalDate ld) return ld;
+        if (o instanceof java.sql.Date d) return d.toLocalDate();
+        if (o instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        return java.time.LocalDate.parse(o.toString());
+    }
 
     public static class FilaCobro {
         public Long cobro;
