@@ -59,3 +59,30 @@ Evidencia:
 ## Resultado
 
 No apruebo REQ-0070. La base visual y Chart.js compilan, pero faltan criterios funcionales centrales: filtros coherentes en graficos, evidencia por KPI y ocupacion/vacancia enlazada.
+
+---
+
+## Ronda 2 - 2026-07-12
+
+**Resultado:** REQUIERE_CAMBIOS
+
+### Observaciones cerradas
+
+- Obs 1 cerrada: `DashboardGerencialBean.construirGraficos()` ahora llama `serieMensual(..., hasta)` y `DashboardMetricasService.serieMensual()` arma la ventana de 12 meses terminando en el mes del filtro.
+- Obs 2 cerrada: los comparativos navegables exponen `detalleClave` y la vista agrega `h:link` a `dashboard-detalle` para KPIs con evidencia.
+- Obs 3 cerrada: la vista agrega seccion `Ocupacion y vacancia` con enlace al modulo `ocupacion` y a la evidencia `vacancia`.
+
+### Obs 4 - El dashboard calcula ocupacion/vacancia sin exigir operacion vigente
+
+**Severidad:** alta  
+**Archivo:** `Desarrollo/sginmo-web/src/main/java/py/com/pysistemas/sginmo/servicio/DashboardMetricasService.java`
+
+**Problema:** el dashboard duplica la logica de ocupacion/vacancia en `DashboardMetricasService.ocupados()`, contando operaciones `ALQUILER` por fechas (`fecha_inicio_contrato` / `fecha_finalizacion`) pero sin exigir `o.estado = 'VIGENTE'`.
+
+**Impacto:** el tablero gerencial puede mostrar ocupacion, vacancia y brechas con operaciones finalizadas o anuladas si sus fechas quedan inconsistentes. Es el mismo defecto detectado en `REQ-0072`, pero aqui afecta el resumen ejecutivo y la seccion del dashboard.
+
+**Solucion esperada:** alinear el calculo con la regla de operacion vigente: agregar `o.estado='VIGENTE'` o reutilizar un unico servicio/regla compartida con `OcupacionService` para evitar divergencias entre pantalla de ocupacion y dashboard.
+
+## Decision ronda 2
+
+No apruebo todavia. Las tres observaciones originales fueron corregidas, pero la ocupacion/vacancia del dashboard queda funcionalmente inconsistente con el criterio de activo ocupado por alquiler vigente.

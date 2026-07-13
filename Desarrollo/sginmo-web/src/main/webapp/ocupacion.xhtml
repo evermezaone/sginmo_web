@@ -54,7 +54,13 @@
                 <p:tag value="!" severity="danger" rendered="#{ocupacionBean.enBrecha(ix)}"
                        title="Dentro de la brecha hacia el objetivo"/>
             </p:column>
-            <p:column headerText="Propiedad"><h:outputText value="#{v.nombre}"/></p:column>
+            <p:column headerText="Propiedad">
+                <h:link outcome="/activos" value="#{v.nombre}" title="Ver la propiedad"
+                        rendered="#{sesionUsuario.puede('activos','VER')}">
+                    <f:param name="filtro" value="#{v.nombre}"/>
+                </h:link>
+                <h:outputText value="#{v.nombre}" rendered="#{not sesionUsuario.puede('activos','VER')}"/>
+            </p:column>
             <p:column headerText="Tipo" style="width:12rem;"><h:outputText value="#{v.tipo}"/></p:column>
             <p:column headerText="Direccion"><h:outputText value="#{v.direccion}"/></p:column>
             <p:column headerText="Precio alquiler" style="width:11rem; text-align:right;">

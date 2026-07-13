@@ -26,9 +26,13 @@ public class OcupacionService {
 
     /** Regla de "alquilable" (documentada). Un activo vendido no cuenta; requiere precio de alquiler. */
     private static final String ALQUILABLE = "a.precio_alquiler > 0 AND a.estado <> 'VENDIDA'";
-    /** Subconsulta de ocupados a una fecha (operacion de alquiler que cubre esa fecha). */
+    /**
+     * Subconsulta de ocupados a una fecha: operacion de alquiler VIGENTE que cubre esa fecha (obs 279:
+     * se exige estado='VIGENTE' para que operaciones FINALIZADAS con fechas inconsistentes no cuenten
+     * como ocupadas y no distorsionen ocupacion/vacancia/brecha).
+     */
     private static final String OCUPADOS_SUB =
-        "SELECT DISTINCT o.activo FROM operacion o WHERE o.tipo_operacion='ALQUILER'"
+        "SELECT DISTINCT o.activo FROM operacion o WHERE o.tipo_operacion='ALQUILER' AND o.estado='VIGENTE'"
       + " AND o.fecha_inicio_contrato <= :f AND (o.fecha_finalizacion IS NULL OR o.fecha_finalizacion > :f)";
 
     @PersistenceContext(unitName = "sginmoPU")

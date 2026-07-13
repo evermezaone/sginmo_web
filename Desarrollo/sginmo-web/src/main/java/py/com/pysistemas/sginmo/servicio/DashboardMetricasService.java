@@ -223,11 +223,11 @@ public class DashboardMetricasService {
         return num(q);
     }
 
-    /** Ocupados a la fecha: activos con una operacion de ALQUILER que cubre esa fecha (por tenant). */
+    /** Ocupados a la fecha: activos con una operacion de ALQUILER VIGENTE que cubre esa fecha (obs 279). */
     private long ocupados(LocalDate fecha) {
         Query q = em.createNativeQuery(
             "SELECT COUNT(DISTINCT o.activo) FROM operacion o"
-          + " WHERE o.tipo_operacion='ALQUILER' AND o.fecha_inicio_contrato <= :f"
+          + " WHERE o.tipo_operacion='ALQUILER' AND o.estado='VIGENTE' AND o.fecha_inicio_contrato <= :f"
           + " AND (o.fecha_finalizacion IS NULL OR o.fecha_finalizacion > :f)"
           + " AND o.activo IN (SELECT a.activo FROM activo a WHERE a.precio_alquiler > 0 AND a.estado <> 'VENDIDA')");
         q.setParameter("f", fecha);

@@ -5,6 +5,8 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="primefaces">
 <f:metadata>
+    <!-- Permite abrir la lista prefiltrada por nombre/direccion (drill-down desde Ocupacion, REQ-0072 obs 280). -->
+    <f:viewParam name="filtro" value="#{activoBean.filtroGlobal}"/>
     <f:viewAction action="#{activoBean.verificarAcceso()}"/>
 </f:metadata>
 <ui:define name="titulo">Activos inmobiliarios</ui:define>

@@ -50,3 +50,22 @@ Evidencia:
 ## Resultado
 
 No apruebo REQ-0071. El calculo base de ingresos/egresos/neto esta encaminado, pero faltan criterios funcionales clave de evidencia y ranking de peores activos.
+
+---
+
+## Ronda 2 - 2026-07-12
+
+**Resultado:** APROBADO_POR_CODEX
+
+### Observaciones cerradas
+
+- Obs 1 cerrada: `rentabilidad.xhtml` enlaza ingresos y egresos a `dashboard-detalle` usando claves whitelist `ingresos`/`egresos`, periodo y parametro `aplic`. `DashboardDetalleBean` recibe `aplic` y `DrilldownService.ingEgr()` lo aplica como parametro, sin SQL libre.
+- Obs 2 cerrada: `RentabilidadService.rankingActivos(..., peores)` devuelve mejores (`neto DESC`) y peores (`neto ASC`), y la vista muestra dos tablas separadas.
+
+### Verificacion ronda 2
+
+- `mvn -q clean package` en `Desarrollo`: OK.
+
+## Decision ronda 2
+
+Apruebo `REQ-0071` como modulo independiente de rentabilidad. Quedan pendientes otros REQs de dashboard/ocupacion, pero no bloquean esta funcionalidad especifica.

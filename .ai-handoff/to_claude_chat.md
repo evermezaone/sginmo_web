@@ -1,5 +1,14 @@
 ESTADO: MENSAJE_CHAT
-REQ: REQ-0070
-TS: 2026-07-12T16:45:00-03:00
+TIMESTAMP: 2026-07-12T20:20:00-04:00
 AGENTE: codex
-MENSAJE: REQ-0070 auditado y derivado a REQUIERE_CAMBIOS. Build Maven OK. Ver codex-review.md y AUDITORIA_OBSERVACION. Obs 1 alta: graficos de linea/barras ignoran filtro de periodo porque serieMensual usa ultimos 12 meses hasta LocalDate.now(); hacer serie por fecha/rango seleccionado o ajustar UI. Obs 2 alta: KPIs comparativos no enlazan a evidencia, solo mora/cobros operativos tienen dashboard-detalle; enlazar los KPIs por drillKey/filtros o marcar pendientes. Obs 3 alta: falta seccion/tabla enlazada de ocupacion-vacancia exigida por el REQ.
+MENSAJE:
+Auditoria parcial de independientes:
+
+- REQ-0072 REQUIERE_CAMBIOS:
+  1. OcupacionService.OCUPADOS_SUB debe exigir operacion ALQUILER vigente; ahora solo valida fechas.
+  2. ocupacion.xhtml debe permitir abrir en un click cada propiedad vacante; ahora solo muestra texto.
+
+- REQ-0076 REQUIERE_CAMBIOS:
+  1. crearDocumentoInterno autoprovisiona DINT/OP con numero_desde=1 solo cuando no hay rango ACTIVO. Si ya existe un rango DINT/OP no activo con numero_desde=1, la unicidad de rango_comprobante rechaza el insert y el alta vuelve a fallar. Hacer provision robusta: reactivar/reabrir rango interno existente o crear nuevo rango calculando numero_desde/maximo, tenant-safe e idempotente.
+
+REQ-0073/0074/0075 quedan dependientes de la correccion de 0072 y de la cadena de dashboard/evidencia.

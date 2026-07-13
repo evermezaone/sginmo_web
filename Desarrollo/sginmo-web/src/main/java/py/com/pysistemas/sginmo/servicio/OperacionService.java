@@ -244,16 +244,29 @@ public class OperacionService {
     /** Documento interno (DINT) ENTRADA: numerado por f_siguiente_numero, detalle unico. */
     private Long crearDocumentoInterno(Operacion op, BigDecimal monto, String concepto) {
         String usr = usuarioAuditoria();
-        // REQ-0076: el documento interno (DINT/OP) respalda la cuenta corriente del cronograma; es de
-        // uso INTERNO, no fiscal, por lo que no requiere un timbrado real. Si la empresa aun no tiene un
-        // rango interno para DINT/OP, se autoprovisiona uno amplio (asi el alta de operacion no falla por
-        // "No hay timbrado ACTIVO"). Idempotente y aislado por tenant (RLS).
+        // REQ-0076: el documento interno (DINT/OP) respalda la cuenta corriente del cronograma; es de uso
+        // INTERNO, no fiscal, por lo que no requiere un timbrado real. Se garantiza un rango ACTIVO usable
+        // para DINT/OP del tenant, de forma idempotente, tenant-safe (RLS) y SIN violar la unicidad
+        // (tenant, tipo, serie, numero_desde) -obs 281-:
+        //  1) si hay un rango inactivo AUN UTILIZABLE, se reactiva (no se crea uno nuevo);
+        //  2) si no hay ninguno activo utilizable, se inserta uno nuevo con numero_desde MAS ALLA del
+        //     mayor numero_hasta existente (asi nunca colisiona con un rango previo -inactivo o agotado-).
+        em.createNativeQuery(
+            "UPDATE rango_comprobante SET estado='ACTIVO', usuario_modificacion='sistema', fecha_modificacion=now()"
+          + " WHERE rango_comprobante = (SELECT rc.rango_comprobante FROM rango_comprobante rc"
+          + "     WHERE rc.tenant=:emp AND rc.tipo='DINT' AND rc.serie='OP' AND rc.estado<>'ACTIVO'"
+          + "       AND rc.numero_actual <= rc.numero_hasta ORDER BY rc.numero_desde LIMIT 1)"
+          + " AND NOT EXISTS (SELECT 1 FROM rango_comprobante a WHERE a.tenant=:emp AND a.tipo='DINT'"
+          + "     AND a.serie='OP' AND a.estado='ACTIVO' AND a.numero_actual <= a.numero_hasta)")
+            .setParameter("emp", op.getTenant()).executeUpdate();
         em.createNativeQuery(
             "INSERT INTO rango_comprobante (tenant, tipo, serie, numero_desde, numero_actual, numero_hasta,"
           + " estado, usuario_creacion, fecha_creacion)"
-          + " SELECT :emp, 'DINT', 'OP', 1, 1, 999999999, 'ACTIVO', 'sistema', now()"
-          + " WHERE NOT EXISTS (SELECT 1 FROM rango_comprobante rc WHERE rc.tenant = :emp"
-          + "   AND rc.tipo = 'DINT' AND rc.serie = 'OP' AND rc.estado = 'ACTIVO')")
+          + " SELECT :emp, 'DINT', 'OP', b.n, b.n, b.n + 1000000000, 'ACTIVO', 'sistema', now()"
+          + " FROM (SELECT COALESCE(MAX(rc.numero_hasta),0) + 1 AS n FROM rango_comprobante rc"
+          + "         WHERE rc.tenant=:emp AND rc.tipo='DINT' AND rc.serie='OP') b"
+          + " WHERE NOT EXISTS (SELECT 1 FROM rango_comprobante a WHERE a.tenant=:emp AND a.tipo='DINT'"
+          + "     AND a.serie='OP' AND a.estado='ACTIVO' AND a.numero_actual <= a.numero_hasta)")
             .setParameter("emp", op.getTenant()).executeUpdate();
         Object num = em.createNativeQuery("SELECT f_siguiente_numero(:emp, 'DINT', 'OP')")
             .setParameter("emp", op.getTenant()).getSingleResult();
