@@ -74,6 +74,19 @@ public class Activo extends Auditable implements Serializable {
     @Column(name = "observacion", length = 250)
     private String observacion;
 
+    // REQ-0088: operacion/tipo de contrato, medidas, anio y cantidad de unidades.
+    @Column(name = "tipo_operacion", length = 10)
+    private String tipoOperacion;   // ALQUILER | VENTA
+
+    @Column(name = "medidas", length = 120)
+    private String medidas;
+
+    @Column(name = "anio")
+    private Integer anio;
+
+    @Column(name = "cantidad_unidades")
+    private Integer cantidadUnidades;
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Long getPadre() { return padre; }
@@ -108,6 +121,14 @@ public class Activo extends Auditable implements Serializable {
     public void setNumeroManzana(String numeroManzana) { this.numeroManzana = numeroManzana; }
     public String getObservacion() { return observacion; }
     public void setObservacion(String observacion) { this.observacion = observacion; }
+    public String getTipoOperacion() { return tipoOperacion; }
+    public void setTipoOperacion(String tipoOperacion) { this.tipoOperacion = tipoOperacion; }
+    public String getMedidas() { return medidas; }
+    public void setMedidas(String medidas) { this.medidas = medidas; }
+    public Integer getAnio() { return anio; }
+    public void setAnio(Integer anio) { this.anio = anio; }
+    public Integer getCantidadUnidades() { return cantidadUnidades; }
+    public void setCantidadUnidades(Integer cantidadUnidades) { this.cantidadUnidades = cantidadUnidades; }
 
     @Override
     public boolean equals(Object o) {

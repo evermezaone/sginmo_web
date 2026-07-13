@@ -160,12 +160,40 @@
                             </div>
                         </div>
                         <div class="campo">
-                            <label>Contenedor (edificio/loteamiento — opcional)</label>
-                            <p:autoComplete value="#{activoBean.seleccionado.padre}" label="Contenedor"
+                            <label>Características</label>
+                            <p:autoComplete value="#{activoBean.seleccionado.padre}" label="Características"
                                             completeMethod="#{activoBean.completarContenedor}" var="c"
                                             itemLabel="#{c.nombre}" itemValue="#{c.id}"
                                             forceSelection="true" minQueryLength="2" queryDelay="400"
                                             disabled="#{activoBean.soloLectura}" style="width:100%;" inputStyle="width:100%;"/>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Operación / Tipo de contrato</label>
+                                <p:selectOneMenu value="#{activoBean.seleccionado.tipoOperacion}" label="Operación"
+                                                 disabled="#{activoBean.soloLectura}">
+                                    <f:selectItem itemLabel="Seleccione..." itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItem itemLabel="Alquiler" itemValue="ALQUILER"/>
+                                    <f:selectItem itemLabel="Venta" itemValue="VENTA"/>
+                                </p:selectOneMenu>
+                            </div>
+                            <div class="campo">
+                                <label>Medidas</label>
+                                <p:inputText value="#{activoBean.seleccionado.medidas}" label="Medidas"
+                                             disabled="#{activoBean.soloLectura}" maxlength="120" style="width:100%;"/>
+                            </div>
+                        </div>
+                        <div class="fila-2">
+                            <div class="campo">
+                                <label>Año</label>
+                                <p:inputNumber value="#{activoBean.seleccionado.anio}" label="Año"
+                                               disabled="#{activoBean.soloLectura}" decimalPlaces="0" thousandSeparator=""/>
+                            </div>
+                            <div class="campo">
+                                <label>Cantidad de unidades</label>
+                                <p:inputNumber value="#{activoBean.seleccionado.cantidadUnidades}" label="Cantidad de unidades"
+                                               disabled="#{activoBean.soloLectura}" decimalPlaces="0" minValue="0" thousandSeparator=""/>
+                            </div>
                         </div>
                         <div class="campo">
                             <label>Dirección</label>

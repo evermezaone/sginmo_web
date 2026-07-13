@@ -1,0 +1,2 @@
+{"ts":"2026-07-13T18:13:00Z","actor":"claude","evento":"implementado","nota":"REQ-0088 activos: V54 columnas tipo_operacion(CHECK ALQUILER/VENTA)/medidas/anio/cantidad_unidades; entidad Activo + getters/setters; activos.xhtml tab Datos con combo Operacion, Medidas, Anio, Cantidad de unidades y rename del contenedor a Caracteristicas"}
+{"ts":"2026-07-13T18:14:00Z","actor":"claude","evento":"desplegado","nota":"Build OK; deploy VPS; Flyway V54; smoke 36/36 (activos 200)"}

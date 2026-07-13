@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0086, REQ-0089
-TS: 2026-07-13T21:09:00Z
+REQ: REQ-0086, REQ-0088, REQ-0089
+TS: 2026-07-13T21:15:57Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0086, REQ-0089. Ultimo derivado REQ-0089: Fix roles no persisten al editar persona: reconciliarRoles (insert + baja logica por tenant) + agregar/quitar diferidos que reconcilian al guardar. Deploy VPS + smoke 36/36 (personas 200).
+MENSAJE: [SGI] Cola de auditoria: REQ-0086, REQ-0088, REQ-0089. Ultimo derivado REQ-0088: Activos: campos Operacion(Alquiler/Venta), Medidas, Anio, Cantidad de unidades (V54) + rename contenedor a Caracteristicas. Deploy VPS + Flyway V54 + smoke 36/36.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
