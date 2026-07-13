@@ -59,6 +59,22 @@
                     · Nro. #{transferenciaBandejaBean.seleccionada.numeroTransaccion}
                 </p>
 
+                <!-- REQ-0084: datos extraidos por OCR del comprobante (insumo para la revision) -->
+                <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:.5rem .7rem; margin-bottom:.6rem; font-size:.83rem;">
+                    <strong style="color:#1d4ed8;">Lectura del comprobante (OCR)</strong>
+                    <span style="color:#64748b;"> — motor #{transferenciaBandejaBean.seleccionada.ocrMotor}, confianza #{transferenciaBandejaBean.seleccionada.confianzaOcr}%</span>
+                    <h:panelGroup rendered="#{transferenciaBandejaBean.seleccionada.tieneOcr}" layout="block" style="margin-top:.3rem;">
+                        <div>Importe leído: <strong><h:outputText value="#{transferenciaBandejaBean.seleccionada.ocrImporte}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></strong>
+                            (declarado: <h:outputText value="#{transferenciaBandejaBean.seleccionada.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>)</div>
+                        <div>Fecha leída: <h:outputText value="#{transferenciaBandejaBean.seleccionada.ocrFecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+                            · Nro. leído: #{transferenciaBandejaBean.seleccionada.ocrNumero}
+                            · Banco: #{transferenciaBandejaBean.seleccionada.ocrBanco}</div>
+                    </h:panelGroup>
+                    <p style="color:#9ca3af; margin:.2rem 0 0;" rendered="#{not transferenciaBandejaBean.seleccionada.tieneOcr}">
+                        Sin lectura automática (imagen sin OCR o comprobante no legible). Revise el archivo adjunto.
+                    </p>
+                </div>
+
                 <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:.6rem .7rem; margin-bottom:.6rem;">
                     <strong style="color:#166534; font-size:.85rem;">Aplicar el pago</strong>
                     <div class="campo" style="margin:.4rem 0 0;">

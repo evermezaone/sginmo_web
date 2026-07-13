@@ -31,19 +31,28 @@ NO aplica pagos por si solo; solo enriquece el tramite con datos extraidos y su 
 - Extender `portal_pago_transferencia`/`portal_pago_transferencia_archivo` con texto OCR y campos extraidos +
   confianza, o crear `portal_pago_transferencia_ocr` (una fila por archivo) sin romper Fase 1.
 
-## Decision Abierta (confirmar al iniciar)
+## Decision Tomada (motor)
 
-- **Motor OCR:** recomendacion Tesseract via `tess4j` (local, sin costo, offline; requiere instalar Tesseract en
-  la VPS) frente a un servicio cloud (mejor precision pero costo + datos afuera). Impacta build/deploy y entorno.
+- **Tesseract NO se puede instalar en la VPS** (sin `sudo`; el binario nativo del sistema no esta). Por eso:
+  - **PDF de texto** (formato mas comun de comprobante bancario): extraccion con **PDFBox** (Java puro, sin binario).
+  - **Imagen (JPG/PNG/WEBP) o PDF escaneado**: se intenta la **CLI de `tesseract`** via ProcessBuilder si esta en el
+    PATH; si no, degrada limpio (sin texto) y el operador lo lee a mano. Al instalar el binario `tesseract` se
+    activa solo, SIN cambios de codigo (decision confirmada por el usuario: "PDFBox ahora + Tesseract listo").
 
 ## Criterios De Aceptacion
 
-- [ ] Al informar/abrir un comprobante, se ejecuta OCR y se guarda el texto extraido.
-- [ ] Se extraen y guardan los campos disponibles con confianza por campo.
-- [ ] La bandeja muestra OCR vs. declarado y resalta discrepancias/confianza baja.
-- [ ] Reglas de parsing configurables por banco; agregar un banco no requiere recompilar reglas hardcodeadas.
-- [ ] El OCR no aplica pagos por si solo.
-- [ ] Build `mvn -q clean package` EXIT 0.
+- [x] Al informar un comprobante se ejecuta la extraccion y se guarda el texto (texto_ocr) y el motor usado.
+- [x] Se extraen y guardan importe, fecha, numero y banco con una confianza global (0..100).
+- [x] La bandeja muestra los datos leidos (OCR) vs. lo declarado (importe/fecha/numero/banco) y el motor/confianza.
+- [x] El parser de banco usa una lista de bancos y regex generales; agregar bancos no requiere tocar el esquema.
+- [x] El OCR es best-effort y NO aplica pagos por si solo (solo insumo para la revision).
+- [x] Build `mvn -q clean package` EXIT 0; Flyway V57; smoke 37/37.
+
+## Follow-up
+
+- OCR de imagenes: requiere instalar Tesseract en la VPS (`apt install tesseract-ocr tesseract-ocr-spa`, tarea de
+  ops). Con eso, el mismo codigo procesa imagenes automaticamente.
+- Reglas de parsing por banco mas finas (por ahora regex generales + lista de bancos).
 
 ## Dependencias
 

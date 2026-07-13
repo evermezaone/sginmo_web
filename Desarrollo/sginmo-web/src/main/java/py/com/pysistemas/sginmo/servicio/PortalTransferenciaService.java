@@ -43,6 +43,8 @@ public class PortalTransferenciaService {
     private CatalogoService catalogoService;
     @Inject
     private ParametroConfig parametros;
+    @Inject
+    private ComprobanteOcrService ocr;   // REQ-0084
 
     public static final String PANTALLA = "transferencias";
 
@@ -91,6 +93,20 @@ public class PortalTransferenciaService {
             .getSingleResult();
         Long nuevo = ((Number) id).longValue();
         auditar(nuevo, AuditoriaFuncionalService.CREAR, "transferencia informada por el socio");
+        // REQ-0084: OCR/extraccion best-effort (no bloquea el flujo si falla o no hay motor).
+        try {
+            ComprobanteOcrService.Resultado o = ocr.extraer(archivo, mime);
+            em.createNativeQuery(
+                "UPDATE portal_pago_transferencia SET texto_ocr = :tx, ocr_importe = :imp, ocr_fecha = :fec,"
+              + " ocr_numero = :num, ocr_banco = :ban, confianza_ocr = :cf, ocr_procesado = true, ocr_motor = :mot"
+              + " WHERE portal_pago_transferencia = :id")
+                .setParameter("tx", o.texto == null ? null : (o.texto.length() > 20000 ? o.texto.substring(0, 20000) : o.texto))
+                .setParameter("imp", o.importe)
+                .setParameter("fec", o.fecha == null ? null : java.sql.Date.valueOf(o.fecha))
+                .setParameter("num", recorta(o.numero, 60)).setParameter("ban", recorta(o.banco, 80))
+                .setParameter("cf", o.confianza).setParameter("mot", o.motor).setParameter("id", nuevo)
+                .executeUpdate();
+        } catch (RuntimeException ignore) { /* el OCR es un insumo, no bloquea informar */ }
         return nuevo;
     }
 
@@ -116,7 +132,8 @@ public class PortalTransferenciaService {
         String cond = (estado != null && !estado.isBlank()) ? " AND estado = :e" : "";
         var q = em.createNativeQuery(
             "SELECT t.portal_pago_transferencia, t.fecha, t.importe, t.estado, t.numero_transaccion, t.motivo_revision,"
-          + " t.cobro, p.nombre, t.banco_origen, t.persona, t.documento, t.moneda, t.cuenta_origen"
+          + " t.cobro, p.nombre, t.banco_origen, t.persona, t.documento, t.moneda, t.cuenta_origen,"
+          + " t.texto_ocr, t.ocr_importe, t.ocr_fecha, t.ocr_numero, t.ocr_banco, t.confianza_ocr, t.ocr_motor"
           + " FROM portal_pago_transferencia t LEFT JOIN persona p ON p.persona = t.persona"
           + " WHERE 1=1" + cond + " ORDER BY CASE t.estado WHEN 'RECIBIDO' THEN 1 WHEN 'EN_REVISION' THEN 2"
           + " WHEN 'OBSERVADO' THEN 3 ELSE 4 END, t.fecha DESC");
@@ -131,6 +148,13 @@ public class PortalTransferenciaService {
             x.documento = f[10] == null ? null : ((Number) f[10]).longValue();
             x.moneda = f[11] == null ? null : ((Number) f[11]).longValue();
             x.cuentaOrigen = (String) f[12];
+            x.textoOcr = (String) f[13];
+            x.ocrImporte = (BigDecimal) f[14];
+            x.ocrFecha = f[15] instanceof java.sql.Date d ? d.toLocalDate() : null;
+            x.ocrNumero = (String) f[16];
+            x.ocrBanco = (String) f[17];
+            x.confianzaOcr = (BigDecimal) f[18];
+            x.ocrMotor = (String) f[19];
             out.add(x);
         }
         return out;
@@ -284,6 +308,18 @@ public class PortalTransferenciaService {
         public Long id, cobro, persona, documento, moneda;
         public LocalDate fecha; public BigDecimal importe;
         public String estado, numeroTransaccion, motivoRevision, cliente, bancoOrigen, cuentaOrigen;
+        // REQ-0084: datos extraidos por OCR (insumo para la revision).
+        public String textoOcr, ocrNumero, ocrBanco, ocrMotor;
+        public BigDecimal ocrImporte, confianzaOcr;
+        public LocalDate ocrFecha;
+        public String getTextoOcr() { return textoOcr; }
+        public String getOcrNumero() { return ocrNumero; }
+        public String getOcrBanco() { return ocrBanco; }
+        public String getOcrMotor() { return ocrMotor; }
+        public BigDecimal getOcrImporte() { return ocrImporte; }
+        public BigDecimal getConfianzaOcr() { return confianzaOcr; }
+        public LocalDate getOcrFecha() { return ocrFecha; }
+        public boolean isTieneOcr() { return textoOcr != null && !textoOcr.isBlank(); }
         public Long getId() { return id; }
         public Long getCobro() { return cobro; }
         public Long getPersona() { return persona; }

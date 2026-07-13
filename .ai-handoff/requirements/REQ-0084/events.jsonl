@@ -1,1 +1,2 @@
-
+{"ts":"2026-07-13T19:38:00Z","actor":"claude","evento":"implementado","nota":"REQ-0084 Fase 2 OCR: PDFBox para PDF de texto + CLI tesseract (si instalada, degrada si no); V57 columnas ocr_importe/fecha/numero/banco/procesado/motor; ComprobanteOcrService (extraer+parsear importe/fecha/nro/banco con confianza); OCR best-effort en informar(); bandeja muestra leido vs declarado. Tesseract no instalable en VPS (sin sudo) -> se activa solo al instalarlo"}
+{"ts":"2026-07-13T19:39:00Z","actor":"claude","evento":"desplegado","nota":"Build OK (pdfbox 3.0.3); deploy VPS; Flyway V57 (schema v57); smoke 37/37 (transferencias 200)"}
