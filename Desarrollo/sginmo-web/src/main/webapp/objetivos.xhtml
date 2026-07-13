@@ -63,7 +63,8 @@
                         styleClass="ui-button ui-button-flat" style="padding:.25rem .4rem;">
                     <i class="pi pi-search"/>
                     <f:param name="clave" value="#{o.drillClave}"/>
-                    <f:param name="hasta" value="#{objetivoBean.hoy}"/>
+                    <f:param name="desde" value="#{o.rangoDesde}"/>
+                    <f:param name="hasta" value="#{o.rangoHasta}"/>
                     <f:param name="sucursal" value="#{o.alcanceRef}"/>
                     <f:param name="moneda" value="#{o.moneda}"/>
                 </h:link>
@@ -99,6 +100,7 @@
                     <div class="campo" style="flex:1;"><label>Periodo</label><br/>
                         <p:selectOneMenu value="#{objetivoBean.edicion.periodo}" style="width:100%;">
                             <f:selectItems value="#{objetivoBean.periodos}"/>
+                            <p:ajax update="celFechas"/>
                         </p:selectOneMenu>
                     </div>
                     <div class="campo" style="flex:1;"><label>Moneda (si es monto)</label><br/>
@@ -124,12 +126,14 @@
                         </p:selectOneMenu>
                     </h:panelGroup></div>
                 </div>
-                <div style="display:flex; gap:.6rem;" rendered="#{objetivoBean.edicion.periodo eq 'PERSONALIZADO'}">
-                    <div class="campo" style="flex:1;"><label>Vigencia desde</label><br/>
-                        <p:datePicker value="#{objetivoBean.edicion.vigenciaDesde}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
-                    <div class="campo" style="flex:1;"><label>Vigencia hasta</label><br/>
-                        <p:datePicker value="#{objetivoBean.edicion.vigenciaHasta}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
-                </div>
+                <h:panelGroup id="celFechas" layout="block">
+                    <div style="display:flex; gap:.6rem;" rendered="#{objetivoBean.edicion.periodo eq 'PERSONALIZADO'}">
+                        <div class="campo" style="flex:1;"><label>Vigencia desde</label><br/>
+                            <p:datePicker value="#{objetivoBean.edicion.vigenciaDesde}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                        <div class="campo" style="flex:1;"><label>Vigencia hasta</label><br/>
+                            <p:datePicker value="#{objetivoBean.edicion.vigenciaHasta}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
+                    </div>
+                </h:panelGroup>
                 <div style="margin-top:.8rem; text-align:right;">
                     <p:commandButton value="Guardar" icon="pi pi-save" action="#{objetivoBean.guardar}"
                                      update="frm" oncomplete="if (!args.validationFailed &amp;&amp; #{not objetivoBean.editando}) PF('dlgObj').hide()"/>
@@ -144,9 +148,9 @@
             <p:dataTable var="m" value="#{objetivoBean.historial}" emptyMessage="Sin mediciones registradas"
                          paginator="true" rows="12">
                 <p:column headerText="Periodo" style="width:12rem;">
-                    <h:outputText value="#{m.periodoDesde}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                    <h:outputText value="#{m.periodoDesde}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
                     <h:outputText value=" a "/>
-                    <h:outputText value="#{m.periodoHasta}"><f:convertDateTime pattern="dd/MM/yyyy"/></h:outputText>
+                    <h:outputText value="#{m.periodoHasta}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
                 </p:column>
                 <p:column headerText="Valor" style="width:8rem; text-align:right;">
                     <h:outputText value="#{m.valor}"><f:convertNumber pattern="#,##0.##"/></h:outputText>

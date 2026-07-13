@@ -112,5 +112,4 @@ public class ObjetivoBean implements Serializable {
     public List<ObjetivoService.Suc> getSucursales() { return sucursales; }
     public List<ObjetivoService.Medicion> getHistorial() { return historial; }
     public ObjetivoService.Objetivo getHistorialDe() { return historialDe; }
-    public String getHoy() { return java.time.LocalDate.now().toString(); }   // obs 286 - hasta para el enlace de evidencia
 }

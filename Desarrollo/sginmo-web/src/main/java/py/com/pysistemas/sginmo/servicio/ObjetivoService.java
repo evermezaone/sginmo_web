@@ -113,6 +113,10 @@ public class ObjetivoService {
             o.faltanUnidades = ocupacion.resumen().getBrecha();
         }
         o.drillClave = drillDe(o.indicador);   // obs 286: evidencia por indicador
+        // obs 293: el enlace de evidencia debe usar el MISMO rango que el calculo del objetivo.
+        LocalDate[] rp = rangoPeriodo(o);
+        o.rangoDesde = rp[0].toString();
+        o.rangoHasta = rp[1].toString();
     }
 
     private BigDecimal valorActual(Objetivo o) {
@@ -277,6 +281,13 @@ public class ObjetivoService {
         if ("MONTO".equals(o.unidad) && o.moneda == null)
             throw new NegocioException("Para una meta en monto debe elegir la moneda (no se mezclan monedas)");
         if (o.sentido == null) throw new NegocioException("Indique el sentido (llegar a minimo / no superar maximo)");
+        // obs 294: un objetivo PERSONALIZADO exige rango de vigencia coherente.
+        if ("PERSONALIZADO".equals(o.periodo)) {
+            if (o.vigenciaDesde == null || o.vigenciaHasta == null)
+                throw new NegocioException("Para un periodo personalizado indique vigencia desde y hasta");
+            if (o.vigenciaHasta.isBefore(o.vigenciaDesde))
+                throw new NegocioException("La vigencia hasta no puede ser anterior a la vigencia desde");
+        }
     }
 
     private Objetivo mapear(Object[] f) {
@@ -338,9 +349,12 @@ public class ObjetivoService {
         // Calculados:
         public BigDecimal valorActual = BigDecimal.ZERO, brecha = BigDecimal.ZERO, cumplimientoPct;
         public String semaforo = "OK", drillClave;
+        public String rangoDesde, rangoHasta;   // obs 293: rango real (ISO) para el enlace de evidencia
         public long faltanUnidades;
         public String getDrillClave() { return drillClave; }
         public boolean isTieneEvidencia() { return drillClave != null; }
+        public String getRangoDesde() { return rangoDesde; }
+        public String getRangoHasta() { return rangoHasta; }
 
         public Long alcanceSucursal() { return "SUCURSAL".equals(alcance) ? alcanceRef : null; }
 
