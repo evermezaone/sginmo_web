@@ -63,8 +63,13 @@ public class PortalTransferenciaService {
         if (archivo == null || archivo.length == 0) throw new NegocioException("Adjunte el comprobante de la transferencia");
         int maxMb = Math.max(1, parametros.entero("PORTAL_TRANSF_TAMANO_MAX_MB", 8));
         if (archivo.length > (long) maxMb * 1024 * 1024) throw new NegocioException("El comprobante supera el maximo de " + maxMb + " MB");
-        String ext = extensionValida(nombreArchivo, mime);
-        if (ext == null) throw new NegocioException("Formato no permitido. Use PDF, JPG, PNG o WEBP");
+        // obs 305: validar el CONTENIDO REAL por firma (magic bytes), no solo extension/MIME declarados,
+        // y exigir que coincida con lo declarado. Se guarda con la extension detectada del contenido.
+        String ext = firmaContenido(archivo);
+        if (ext == null) throw new NegocioException("El contenido del comprobante no es un PDF/JPG/PNG/WEBP valido");
+        String declarada = extensionValida(nombreArchivo, mime);
+        if (declarada != null && !declarada.equals(ext))
+            throw new NegocioException("El archivo no coincide con su tipo declarado");
 
         Long t = tenant.actual();
         String fisico = "trf_" + java.util.UUID.randomUUID().toString().replace("-", "") + ext;
@@ -204,30 +209,37 @@ public class PortalTransferenciaService {
 
     public void aprobar(Long id, Long documentoId, Long planillaId, Long formaPagoId, String emisor, Long monedaId) {
         autorizacion.exigir(PANTALLA, "EDITAR");
-        if (formaPagoId == null) formaPagoId = idFormaTransferencia();
-        Object[] t = (Object[]) em.createNativeQuery(
-            "SELECT persona, importe, estado, numero_transaccion, cuenta_origen FROM portal_pago_transferencia"
-          + " WHERE portal_pago_transferencia = :id").setParameter("id", id).getSingleResult();
-        Long persona = ((Number) t[0]).longValue();
-        BigDecimal importe = (BigDecimal) t[1];
-        String estado = (String) t[2];
-        String numero = (String) t[3];
-        String cuentaOrigen = (String) t[4];
-        if (!"RECIBIDO".equals(estado) && !"EN_REVISION".equals(estado) && !"OBSERVADO".equals(estado))
-            throw new NegocioException("La transferencia ya fue cerrada");
         if (documentoId == null) throw new NegocioException("Elija el documento/cuota a imputar");
         if (planillaId == null) throw new NegocioException("No hay una caja abierta para aplicar el cobro");
+        if (formaPagoId == null) formaPagoId = idFormaTransferencia();
+
+        // obs 304: reclamar la fila ATOMICAMENTE antes de cobrar. El UPDATE toma el lock de escritura de la fila
+        // (retenido hasta el commit): un segundo request concurrente se bloquea y, al liberarse, ya no cumple el
+        // WHERE (estado APLICADO) -> 0 filas -> falla, evitando el doble cobro sobre la misma transferencia.
+        @SuppressWarnings("unchecked")
+        List<Object[]> claim = em.createNativeQuery(
+            "UPDATE portal_pago_transferencia SET estado='EN_REVISION'"
+          + " WHERE portal_pago_transferencia = :id AND estado IN ('RECIBIDO','EN_REVISION','OBSERVADO')"
+          + " RETURNING persona, importe, numero_transaccion, cuenta_origen").setParameter("id", id).getResultList();
+        if (claim.isEmpty()) throw new NegocioException("La transferencia ya fue cerrada o esta siendo procesada");
+        Object[] t = claim.get(0);
+        Long persona = ((Number) t[0]).longValue();
+        BigDecimal importe = (BigDecimal) t[1];
+        String numero = (String) t[2];
+        String cuentaOrigen = (String) t[3];
 
         // Aplica el cobro con el motor de caja (forma TRANSFERENCIA: cuenta = cuenta origen, referencia = nro transaccion).
         long cobroId = cajaService.cobrar(documentoId, planillaId, formaPagoId, persona, importe, monedaId,
-                sesion.codigoUsuario(), emisor == null ? null : String.valueOf(emisor), null, null, null,
+                sesion.codigoUsuario(), emisor, null, null, null,
                 cuentaOrigen, null, numero, null, null, null, null, null, null);
 
-        em.createNativeQuery(
+        int n = em.createNativeQuery(
             "UPDATE portal_pago_transferencia SET estado='APLICADO', cobro = :c, documento = :doc,"
-          + " usuario_revision = :u, fecha_revision = now() WHERE portal_pago_transferencia = :id")
+          + " usuario_revision = :u, fecha_revision = now()"
+          + " WHERE portal_pago_transferencia = :id AND estado = 'EN_REVISION'")
             .setParameter("c", cobroId).setParameter("doc", documentoId)
             .setParameter("u", sesion.codigoUsuario()).setParameter("id", id).executeUpdate();
+        if (n == 0) throw new NegocioException("La transferencia cambio de estado durante la aplicacion");
         auditar(id, AuditoriaFuncionalService.EDITAR, "APLICADO (cobro " + cobroId + ", doc " + documentoId + ")");
     }
 
@@ -392,6 +404,18 @@ public class PortalTransferenciaService {
     private void auditar(Long id, String accion, String detalle) {
         try { auditoria.registrar("portal_pago_transferencia", id, accion, PANTALLA, detalle); }
         catch (RuntimeException ignore) { }
+    }
+
+    /** obs 305: tipo real por firma/magic bytes; devuelve la extension canonica o null si no es permitido. */
+    private static String firmaContenido(byte[] d) {
+        if (d == null || d.length < 12) return null;
+        int b0 = d[0] & 0xFF, b1 = d[1] & 0xFF, b2 = d[2] & 0xFF, b3 = d[3] & 0xFF;
+        if (b0 == 0x25 && b1 == 0x50 && b2 == 0x44 && b3 == 0x46) return ".pdf";           // %PDF
+        if (b0 == 0xFF && b1 == 0xD8 && b2 == 0xFF) return ".jpg";                          // JPEG
+        if (b0 == 0x89 && b1 == 0x50 && b2 == 0x4E && b3 == 0x47) return ".png";            // PNG
+        if (b0 == 0x52 && b1 == 0x49 && b2 == 0x46 && b3 == 0x46                            // RIFF....WEBP
+                && (d[8] & 0xFF) == 0x57 && (d[9] & 0xFF) == 0x45 && (d[10] & 0xFF) == 0x42 && (d[11] & 0xFF) == 0x50) return ".webp";
+        return null;
     }
 
     private static String extensionValida(String nombre, String mime) {
