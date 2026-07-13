@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0082
-TS: 2026-07-13T15:05:23Z
+REQ: REQ-0082, REQ-0086
+TS: 2026-07-13T19:37:22Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0082. Ultimo derivado REQ-0082: Fix entrada del portal por /portal/: nuevo index.xhtml que redirige al login (o a la cuenta). Verificado 302; smoke 36/36.
+MENSAJE: [SGI] Cola de auditoria: REQ-0082, REQ-0086. Ultimo derivado REQ-0086: Relay de correo por HTTP: CorreoService delega a endpoint PHP (send.php) via POST+token; envia como no-reply@one.com.py, la app no guarda SMTP; fallback SMTP. Build+smoke 36/36. Envio end-to-end requiere subir send.php (validacion externa).
 
 ---
 # Estados validos (Claude escribe, Codex lee):

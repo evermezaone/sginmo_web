@@ -26,7 +26,12 @@ CorreoService puede delegar el envio a un endpoint PHP alojado en el hosting del
 - [x] El endpoint exige token (401 si falta/incorrecto), solo POST, valida email y sanitiza asunto (anti header-injection).
 - [x] La app no almacena credenciales SMTP cuando usa el relay (solo el token).
 - [x] Build `mvn -q clean package` EXIT 0; smoke 36/36.
-- [ ] (Manual, requiere subir send.php) El OTP del portal llega al email del cliente por el relay.
+- [x] El token NO queda en el repo (placeholder en send.php/README; valor real fuera del control de versiones).
+
+## Validacion Pendiente (externa, no bloquea la implementacion)
+
+- Subir `send.php` a https://one.com.py/mailer/send.php + PHPMailer + cargar `MAIL_HTTP_URL`/`MAIL_HTTP_TOKEN`,
+  y probar que el OTP del portal llega al email del cliente (prueba manual M03 del test-plan).
 
 ## Dependencias
 
