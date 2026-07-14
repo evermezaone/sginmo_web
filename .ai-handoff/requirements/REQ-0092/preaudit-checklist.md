@@ -22,3 +22,18 @@ Notas:
 ## Respuesta Por Observacion Cerrada
 
 N/A - REQ nuevo.
+
+```text
+Obs 313 (alta, transicion a EN_REVISION):
+- Problema: seleccionar() abria el dialogo pero no reclamaba la fila; el socio podia eliminar una RECIBIDO mientras el operador la revisaba.
+- Cambio: nuevo PortalTransferenciaService.reclamar(id) atomico (UPDATE ... WHERE estado=RECIBIDO -> EN_REVISION); TransferenciaBandejaBean.seleccionar() lo llama y recarga la grilla; el boton actualiza frm:tabla. Una vez EN_REVISION, eliminar() del socio ya no aplica.
+- Archivos: servicio/PortalTransferenciaService.java, web/TransferenciaBandejaBean.java, webapp/transferencias.xhtml.
+- Evidencia: Build OK; smoke 37/37.
+
+Obs 314 (media, acciones sin verificacion):
+- Problema: observar()/rechazar() (via cambiarEstado) permitian pasar de RECIBIDO directo a OBSERVADO/RECHAZADO sin pasar por EN_REVISION.
+- Cambio: cambiarEstado ahora exige estado IN (EN_REVISION, OBSERVADO); desde RECIBIDO falla con "Primero tome la transferencia para verificar". Como seleccionar() reclama, el flujo real pasa por verificacion.
+- Archivos: servicio/PortalTransferenciaService.java.
+- Evidencia: Build OK; smoke 37/37.
+```
+

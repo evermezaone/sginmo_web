@@ -81,6 +81,13 @@ public class TransferenciaBandejaBean implements Serializable {
         emisorSel = null;
         documentos = f != null && f.getPersona() != null ? cajaService.documentosPendientesDe(f.getPersona()) : List.of();
         candidatos = f != null ? servicio.candidatos(f.getId()) : List.of();
+        // REQ-0092 (obs 313): tomar la transferencia para verificar (RECIBIDO -> EN_REVISION); el socio ya
+        // no podra eliminarla. Se refresca la grilla para reflejar el nuevo estado.
+        if (f != null) {
+            try { servicio.reclamar(f.getId()); }
+            catch (NegocioException e) { /* sin permiso de edicion: se abre solo para ver */ }
+            cargar();
+        }
     }
 
     /** REQ-0085: concilia con un movimiento bancario confirmado y aplica el pago. */

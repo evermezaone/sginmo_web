@@ -173,6 +173,19 @@ public class PortalTransferenciaService {
         return rows.stream().filter(r -> r.id.equals(id)).findFirst().orElse(null);
     }
 
+    /**
+     * REQ-0092 (obs 313): el operador TOMA la transferencia para verificar: RECIBIDO -> EN_REVISION de
+     * forma atomica. A partir de ahi el socio ya no puede eliminarla. Idempotente si ya estaba EN_REVISION.
+     */
+    public void reclamar(Long id) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        int n = em.createNativeQuery(
+            "UPDATE portal_pago_transferencia SET estado='EN_REVISION', usuario_revision = :u, fecha_revision = now()"
+          + " WHERE portal_pago_transferencia = :id AND estado = 'RECIBIDO'")
+            .setParameter("u", sesion.codigoUsuario()).setParameter("id", id).executeUpdate();
+        if (n > 0) auditar(id, AuditoriaFuncionalService.EDITAR, "EN_REVISION (tomada para verificar)");
+    }
+
     /** Observa la transferencia con motivo visible para el socio. */
     public void observar(Long id, String motivo) {
         autorizacion.exigir(PANTALLA, "EDITAR");
@@ -187,13 +200,15 @@ public class PortalTransferenciaService {
         cambiarEstado(id, "RECHAZADO", motivo);
     }
 
+    // obs 314: observar/rechazar solo en VERIFICACION (EN_REVISION) o sobre una ya OBSERVADO; nunca directo
+    // desde RECIBIDO (primero hay que tomarla con reclamar()). Asi se respeta el paso por verificacion.
     private void cambiarEstado(Long id, String estado, String motivo) {
         int n = em.createNativeQuery(
             "UPDATE portal_pago_transferencia SET estado = :e, motivo_revision = :m, usuario_revision = :u,"
-          + " fecha_revision = now() WHERE portal_pago_transferencia = :id AND estado NOT IN ('APLICADO','RECHAZADO')")
+          + " fecha_revision = now() WHERE portal_pago_transferencia = :id AND estado IN ('EN_REVISION','OBSERVADO')")
             .setParameter("e", estado).setParameter("m", recorta(motivo, 300))
             .setParameter("u", sesion.codigoUsuario()).setParameter("id", id).executeUpdate();
-        if (n == 0) throw new NegocioException("La transferencia no existe o ya fue cerrada");
+        if (n == 0) throw new NegocioException("Primero tome la transferencia para verificar (o ya fue cerrada)");
         auditar(id, AuditoriaFuncionalService.EDITAR, estado + (motivo == null ? "" : ": " + motivo));
     }
 

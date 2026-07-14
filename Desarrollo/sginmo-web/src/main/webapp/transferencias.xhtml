@@ -52,7 +52,7 @@
                 </p:commandButton>
                 <p:commandButton icon="pi pi-check-square" title="Revisar / Aplicar" styleClass="ui-button-flat"
                                  rendered="#{t.estado ne 'APLICADO' and t.estado ne 'RECHAZADO' and sesionUsuario.puede('transferencias','EDITAR')}"
-                                 action="#{transferenciaBandejaBean.seleccionar(t)}" update="frm:dlg" oncomplete="PF('dlgRev').show()"/>
+                                 action="#{transferenciaBandejaBean.seleccionar(t)}" update="frm:tabla frm:dlg" oncomplete="PF('dlgRev').show()"/>
             </p:column>
         </p:dataTable>
 
