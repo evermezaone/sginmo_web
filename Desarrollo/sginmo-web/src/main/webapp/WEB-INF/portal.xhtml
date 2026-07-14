@@ -30,6 +30,19 @@
         table.tp { width:100%; border-collapse:collapse; font-size:.9rem; }
         table.tp th, table.tp td { text-align:left; padding:.45rem .5rem; border-bottom:1px solid #eef0f3; white-space:nowrap; }
         table.tp th { color:#6b7280; font-weight:600; }
+        /* REQ-0091: layout de 2 columnas (contenido + panel de pagos a la derecha). */
+        .portal-cols { display:flex; gap:1rem; align-items:flex-start; }
+        .portal-main { flex:1 1 auto; min-width:0; }
+        .portal-aside { flex:0 0 300px; max-width:100%; }
+        .pago-item { padding:.55rem 0; border-bottom:1px solid #eef0f3; }
+        .pago-item:last-child { border-bottom:0; }
+        .pago-top { display:flex; align-items:center; justify-content:space-between; gap:.5rem; }
+        .pago-monto { font-weight:700; overflow-wrap:anywhere; }
+        .pago-sub { color:#6b7280; font-size:.82rem; margin-top:.15rem; }
+        .badge { font-size:.72rem; font-weight:600; padding:.12rem .5rem; border-radius:999px; white-space:nowrap; }
+        .badge.b-trf { background:#ccfbf1; color:#0f766e; }
+        .badge.b-caja { background:#e5e7eb; color:#374151; }
+        @media (max-width:820px) { .portal-cols { flex-direction:column; } .portal-aside { flex-basis:auto; width:100%; } }
         @media (max-width:640px) {
             .portal-top { padding:.7rem .8rem; }
             .portal-top .marca { flex-basis:100%; }

@@ -52,7 +52,9 @@
         </div>
     </div>
 
-    <div class="seccion-p">
+    <div class="portal-cols">
+     <div class="portal-main">
+      <div class="seccion-p">
         <h3>Mis cuotas</h3>
         <table class="tp">
             <thead><tr><th>Operacion</th><th>Cuota</th><th>Vencimiento</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead>
@@ -70,23 +72,6 @@
             </tbody>
         </table>
         <p style="color:#9ca3af;" rendered="#{empty portalBean.cuotas}">Sin cuotas registradas.</p>
-    </div>
-
-    <div class="seccion-p">
-        <h3>Mis pagos</h3>
-        <table class="tp">
-            <thead><tr><th>Fecha</th><th>Monto</th><th>Estado</th></tr></thead>
-            <tbody>
-                <ui:repeat value="#{portalBean.pagos}" var="pg">
-                    <tr>
-                        <td><h:outputText value="#{pg.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
-                        <td><h:outputText value="#{pg.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
-                        <td>#{pg.estado}</td>
-                    </tr>
-                </ui:repeat>
-            </tbody>
-        </table>
-        <p style="color:#9ca3af;" rendered="#{empty portalBean.pagos}">Sin pagos registrados.</p>
     </div>
 
     <div class="seccion-p">
@@ -111,7 +96,30 @@
             </table>
             <p style="color:#9ca3af;" rendered="#{empty portalBean.documentos}">Sin documentos habilitados.</p>
         </h:form>
-    </div>
+      </div>
+     </div><!-- /portal-main -->
+
+     <aside class="portal-aside">
+       <div class="seccion-p">
+         <h3>Mis pagos</h3>
+         <ui:repeat value="#{portalBean.pagos}" var="pg">
+           <div class="pago-item">
+             <div class="pago-top">
+               <span class="pago-monto">
+                 Gs. <h:outputText value="#{pg.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+               </span>
+               <span class="badge #{pg.canal == 'Transferencia' ? 'b-trf' : 'b-caja'}">#{pg.canal}</span>
+             </div>
+             <div class="pago-sub">
+               <h:outputText value="#{pg.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+               <h:outputText value=" · #{pg.forma}" rendered="#{not empty pg.forma}"/>
+             </div>
+           </div>
+         </ui:repeat>
+         <p style="color:#9ca3af;" rendered="#{empty portalBean.pagos}">Sin pagos registrados.</p>
+       </div>
+     </aside>
+    </div><!-- /portal-cols -->
   </h:panelGroup>
 
   <h:panelGroup layout="block" rendered="#{portalBean.esPropietario}">

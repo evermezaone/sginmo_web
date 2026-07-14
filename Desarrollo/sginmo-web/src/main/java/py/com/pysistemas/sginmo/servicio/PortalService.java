@@ -94,12 +94,19 @@ public class PortalService {
         if (persona == null) return out;
         @SuppressWarnings("unchecked")
         List<Object[]> filas = em.createNativeQuery(
-            "SELECT fecha, monto, estado FROM cobro WHERE persona=:p AND estado='ACTIVO' ORDER BY fecha DESC")
+            "SELECT c.fecha, c.monto, c.estado, fp.codigo, fp.descripcion, c.concepto"
+          + " FROM cobro c LEFT JOIN forma_pago fp ON fp.forma_pago = c.forma_pago"
+          + " WHERE c.persona=:p AND c.estado='ACTIVO' ORDER BY c.fecha DESC, c.cobro DESC")
             .setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
             FilaPago pago = new FilaPago();
             pago.fecha = aLocalDate(f[0]);
             pago.monto = dec(f[1]); pago.estado = (String) f[2];
+            String codigo = (String) f[3];
+            // REQ-0091: canal simplificado para el socio (caja vs transferencia); forma = detalle real.
+            pago.canal = "TRF".equalsIgnoreCase(codigo) ? "Transferencia" : "Caja";
+            pago.forma = f[4] == null ? "Efectivo" : (String) f[4];
+            pago.concepto = (String) f[5];
             out.add(pago);
         }
         return out;
@@ -278,9 +285,15 @@ public class PortalService {
     }
     public static class FilaPago {
         public LocalDate fecha; public BigDecimal monto; public String estado;
+        public String canal;    // REQ-0091: "Caja" | "Transferencia"
+        public String forma;    // detalle de la forma de pago (Efectivo, Transferencia, Tarjeta, ...)
+        public String concepto;
         public LocalDate getFecha() { return fecha; }
         public BigDecimal getMonto() { return monto; }
         public String getEstado() { return estado; }
+        public String getCanal() { return canal; }
+        public String getForma() { return forma; }
+        public String getConcepto() { return concepto; }
     }
     public static class FilaDoc {
         public Long id; public String tipo, descripcion, nombre;
