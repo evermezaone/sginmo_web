@@ -23,3 +23,13 @@ Notas:
 ## Respuesta Por Observacion Cerrada
 
 N/A - REQ nuevo.
+
+```text
+Obs 315 (alta, parametros obligatorios EMVCo/SIPAP):
+- Problema: habilitado() exigia PORTAL_QR_CUENTA pero no PORTAL_QR_GUI; sin GUI (tag 26 subtag 00) el payload EMVCo/SIPAP queda bancariamente incompleto.
+- Cambio: habilitado() ahora exige ademas PORTAL_QR_GUI no vacio; sin GUI el QR no se muestra (queda deshabilitado).
+- Archivos: servicio/QrPagoService.java.
+- Evidencia: Build OK; smoke 37/37.
+- Validacion propia: sin GUI cargado, qr.habilitado()=false -> no se genera el QR (evita QR incompleto).
+```
+

@@ -109,10 +109,15 @@ public class QrPagoService {
         return sb.toString();
     }
 
-    /** El pago por QR esta activo solo si se habilito y hay una cuenta destino configurada. */
+    /**
+     * El pago por QR esta activo solo si se habilito y estan cargados los datos MINIMOS del esquema:
+     * la cuenta destino (tag 26 subtag 01) Y el GUI/identificador del banco/esquema (tag 26 subtag 00).
+     * obs 315: sin GUI el payload EMVCo/SIPAP queda bancariamente incompleto, por eso se bloquea.
+     */
     public boolean habilitado() {
         return parametros.booleano("PORTAL_QR_HABILITADO", false)
-            && !parametros.texto("PORTAL_QR_CUENTA", "").isBlank();
+            && !parametros.texto("PORTAL_QR_CUENTA", "").isBlank()
+            && !parametros.texto("PORTAL_QR_GUI", "").isBlank();
     }
 
     /** Construye el payload EMVCo QR (con CRC16) para el monto y la referencia dados. */
