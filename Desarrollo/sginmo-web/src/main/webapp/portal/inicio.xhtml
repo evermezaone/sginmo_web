@@ -19,6 +19,9 @@
 </ui:define>
 
 <ui:define name="contenido">
+  <h1 style="font-size:1.8rem; font-weight:700; margin:.2rem 0 1rem; color:#0f766e; line-height:1.2;">
+      Bienvenido, #{portalBean.nombreUsuario}
+  </h1>
   <h:panelGroup layout="block" rendered="#{portalBean.esCliente}">
     <h2 style="font-size:1.05rem; margin:.2rem 0 .6rem; color:#0f766e;" rendered="#{portalBean.esPropietario}">Como cliente</h2>
     <div class="tarjetas-portal">
