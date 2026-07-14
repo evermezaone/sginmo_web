@@ -55,12 +55,12 @@ RECIBIDO / EN_REVISION con etiquetas de UI; definir en analisis (preferible etiq
 
 ## Criterios De Aceptacion
 
-- [ ] Al informar, la transferencia queda en PENDIENTE_DE_VALIDACION.
-- [ ] En PENDIENTE_DE_VALIDACION el socio puede eliminar su registro (se borra tambien la evidencia) y se audita.
-- [ ] Cuando el operador la toma, pasa a VERIFICACION y el socio ya NO puede eliminarla.
-- [ ] En VERIFICACION el operador solo puede confirmar o rechazar (u observar); confirmar aplica el cobro.
-- [ ] El borrado es seguro ante concurrencia (si paso a VERIFICACION, el intento de borrado falla).
-- [ ] Un socio solo ve/elimina sus propias transferencias (aislamiento por persona + tenant).
+- [x] Al informar, la transferencia queda en PENDIENTE_DE_VALIDACION.
+- [x] En PENDIENTE_DE_VALIDACION el socio puede eliminar su registro (se borra tambien la evidencia) y se audita.
+- [x] Cuando el operador la toma, pasa a VERIFICACION y el socio ya NO puede eliminarla.
+- [x] En VERIFICACION el operador solo puede confirmar o rechazar (u observar); confirmar aplica el cobro.
+- [x] El borrado es seguro ante concurrencia (si paso a VERIFICACION, el intento de borrado falla).
+- [x] Un socio solo ve/elimina sus propias transferencias (aislamiento por persona + tenant).
 
 ## Dependencias
 

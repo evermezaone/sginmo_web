@@ -51,21 +51,38 @@
 
     <div class="seccion-p">
         <h3>Mis transferencias informadas</h3>
+        <p style="color:#6b7280; font-size:.85rem; margin-top:0;">
+            Mientras figuran como <b>Pendiente de validación</b> podés eliminarlas. Cuando un operador las toma
+            (<b>En verificación</b>), ya no se pueden eliminar: solo se confirman o rechazan.
+        </p>
+        <h:form id="frmMias">
+        <p:growl id="msjMias" showDetail="true" life="5000"/>
         <table class="tp">
-            <thead><tr><th>Fecha</th><th>Importe</th><th>Nro.</th><th>Estado</th><th>Observación</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Importe</th><th>Nro.</th><th>Estado</th><th>Observación</th><th>Acciones</th></tr></thead>
             <tbody>
                 <ui:repeat value="#{portalTransferenciaBean.mias}" var="t">
                     <tr>
                         <td><h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
                         <td><h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
                         <td>#{t.numeroTransaccion}</td>
-                        <td>#{t.estado}</td>
+                        <td>#{t.estadoLabel}</td>
                         <td>#{t.motivoRevision}</td>
+                        <td style="white-space:nowrap;">
+                            <p:commandButton icon="pi pi-download" title="Descargar comprobante" styleClass="ui-button-flat" ajax="false">
+                                <p:fileDownload value="#{portalTransferenciaBean.descargarComprobante(t)}"/>
+                            </p:commandButton>
+                            <p:commandButton icon="pi pi-trash" title="Eliminar" styleClass="ui-button-flat ui-button-danger"
+                                             rendered="#{t.puedeEliminar}"
+                                             action="#{portalTransferenciaBean.eliminar(t)}"
+                                             onclick="if(!confirm('¿Eliminar esta transferencia informada?')) return false;"
+                                             update="frmMias"/>
+                        </td>
                     </tr>
                 </ui:repeat>
             </tbody>
         </table>
         <p style="color:#9ca3af;" rendered="#{empty portalTransferenciaBean.mias}">Aún no informó transferencias.</p>
+        </h:form>
     </div>
 </ui:define>
 </ui:composition>

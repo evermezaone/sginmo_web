@@ -7,9 +7,12 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.primefaces.model.file.UploadedFile;
+import org.primefaces.model.StreamedContent;
+import org.primefaces.model.DefaultStreamedContent;
 import py.com.one.core.NegocioException;
 import py.com.pysistemas.sginmo.servicio.PortalTransferenciaService;
 
+import java.io.ByteArrayInputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -72,6 +75,31 @@ public class PortalTransferenciaBean implements Serializable {
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo informar", e.getMessage());
         }
+    }
+
+    /** REQ-0092: elimina una transferencia propia mientras esta pendiente de validacion (RECIBIDO). */
+    public void eliminar(PortalTransferenciaService.Fila t) {
+        try {
+            servicio.eliminar(t.getId(), sesion.getPersona());
+            aviso(FacesMessage.SEVERITY_INFO, "Transferencia eliminada", "Se quito el registro y su comprobante.");
+        } catch (NegocioException e) {
+            aviso(FacesMessage.SEVERITY_WARN, "No se pudo eliminar", e.getMessage());
+        }
+        recargar();   // refresca el estado por si cambio (paso a verificacion) en el interin
+    }
+
+    /** REQ-0092: descarga del comprobante propio (la evidencia adjuntada por el socio). */
+    public StreamedContent descargarComprobante(PortalTransferenciaService.Fila t) {
+        final Long id = t.getId();
+        final Long persona = sesion.getPersona();
+        return DefaultStreamedContent.builder()
+                .name("comprobante-" + id)
+                .contentType("application/octet-stream")
+                .stream(() -> {
+                    PortalTransferenciaService.Descarga d = servicio.descargar(id, persona);
+                    return new ByteArrayInputStream(d.datos);
+                })
+                .build();
     }
 
     private void aviso(FacesMessage.Severity s, String t, String d) {

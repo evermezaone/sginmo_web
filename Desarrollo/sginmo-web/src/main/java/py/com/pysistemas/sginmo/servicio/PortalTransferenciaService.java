@@ -269,6 +269,32 @@ public class PortalTransferenciaService {
         }
     }
 
+    /**
+     * REQ-0092: el socio elimina su transferencia informada SOLO mientras esta en RECIBIDO
+     * (pendiente de validacion). Es atomico contra el reclamo del operador: si ya paso a EN_REVISION
+     * (u otro estado), el DELETE no toca ninguna fila y se rechaza. Tambien borra la evidencia adjunta.
+     */
+    public void eliminar(Long id, Long persona) {
+        if (persona == null) throw new NegocioException("Sesion invalida");
+        Object[] r;
+        try {
+            r = (Object[]) em.createNativeQuery(
+                "DELETE FROM portal_pago_transferencia"
+              + " WHERE portal_pago_transferencia = :id AND persona = :p AND estado = 'RECIBIDO'"
+              + " RETURNING tenant, archivo_fisico")
+                .setParameter("id", id).setParameter("p", persona).getSingleResult();
+        } catch (jakarta.persistence.NoResultException e) {
+            throw new NegocioException("No se puede eliminar: la transferencia ya esta en verificacion o no le pertenece");
+        }
+        Long t = ((Number) r[0]).longValue();
+        String fisico = (String) r[1];
+        if (fisico != null) {
+            try { Files.deleteIfExists(baseDir().resolve(String.valueOf(t)).resolve(fisico)); }
+            catch (Exception ignore) { /* la evidencia ya no existe o no se pudo borrar: no bloquea */ }
+        }
+        auditar(id, AuditoriaFuncionalService.ANULAR, "transferencia eliminada por el socio (estaba pendiente de validacion)");
+    }
+
     // ── Conciliacion bancaria (REQ-0085 Fase 3) ────────────────────────────────
 
     /** Registra manualmente un movimiento/aviso bancario. */
@@ -493,6 +519,20 @@ public class PortalTransferenciaService {
         public LocalDate getFecha() { return fecha; }
         public BigDecimal getImporte() { return importe; }
         public String getEstado() { return estado; }
+        /** REQ-0092: etiqueta amigable para el socio. */
+        public String getEstadoLabel() {
+            if (estado == null) return "";
+            switch (estado) {
+                case "RECIBIDO":    return "Pendiente de validacion";
+                case "EN_REVISION": return "En verificacion";
+                case "APLICADO":    return "Aplicada";
+                case "RECHAZADO":   return "Rechazada";
+                case "OBSERVADO":   return "Observada";
+                default:            return estado;
+            }
+        }
+        /** REQ-0092: solo se puede eliminar mientras esta pendiente de validacion. */
+        public boolean isPuedeEliminar() { return "RECIBIDO".equals(estado); }
         public String getNumeroTransaccion() { return numeroTransaccion; }
         public String getMotivoRevision() { return motivoRevision; }
         public String getCliente() { return cliente; }
