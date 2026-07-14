@@ -155,12 +155,16 @@ public class PersonaBean implements Serializable {
             boolean esNueva = seleccionado.getId() == null;
             if (soloLectura || !sesion.puede(PANTALLA, esNueva ? "CREAR" : "EDITAR")) return;
             Long tenant = tenantActual();
+            // REQ-0089 (obs 309): guardado de persona + reconciliacion de roles en UNA transaccion,
+            // con autorizacion coherente (CREAR en alta / EDITAR en edicion).
+            var rolIds = rolesPersona.stream().map(PersonaRol::getRol)
+                    .filter(java.util.Objects::nonNull).distinct().toList();
             if (seleccionadoEsFisica()) {
-                personaService.guardarFisica(seleccionado, fisica, datosEmpresa, tenant);
+                personaService.guardarFisicaConRoles(seleccionado, fisica, datosEmpresa, tenant, rolIds);
             } else {
-                personaService.guardarJuridica(seleccionado, juridica, datosEmpresa, tenant);
+                personaService.guardarJuridicaConRoles(seleccionado, juridica, datosEmpresa, tenant, rolIds);
             }
-            reconciliarRoles();
+            rolesPersona = personaService.rolesDe(seleccionado.getId());
             aviso(FacesMessage.SEVERITY_INFO, esNueva ? "Persona creada" : "Persona actualizada", seleccionado.getNombre());
             org.primefaces.PrimeFaces.current().executeScript("PF('dlgPersona').hide()");
             org.primefaces.PrimeFaces.current().ajax().update("frmLista:tabla", "frmLista:mensajes");
@@ -214,17 +218,6 @@ public class PersonaBean implements Serializable {
             .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
     }
 
-    /** REQ-0089: al guardar, reconcilia los roles de la persona con la lista editada (inserta nuevos, baja desmarcados). */
-    private void reconciliarRoles() {
-        if (seleccionado.getId() == null) return;
-        var rolIds = rolesPersona.stream()
-            .map(PersonaRol::getRol)
-            .filter(java.util.Objects::nonNull)
-            .distinct()
-            .toList();
-        personaService.reconciliarRoles(seleccionado.getId(), rolIds);
-        rolesPersona = personaService.rolesDe(seleccionado.getId());
-    }
 
     public String descripcionRol(Long id) {
         if (id == null) return "";

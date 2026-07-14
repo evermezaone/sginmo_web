@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0085, REQ-0086, REQ-0087, REQ-0088, REQ-0089
-TS: 2026-07-13T23:40:30Z
+REQ: REQ-0089
+TS: 2026-07-14T00:08:47Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0085, REQ-0086, REQ-0087, REQ-0088, REQ-0089. Ultimo derivado REQ-0085: Ronda 1: validacion de match movimiento-transferencia en backend (UPDATE...FROM...RETURNING) + fix form anidado del import CSV. Deploy VPS + smoke 37/37.
+MENSAJE: [SGI] Cola de auditoria: REQ-0089. Ultimo derivado REQ-0089: Ronda 1: rolesDe acotado al tenant efectivo (fin mezcla de tenants); guardado persona+roles en una sola transaccion con authz coherente CREAR/EDITAR. Deploy VPS + smoke 37/37.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

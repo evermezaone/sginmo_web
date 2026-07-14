@@ -114,12 +114,15 @@ public class PersonaService {
         return (id == null || !perteneceAlTenant(id)) ? null : em.find(PersonaJuridica.class, id);
     }
 
-    /** Roles ACTIVOS de la persona EN EL TENANT actual (obs 250); los INACTIVOS son historial. */
+    /**
+     * Roles ACTIVOS de la persona EN EL TENANT EFECTIVO (obs 250/308); los INACTIVOS son historial.
+     * Se acota SIEMPRE a tenant.actual() (tambien para SUPERADMIN): esta lista alimenta la edicion y la
+     * reconciliacion, que escribe contra tenant.actual(); mezclar tenants copiaria roles de otra empresa.
+     */
     public List<PersonaRol> rolesDe(Long personaId) {
         return em.createQuery("SELECT r FROM PersonaRol r WHERE r.persona = :p AND r.estado = 'ACTIVO'"
-                + " AND (:sa = TRUE OR r.tenant = :t) ORDER BY r.rol", PersonaRol.class)
-            .setParameter("p", personaId)
-            .setParameter("sa", tenant.esSuperadmin()).setParameter("t", tenant.actual())
+                + " AND r.tenant = :t ORDER BY r.rol", PersonaRol.class)
+            .setParameter("p", personaId).setParameter("t", tenant.actual())
             .getResultList();
     }
 
@@ -299,9 +302,30 @@ public class PersonaService {
      * (los ids de rol que quedaron en el ABM al guardar). Inserta/reactiva los que faltan y da de baja
      * logica (INACTIVO) los activos que ya no estan. Preserva el historial y respeta pertenencia/tenant.
      */
+    /**
+     * REQ-0089 (obs 309): guarda la persona fisica y reconcilia sus roles en UNA sola transaccion y con
+     * autorizacion coherente (CREAR en alta, EDITAR en edicion). Evita que quede la persona creada sin roles
+     * cuando el perfil tiene CREAR pero no EDITAR.
+     */
     @Transactional
-    public void reconciliarRoles(Long personaId, java.util.List<Long> rolesDeseados) {
-        autorizacion.exigir("personas", "EDITAR");
+    public void guardarFisicaConRoles(Persona persona, PersonaFisica fisica, PersonaEmpresa datos, Long tenant,
+                                      java.util.List<Long> rolesDeseados) {
+        boolean esNuevo = persona.getId() == null;
+        guardarFisica(persona, fisica, datos, tenant);   // self-invocation -> misma transaccion
+        reconciliarRoles(persona.getId(), rolesDeseados, esNuevo);
+    }
+
+    @Transactional
+    public void guardarJuridicaConRoles(Persona persona, PersonaJuridica juridica, PersonaEmpresa datos, Long tenant,
+                                        java.util.List<Long> rolesDeseados) {
+        boolean esNuevo = persona.getId() == null;
+        guardarJuridica(persona, juridica, datos, tenant);
+        reconciliarRoles(persona.getId(), rolesDeseados, esNuevo);
+    }
+
+    @Transactional
+    public void reconciliarRoles(Long personaId, java.util.List<Long> rolesDeseados, boolean esNuevo) {
+        autorizacion.exigir("personas", esNuevo ? "CREAR" : "EDITAR");
         if (personaId == null) return;
         if (!perteneceAlTenant(personaId)) {
             throw new NegocioException("La persona no pertenece a la cartera de la empresa");

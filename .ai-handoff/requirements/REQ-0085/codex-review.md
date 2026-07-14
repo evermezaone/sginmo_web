@@ -1,48 +1,49 @@
 # REQ-0085 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO_POR_CODEX
 **Fecha:** 2026-07-13
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
+
+## Reauditoria De Observaciones
+
+### Obs - Match backend movimiento/transferencia
+
+**Estado:** corregida.
+
+- `PortalTransferenciaService#conciliarYAplicar()` ahora usa `UPDATE movimiento_bancario_importado ... FROM portal_pago_transferencia ... RETURNING`.
+- El claim exige movimiento `PENDIENTE`, transferencia en estado conciliable, mismo importe, tolerancia de fecha y referencia compatible.
+- Si no retorna fila, falla antes de llamar a `aprobar()`.
+
+### Obs - Formulario anidado CSV
+
+**Estado:** corregida.
+
+- `transferencias.xhtml` ya cierra el `<h:form id="frm">` antes del dialogo de movimientos.
+- El dialogo `Movimientos bancarios` queda fuera del formulario principal y contiene un unico `<h:form id="frmMov" enctype="multipart/form-data">`.
+- El upload CSV ya no queda en un formulario HTML anidado.
+
+## Validacion
+
+- Revision estatica de `PortalTransferenciaService#conciliarYAplicar()`.
+- Revision estatica de `transferencias.xhtml`.
+- Revision estatica de `TransferenciaBandejaBean`.
+- Revision estatica de `V58__movimiento_bancario.sql`.
+- Build: `mvn -q -pl sginmo-web -am clean package` desde `Desarrollo`, resultado EXIT 0.
 
 ## Hallazgos
 
 ### Bloqueantes
 
-1. **La conciliacion no valida en backend que el movimiento bancario sea candidato real de la transferencia.**
-
-   `PortalTransferenciaService#conciliarYAplicar()` solo exige que el movimiento este `PENDIENTE`, lo marca `CONCILIADO` con la transferencia recibida y llama a `aprobar()`. No valida en backend que el movimiento pertenezca al mismo tenant por regla explicita, ni que coincida con importe, fecha/tolerancia, referencia/numero, moneda/cuenta/banco segun los criterios del REQ. La UI muestra candidatos, pero el backend permite conciliar cualquier `movimiento_bancario_importado` pendiente que llegue por parametro.
-
-   **Impacto:** un error de UI, manipulacion de request o bug operativo puede confirmar un movimiento bancario que no corresponde al comprobante y aun asi aplicar el cobro. Para pagos, no basta con filtrar en pantalla.
-
-   **Evidencia:** `PortalTransferenciaService.java` lineas 368-376.
-
-   **Solucion esperada:** antes de marcar `CONCILIADO` y aplicar, validar atomicamente que el movimiento cumple los mismos criterios de `candidatos()` para esa transferencia: estado `PENDIENTE`, importe, tolerancia de fecha, referencia/numero si existe, y los campos que correspondan al alcance (moneda/cuenta/banco cuando esten disponibles). Ideal: `UPDATE ... FROM portal_pago_transferencia ... WHERE movimiento=:m AND transferencia=:tr AND estado_conciliacion='PENDIENTE' AND criterios_match RETURNING ...`; si no retorna fila, no aplicar.
-
-2. **La importacion CSV esta dentro de un formulario JSF anidado, por lo que el upload no es confiable.**
-
-   `transferencias.xhtml` tiene un `<h:form id="frm">` que envuelve toda la pagina, y dentro del dialogo `Movimientos bancarios` agrega otro `<h:form enctype="multipart/form-data">` para el CSV. HTML no permite formularios anidados y JSF/PrimeFaces no garantizan que el `p:fileUpload mode="simple"` envie correctamente el archivo en esa estructura. El criterio de aceptacion exige importar CSV.
-
-   **Impacto:** la carga/importacion de avisos bancarios puede fallar o comportarse de forma dependiente del navegador, dejando inutilizable una parte central del REQ.
-
-   **Evidencia:** `transferencias.xhtml` lineas 12 y 56-60.
-
-   **Solucion esperada:** eliminar el formulario anidado. Usar un unico formulario multipart para la pantalla/dialogo, o mover el dialogo de importacion a un formulario separado no anidado fuera de `frm`. Asegurar que el update apunte a componentes validos tras importar.
+- Ninguno.
 
 ### No Bloqueantes
 
-- `importarCsv()` incrementa el contador aun cuando `ON CONFLICT DO NOTHING` no inserta fila; el mensaje puede contar lineas procesadas, no movimientos realmente insertados. Es cosmetico/operativo, no bloquea si se corrigen los dos puntos anteriores.
+- `importarCsv()` sigue contando lineas procesadas aunque `ON CONFLICT DO NOTHING` no inserte por duplicado. Es mensaje operativo, no afecta idempotencia.
 
-## Validacion Realizada
+## Riesgos
 
-- Revision estatica de `PortalTransferenciaService` metodos `registrarMovimiento`, `importarCsv`, `candidatos` y `conciliarYAplicar`.
-- Revision estatica de `TransferenciaBandejaBean`.
-- Revision estatica de `transferencias.xhtml`.
-- Revision estatica de `V58__movimiento_bancario.sql`.
-
-## Pruebas
-
-- No se aprobo la entrega por hallazgos funcionales/de seguridad. El build no detecta estos dos problemas.
+- Maneja dinero, pero queda mitigado por conciliacion validada en backend, reclamo atomico del movimiento, reutilizacion del motor de caja y anti-doble aplicacion de `REQ-0083`.
