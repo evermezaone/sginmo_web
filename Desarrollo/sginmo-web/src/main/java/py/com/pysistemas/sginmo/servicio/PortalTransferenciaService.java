@@ -155,7 +155,7 @@ public class PortalTransferenciaService {
             x.cuentaOrigen = (String) f[12];
             x.textoOcr = (String) f[13];
             x.ocrImporte = (BigDecimal) f[14];
-            x.ocrFecha = f[15] instanceof java.sql.Date d ? d.toLocalDate() : null;
+            x.ocrFecha = aLocalDate(f[15]);
             x.ocrNumero = (String) f[16];
             x.ocrBanco = (String) f[17];
             x.confianzaOcr = (BigDecimal) f[18];
@@ -344,7 +344,7 @@ public class PortalTransferenciaService {
               + " WHERE portal_pago_transferencia = :id").setParameter("id", transferenciaId).getSingleResult();
         } catch (jakarta.persistence.NoResultException e) { return out; }
         BigDecimal importe = (BigDecimal) t[0];
-        java.sql.Date fecha = (java.sql.Date) t[1];
+        LocalDate fecha = aLocalDate(t[1]);
         String numero = (String) t[3];
         int tol = Math.max(0, parametros.entero("PORTAL_TRANSF_TOLERANCIA_DIAS", 2));
         @SuppressWarnings("unchecked")
@@ -355,7 +355,7 @@ public class PortalTransferenciaService {
           + " AND (:fec IS NULL OR fecha IS NULL OR abs(fecha - :fec) <= :tol)"
           + " AND (:num IS NULL OR referencia IS NULL OR referencia = :num)"
           + " ORDER BY fecha DESC NULLS LAST")
-            .setParameter("imp", importe).setParameter("fec", fecha).setParameter("tol", tol)
+            .setParameter("imp", importe).setParameter("fec", fecha == null ? null : java.sql.Date.valueOf(fecha)).setParameter("tol", tol)
             .setParameter("num", numero).getResultList();
         for (Object[] f : rows) out.add(mov(f));
         return out;
@@ -393,13 +393,24 @@ public class PortalTransferenciaService {
         Mov m = new Mov();
         m.id = ((Number) f[0]).longValue();
         m.banco = (String) f[1]; m.cuenta = (String) f[2];
-        m.fecha = f[3] instanceof java.sql.Date d ? d.toLocalDate() : null;
+        m.fecha = aLocalDate(f[3]);
         m.importe = (BigDecimal) f[4]; m.referencia = (String) f[5]; m.remitente = (String) f[6];
         m.estado = (String) f[7]; m.transferencia = f[8] == null ? null : ((Number) f[8]).longValue();
         return m;
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────
+
+    /** Una columna date puede llegar como LocalDate (Hibernate 7) o java.sql.Date segun el driver. */
+    private static LocalDate aLocalDate(Object o) {
+        if (o == null) return null;
+        if (o instanceof LocalDate ld) return ld;
+        if (o instanceof java.sql.Date d) return d.toLocalDate();
+        if (o instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        if (o instanceof java.time.LocalDateTime l) return l.toLocalDate();
+        if (o instanceof java.time.OffsetDateTime ofs) return ofs.toLocalDate();
+        return LocalDate.parse(o.toString());
+    }
 
     private Fila fila(Object[] f) {
         Fila x = new Fila();

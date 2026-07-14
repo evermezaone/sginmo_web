@@ -172,8 +172,8 @@ public class ObjetivoService {
         List<Object[]> rows = q.getResultList();
         for (Object[] f : rows) {
             Medicion m = new Medicion();
-            m.periodoDesde = f[0] == null ? null : ((java.sql.Date) f[0]).toLocalDate();
-            m.periodoHasta = f[1] == null ? null : ((java.sql.Date) f[1]).toLocalDate();
+            m.periodoDesde = f[0] == null ? null : aLocalDate(f[0]);
+            m.periodoHasta = f[1] == null ? null : aLocalDate(f[1]);
             m.valor = dec(f[2]); m.cumplimientoPct = f[3] == null ? null : dec(f[3]); m.semaforo = str(f[4]);
             m.fecha = f[5] == null ? "" : fmtTs(f[5]);
             out.add(m);
@@ -298,8 +298,8 @@ public class ObjetivoService {
         o.alcance = str(f[7]); o.alcanceRef = f[8] == null ? null : ((Number) f[8]).longValue();
         o.moneda = f[9] == null ? null : ((Number) f[9]).longValue();
         o.umbralAdv = f[10] == null ? null : dec(f[10]);
-        o.vigenciaDesde = f[11] == null ? null : ((java.sql.Date) f[11]).toLocalDate();
-        o.vigenciaHasta = f[12] == null ? null : ((java.sql.Date) f[12]).toLocalDate();
+        o.vigenciaDesde = f[11] == null ? null : aLocalDate(f[11]);
+        o.vigenciaHasta = f[12] == null ? null : aLocalDate(f[12]);
         o.estado = str(f[13]);
         return o;
     }
@@ -308,6 +308,14 @@ public class ObjetivoService {
     private static LocalDate inicioMes() { return LocalDate.now().withDayOfMonth(1); }
     private static String str(Object o) { return o == null ? null : o.toString(); }
     private static BigDecimal dec(Object o) { return o == null ? BigDecimal.ZERO : new BigDecimal(o.toString()); }
+    /** Una columna date puede llegar como LocalDate (Hibernate 7) o java.sql.Date segun el driver. */
+    private static LocalDate aLocalDate(Object o) {
+        if (o == null) return null;
+        if (o instanceof LocalDate ld) return ld;
+        if (o instanceof java.sql.Date d) return d.toLocalDate();
+        if (o instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        return LocalDate.parse(o.toString());
+    }
 
     /** Indicadores disponibles (para el combo del ABM). */
     public static List<String> indicadores() {

@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0089
-TS: 2026-07-14T00:08:47Z
+REQ: REQ-0090
+TS: 2026-07-14T12:57:45Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0089. Ultimo derivado REQ-0089: Ronda 1: rolesDe acotado al tenant efectivo (fin mezcla de tenants); guardado persona+roles en una sola transaccion con authz coherente CREAR/EDITAR. Deploy VPS + smoke 37/37.
+MENSAJE: [SGI] Cola de auditoria: REQ-0090. Ultimo derivado REQ-0090: --resumen
 
 ---
 # Estados validos (Claude escribe, Codex lee):

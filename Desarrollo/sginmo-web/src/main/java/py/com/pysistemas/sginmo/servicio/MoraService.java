@@ -31,6 +31,15 @@ public class MoraService {
     private static final int LIMITE_CARTERA = 1000;
     private static final Set<String> ESTADOS_PROMESA = Set.of("PENDIENTE", "CUMPLIDA", "INCUMPLIDA");
 
+    /** Una columna date puede llegar como LocalDate (Hibernate 7) o java.sql.Date segun el driver. */
+    private static LocalDate aLocalDate(Object o) {
+        if (o == null) return null;
+        if (o instanceof LocalDate ld) return ld;
+        if (o instanceof java.sql.Date d) return d.toLocalDate();
+        if (o instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        return LocalDate.parse(o.toString());
+    }
+
     @PersistenceContext(unitName = "sginmoPU")
     private EntityManager em;
 
@@ -77,7 +86,7 @@ public class MoraService {
             c.cliente = f[2] == null ? null : ((Number) f[2]).longValue();
             c.clienteNombre = (String) f[3];
             c.numeroCuota = ((Number) f[4]).intValue();
-            c.fechaVencimiento = ((java.sql.Date) f[5]).toLocalDate();
+            c.fechaVencimiento = aLocalDate(f[5]);
             c.saldo = f[6] == null ? BigDecimal.ZERO : new BigDecimal(f[6].toString());
             c.moneda = f[7] == null ? null : ((Number) f[7]).longValue();
             c.diasMora = ((Number) f[8]).intValue();

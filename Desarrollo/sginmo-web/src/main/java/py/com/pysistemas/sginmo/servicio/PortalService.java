@@ -34,6 +34,15 @@ public class PortalService {
 
     private static BigDecimal dec(Object o) { return o == null ? BigDecimal.ZERO : new BigDecimal(o.toString()); }
 
+    /** Una columna date puede llegar como LocalDate (Hibernate 7) o java.sql.Date segun el driver. */
+    private static LocalDate aLocalDate(Object o) {
+        if (o == null) return null;
+        if (o instanceof LocalDate ld) return ld;
+        if (o instanceof java.sql.Date d) return d.toLocalDate();
+        if (o instanceof java.sql.Timestamp ts) return ts.toLocalDateTime().toLocalDate();
+        return LocalDate.parse(o.toString());
+    }
+
     /** Resumen de cuenta del cliente: deuda vencida, proxima cuota, total pagado, cantidad de operaciones. */
     public ResumenCuenta resumen(Long persona) {
         if (persona == null) return new ResumenCuenta();
@@ -54,7 +63,7 @@ public class PortalService {
           + " ORDER BY cc.fecha_vencimiento LIMIT 1").setParameter("p", persona).getResultList();
         if (!prox.isEmpty()) {
             Object[] fila = (Object[]) prox.get(0);
-            r.proximaCuota = ((java.sql.Date) fila[0]).toLocalDate();
+            r.proximaCuota = aLocalDate(fila[0]);
             r.proximaCuotaMonto = dec(fila[1]);
         }
         return r;
@@ -71,7 +80,7 @@ public class PortalService {
         for (Object[] f : filas) {
             FilaCuota c = new FilaCuota();
             c.numero = ((Number) f[0]).intValue();
-            c.vencimiento = ((java.sql.Date) f[1]).toLocalDate();
+            c.vencimiento = aLocalDate(f[1]);
             c.monto = dec(f[2]); c.saldo = dec(f[3]);
             c.estado = (String) f[4];
             c.operacion = ((Number) f[5]).longValue();
@@ -89,7 +98,7 @@ public class PortalService {
             .setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
             FilaPago pago = new FilaPago();
-            pago.fecha = ((java.sql.Date) f[0]).toLocalDate();
+            pago.fecha = aLocalDate(f[0]);
             pago.monto = dec(f[1]); pago.estado = (String) f[2];
             out.add(pago);
         }
@@ -131,7 +140,7 @@ public class PortalService {
             FilaOperacion o = new FilaOperacion();
             o.id = ((Number) f[0]).longValue();
             o.tipo = (String) f[1];
-            o.fecha = ((java.sql.Date) f[2]).toLocalDate();
+            o.fecha = aLocalDate(f[2]);
             o.estado = (String) f[3]; o.activo = (String) f[4];
             out.add(o);
         }
@@ -152,7 +161,7 @@ public class PortalService {
         for (Object[] f : filas) {
             FilaLiquidacion l = new FilaLiquidacion();
             l.id = ((Number) f[0]).longValue();
-            l.fecha = ((java.sql.Date) f[1]).toLocalDate();
+            l.fecha = aLocalDate(f[1]);
             l.totalGarantia = dec(f[2]); l.totalGastos = dec(f[3]); l.saldo = dec(f[4]);
             l.activo = (String) f[5];
             out.add(l);

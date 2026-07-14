@@ -1,0 +1,1 @@
+{"ts":"2026-07-14T12:00:00.000Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"Bug portal: ClassCastException LocalDate en resumen de cuenta; hardening de lecturas date en queries nativas (Hibernate 7)"}

@@ -66,7 +66,8 @@ PANTALLAS = ["index", "personas", "activos", "operaciones", "caja", "articulos",
              "rentabilidad",  # REQ-0071
              "objetivos",  # REQ-0073
              "dashboard-detalle",  # REQ-0074
-             "alertas"]  # REQ-0075
+             "alertas",  # REQ-0075
+             "transferencias"]  # REQ-0083 Fase 1
 
 _cj = http.cookiejar.CookieJar()
 _op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(_cj))
