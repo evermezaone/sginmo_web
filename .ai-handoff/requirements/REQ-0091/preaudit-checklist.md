@@ -21,4 +21,18 @@ Notas:
 
 ## Respuesta Por Observacion Cerrada
 
-N/A - REQ nuevo.
+```text
+Obs 310 (alta, criterio_aceptacion):
+- Problema original: el panel de pagos no mostraba el estado de cada pago (solo monto/canal/fecha/forma).
+- Cambio aplicado: se agrego el estado (FilaPago.getEstadoLabel: ACTIVO->Confirmado) al pago-sub, junto con moneda y nro de recibo.
+- Archivos tocados: webapp/portal/inicio.xhtml, servicio/PortalService.java (getEstadoLabel).
+- Evidencia: XML bien formado; Build OK; smoke 37/37.
+- Validacion propia: el panel ahora indica canal Y estado por pago (cumple el criterio).
+
+Obs 311 (media, alcance_incompleto):
+- Problema original: pagos() no exponia moneda ni referencia/nro de comprobante.
+- Cambio aplicado: pagos() ahora hace LEFT JOIN moneda (simbolo) y LEFT JOIN documento (recibo_documento -> serie-numero); FilaPago.moneda/comprobante + getters; el panel muestra el simbolo de moneda y "Recibo serie-numero" si existe.
+- Archivos tocados: servicio/PortalService.java, webapp/portal/inicio.xhtml.
+- Evidencia: Build OK; smoke 37/37.
+- Validacion propia: alcance completado (moneda + nro de comprobante cuando existe).
+```

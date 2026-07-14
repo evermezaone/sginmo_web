@@ -94,8 +94,12 @@ public class PortalService {
         if (persona == null) return out;
         @SuppressWarnings("unchecked")
         List<Object[]> filas = em.createNativeQuery(
-            "SELECT c.fecha, c.monto, c.estado, fp.codigo, fp.descripcion, c.concepto"
-          + " FROM cobro c LEFT JOIN forma_pago fp ON fp.forma_pago = c.forma_pago"
+            "SELECT c.fecha, c.monto, c.estado, fp.codigo, fp.descripcion, c.concepto, mo.simbolo,"
+          + "  CASE WHEN d.documento IS NOT NULL THEN d.serie || '-' || lpad(d.numero::text, 7, '0') ELSE NULL END"
+          + " FROM cobro c"
+          + " LEFT JOIN forma_pago fp ON fp.forma_pago = c.forma_pago"
+          + " LEFT JOIN moneda mo ON mo.moneda = c.moneda"
+          + " LEFT JOIN documento d ON d.documento = c.recibo_documento"
           + " WHERE c.persona=:p AND c.estado='ACTIVO' ORDER BY c.fecha DESC, c.cobro DESC")
             .setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
@@ -107,6 +111,8 @@ public class PortalService {
             pago.canal = "TRF".equalsIgnoreCase(codigo) ? "Transferencia" : "Caja";
             pago.forma = f[4] == null ? "Efectivo" : (String) f[4];
             pago.concepto = (String) f[5];
+            pago.moneda = f[6] == null ? null : (String) f[6];        // obs 311: simbolo de moneda
+            pago.comprobante = f[7] == null ? null : (String) f[7];   // obs 311: nro de recibo (si existe)
             out.add(pago);
         }
         return out;
@@ -288,12 +294,18 @@ public class PortalService {
         public String canal;    // REQ-0091: "Caja" | "Transferencia"
         public String forma;    // detalle de la forma de pago (Efectivo, Transferencia, Tarjeta, ...)
         public String concepto;
+        public String moneda;       // obs 311: simbolo de la moneda (ej. "Gs.")
+        public String comprobante;  // obs 311: nro de recibo (serie-numero) si existe
         public LocalDate getFecha() { return fecha; }
         public BigDecimal getMonto() { return monto; }
         public String getEstado() { return estado; }
+        /** Etiqueta amigable del estado del cobro para el socio. */
+        public String getEstadoLabel() { return "ACTIVO".equals(estado) ? "Confirmado" : estado; }
         public String getCanal() { return canal; }
         public String getForma() { return forma; }
         public String getConcepto() { return concepto; }
+        public String getMoneda() { return moneda; }
+        public String getComprobante() { return comprobante; }
     }
     public static class FilaDoc {
         public Long id; public String tipo, descripcion, nombre;

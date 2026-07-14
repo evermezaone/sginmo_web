@@ -121,13 +121,14 @@
            <div class="pago-item">
              <div class="pago-top">
                <span class="pago-monto">
-                 Gs. <h:outputText value="#{pg.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                 #{empty pg.moneda ? 'Gs.' : pg.moneda} <h:outputText value="#{pg.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
                </span>
                <span class="badge #{pg.canal == 'Transferencia' ? 'b-trf' : 'b-caja'}">#{pg.canal}</span>
              </div>
              <div class="pago-sub">
                <h:outputText value="#{pg.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
                <h:outputText value=" · #{pg.forma}" rendered="#{not empty pg.forma}"/>
+               · #{pg.estadoLabel}<h:outputText value=" · Recibo #{pg.comprobante}" rendered="#{not empty pg.comprobante}"/>
              </div>
            </div>
          </ui:repeat>
