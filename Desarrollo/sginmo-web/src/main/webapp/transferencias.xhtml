@@ -177,5 +177,23 @@
                              action="#{transferenciaBandejaBean.importarCsv()}"/>
         </h:form>
     </p:dialog>
+
+    <!-- REQ-0094: pagos por QR ya conciliados con un movimiento bancario (listos para aplicar). -->
+    <p:panel header="Pagos por QR conciliados (listos para aplicar)" style="margin-top:1rem;" toggleable="true">
+        <p style="color:#6c757d; font-size:.85rem; margin-top:0;">
+            El socio pagó por QR y el movimiento bancario importado cuadra por referencia e importe.
+            Aplicá el cobro por el flujo habitual de caja.
+        </p>
+        <p:dataTable var="q" value="#{transferenciaBandejaBean.pagosQr}" paginator="true" rows="10"
+                     emptyMessage="Sin pagos QR conciliados">
+            <p:column headerText="Referencia">#{q[0]}</p:column>
+            <p:column headerText="Socio">#{q[1]}</p:column>
+            <p:column headerText="Importe" style="text-align:right;">
+                <h:outputText value="#{q[2]}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+            </p:column>
+            <p:column headerText="Fecha mov.">#{q[3]}</p:column>
+            <p:column headerText="Banco">#{q[4]}</p:column>
+        </p:dataTable>
+    </p:panel>
 </ui:define>
 </ui:composition>

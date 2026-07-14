@@ -121,7 +121,10 @@ public class PortalBean implements Serializable {
                     ? resumen.deudaVencida : resumen.proximaCuotaMonto;
             if (m == null || m.signum() <= 0) return;
             qrMonto = m;
-            qrDataUri = qr.pngDataUri(qr.payload(m, sesion.getDocumento()), 240);
+            // REQ-0094: referencia UNICA por intento (dinamica); si no se pudo, cae al documento (estatica).
+            String ref = qr.referenciaIntento(persona, m, null);
+            if (ref == null) ref = sesion.getDocumento();
+            qrDataUri = qr.pngDataUri(qr.payload(m, ref), 240);
             qrHabilitado = qrDataUri != null;
         } catch (RuntimeException ignore) { /* el QR es opcional: nunca rompe el portal */ }
     }

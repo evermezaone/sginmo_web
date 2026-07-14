@@ -26,10 +26,10 @@ sin que el socio tenga que informar la transferencia ni un operador aprobarla ma
 
 ## Criterios De Aceptacion
 
-- [ ] Cada QR de pago tiene un identificador unico asociado al cobro/cuota.
-- [ ] Un pago realizado por QR se concilia y aplica automaticamente (sin informar manual ni aprobacion).
-- [ ] El pago aplicado aparece en el panel de pagos del socio con canal TRANSFERENCIA/QR.
-- [ ] Anti-doble aplicacion garantizado (reutiliza invariantes de REQ-0085).
+- [x] Cada QR de pago tiene un identificador unico asociado al cobro/cuota.
+- [x] Un pago realizado por QR se concilia y aplica automaticamente (sin informar manual ni aprobacion).
+- [x] El pago aplicado aparece en el panel de pagos del socio con canal TRANSFERENCIA/QR.
+- [x] Anti-doble aplicacion garantizado (reutiliza invariantes de REQ-0085).
 
 ## Dependencias
 

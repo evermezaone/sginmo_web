@@ -2,6 +2,11 @@ package py.com.pysistemas.sginmo.servicio;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
+import java.security.SecureRandom;
+import java.util.List;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
@@ -38,6 +43,71 @@ public class QrPagoService {
 
     @Inject
     private ParametroConfig parametros;
+
+    @PersistenceContext(unitName = "sginmoPU")
+    private EntityManager em;
+
+    @Inject
+    private py.com.pysistemas.sginmo.web.TenantContext tenant;
+
+    private static final SecureRandom RND = new SecureRandom();
+
+    /**
+     * REQ-0094: referencia UNICA de un intento de pago QR dinamico, vigente para (persona, importe).
+     * Reusa un intento PENDIENTE no vencido del mismo importe (para no crear uno por cada carga de pagina);
+     * si no hay, crea uno nuevo. Devuelve null si no se pudo (el llamador cae a una referencia estatica).
+     */
+    public String referenciaIntento(Long persona, java.math.BigDecimal importe, Long moneda) {
+        if (persona == null || importe == null || importe.signum() <= 0) return null;
+        Long t = tenant.actual();
+        List<?> ex = em.createNativeQuery(
+            "SELECT referencia FROM portal_pago_qr WHERE tenant=:t AND persona=:p AND importe=:imp"
+          + " AND estado='PENDIENTE' AND (expira_en IS NULL OR expira_en > now())"
+          + " ORDER BY creado_en DESC LIMIT 1")
+            .setParameter("t", t).setParameter("p", persona).setParameter("imp", importe).getResultList();
+        if (!ex.isEmpty() && ex.get(0) != null) return ex.get(0).toString();
+        int min = Math.max(5, parametros.entero("PORTAL_QR_INTENTO_EXPIRA_MIN", 1440));
+        String ref = nuevaReferencia();
+        try {
+            em.createNativeQuery(
+                "INSERT INTO portal_pago_qr (tenant, persona, referencia, importe, moneda, expira_en, usuario_creacion, fecha_creacion)"
+              + " VALUES (:t,:p,:r,:imp,:mon, now() + (:min || ' minutes')::interval, 'portal', now())")
+                .setParameter("t", t).setParameter("p", persona).setParameter("r", ref).setParameter("imp", importe)
+                .setParameter("mon", moneda).setParameter("min", String.valueOf(min))
+                .executeUpdate();
+        } catch (RuntimeException e) {
+            return null;   // choque de referencia (improbable): el QR usara la referencia estatica
+        }
+        return ref;
+    }
+
+    /**
+     * REQ-0094: intenta conciliar un movimiento bancario importado (REQ-0085) con un intento QR PENDIENTE,
+     * cruzando por referencia (la del QR aparece dentro de la del movimiento) + importe exacto. Reclamo
+     * atomico (un solo UPDATE...RETURNING). Devuelve true si concilio alguno. Deja el pago "listo para
+     * aplicar" por el operador (la aplicacion automatica del cobro es la extension pendiente de Fase 2).
+     */
+    public boolean intentarConciliar(Long movimientoId, String referenciaMov, java.math.BigDecimal importe) {
+        if (movimientoId == null || referenciaMov == null || referenciaMov.isBlank() || importe == null) return false;
+        Long t = tenant.actual();
+        List<?> upd = em.createNativeQuery(
+            "UPDATE portal_pago_qr SET estado='CONCILIADO', movimiento=:mov"
+          + " WHERE portal_pago_qr = (SELECT portal_pago_qr FROM portal_pago_qr"
+          + "   WHERE tenant=:t AND estado='PENDIENTE' AND importe=:imp"
+          + "     AND position(referencia in upper(:ref)) > 0"
+          + "   ORDER BY creado_en LIMIT 1)"
+          + " RETURNING portal_pago_qr")
+            .setParameter("mov", movimientoId).setParameter("t", t).setParameter("imp", importe)
+            .setParameter("ref", referenciaMov.toUpperCase()).getResultList();
+        return !upd.isEmpty();
+    }
+
+    private static String nuevaReferencia() {
+        String abc = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        StringBuilder sb = new StringBuilder("QR");
+        for (int i = 0; i < 12; i++) sb.append(abc.charAt(RND.nextInt(abc.length())));
+        return sb.toString();
+    }
 
     /** El pago por QR esta activo solo si se habilito y hay una cuenta destino configurada. */
     public boolean habilitado() {

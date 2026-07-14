@@ -45,6 +45,8 @@ public class PortalTransferenciaService {
     private ParametroConfig parametros;
     @Inject
     private ComprobanteOcrService ocr;   // REQ-0084
+    @Inject
+    private QrPagoService qrPago;         // REQ-0094: auto-match de intentos QR
 
     public static final String PANTALLA = "transferencias";
 
@@ -301,15 +303,19 @@ public class PortalTransferenciaService {
     public void registrarMovimiento(Mov m) {
         autorizacion.exigir(PANTALLA, "EDITAR");
         if (m == null || m.importe == null || m.importe.signum() <= 0) throw new NegocioException("Indique el importe del movimiento");
-        em.createNativeQuery(
+        Object nuevoId = em.createNativeQuery(
             "INSERT INTO movimiento_bancario_importado (tenant, fuente, banco, cuenta, fecha, importe, moneda,"
           + " referencia, remitente, hash_externo, usuario_carga)"
-          + " VALUES (:t,'MANUAL',:b,:c,:f,:imp,:mon,:ref,:rem,:h,:u)")
+          + " VALUES (:t,'MANUAL',:b,:c,:f,:imp,:mon,:ref,:rem,:h,:u)"
+          + " RETURNING movimiento_bancario_importado")
             .setParameter("t", tenant.actual()).setParameter("b", recorta(m.banco, 80)).setParameter("c", recorta(m.cuenta, 40))
             .setParameter("f", m.fecha == null ? null : java.sql.Date.valueOf(m.fecha)).setParameter("imp", m.importe)
             .setParameter("mon", m.moneda).setParameter("ref", recorta(m.referencia, 80)).setParameter("rem", recorta(m.remitente, 120))
             .setParameter("h", m.referencia == null ? null : ("MAN:" + m.referencia + ":" + m.importe))
-            .setParameter("u", sesion.codigoUsuario()).executeUpdate();
+            .setParameter("u", sesion.codigoUsuario()).getSingleResult();
+        // REQ-0094: intenta conciliar automaticamente con un intento de pago QR pendiente.
+        try { qrPago.intentarConciliar(((Number) nuevoId).longValue(), m.referencia, m.importe); }
+        catch (RuntimeException ignore) { /* el auto-match no bloquea el registro del movimiento */ }
     }
 
     /** Importa movimientos desde un archivo CSV: banco;cuenta;fecha(dd/MM/yyyy);importe;referencia;remitente. */
@@ -329,15 +335,22 @@ public class PortalTransferenciaService {
                 String ref = c.length > 4 ? c[4].trim() : null;
                 String rem = c.length > 5 ? c[5].trim() : null;
                 String hash = "CSV:" + (ref == null || ref.isBlank() ? (c[0] + c[2] + c[3]) : ref);
-                em.createNativeQuery(
+                List<?> ins = em.createNativeQuery(
                     "INSERT INTO movimiento_bancario_importado (tenant, fuente, banco, cuenta, fecha, importe,"
                   + " referencia, remitente, hash_externo, usuario_carga)"
                   + " VALUES (:t,'ARCHIVO',:b,:cu,:f,:imp,:ref,:rem,:h,:u)"
-                  + " ON CONFLICT (tenant, hash_externo) WHERE hash_externo IS NOT NULL DO NOTHING")
+                  + " ON CONFLICT (tenant, hash_externo) WHERE hash_externo IS NOT NULL DO NOTHING"
+                  + " RETURNING movimiento_bancario_importado")
                     .setParameter("t", tenant.actual()).setParameter("b", recorta(c[0].trim(), 80))
                     .setParameter("cu", recorta(c[1].trim(), 40)).setParameter("f", fecha == null ? null : java.sql.Date.valueOf(fecha))
                     .setParameter("imp", imp).setParameter("ref", recorta(ref, 80)).setParameter("rem", recorta(rem, 120))
-                    .setParameter("h", recorta(hash, 120)).setParameter("u", sesion.codigoUsuario()).executeUpdate();
+                    .setParameter("h", recorta(hash, 120)).setParameter("u", sesion.codigoUsuario()).getResultList();
+                if (!ins.isEmpty() && ins.get(0) != null) {
+                    // REQ-0094: auto-match con intento de pago QR pendiente (solo si realmente se inserto).
+                    final BigDecimal impFinal = imp; final String refFinal = ref;
+                    try { qrPago.intentarConciliar(((Number) ins.get(0)).longValue(), refFinal, impFinal); }
+                    catch (RuntimeException ignore) { /* el auto-match no bloquea la importacion */ }
+                }
                 n++;
             } catch (RuntimeException ignore) { /* linea invalida: se omite */ }
         }
@@ -489,6 +502,23 @@ public class PortalTransferenciaService {
     }
 
     private static String recorta(String s, int max) { return s == null ? null : (s.length() <= max ? s : s.substring(0, max)); }
+
+    /**
+     * REQ-0094: intentos de pago por QR ya conciliados con un movimiento bancario (el socio pago por QR
+     * y el movimiento cuadra). Quedan "listos para aplicar" por el operador. Columnas:
+     * [referencia, nombre socio, importe, fecha movimiento, banco].
+     */
+    public List<Object[]> intentosQrConciliados() {
+        autorizacion.exigir(PANTALLA, "VER");
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery(
+            "SELECT q.referencia, p.nombre, q.importe, m.fecha, m.banco"
+          + " FROM portal_pago_qr q JOIN persona p ON p.persona = q.persona"
+          + " LEFT JOIN movimiento_bancario_importado m ON m.movimiento_bancario_importado = q.movimiento"
+          + " WHERE q.estado = 'CONCILIADO' ORDER BY q.creado_en DESC")
+            .getResultList();
+        return rows;
+    }
 
     // ── DTOs ──
     public static class Datos {

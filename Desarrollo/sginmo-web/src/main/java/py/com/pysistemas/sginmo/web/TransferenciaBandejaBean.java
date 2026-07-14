@@ -49,6 +49,8 @@ public class TransferenciaBandejaBean implements Serializable {
     private Long documentoSel;
     private List<py.com.pysistemas.sginmo.dominio.catalogo.Entidad> emisores = List.of();
     private String emisorSel;
+    // REQ-0094: pagos por QR conciliados (listos para aplicar).
+    private List<Object[]> pagosQr = List.of();
     // Conciliacion bancaria (REQ-0085).
     private List<PortalTransferenciaService.Mov> candidatos = List.of();
     private PortalTransferenciaService.Mov nuevoMov = new PortalTransferenciaService.Mov();
@@ -65,7 +67,12 @@ public class TransferenciaBandejaBean implements Serializable {
         return sesion.puede(PANTALLA, "VER") ? null : "/index?faces-redirect=true";
     }
 
-    public void cargar() { lista = servicio.bandeja(filtroEstado); }
+    public void cargar() {
+        lista = servicio.bandeja(filtroEstado);
+        pagosQr = servicio.intentosQrConciliados();   // REQ-0094
+    }
+
+    public List<Object[]> getPagosQr() { return pagosQr; }
 
     public void seleccionar(PortalTransferenciaService.Fila f) {
         seleccionada = f;
