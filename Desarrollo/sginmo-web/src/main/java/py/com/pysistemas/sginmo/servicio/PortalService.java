@@ -69,21 +69,50 @@ public class PortalService {
         return r;
     }
 
-    public List<FilaCuota> cuotas(Long persona) {
+    /** Compat: vista por defecto (ano actual + todo pendiente anterior). REQ-0097. */
+    public List<FilaCuota> cuotas(Long persona) { return cuotas(persona, null); }
+
+    /** REQ-0097: anos con cuotas del socio (para el selector de historicos), mas recientes primero. */
+    public List<Integer> aniosConCuotas(Long persona) {
+        List<Integer> out = new ArrayList<>();
+        if (persona == null) return out;
+        @SuppressWarnings("unchecked")
+        List<Object> rows = em.createNativeQuery(
+            "SELECT DISTINCT date_part('year', cc.fecha_vencimiento)::int AS anio"
+          + " FROM cronograma_cuota cc JOIN operacion o ON o.operacion = cc.operacion"
+          + " WHERE o.cliente = :p AND cc.fecha_vencimiento IS NOT NULL ORDER BY anio DESC")
+            .setParameter("p", persona).getResultList();
+        for (Object r : rows) if (r != null) out.add(((Number) r).intValue());
+        return out;
+    }
+
+    /**
+     * REQ-0097: cuotas del socio con mora. Aislamiento por persona SIEMPRE primero (o.cliente = :p).
+     * - anio == null: vista por defecto = cuotas del ano actual + TODO lo pendiente de anos anteriores
+     *   (no oculta deuda vieja).
+     * - anio != null: vista historica de ese ano (todos los estados).
+     * La mora en dinero usa f_mora_cuota (misma fuente que cobranza; no se duplica) y se calcula a HOY
+     * incluso para cuotas de anos anteriores que sigan pendientes. No recalcula importes/saldos historicos.
+     */
+    public List<FilaCuota> cuotas(Long persona, Integer anio) {
         List<FilaCuota> out = new ArrayList<>();
         if (persona == null) return out;
-        // REQ-0097: dias de mora y multa/mora acumulada por cuota. La mora en dinero usa f_mora_cuota
-        // (misma fuente que el modulo de cobranza; no se duplica la formula). Solo cuenta si la cuota
-        // esta PENDIENTE, con saldo > 0 y vencida.
-        @SuppressWarnings("unchecked")
-        List<Object[]> filas = em.createNativeQuery(
+        String filtro = (anio == null)
+            ? " AND (date_part('year', cc.fecha_vencimiento) = date_part('year', current_date)"
+            + "      OR (cc.estado = 'PENDIENTE' AND cc.saldo > 0))"
+            : " AND date_part('year', cc.fecha_vencimiento) = :anio";
+        var q = em.createNativeQuery(
             "SELECT cc.numero_cuota, cc.fecha_vencimiento, cc.monto, cc.saldo, cc.estado, o.operacion,"
           + "  CASE WHEN cc.estado='PENDIENTE' AND cc.saldo > 0 AND cc.fecha_vencimiento < current_date"
           + "       THEN (current_date - cc.fecha_vencimiento) ELSE 0 END AS dias_mora,"
           + "  CASE WHEN cc.estado='PENDIENTE' AND cc.saldo > 0 AND cc.fecha_vencimiento < current_date"
           + "       THEN f_mora_cuota(cc.cronograma_cuota, current_date) ELSE 0 END AS mora"
           + " FROM cronograma_cuota cc JOIN operacion o ON o.operacion=cc.operacion"
-          + " WHERE o.cliente=:p ORDER BY cc.fecha_vencimiento").setParameter("p", persona).getResultList();
+          + " WHERE o.cliente=:p" + filtro + " ORDER BY cc.fecha_vencimiento")
+            .setParameter("p", persona);
+        if (anio != null) q.setParameter("anio", anio);
+        @SuppressWarnings("unchecked")
+        List<Object[]> filas = q.getResultList();
         for (Object[] f : filas) {
             FilaCuota c = new FilaCuota();
             c.numero = ((Number) f[0]).intValue();

@@ -20,3 +20,12 @@ Notas:
 
 ## Respuesta Por Observacion Cerrada
 N/A - REQ nuevo.
+
+```text
+Obs 319 (alta, alcance historicos - ampliacion del REQ):
+- Problema: el REQ se amplio (puntos 8-12) a historicos: vista por defecto ano actual + todo pendiente anterior, y consulta por ano; cuotas(persona) devolvia todo sin filtro y no habia selector.
+- Cambio: PortalService.cuotas(persona, Integer anio): anio=null -> ano actual + todo PENDIENTE con saldo (cualquier ano); anio!=null -> ese ano (todos los estados). Filtro por persona SIEMPRE primero (aislamiento). Nuevo aniosConCuotas(persona) para el selector. PortalBean expone anioCuotas/aniosCuotas/cambiarAnio(). inicio.xhtml agrega selectOneMenu (Ano actual + pendientes / Ano N) que recarga la grilla por ajax. La mora se calcula a hoy incluso para cuotas viejas pendientes; no se recalculan importes/saldos historicos.
+- Archivos: servicio/PortalService.java, web/PortalBean.java, webapp/portal/inicio.xhtml.
+- Evidencia: inicio.xhtml XML OK; Build OK; smoke 37/37.
+```
+

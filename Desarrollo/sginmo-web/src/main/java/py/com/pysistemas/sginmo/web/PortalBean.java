@@ -48,6 +48,10 @@ public class PortalBean implements Serializable {
     private List<PortalService.FilaLiquidacion> liquidaciones = List.of();
     private List<PortalService.FilaDoc> documentosPropietario = List.of();
 
+    // REQ-0097: filtro de anio para la grilla de cuotas (null = ano actual + pendientes).
+    private Integer anioCuotas;
+    private List<Integer> aniosCuotas = List.of();
+
     // REQ-0093: pago por QR (Fase 1). Se calcula una vez por vista.
     private boolean qrHabilitado;
     private java.math.BigDecimal qrMonto;
@@ -62,7 +66,8 @@ public class PortalBean implements Serializable {
         // Vista de cliente (si tiene rol CLIENTE).
         if (sesion.isEsCliente()) {
             resumen = portal.resumen(persona);
-            cuotas = portal.cuotas(persona);
+            aniosCuotas = portal.aniosConCuotas(persona);
+            cuotas = portal.cuotas(persona, anioCuotas);
             pagos = portal.pagos(persona);
             documentos = portal.documentos(persona);
             calcularQr();
@@ -132,6 +137,12 @@ public class PortalBean implements Serializable {
     public boolean isQrHabilitado() { return qrHabilitado; }
     public java.math.BigDecimal getQrMonto() { return qrMonto; }
     public String getQrDataUri() { return qrDataUri; }
+
+    /** REQ-0097: recarga la grilla de cuotas segun el anio elegido (null = actual + pendientes). */
+    public void cambiarAnio() { cuotas = portal.cuotas(persona, anioCuotas); }
+    public Integer getAnioCuotas() { return anioCuotas; }
+    public void setAnioCuotas(Integer anioCuotas) { this.anioCuotas = anioCuotas; }
+    public List<Integer> getAniosCuotas() { return aniosCuotas; }
 
     public PortalService.ResumenCuenta getResumen() { return resumen; }
     public List<PortalService.FilaCuota> getCuotas() { return cuotas; }
