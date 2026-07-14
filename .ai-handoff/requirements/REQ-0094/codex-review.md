@@ -12,8 +12,7 @@
 
 ### Bloqueantes
 
-- **No aplica el cobro automaticamente.** El REQ exige que el pago QR, al confirmarse, se concilie y se aplique automaticamente sin informe manual ni aprobacion. La implementacion solo marca `portal_pago_qr.estado='CONCILIADO'` y lo muestra como "listo para aplicar"; `QrPagoService.intentarConciliar()` no llama al motor de caja, no setea `cobro`, no pasa el intento a `APLICADO`, y `transferencias.xhtml` indica al operador "Aplica el cobro por el flujo habitual de caja". Esto incumple los criterios de aceptacion principales.
-- **La conciliacion puede tomar intentos QR vencidos.** `referenciaIntento()` reusa solo intentos no vencidos, pero `intentarConciliar()` busca cualquier `estado='PENDIENTE'` por referencia e importe sin validar `expira_en`. Un movimiento bancario tardio puede conciliar un QR expirado, contrariando el alcance de "manejo de estados y expiracion del QR".
+- **El movimiento bancario no se consume al conciliar/aplicar el QR.** La correccion ahora marca el intento QR como `CONCILIADO` y puede auto-aplicar el cobro (`portal_pago_qr.estado='APLICADO'`), pero `QrPagoService.intentarConciliar()` no actualiza `movimiento_bancario_importado.estado_conciliacion`. El movimiento queda `PENDIENTE`, por lo que todavia aparece como candidato en `PortalTransferenciaService.candidatos()` y puede volver a usarse para aplicar una transferencia manual. Esto rompe el criterio de anti-doble aplicacion y la invariante de REQ-0085.
 
 ### No Bloqueantes
 
@@ -21,13 +20,14 @@
 
 ## Riesgos
 
-- La auto-aplicacion requiere regla de imputacion, caja/planilla y forma de pago. Si aun no existe definicion de negocio, el REQ debe pasar a `BLOQUEADO_POR_USUARIO` o modificarse formalmente; no corresponde aprobarlo como si el criterio estuviera implementado.
+- La auto-aplicacion es condicional ("gated"), pero cuando aplica debe dejar cerrada toda la cadena: intento QR, cobro y movimiento bancario. Si no se consume el movimiento, el sistema puede cobrar dos veces el mismo ingreso bancario.
 
 ## Pruebas Revisadas
 
 - [x] Revision estatica de `QrPagoService`, `PortalTransferenciaService`, `transferencias.xhtml` y migracion V60.
-- [x] Revision de `claude-implementation.md`, `preaudit-checklist.md` y `user-decision.md`; no hay decision de usuario registrada que recorte el alcance a "base ahora, auto-apply despues".
+- [x] Revision de respuesta a Obs 316/317 en `preaudit-checklist.md`.
+- [x] Build local: `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual luego del ajuste: generar intento QR, importar/recibir movimiento con referencia e importe, verificar que se crea cobro, se imputa documento/cuota, `portal_pago_qr` queda `APLICADO` con `cobro`, el movimiento queda consumido y el panel del socio lo muestra como aplicado.
+- [ ] Prueba manual luego del ajuste: generar intento QR, importar/recibir movimiento con referencia e importe, verificar que se crea cobro, se imputa documento/cuota, `portal_pago_qr` queda `APLICADO` con `cobro`, `movimiento_bancario_importado` queda `CONCILIADO`/consumido y ya no aparece como candidato para otra transferencia.

@@ -37,3 +37,11 @@ Obs 317 (media, estado_expiracion):
 - Evidencia: Build OK; smoke 37/37.
 ```
 
+```text
+Obs 318 (alta, anti_doble_aplicacion):
+- Problema: al auto-conciliar el QR no se marcaba movimiento_bancario_importado.estado_conciliacion; el movimiento seguia PENDIENTE y candidatos() podia ofrecerlo para una conciliacion manual -> doble aplicacion del mismo ingreso.
+- Cambio: intentarConciliar(), tras tomar el intento QR, marca el movimiento estado_conciliacion=CONCILIADO (WHERE PENDIENTE); candidatos() filtra PENDIENTE, asi el movimiento ya no se ofrece para aplicar de nuevo.
+- Archivos: servicio/QrPagoService.java.
+- Evidencia: Build OK; smoke 37/37.
+```
+

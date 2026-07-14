@@ -108,6 +108,13 @@ public class QrPagoService {
             .setParameter("mov", movimientoId).setParameter("t", t).setParameter("imp", importe)
             .setParameter("ref", referenciaMov.toUpperCase()).getResultList();
         if (upd.isEmpty()) return false;
+        // obs 318 (anti doble aplicacion): el movimiento queda tomado por el QR -> CONCILIADO, para que
+        // PortalTransferenciaService.candidatos() (que filtra PENDIENTE) no lo ofrezca en una conciliacion
+        // manual de transferencia. Asi el mismo ingreso bancario no se aplica dos veces.
+        em.createNativeQuery(
+            "UPDATE movimiento_bancario_importado SET estado_conciliacion = 'CONCILIADO'"
+          + " WHERE movimiento_bancario_importado = :mov AND estado_conciliacion = 'PENDIENTE'")
+            .setParameter("mov", movimientoId).executeUpdate();
         // REQ-0094 (obs 316): intentar aplicar el cobro AUTOMATICAMENTE (gated). Best-effort: si no se
         // dan las condiciones (sin permiso/caja/documento/moneda), queda CONCILIADO para el operador.
         aplicarAutomatico(((Number) upd.get(0)).longValue(), referenciaMov);
