@@ -72,9 +72,16 @@ public class PortalService {
     public List<FilaCuota> cuotas(Long persona) {
         List<FilaCuota> out = new ArrayList<>();
         if (persona == null) return out;
+        // REQ-0097: dias de mora y multa/mora acumulada por cuota. La mora en dinero usa f_mora_cuota
+        // (misma fuente que el modulo de cobranza; no se duplica la formula). Solo cuenta si la cuota
+        // esta PENDIENTE, con saldo > 0 y vencida.
         @SuppressWarnings("unchecked")
         List<Object[]> filas = em.createNativeQuery(
-            "SELECT cc.numero_cuota, cc.fecha_vencimiento, cc.monto, cc.saldo, cc.estado, o.operacion"
+            "SELECT cc.numero_cuota, cc.fecha_vencimiento, cc.monto, cc.saldo, cc.estado, o.operacion,"
+          + "  CASE WHEN cc.estado='PENDIENTE' AND cc.saldo > 0 AND cc.fecha_vencimiento < current_date"
+          + "       THEN (current_date - cc.fecha_vencimiento) ELSE 0 END AS dias_mora,"
+          + "  CASE WHEN cc.estado='PENDIENTE' AND cc.saldo > 0 AND cc.fecha_vencimiento < current_date"
+          + "       THEN f_mora_cuota(cc.cronograma_cuota, current_date) ELSE 0 END AS mora"
           + " FROM cronograma_cuota cc JOIN operacion o ON o.operacion=cc.operacion"
           + " WHERE o.cliente=:p ORDER BY cc.fecha_vencimiento").setParameter("p", persona).getResultList();
         for (Object[] f : filas) {
@@ -84,6 +91,8 @@ public class PortalService {
             c.monto = dec(f[2]); c.saldo = dec(f[3]);
             c.estado = (String) f[4];
             c.operacion = ((Number) f[5]).longValue();
+            c.diasMora = f[6] == null ? 0 : ((Number) f[6]).intValue();
+            c.moraAcumulada = dec(f[7]);
             out.add(c);
         }
         return out;
@@ -282,12 +291,21 @@ public class PortalService {
     }
     public static class FilaCuota {
         public int numero; public LocalDate vencimiento; public BigDecimal monto, saldo; public String estado; public Long operacion;
+        public int diasMora;                              // REQ-0097: dias vencidos (0 si al dia/pagada)
+        public BigDecimal moraAcumulada = BigDecimal.ZERO; // REQ-0097: multa/mora en dinero (f_mora_cuota)
         public int getNumero() { return numero; }
         public LocalDate getVencimiento() { return vencimiento; }
         public BigDecimal getMonto() { return monto; }
         public BigDecimal getSaldo() { return saldo; }
         public String getEstado() { return estado; }
         public Long getOperacion() { return operacion; }
+        public int getDiasMora() { return diasMora; }
+        public BigDecimal getMoraAcumulada() { return moraAcumulada; }
+        /** REQ-0097: indicador simple para el socio, derivado de saldo/vencimiento. */
+        public String getIndicador() {
+            if (saldo == null || saldo.signum() <= 0) return "Pagado";
+            return diasMora > 0 ? "Atrasado" : "Al dia";
+        }
     }
     public static class FilaPago {
         public LocalDate fecha; public BigDecimal monto; public String estado;

@@ -23,7 +23,6 @@
       Bienvenido, #{portalBean.nombreUsuario}
   </h1>
   <h:panelGroup layout="block" rendered="#{portalBean.esCliente}">
-    <h2 style="font-size:1.05rem; margin:.2rem 0 .6rem; color:#0f766e;" rendered="#{portalBean.esPropietario}">Como cliente</h2>
     <div class="tarjetas-portal">
         <div class="card-p">
             <div class="n #{portalBean.resumen.deudaVencida gt 0 ? 'alerta' : ''}">
@@ -57,7 +56,7 @@
       <div class="seccion-p">
         <h3>Mis cuotas</h3>
         <table class="tp">
-            <thead><tr><th>Operacion</th><th>Cuota</th><th>Vencimiento</th><th>Monto</th><th>Saldo</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Operacion</th><th>Cuota</th><th>Vencimiento</th><th>Monto</th><th>Saldo</th><th>Estado</th><th>Días mora</th><th>Multa/Mora</th></tr></thead>
             <tbody>
                 <ui:repeat value="#{portalBean.cuotas}" var="c">
                     <tr>
@@ -66,7 +65,12 @@
                         <td><h:outputText value="#{c.vencimiento}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
                         <td><h:outputText value="#{c.monto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
                         <td><h:outputText value="#{c.saldo}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
-                        <td>#{c.estado}</td>
+                        <td><span class="badge #{c.indicador == 'Atrasado' ? 'b-atraso' : (c.indicador == 'Pagado' ? 'b-pagado' : 'b-aldia')}">#{c.indicador}</span></td>
+                        <td><h:outputText value="#{c.diasMora}" rendered="#{c.diasMora gt 0}"/><h:outputText value="—" rendered="#{c.diasMora le 0}"/></td>
+                        <td>
+                            <h:outputText value="#{c.moraAcumulada}" rendered="#{c.moraAcumulada gt 0}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                            <h:outputText value="—" rendered="#{c.moraAcumulada le 0}"/>
+                        </td>
                     </tr>
                 </ui:repeat>
             </tbody>
