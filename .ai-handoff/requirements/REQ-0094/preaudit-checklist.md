@@ -22,3 +22,18 @@ Notas:
 ## Respuesta Por Observacion Cerrada
 
 N/A - REQ nuevo.
+
+```text
+Obs 316 (alta, alcance_incompleto - auto-apply):
+- Decision del usuario (2026-07-14): implementar el auto-apply ahora en modo GATED (opcion elegida al re-consultar por el bloqueo del auditor).
+- Cambio: intentarConciliar() ahora, tras marcar CONCILIADO, llama aplicarAutomatico(): con permiso de caja + caja abierta + documento pendiente + moneda + sin sobrepago, aplica el cobro via CajaService.cobrar (imputa a la cuota/documento mas antiguo, forma TRF) y marca APLICADO + linkea cobro; el pago aparece en el panel del socio (pagos()). Si falta alguna condicion, queda CONCILIADO para el operador. Todo pre-validado para NO envenenar la tx del import.
+- Archivos: servicio/QrPagoService.java (+ inject CajaService/SesionUsuario).
+- Evidencia: Build OK; smoke 37/37.
+
+Obs 317 (media, estado_expiracion):
+- Problema: intentarConciliar no validaba expira_en; un movimiento tardio podia conciliar un QR vencido.
+- Cambio: el subquery de conciliacion agrega (expira_en IS NULL OR expira_en > now()).
+- Archivos: servicio/QrPagoService.java.
+- Evidencia: Build OK; smoke 37/37.
+```
+

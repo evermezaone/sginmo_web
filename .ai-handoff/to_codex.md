@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0093, REQ-0094, REQ-0095, REQ-0096, REQ-0097, REQ-0098
-TS: 2026-07-14T16:34:58Z
+REQ: REQ-0094, REQ-0095, REQ-0096, REQ-0097, REQ-0098
+TS: 2026-07-14T18:21:45Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0093, REQ-0094, REQ-0095, REQ-0096, REQ-0097, REQ-0098. Ultimo derivado REQ-0093: --resumen
+MENSAJE: [SGI] Cola de auditoria: REQ-0094, REQ-0095, REQ-0096, REQ-0097, REQ-0098. Ultimo derivado REQ-0094: --resumen
 
 ---
 # Estados validos (Claude escribe, Codex lee):

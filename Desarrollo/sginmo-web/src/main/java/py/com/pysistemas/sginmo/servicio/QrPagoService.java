@@ -50,6 +50,12 @@ public class QrPagoService {
     @Inject
     private py.com.pysistemas.sginmo.web.TenantContext tenant;
 
+    @Inject
+    private CajaService caja;                       // REQ-0094: aplicar el cobro automatico
+
+    @Inject
+    private py.com.one.security.web.SesionUsuario sesion;   // permiso de caja del operador
+
     private static final SecureRandom RND = new SecureRandom();
 
     /**
@@ -90,16 +96,73 @@ public class QrPagoService {
     public boolean intentarConciliar(Long movimientoId, String referenciaMov, java.math.BigDecimal importe) {
         if (movimientoId == null || referenciaMov == null || referenciaMov.isBlank() || importe == null) return false;
         Long t = tenant.actual();
+        // obs 317: no conciliar intentos VENCIDOS (respetar expira_en); un movimiento tardio no revive un QR expirado.
         List<?> upd = em.createNativeQuery(
             "UPDATE portal_pago_qr SET estado='CONCILIADO', movimiento=:mov"
           + " WHERE portal_pago_qr = (SELECT portal_pago_qr FROM portal_pago_qr"
           + "   WHERE tenant=:t AND estado='PENDIENTE' AND importe=:imp"
+          + "     AND (expira_en IS NULL OR expira_en > now())"
           + "     AND position(referencia in upper(:ref)) > 0"
           + "   ORDER BY creado_en LIMIT 1)"
           + " RETURNING portal_pago_qr")
             .setParameter("mov", movimientoId).setParameter("t", t).setParameter("imp", importe)
             .setParameter("ref", referenciaMov.toUpperCase()).getResultList();
-        return !upd.isEmpty();
+        if (upd.isEmpty()) return false;
+        // REQ-0094 (obs 316): intentar aplicar el cobro AUTOMATICAMENTE (gated). Best-effort: si no se
+        // dan las condiciones (sin permiso/caja/documento/moneda), queda CONCILIADO para el operador.
+        aplicarAutomatico(((Number) upd.get(0)).longValue(), referenciaMov);
+        return true;
+    }
+
+    /**
+     * REQ-0094 (obs 316): aplica el cobro del intento QR conciliado con el motor de caja y lo marca
+     * APLICADO. Regla por defecto: imputa a la cuota/documento pendiente MAS ANTIGUO del socio, en la
+     * caja abierta de la empresa, forma de pago TRANSFERENCIA. Todo pre-validado para NO lanzar (no
+     * envenena la tx del import): si falta permiso de caja, caja abierta, documento, moneda, o el importe
+     * excede el saldo, se omite y la intencion queda CONCILIADO para que el operador la aplique a mano.
+     */
+    private void aplicarAutomatico(Long intentoId, String referenciaMov) {
+        if (sesion == null || !sesion.puede("caja", "CREAR")) return;   // sin permiso de caja: lo hace el operador
+        Long t = tenant.actual();
+        List<?> qs = em.createNativeQuery(
+            "SELECT persona, importe, moneda FROM portal_pago_qr WHERE portal_pago_qr = :id AND estado = 'CONCILIADO'")
+            .setParameter("id", intentoId).getResultList();
+        if (qs.isEmpty()) return;
+        Object[] q = (Object[]) qs.get(0);
+        Long persona = ((Number) q[0]).longValue();
+        java.math.BigDecimal importe = (java.math.BigDecimal) q[1];
+        Long moneda = q[2] == null ? null : ((Number) q[2]).longValue();
+        if (persona == null || importe == null || importe.signum() <= 0) return;
+
+        List<?> pl = em.createNativeQuery(
+            "SELECT planilla FROM planilla WHERE tenant = :t AND estado = 'ABIERTA' ORDER BY planilla DESC LIMIT 1")
+            .setParameter("t", t).getResultList();
+        if (pl.isEmpty()) return;   // sin caja abierta -> queda para el operador
+        Long planillaId = ((Number) pl.get(0)).longValue();
+
+        List<Object[]> docs = em.createNativeQuery(
+            "SELECT documento, moneda, saldo FROM documento WHERE persona = :p AND estado = 'PENDIENTE'"
+          + " AND direccion_dinero = 'ENTRADA' AND saldo > 0 ORDER BY fecha, documento LIMIT 1")
+            .setParameter("p", persona).getResultList();
+        if (docs.isEmpty()) return;   // sin documento a imputar -> queda para el operador
+        Object[] d = docs.get(0);
+        Long documentoId = ((Number) d[0]).longValue();
+        Long monedaFinal = moneda != null ? moneda : (d[1] == null ? null : ((Number) d[1]).longValue());
+        java.math.BigDecimal saldo = (java.math.BigDecimal) d[2];
+        if (monedaFinal == null || saldo == null || importe.compareTo(saldo) > 0) return;  // sin moneda o sobrepago -> operador
+
+        List<?> fps = em.createNativeQuery(
+            "SELECT forma_pago FROM forma_pago WHERE codigo = 'TRF' AND tenant IN (:t, -1) ORDER BY tenant DESC LIMIT 1")
+            .setParameter("t", t).getResultList();
+        if (fps.isEmpty()) return;
+        Long formaTrf = ((Number) fps.get(0)).longValue();
+
+        long cobroId = caja.cobrar(documentoId, planillaId, formaTrf, persona, importe, monedaFinal,
+                "portal-qr", null, null, null, null, null, null, referenciaMov,
+                null, null, null, null, null, null);
+        em.createNativeQuery("UPDATE portal_pago_qr SET estado = 'APLICADO', cobro = :c"
+          + " WHERE portal_pago_qr = :id AND estado = 'CONCILIADO'")
+            .setParameter("c", cobroId).setParameter("id", intentoId).executeUpdate();
     }
 
     private static String nuevaReferencia() {
