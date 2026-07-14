@@ -19,24 +19,15 @@
     <div class="seccion-p">
         <h3>Informar transferencia</h3>
         <p style="color:#6b7280; font-size:.85rem; margin-top:0;">
-            Cargue los datos de su transferencia y adjunte el comprobante. Un operador la revisara y aplicara a su cuenta.
+            Indicá el <b>monto</b> y adjuntá el <b>comprobante</b>. Los demás datos (fecha, banco, nº de
+            operación) se leen automáticamente del comprobante. Un operador la revisará y aplicará a tu cuenta.
         </p>
         <h:form enctype="multipart/form-data">
             <p:growl id="msj" showDetail="true" life="5000"/>
-            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.7rem;">
-                <div><label>Importe *</label><br/>
-                    <p:inputNumber value="#{portalTransferenciaBean.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/></div>
-                <div><label>Fecha de la transferencia</label><br/>
-                    <p:datePicker value="#{portalTransferenciaBean.fecha}" pattern="dd/MM/yyyy" style="width:100%;"/></div>
-                <div><label>Banco de origen</label><br/>
-                    <p:inputText value="#{portalTransferenciaBean.bancoOrigen}" maxlength="80" style="width:100%;"/></div>
-                <div><label>Cuenta de origen (o últimos dígitos)</label><br/>
-                    <p:inputText value="#{portalTransferenciaBean.cuentaOrigen}" maxlength="40" style="width:100%;"/></div>
-                <div><label>Nro. de operación / transacción</label><br/>
-                    <p:inputText value="#{portalTransferenciaBean.numeroTransaccion}" maxlength="60" style="width:100%;"/></div>
+            <div style="max-width:320px;">
+                <label>Monto *</label><br/>
+                <p:inputNumber value="#{portalTransferenciaBean.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/>
             </div>
-            <div style="margin-top:.6rem;"><label>Observación</label><br/>
-                <p:inputTextarea value="#{portalTransferenciaBean.observacion}" rows="2" maxlength="300" style="width:100%;"/></div>
             <div style="margin-top:.6rem;">
                 <label>Comprobante (PDF, JPG, PNG o WEBP) *</label><br/>
                 <p:fileUpload value="#{portalTransferenciaBean.comprobante}" mode="simple" skinSimple="true"

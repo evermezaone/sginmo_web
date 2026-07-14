@@ -56,13 +56,20 @@
       <div class="seccion-p">
         <h3>Mis cuotas</h3>
         <h:form id="frmCuotas">
-          <div style="margin-bottom:.6rem;">
-            <label style="font-size:.85rem; color:#6b7280; margin-right:.4rem;">Periodo:</label>
-            <p:selectOneMenu value="#{portalBean.anioCuotas}" style="min-width:13rem;">
-                <f:selectItem itemLabel="Año actual + pendientes" itemValue="#{null}"/>
-                <f:selectItems value="#{portalBean.aniosCuotas}" var="a" itemLabel="Año #{a}" itemValue="#{a}"/>
-                <p:ajax listener="#{portalBean.cambiarAnio}" update="tablaCuotas"/>
-            </p:selectOneMenu>
+          <div style="margin-bottom:.6rem; display:flex; align-items:center; flex-wrap:wrap; gap:.6rem;">
+            <span>
+              <label style="font-size:.85rem; color:#6b7280; margin-right:.4rem;">Periodo:</label>
+              <p:selectOneMenu value="#{portalBean.anioCuotas}" style="min-width:13rem;">
+                  <f:selectItem itemLabel="Año actual + pendientes" itemValue="#{null}"/>
+                  <f:selectItems value="#{portalBean.aniosCuotas}" var="a" itemLabel="Año #{a}" itemValue="#{a}"/>
+                  <p:ajax listener="#{portalBean.cambiarAnio}" update="tablaCuotas"/>
+              </p:selectOneMenu>
+            </span>
+            <span style="flex:1 1 auto;"></span>
+            <h:link outcome="/portal/transferencia" rendered="#{portalBean.esCliente}"
+                    style="background:#0f766e; color:#fff; padding:.5rem .9rem; border-radius:8px; text-decoration:none; font-weight:600; white-space:nowrap;">
+                <i class="pi pi-send"></i> Informar transferencia
+            </h:link>
           </div>
           <h:panelGroup id="tablaCuotas" layout="block" style="overflow-x:auto;">
             <table class="tp">
