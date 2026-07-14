@@ -11,21 +11,36 @@
     <h:outputStylesheet library="primefaces" name="primeicons/primeicons.css"/>
     <style>
         body { margin:0; font-family: system-ui, Arial, sans-serif; background:#f4f6f9; color:#1f2937; }
-        .portal-top { background:#0f766e; color:#fff; padding:.9rem 1rem; display:flex; align-items:center; gap:.6rem; }
-        .portal-top .marca { font-weight:600; font-size:1.05rem; flex:1; }
+        *, *::before, *::after { box-sizing:border-box; }
+        .portal-top { background:#0f766e; color:#fff; padding:.9rem 1rem; display:flex; align-items:center; flex-wrap:wrap; gap:.4rem .8rem; }
+        .portal-top .marca { font-weight:600; font-size:1.05rem; flex:1 1 auto; }
         .portal-top a { color:#e6fffb; text-decoration:none; }
+        .portal-top form { display:flex; align-items:center; flex-wrap:wrap; gap:.3rem 1rem; }
+        .portal-top form a, .portal-top form .ui-commandlink, .portal-top form span { padding:.2rem 0; white-space:nowrap; }
         .portal-wrap { max-width:900px; margin:0 auto; padding:1rem; }
-        .tarjetas-portal { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.8rem; margin:.5rem 0 1.2rem; }
+        .portal-wrap h1 { overflow-wrap:anywhere; }
+        .tarjetas-portal { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.8rem; margin:.5rem 0 1.2rem; }
         .card-p { background:#fff; border-radius:10px; padding:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-        .card-p .n { font-size:1.5rem; font-weight:700; }
+        .card-p .n { font-size:1.5rem; font-weight:700; overflow-wrap:anywhere; }
         .card-p .n.alerta { color:#dc2626; }
         .card-p .t { color:#6b7280; font-size:.85rem; margin-top:.2rem; }
-        .seccion-p { background:#fff; border-radius:10px; padding:1rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+        /* Cada seccion permite scroll horizontal propio: una tabla ancha nunca desborda la pagina. */
+        .seccion-p { background:#fff; border-radius:10px; padding:1rem; margin-bottom:1rem; box-shadow:0 1px 3px rgba(0,0,0,.08); overflow-x:auto; -webkit-overflow-scrolling:touch; }
         .seccion-p h3 { margin:.1rem 0 .8rem; font-size:1rem; }
         table.tp { width:100%; border-collapse:collapse; font-size:.9rem; }
-        table.tp th, table.tp td { text-align:left; padding:.45rem .4rem; border-bottom:1px solid #eef0f3; }
+        table.tp th, table.tp td { text-align:left; padding:.45rem .5rem; border-bottom:1px solid #eef0f3; white-space:nowrap; }
         table.tp th { color:#6b7280; font-weight:600; }
-        @media (max-width:520px) { .portal-wrap { padding:.6rem; } table.tp { font-size:.82rem; } }
+        @media (max-width:640px) {
+            .portal-top { padding:.7rem .8rem; }
+            .portal-top .marca { flex-basis:100%; }
+            .portal-wrap { padding:.7rem; }
+            .portal-wrap h1 { font-size:1.45rem !important; margin-bottom:.7rem !important; }
+            .tarjetas-portal { grid-template-columns:repeat(2,1fr); gap:.6rem; }
+            .card-p { padding:.8rem; }
+            .card-p .n { font-size:1.3rem; }
+            table.tp { font-size:.85rem; }
+        }
+        @media (max-width:380px) { .tarjetas-portal { grid-template-columns:1fr; } }
     </style>
 </h:head>
 <h:body>
