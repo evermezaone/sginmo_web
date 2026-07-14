@@ -59,6 +59,18 @@
       <version>3.0.3</version>
     </dependency>
 
+    <!-- REQ-0093: generacion de QR de pago (EMVCo). Java puro, sin binario nativo. -->
+    <dependency>
+      <groupId>com.google.zxing</groupId>
+      <artifactId>core</artifactId>
+      <version>3.5.3</version>
+    </dependency>
+    <dependency>
+      <groupId>com.google.zxing</groupId>
+      <artifactId>javase</artifactId>
+      <version>3.5.3</version>
+    </dependency>
+
     <!-- Migraciones versionadas (REQ-0032): dejan de aplicarse a mano -->
     <dependency>
       <groupId>org.flywaydb</groupId>

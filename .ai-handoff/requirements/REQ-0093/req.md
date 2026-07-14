@@ -27,10 +27,10 @@ pagar, el socio informa la transferencia (enlaza con REQ-0092).
 
 ## Criterios De Aceptacion
 
-- [ ] El socio puede generar/ver un QR con el monto y la referencia de la cuota a pagar.
-- [ ] Los datos de la cuenta destino son parametrizables por empresa (no hardcodeados).
-- [ ] El QR es escaneable por apps bancarias de plaza (validar el estandar elegido en analisis).
-- [ ] Desde la misma pantalla, el socio puede pasar a informar la transferencia realizada.
+- [x] El socio puede generar/ver un QR con el monto y la referencia de la cuota a pagar.
+- [x] Los datos de la cuenta destino son parametrizables por empresa (no hardcodeados).
+- [x] El QR es escaneable por apps bancarias de plaza (validar el estandar elegido en analisis).
+- [x] Desde la misma pantalla, el socio puede pasar a informar la transferencia realizada.
 
 ## Dependencias
 

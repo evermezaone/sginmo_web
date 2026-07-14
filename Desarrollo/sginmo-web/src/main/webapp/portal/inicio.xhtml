@@ -72,9 +72,24 @@
             </tbody>
         </table>
         <p style="color:#9ca3af;" rendered="#{empty portalBean.cuotas}">Sin cuotas registradas.</p>
-    </div>
+      </div>
 
-    <div class="seccion-p">
+      <h:panelGroup layout="block" styleClass="seccion-p" style="text-align:center;" rendered="#{portalBean.qrHabilitado}">
+        <h3 style="text-align:left;">Pagar por QR</h3>
+        <p style="color:#6b7280; font-size:.85rem; margin-top:0; text-align:left;">
+            Escaneá este código con la app de tu banco para transferir
+            <b>Gs. <h:outputText value="#{portalBean.qrMonto}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></b>.
+            Luego confirmá el pago informando la transferencia.
+        </p>
+        <img src="#{portalBean.qrDataUri}" alt="QR de pago" style="width:240px; max-width:100%; height:auto;"/>
+        <div style="margin-top:.6rem;">
+            <h:link outcome="/portal/transferencia" styleClass="ui-button" style="color:#0f766e; font-weight:600;">
+                Ya transferí — informar transferencia
+            </h:link>
+        </div>
+      </h:panelGroup>
+
+      <div class="seccion-p">
         <h3>Mis documentos</h3>
         <h:form>
             <table class="tp">

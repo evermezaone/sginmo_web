@@ -31,6 +31,9 @@ public class PortalBean implements Serializable {
     @Inject
     private PortalSesion sesion;
 
+    @Inject
+    private transient py.com.pysistemas.sginmo.servicio.QrPagoService qr;
+
     private Long persona;
     private Long tenant;
     private transient String ip;
@@ -45,6 +48,11 @@ public class PortalBean implements Serializable {
     private List<PortalService.FilaLiquidacion> liquidaciones = List.of();
     private List<PortalService.FilaDoc> documentosPropietario = List.of();
 
+    // REQ-0093: pago por QR (Fase 1). Se calcula una vez por vista.
+    private boolean qrHabilitado;
+    private java.math.BigDecimal qrMonto;
+    private String qrDataUri;
+
     @PostConstruct
     public void iniciar() {
         if (!sesion.isAutenticado()) return;
@@ -57,6 +65,7 @@ public class PortalBean implements Serializable {
             cuotas = portal.cuotas(persona);
             pagos = portal.pagos(persona);
             documentos = portal.documentos(persona);
+            calcularQr();
         }
         // Vista de propietario (obs 300): sus activos, operaciones, liquidaciones y documentos.
         if (sesion.isEsPropietario()) {
@@ -103,6 +112,23 @@ public class PortalBean implements Serializable {
             return null;
         }
     }
+
+    /** REQ-0093: prepara el QR de pago para el saldo a pagar (deuda vencida, o la proxima cuota). */
+    private void calcularQr() {
+        try {
+            if (qr == null || !qr.habilitado() || resumen == null) return;
+            java.math.BigDecimal m = (resumen.deudaVencida != null && resumen.deudaVencida.signum() > 0)
+                    ? resumen.deudaVencida : resumen.proximaCuotaMonto;
+            if (m == null || m.signum() <= 0) return;
+            qrMonto = m;
+            qrDataUri = qr.pngDataUri(qr.payload(m, sesion.getDocumento()), 240);
+            qrHabilitado = qrDataUri != null;
+        } catch (RuntimeException ignore) { /* el QR es opcional: nunca rompe el portal */ }
+    }
+
+    public boolean isQrHabilitado() { return qrHabilitado; }
+    public java.math.BigDecimal getQrMonto() { return qrMonto; }
+    public String getQrDataUri() { return qrDataUri; }
 
     public PortalService.ResumenCuenta getResumen() { return resumen; }
     public List<PortalService.FilaCuota> getCuotas() { return cuotas; }
