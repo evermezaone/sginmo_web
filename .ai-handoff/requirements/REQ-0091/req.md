@@ -25,10 +25,10 @@ estado. Hoy PortalService.pagos() ya lista cobros pero NO expone el canal ni tie
 
 ## Criterios De Aceptacion
 
-- [ ] El socio ve un panel lateral derecho con sus pagos, ordenados por fecha desc.
-- [ ] Cada pago indica claramente el canal (CAJA / TRANSFERENCIA) y su estado.
-- [ ] Diseño responsive y consistente con el estilo del portal (profesional, sin romper mobile).
-- [ ] Un socio nunca ve pagos de otro socio ni de otra empresa.
+- [x] El socio ve un panel lateral derecho con sus pagos, ordenados por fecha desc.
+- [x] Cada pago indica claramente el canal (CAJA / TRANSFERENCIA) y su estado.
+- [x] Diseño responsive y consistente con el estilo del portal (profesional, sin romper mobile).
+- [x] Un socio nunca ve pagos de otro socio ni de otra empresa.
 
 ## Dependencias
 
