@@ -132,7 +132,7 @@
              <div class="pago-sub">
                <h:outputText value="#{pg.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
                <h:outputText value=" · #{pg.forma}" rendered="#{not empty pg.forma}"/>
-               · #{pg.estadoLabel}<h:outputText value=" · Recibo #{pg.comprobante}" rendered="#{not empty pg.comprobante}"/>
+               · #{pg.estadoLabel}<h:outputText value=" · Ref #{pg.referencia}" rendered="#{not empty pg.referencia}"/><h:outputText value=" · Recibo #{pg.comprobante}" rendered="#{not empty pg.comprobante}"/>
              </div>
            </div>
          </ui:repeat>

@@ -36,3 +36,13 @@ Obs 311 (media, alcance_incompleto):
 - Evidencia: Build OK; smoke 37/37.
 - Validacion propia: alcance completado (moneda + nro de comprobante cuando existe).
 ```
+
+```text
+Obs 312 (media, ronda 2, Portal pagos - referencia/comprobante):
+- Problema original: el panel no mostraba la referencia/nro de transaccion bancaria de los pagos por transferencia (guardada en dato_cobro.referencia); pagos() solo miraba documento.recibo_documento.
+- Cambio aplicado: pagos() agrega una subconsulta escalar a dato_cobro (referencia no vacia, LIMIT 1) sin duplicar filas; FilaPago.referencia + getter; el panel muestra "Ref {referencia}" cuando existe (ademas del recibo).
+- Archivos tocados: servicio/PortalService.java, webapp/portal/inicio.xhtml.
+- Evidencia: XML bien formado; Build OK; smoke 37/37.
+- Validacion propia: los pagos por transferencia con numero_transaccion ahora muestran la referencia bancaria; los de caja/sin dato quedan sin Ref (limpio).
+```
+
