@@ -1,26 +1,18 @@
 <?php
 /**
- * REQ-0086 - Relay de correo transaccional para SGInmo.
+ * REQ-0086 - Relay de correo transaccional para SGInmo (sin dependencias).
  * Recibe un POST JSON { "to", "subject", "body" } con el header X-Mailer-Token y envia el correo
- * como no-reply@one.com.py usando PHPMailer. Corre en el hosting del dominio (Hostinger), asi el
- * envio pasa SPF/DKIM. La VPS/app solo conoce el token (nunca las credenciales SMTP).
+ * como no-reply@one.com.py usando la funcion mail() nativa de PHP (el MTA local del hosting, que
+ * envia con el dominio y pasa SPF/DKIM). La VPS/app solo conoce el token, nunca las credenciales.
  *
- * Subir a: https://one.com.py/mailer/send.php
- * Requiere PHPMailer: o bien `composer require phpmailer/phpmailer` en esta carpeta (crea vendor/),
- * o bien subir los archivos en ./PHPMailer/src/ (PHPMailer.php, SMTP.php, Exception.php).
+ * Subir a: https://one.com.py/mailer/send.php   (carpeta public_html/mailer/)
+ * NO requiere Composer ni PHPMailer: es un unico archivo.
  */
 
 // ===================== CONFIGURACION =====================
-const MAILER_TOKEN   = 'REEMPLAZAR_POR_EL_TOKEN';  // pega aca el token (el mismo que MAIL_HTTP_TOKEN en la app). NO lo subas al repo.
+const MAILER_TOKEN   = 'REEMPLAZAR_POR_EL_TOKEN';  // el mismo valor que MAIL_HTTP_TOKEN en la app. NO subir al repo.
 const MAIL_FROM      = 'no-reply@one.com.py';
 const MAIL_FROM_NAME = 'SGInmo';
-
-// SMTP opcional. Si SMTP_HOST queda vacio, se usa la funcion mail() de PHP (el MTA local del hosting,
-// que envia como el dominio). Si preferis SMTP autenticado con la casilla no-reply, completa estos:
-const SMTP_HOST = '';                 // ej: 'smtp.hostinger.com'
-const SMTP_USER = 'no-reply@one.com.py';
-const SMTP_PASS = '';                 // contrasena de la casilla no-reply (solo si usas SMTP)
-const SMTP_PORT = 587;
 // =========================================================
 
 header('Content-Type: application/json; charset=utf-8');
@@ -49,7 +41,7 @@ if (!is_array($d)) {
 
 $to      = trim((string)($d['to'] ?? ''));
 $subject = str_replace(["\r", "\n"], ' ', (string)($d['subject'] ?? ''));  // anti header-injection
-$body    = (string)($d['body'] ?? '');
+$body    = str_replace("\r\n", "\n", (string)($d['body'] ?? ''));
 
 if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
@@ -57,43 +49,25 @@ if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
     exit;
 }
 
-// Carga de PHPMailer (composer autoload o carpeta manual).
-if (is_file(__DIR__ . '/vendor/autoload.php')) {
-    require __DIR__ . '/vendor/autoload.php';
-} elseif (is_file(__DIR__ . '/PHPMailer/src/PHPMailer.php')) {
-    require __DIR__ . '/PHPMailer/src/PHPMailer.php';
-    require __DIR__ . '/PHPMailer/src/SMTP.php';
-    require __DIR__ . '/PHPMailer/src/Exception.php';
-} else {
-    http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'phpmailer_missing']);
-    exit;
-}
+// Asunto en UTF-8 codificado (RFC 2047) para no romper acentos/enes.
+$subjectEnc = '=?UTF-8?B?' . base64_encode($subject) . '?=';
 
-use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+// From sanitizado (el nombre no debe contener CR/LF).
+$fromName = str_replace(["\r", "\n"], ' ', MAIL_FROM_NAME);
+$headers  = 'From: ' . $fromName . ' <' . MAIL_FROM . '>' . "\r\n";
+$headers .= 'Reply-To: ' . MAIL_FROM . "\r\n";
+$headers .= 'MIME-Version: 1.0' . "\r\n";
+$headers .= 'Content-Type: text/plain; charset=UTF-8' . "\r\n";
+$headers .= 'Content-Transfer-Encoding: 8bit' . "\r\n";
+$headers .= 'X-Mailer: SGInmo-Relay';
 
-try {
-    $mail = new PHPMailer(true);
-    if (SMTP_HOST !== '') {
-        $mail->isSMTP();
-        $mail->Host       = SMTP_HOST;
-        $mail->Port       = SMTP_PORT;
-        $mail->SMTPAuth   = true;
-        $mail->Username   = SMTP_USER;
-        $mail->Password   = SMTP_PASS;
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-    } else {
-        $mail->isMail();
-    }
-    $mail->CharSet = 'UTF-8';
-    $mail->setFrom(MAIL_FROM, MAIL_FROM_NAME);
-    $mail->addAddress($to);
-    $mail->Subject = $subject;
-    $mail->Body    = $body;   // texto plano (SGInmo envia texto)
-    $mail->send();
+// El 5to parametro fuerza el envelope-from al dominio (mejora la entrega/SPF).
+$ok = @mail($to, $subjectEnc, $body, $headers, '-f' . MAIL_FROM);
+
+if ($ok) {
     echo json_encode(['ok' => true]);
-} catch (Throwable $e) {
+} else {
+    $err = error_get_last();
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => isset($mail) ? $mail->ErrorInfo : $e->getMessage()]);
+    echo json_encode(['ok' => false, 'error' => 'mail_failed', 'detail' => $err['message'] ?? null]);
 }

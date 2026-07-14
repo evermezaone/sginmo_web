@@ -2,41 +2,30 @@
 
 La app (VPS) delega el envio de correos a este endpoint PHP alojado en el hosting del dominio
 (one.com.py). Asi el correo sale como `no-reply@one.com.py`, pasa SPF/DKIM y la app nunca guarda
-credenciales SMTP: solo el token.
+credenciales SMTP: solo el token. **Es un unico archivo, sin Composer ni PHPMailer.**
 
-## 1) Subir a Hostinger
+## 1) Subir a Hostinger (hPanel → Administrador de archivos)
 
-Crear la carpeta `mailer/` en la raiz publica del sitio one.com.py y subir `send.php` alli, de modo
-que quede accesible en:
+1. Entrar a hPanel de one.com.py → **Administrador de archivos**.
+2. Dentro de `public_html/`, crear la carpeta `mailer`.
+3. Subir `send.php` dentro de `public_html/mailer/`, de modo que quede accesible en:
 
-    https://one.com.py/mailer/send.php
+       https://one.com.py/mailer/send.php
 
-## 2) Instalar PHPMailer (una de las dos)
+4. **Pegar el token**: editar `send.php` y reemplazar `REEMPLAZAR_POR_EL_TOKEN` por el token real
+   (el mismo que vas a poner en `MAIL_HTTP_TOKEN`). El token NO se versiona en el repo.
 
-- **Composer** (recomendado, via SSH o Terminal de hPanel, dentro de la carpeta `mailer/`):
+> El archivo usa la funcion `mail()` nativa del hosting (MTA local, envia con el dominio). No hace
+> falta instalar nada mas.
 
-      composer require phpmailer/phpmailer
-
-  (crea `vendor/` — send.php lo detecta solo).
-
-- **Manual**: descargar PHPMailer (https://github.com/PHPMailer/PHPMailer/releases) y subir estos
-  tres archivos a `mailer/PHPMailer/src/`:
-  `PHPMailer.php`, `SMTP.php`, `Exception.php`.
-
-## 3) Transporte de envio (en send.php)
-
-- Por defecto usa `mail()` (el MTA local del hosting; envia como el dominio, sin credenciales).
-- Si preferis SMTP autenticado con la casilla no-reply, completa en `send.php`:
-  `SMTP_HOST` (ej. `smtp.hostinger.com`), `SMTP_USER = no-reply@one.com.py`, `SMTP_PASS`.
-
-## 4) Configurar la app (pantalla Parametros, tenant -1 o por empresa)
+## 2) Configurar la app (pantalla Parametros, tenant -1 o por empresa)
 
     MAIL_HTTP_URL   = https://one.com.py/mailer/send.php
     MAIL_HTTP_TOKEN = <TU_TOKEN_SECRETO>
 
 Si `MAIL_HTTP_URL` esta seteado, `CorreoService` hace POST al relay; si no, cae al SMTP directo.
 
-## 5) Probar
+## 3) Probar (desde cualquier terminal, o pedimelo y lo corro desde la VPS)
 
     curl -s -X POST https://one.com.py/mailer/send.php \
       -H "Content-Type: application/json" \
@@ -48,6 +37,12 @@ Respuesta esperada: `{"ok":true}`. Luego, en el portal, "Primer ingreso" enviara
 ## Seguridad
 
 - Token secreto obligatorio (header `X-Mailer-Token`), comparado con `hash_equals`.
-- Solo POST; valida que `to` sea un email; sanitiza el asunto (anti header-injection).
+- Solo POST; valida que `to` sea un email; sanitiza el asunto y el From (anti header-injection).
 - Servir SIEMPRE por HTTPS. No es un relay abierto: sin token valido responde 401.
 - Si el token se filtra, regenerarlo en `send.php` y en el parametro `MAIL_HTTP_TOKEN`.
+
+## Nota
+
+Si `mail()` no entrega en tu plan de Hostinger (algunos lo restringen), la alternativa es SMTP
+autenticado con la casilla `no-reply@one.com.py`; en ese caso avisame y te devuelvo una variante de
+`send.php` con SMTP (requiere la contrasena de esa casilla, que sale del panel de correo).
