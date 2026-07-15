@@ -36,7 +36,11 @@ public class PortalTransferenciaBean implements Serializable {
     private String cuentaOrigen;
     private String numeroTransaccion;
     private String observacion;
-    private transient UploadedFile comprobante;
+    // REQ-0099: el comprobante se sube por ajax (advanced/auto) y se guarda en bytes apenas se adjunta,
+    // desacoplado del submit del formulario (mas confiable que mode=simple en el portal).
+    private transient byte[] comprobanteBytes;
+    private String comprobanteNombre;
+    private String comprobanteMime;
 
     private List<PortalTransferenciaService.Fila> mias = List.of();
 
@@ -53,9 +57,19 @@ public class PortalTransferenciaBean implements Serializable {
         mias = servicio.mias(sesion.getPersona());
     }
 
+    /** REQ-0099: el comprobante se sube apenas se adjunta (advanced/auto) y se retiene en bytes. */
+    public void subirComprobante(org.primefaces.event.FileUploadEvent event) {
+        UploadedFile f = event.getFile();
+        if (f == null || f.getContent() == null || f.getContent().length == 0) return;
+        comprobanteBytes = f.getContent();
+        comprobanteNombre = f.getFileName();
+        comprobanteMime = f.getContentType();
+        aviso(FacesMessage.SEVERITY_INFO, "Comprobante cargado", comprobanteNombre);
+    }
+
     public void informar() {
         try {
-            if (comprobante == null || comprobante.getContent() == null || comprobante.getContent().length == 0) {
+            if (comprobanteBytes == null || comprobanteBytes.length == 0) {
                 throw new NegocioException("Adjunte el comprobante de la transferencia");
             }
             PortalTransferenciaService.Datos d = new PortalTransferenciaService.Datos();
@@ -65,12 +79,12 @@ public class PortalTransferenciaBean implements Serializable {
             d.cuentaOrigen = cuentaOrigen;
             d.numeroTransaccion = numeroTransaccion;
             d.observacion = observacion;
-            servicio.informar(sesion.getPersona(), d, comprobante.getContent(),
-                    comprobante.getFileName(), comprobante.getContentType());
+            servicio.informar(sesion.getPersona(), d, comprobanteBytes, comprobanteNombre, comprobanteMime);
             aviso(FacesMessage.SEVERITY_INFO, "Transferencia informada",
                     "Queda en revision. Le avisaremos cuando se aplique.");
             importe = null; fecha = null; bancoOrigen = null; cuentaOrigen = null;
-            numeroTransaccion = null; observacion = null; comprobante = null;
+            numeroTransaccion = null; observacion = null;
+            comprobanteBytes = null; comprobanteNombre = null; comprobanteMime = null;
             recargar();
         } catch (NegocioException e) {
             aviso(FacesMessage.SEVERITY_WARN, "No se pudo informar", e.getMessage());
@@ -118,8 +132,8 @@ public class PortalTransferenciaBean implements Serializable {
     public void setNumeroTransaccion(String numeroTransaccion) { this.numeroTransaccion = numeroTransaccion; }
     public String getObservacion() { return observacion; }
     public void setObservacion(String observacion) { this.observacion = observacion; }
-    public UploadedFile getComprobante() { return comprobante; }
-    public void setComprobante(UploadedFile comprobante) { this.comprobante = comprobante; }
+    public boolean isComprobanteCargado() { return comprobanteBytes != null && comprobanteBytes.length > 0; }
+    public String getComprobanteNombre() { return comprobanteNombre; }
     public List<PortalTransferenciaService.Fila> getMias() { return mias; }
     public String getNombre() { return sesion.getNombre(); }
 }

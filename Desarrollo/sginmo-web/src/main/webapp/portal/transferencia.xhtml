@@ -22,7 +22,7 @@
             Indicá el <b>monto</b> y adjuntá el <b>comprobante</b>. Los demás datos (fecha, banco, nº de
             operación) se leen automáticamente del comprobante. Un operador la revisará y aplicará a tu cuenta.
         </p>
-        <h:form enctype="multipart/form-data">
+        <h:form id="frmInformar">
             <p:growl id="msj" showDetail="true" life="5000"/>
             <div style="max-width:320px;">
                 <label>Monto *</label><br/>
@@ -30,12 +30,17 @@
             </div>
             <div style="margin-top:.6rem;">
                 <label>Comprobante (PDF, JPG, PNG o WEBP) *</label><br/>
-                <p:fileUpload value="#{portalTransferenciaBean.comprobante}" mode="simple" skinSimple="true"
-                              accept=".pdf,.jpg,.jpeg,.png,.webp"/>
+                <p:fileUpload listener="#{portalTransferenciaBean.subirComprobante}" mode="advanced" auto="true"
+                              label="Adjuntar comprobante" accept=".pdf,.jpg,.jpeg,.png,.webp" update="msj lblAdj"/>
+                <h:panelGroup id="lblAdj" layout="block" style="margin-top:.3rem;">
+                    <h:outputText value="✓ Adjuntado: #{portalTransferenciaBean.comprobanteNombre}"
+                                  rendered="#{portalTransferenciaBean.comprobanteCargado}"
+                                  style="color:#166534; font-size:.85rem; font-weight:600;"/>
+                </h:panelGroup>
             </div>
             <div style="margin-top:.8rem;">
-                <p:commandButton value="Informar transferencia" icon="pi pi-send" ajax="false"
-                                 action="#{portalTransferenciaBean.informar}"/>
+                <p:commandButton value="Informar transferencia" icon="pi pi-send"
+                                 action="#{portalTransferenciaBean.informar}" update="frmInformar :frmMias"/>
             </div>
         </h:form>
     </div>

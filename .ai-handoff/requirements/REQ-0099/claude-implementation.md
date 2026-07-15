@@ -45,3 +45,16 @@ Sin cambios.
 2. Informar con solo monto + comprobante -> queda RECIBIDO; el OCR completa fecha/nro/banco si puede.
 ## Riesgos Conocidos
 La vista del portal no entra en el smoke (OTP).
+
+## Fix de subida (mismo REQ): el comprobante llegaba null con mode=simple en el portal
+
+Sintoma reportado por el usuario: al informar, "Adjunte el comprobante" aunque adjuntara el archivo (el
+comprobante llegaba null; sin error de multipart en el log). El patron mode=simple + boton ajax=false es
+identico al de documentos.xhtml (admin) pero en el portal el archivo no viajaba en el submit.
+
+Solucion: se cambio la subida a **advanced + auto** con listener (PortalTransferenciaBean.subirComprobante):
+el archivo se sube por ajax apenas se adjunta y se retiene en bytes en el bean (comprobanteBytes/Nombre/Mime),
+desacoplado del submit del formulario; informar() usa esos bytes. Se removieron los getters de UploadedFile
+y se agrego feedback "Adjuntado: <archivo>". Archivos: web/PortalTransferenciaBean.java, webapp/portal/transferencia.xhtml.
+Build OK; smoke 37/37.
+
