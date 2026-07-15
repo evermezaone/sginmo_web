@@ -34,6 +34,9 @@ public class PortalBean implements Serializable {
     @Inject
     private transient py.com.pysistemas.sginmo.servicio.QrPagoService qr;
 
+    @Inject
+    private transient py.com.pysistemas.sginmo.servicio.PortalTransferenciaService transferencias;
+
     private Long persona;
     private Long tenant;
     private transient String ip;
@@ -41,6 +44,8 @@ public class PortalBean implements Serializable {
     private PortalService.ResumenCuenta resumen;
     private List<PortalService.FilaCuota> cuotas;
     private List<PortalService.FilaPago> pagos;
+    // REQ-0100: transferencias informadas aun no aplicadas (en proceso de aceptacion).
+    private List<py.com.pysistemas.sginmo.servicio.PortalTransferenciaService.Fila> transferenciasEnProceso = List.of();
     private List<PortalService.FilaDoc> documentos;
     // Vista de propietario (obs 300).
     private List<PortalService.FilaActivo> activos = List.of();
@@ -70,6 +75,9 @@ public class PortalBean implements Serializable {
             cuotas = portal.cuotas(persona, anioCuotas);
             pagos = portal.pagos(persona);
             documentos = portal.documentos(persona);
+            // REQ-0100: transferencias informadas que aun no se aplicaron (las APLICADO ya figuran en pagos).
+            transferenciasEnProceso = transferencias.mias(persona).stream()
+                    .filter(t -> !"APLICADO".equals(t.getEstado())).toList();
             calcularQr();
         }
         // Vista de propietario (obs 300): sus activos, operaciones, liquidaciones y documentos.
@@ -143,6 +151,8 @@ public class PortalBean implements Serializable {
     public Integer getAnioCuotas() { return anioCuotas; }
     public void setAnioCuotas(Integer anioCuotas) { this.anioCuotas = anioCuotas; }
     public List<Integer> getAniosCuotas() { return aniosCuotas; }
+
+    public List<py.com.pysistemas.sginmo.servicio.PortalTransferenciaService.Fila> getTransferenciasEnProceso() { return transferenciasEnProceso; }
 
     public PortalService.ResumenCuenta getResumen() { return resumen; }
     public List<PortalService.FilaCuota> getCuotas() { return cuotas; }

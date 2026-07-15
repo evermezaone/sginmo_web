@@ -138,6 +138,24 @@
      </div><!-- /portal-main -->
 
      <aside class="portal-aside">
+       <h:panelGroup layout="block" styleClass="seccion-p" rendered="#{not empty portalBean.transferenciasEnProceso}">
+         <h3>Transferencias en proceso</h3>
+         <ui:repeat value="#{portalBean.transferenciasEnProceso}" var="t">
+           <div class="pago-item">
+             <div class="pago-top">
+               <span class="pago-monto">
+                 Gs. <h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+               </span>
+               <span class="badge b-proceso">#{t.estadoLabel}</span>
+             </div>
+             <div class="pago-sub">
+               <h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+               <h:outputText value=" · #{t.motivoRevision}" rendered="#{not empty t.motivoRevision}"/>
+             </div>
+           </div>
+         </ui:repeat>
+       </h:panelGroup>
+
        <div class="seccion-p">
          <h3>Mis pagos</h3>
          <ui:repeat value="#{portalBean.pagos}" var="pg">
