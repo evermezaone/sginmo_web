@@ -58,3 +58,13 @@ desacoplado del submit del formulario; informar() usa esos bytes. Se removieron 
 y se agrego feedback "Adjuntado: <archivo>". Archivos: web/PortalTransferenciaBean.java, webapp/portal/transferencia.xhtml.
 Build OK; smoke 37/37.
 
+## Fix 2 (mismo REQ): validacion de comprobante rechazaba archivos validos
+
+Sintoma: subido el archivo, error "El archivo no coincide con su tipo declarado". Causa: informar()
+(obs 305, REQ-0083) exigia que la extension/MIME DECLARADOS coincidieran con el contenido (magic bytes);
+una captura .png renombrada .jpg (caso comun) se rechazaba aunque el contenido es un tipo permitido.
+Solucion: el tipo REAL (magic bytes) manda: se valida que el contenido sea PDF/JPG/PNG/WEBP (ext != null),
+se guarda con esa extension y se normaliza el MIME al contenido (mimeDe(ext)); ya NO se rechaza por
+discrepancia con el nombre/MIME declarados. Alineado con el intento de obs 305 (validar el contenido real).
+Archivo: servicio/PortalTransferenciaService.java. Build OK; smoke 37/37.
+

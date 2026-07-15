@@ -65,13 +65,13 @@ public class PortalTransferenciaService {
         if (archivo == null || archivo.length == 0) throw new NegocioException("Adjunte el comprobante de la transferencia");
         int maxMb = Math.max(1, parametros.entero("PORTAL_TRANSF_TAMANO_MAX_MB", 8));
         if (archivo.length > (long) maxMb * 1024 * 1024) throw new NegocioException("El comprobante supera el maximo de " + maxMb + " MB");
-        // obs 305: validar el CONTENIDO REAL por firma (magic bytes), no solo extension/MIME declarados,
-        // y exigir que coincida con lo declarado. Se guarda con la extension detectada del contenido.
+        // obs 305: validar el CONTENIDO REAL por firma (magic bytes). El tipo REAL manda: se guarda con la
+        // extension detectada y se normaliza el MIME a ese contenido. NO se rechaza si el nombre/MIME
+        // declarados no coinciden (ej. una captura .png renombrada .jpg): lo importante es que el contenido
+        // sea un tipo permitido (PDF/JPG/PNG/WEBP), no confiar en la extension declarada.
         String ext = firmaContenido(archivo);
-        if (ext == null) throw new NegocioException("El contenido del comprobante no es un PDF/JPG/PNG/WEBP valido");
-        String declarada = extensionValida(nombreArchivo, mime);
-        if (declarada != null && !declarada.equals(ext))
-            throw new NegocioException("El archivo no coincide con su tipo declarado");
+        if (ext == null) throw new NegocioException("El comprobante debe ser un PDF, JPG, PNG o WEBP valido");
+        mime = mimeDe(ext);
 
         Long t = tenant.actual();
         String fisico = "trf_" + java.util.UUID.randomUUID().toString().replace("-", "") + ext;
@@ -494,6 +494,15 @@ public class PortalTransferenciaService {
         if (b0 == 0x52 && b1 == 0x49 && b2 == 0x46 && b3 == 0x46                            // RIFF....WEBP
                 && (d[8] & 0xFF) == 0x57 && (d[9] & 0xFF) == 0x45 && (d[10] & 0xFF) == 0x42 && (d[11] & 0xFF) == 0x50) return ".webp";
         return null;
+    }
+
+    /** MIME canonico segun el contenido real detectado (magic bytes). */
+    private static String mimeDe(String ext) {
+        if (".pdf".equals(ext))  return "application/pdf";
+        if (".jpg".equals(ext))  return "image/jpeg";
+        if (".png".equals(ext))  return "image/png";
+        if (".webp".equals(ext)) return "image/webp";
+        return "application/octet-stream";
     }
 
     private static String extensionValida(String nombre, String mime) {
