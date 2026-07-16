@@ -1,12 +1,12 @@
 # REQ-0101 - Auditoria Codex
 
-**Estado:** EN_AUDITORIA_CODEX
-**Fecha:** 2026-07-16
+**Estado:** APROBADO_POR_CODEX
+**Fecha:** 2026-07-16 09:46 -03:00
 **Auditor:** Codex
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
@@ -24,8 +24,11 @@ Ninguno identificado.
 
 ## Pruebas Revisadas
 
-- [ ] Revision estatica
+- [x] Revision estatica de `WEB-INF/portal-acceso.xhtml`: `.campo-a .ui-password` queda `display:block; width:100%`.
+- [x] Revision estatica de input interno: `.campo-a .ui-password input` queda `width:100%; box-sizing:border-box`.
+- [x] Revision de `portal/login.xhtml`: el `p:password` con `toggleMask=true` sigue igual; el cambio es solo CSS del template.
+- [x] Build local: `mvn -q -f Desarrollo\pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual
+- [ ] Prueba visual manual en navegador/VPS.

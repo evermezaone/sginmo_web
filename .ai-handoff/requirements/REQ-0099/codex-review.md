@@ -1,7 +1,7 @@
 # REQ-0099 - Auditoria Codex
 
 **Estado:** APROBADO_POR_CODEX
-**Fecha:** 2026-07-14 21:22 -03:00
+**Fecha:** 2026-07-16 09:16 -03:00
 **Auditor:** Codex
 
 ## Decision
@@ -28,8 +28,9 @@ Ninguno identificado.
 - [x] Revision estatica de `portal/transferencia.xhtml`: el formulario de carga solo solicita `Monto` y `Comprobante`; los datos removidos quedan fuera del formulario.
 - [x] Revision backend de `PortalTransferenciaBean` y `PortalTransferenciaService`: `informar()` solo exige persona, importe positivo y archivo; fecha/banco/cuenta/nro/observacion/documento son opcionales y se insertan como null.
 - [x] Re-auditoria del fix posterior de subida: `p:fileUpload` avanzado con listener `subirComprobante()` guarda bytes/nombre/mime en el `ViewScoped` y `informar()` usa esos bytes, manteniendo el formulario con solo monto + comprobante.
+- [x] Re-auditoria del Fix 2: `PortalTransferenciaService` valida el contenido real por magic bytes, guarda extension/MIME canonicos (`mimeDe(ext)`) y ya no rechaza capturas validas por discrepancia entre nombre/MIME declarado y contenido real.
 - [x] Revision de migracion `V56__portal_pago_transferencia.sql`: los campos removidos del formulario no son `NOT NULL`; el flujo RECIBIDO/EN_REVISION/APLICADO y RLS permanecen vigentes.
-- [x] Build local re-ejecutado: `mvn -q -f Desarrollo\pom.xml -pl sginmo-web -am clean package` EXIT 0.
+- [x] Build local re-ejecutado el 2026-07-16: `mvn -q -f Desarrollo\pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
 ## Pruebas Faltantes
 

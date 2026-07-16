@@ -6,7 +6,7 @@
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
@@ -20,12 +20,14 @@
 
 ## Riesgos
 
-Ninguno identificado.
+- Bajo: cambio visual aislado.
 
 ## Pruebas Revisadas
 
-- [ ] Revision estatica
+- [x] Revision estatica de `portal/inicio.xhtml`.
+- [x] Confirmado que no queda texto "Como cliente" y que "Como propietario" se conserva.
+- [x] Build local ejecutado en este ciclo para el WAR completo: EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual
+- [ ] Prueba visual manual en portal real.

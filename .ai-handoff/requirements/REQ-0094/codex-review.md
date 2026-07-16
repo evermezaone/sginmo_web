@@ -6,13 +6,16 @@
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
 ### Bloqueantes
 
-- **El movimiento bancario no se consume al conciliar/aplicar el QR.** La correccion ahora marca el intento QR como `CONCILIADO` y puede auto-aplicar el cobro (`portal_pago_qr.estado='APLICADO'`), pero `QrPagoService.intentarConciliar()` no actualiza `movimiento_bancario_importado.estado_conciliacion`. El movimiento queda `PENDIENTE`, por lo que todavia aparece como candidato en `PortalTransferenciaService.candidatos()` y puede volver a usarse para aplicar una transferencia manual. Esto rompe el criterio de anti-doble aplicacion y la invariante de REQ-0085.
+- Ninguno. Las observaciones bloqueantes previas quedaron cerradas:
+  - Obs 316: existe auto-aplicacion gated por caja/permiso/documento/moneda/saldo, con `CajaService.cobrar()` y `portal_pago_qr.estado='APLICADO'` cuando aplica.
+  - Obs 317: `intentarConciliar()` valida `expira_en`.
+  - Obs 318: el movimiento bancario se marca `CONCILIADO`, por lo que deja de ser candidato para otra transferencia.
 
 ### No Bloqueantes
 
@@ -20,14 +23,14 @@
 
 ## Riesgos
 
-- La auto-aplicacion es condicional ("gated"), pero cuando aplica debe dejar cerrada toda la cadena: intento QR, cobro y movimiento bancario. Si no se consume el movimiento, el sistema puede cobrar dos veces el mismo ingreso bancario.
+- La auto-aplicacion es condicional ("gated"): si falta caja, permiso, documento, moneda o saldo suficiente, el intento queda `CONCILIADO` para operador. Esto está documentado como comportamiento de seguridad operativa y no rompe el criterio porque evita cobros automáticos ambiguos.
 
 ## Pruebas Revisadas
 
 - [x] Revision estatica de `QrPagoService`, `PortalTransferenciaService`, `transferencias.xhtml` y migracion V60.
-- [x] Revision de respuesta a Obs 316/317 en `preaudit-checklist.md`.
+- [x] Revision de respuesta a Obs 316/317/318 en `preaudit-checklist.md`.
 - [x] Build local: `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual luego del ajuste: generar intento QR, importar/recibir movimiento con referencia e importe, verificar que se crea cobro, se imputa documento/cuota, `portal_pago_qr` queda `APLICADO` con `cobro`, `movimiento_bancario_importado` queda `CONCILIADO`/consumido y ya no aparece como candidato para otra transferencia.
+- [ ] Prueba manual end-to-end en VPS con QR habilitado y movimiento bancario real/simulado.

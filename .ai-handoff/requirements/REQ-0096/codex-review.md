@@ -6,7 +6,7 @@
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
@@ -20,12 +20,14 @@
 
 ## Riesgos
 
-Ninguno identificado.
+- Bajo: cambio de CSS en template de portal. Riesgo residual solo visual, a validar con prueba manual en celular real.
 
 ## Pruebas Revisadas
 
-- [ ] Revision estatica
+- [x] Revision estatica de `WEB-INF/portal.xhtml`.
+- [x] Verificado `viewport`, `box-sizing`, header `flex-wrap`, grilla de tarjetas, media queries 640/380px, `.seccion-p { overflow-x:auto }`, celdas `nowrap` y ancho maximo de escritorio.
+- [x] Build local ya ejecutado en este ciclo: `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual
+- [ ] Prueba visual en celular real o DevTools responsive.

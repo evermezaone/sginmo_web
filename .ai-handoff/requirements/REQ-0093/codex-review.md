@@ -1,29 +1,22 @@
 # REQ-0093 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO
 **Fecha:** 2026-07-14
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
-## Hallazgos
+## Verificacion
 
-### Bloqueantes
-
-1. `QrPagoService.habilitado()` permite mostrar el QR si `PORTAL_QR_HABILITADO=true` y `PORTAL_QR_CUENTA` no esta vacio, pero no exige `PORTAL_QR_GUI`. El propio servicio define el payload EMVCo/SIPAP con tag 26 compuesto por subtag `00` = GUI/esquema/banco y subtag `01` = cuenta. Si `PORTAL_QR_GUI` queda vacio, el sistema igual renderiza un QR con merchant account template incompleto. Eso rompe el criterio "QR escaneable por apps bancarias de plaza" y puede mostrar al socio un QR visualmente valido pero bancariamente inutil. Debe bloquearse la habilitacion/generacion si falta el identificador GUI requerido por el estandar elegido, o documentar/implementar otro formato validado por banco.
-
-### No Bloqueantes
-
-- El QR queda detras de parametros (`PORTAL_QR_HABILITADO`, cuenta, merchant, ciudad, MCC, moneda, pais).
+- `QrPagoService.habilitado()` exige `PORTAL_QR_HABILITADO=true`, `PORTAL_QR_CUENTA` cargada y `PORTAL_QR_GUI` cargado.
+- El payload EMVCo/SIPAP usa merchant account template `tag 26` con `subtag 00` = GUI/esquema/banco y `subtag 01` = cuenta.
+- El QR incluye monto, moneda, pais, merchant, ciudad, referencia y CRC16.
 - La imagen se genera con ZXing como `data:image/png;base64`.
-- El portal muestra monto, QR e instrucciones, y ofrece el boton "Ya transferi - informar transferencia".
-- El flujo no aplica pagos automaticamente en Fase 1; enlaza con informar transferencia.
-
-## Riesgos
-
-- Activar QR con parametros incompletos haria que el usuario crea que puede pagar, pero su app bancaria podria rechazar el codigo.
+- El portal muestra seccion "Pagar por QR", monto, imagen QR e instrucciones.
+- El boton "Ya transferi - informar transferencia" lleva al flujo de REQ-0092.
+- El flujo no aplica pago automaticamente en Fase 1.
 
 ## Pruebas Revisadas
 
@@ -34,6 +27,6 @@
 - [x] Revision estatica de dependencias ZXing en `pom.xml`.
 - [x] `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
-## Pruebas Faltantes
+## Riesgo Residual
 
-- [ ] Prueba manual con QR configurado con datos reales de banco/SIPAP y escaneo desde app bancaria local.
+- Falta prueba manual con datos reales del banco/SIPAP y escaneo desde una app bancaria local. La implementacion ya bloquea parametros incompletos, pero la validacion final de plaza requiere credenciales/datos reales.

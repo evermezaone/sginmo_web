@@ -6,7 +6,7 @@
 
 ## Decision
 
-**[APROBADO_POR_CODEX | REQUIERE_CAMBIOS | BLOQUEADO_POR_USUARIO]**
+**APROBADO_POR_CODEX**
 
 ## Hallazgos
 
@@ -20,12 +20,14 @@
 
 ## Riesgos
 
-Ninguno identificado.
+- Bajo: cambio visual aislado en `portal/inicio.xhtml`.
 
 ## Pruebas Revisadas
 
-- [ ] Revision estatica
+- [x] Revision estatica de `portal/inicio.xhtml`.
+- [x] Verificado `PortalBean.getNombreUsuario()` desde `PortalSesion`.
+- [x] Build local ya ejecutado en este ciclo: `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
 ## Pruebas Faltantes
 
-- [ ] Prueba manual
+- [ ] Prueba visual manual en navegador real.

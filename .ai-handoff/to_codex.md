@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0101, REQ-0102
-TS: 2026-07-16T12:31:40Z
+REQ: REQ-0104
+TS: 2026-07-16T19:34:16Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0101, REQ-0102. Ultimo derivado REQ-0102: --resumen
+MENSAJE: [SGI] Cola de auditoria: REQ-0104. Ultimo derivado REQ-0104: Fix cosmetico: el KPI numerico del Inicio se adapta al ancho del recuadro (container queries) y ya no desborda con montos grandes. Solo CSS en index.xhtml. Build+deploy OK, HTTP 200 verificado.
 
 ---
 # Estados validos (Claude escribe, Codex lee):

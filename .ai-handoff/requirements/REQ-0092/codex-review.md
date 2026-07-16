@@ -1,37 +1,28 @@
 # REQ-0092 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO
 **Fecha:** 2026-07-14
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
-## Hallazgos
+## Verificacion
 
-### Bloqueantes
-
-1. Falta la transicion real a `EN_REVISION` cuando el operador toma la transferencia para verificar. En la bandeja interna, `TransferenciaBandejaBean.seleccionar()` solo carga documentos/candidatos y abre el dialogo; no llama a ningun metodo que reclame la transferencia ni actualiza el estado. Por eso una transferencia `RECIBIDO` sigue siendo eliminable por el socio mientras el operador ya la esta revisando. El REQ exige: "Cuando el operador la toma, pasa a VERIFICACION y el socio ya NO puede eliminarla". Debe existir una accion backend atomica de reclamo/toma para pasar de `RECIBIDO` a `EN_REVISION` antes de revisar, y la UI debe refrescar ese estado.
-
-2. Las acciones de operador `observar()` y `rechazar()` pueden cambiar directamente una transferencia desde `RECIBIDO` a `OBSERVADO`/`RECHAZADO` mediante `cambiarEstado()`, sin pasar por `EN_REVISION`. El flujo requerido dice que en `VERIFICACION` el operador confirma/rechaza/observa. Debe cerrarse la brecha de estados: o se reclama a `EN_REVISION` al seleccionar, o esas acciones deben reclamar/validar primero la transicion.
-
-### Correcto
-
-- Al informar, la transferencia se inserta con estado `RECIBIDO`, usado como etiqueta "Pendiente de validacion".
-- El portal muestra lista de transferencias propias con estado, motivo visible y descarga de evidencia.
-- El boton eliminar del socio se renderiza solo cuando `t.puedeEliminar`, que depende de `estado == RECIBIDO`.
-- `PortalTransferenciaService.eliminar()` borra de forma atomica solo si `persona = :p` y `estado = 'RECIBIDO'`.
-- La descarga de comprobante valida que sea propia para el socio, o exige permiso interno si no lo es.
+- Al informar, `PortalTransferenciaService.informar()` inserta la transferencia en `RECIBIDO`, mostrado al socio como "Pendiente de validacion".
+- El portal muestra transferencias propias con estado, numero, motivo, descarga de evidencia y boton eliminar solo si `estado == RECIBIDO`.
+- `PortalTransferenciaService.eliminar()` es atomico: borra solo con `persona = :p` y `estado = 'RECIBIDO'`, usando `DELETE ... RETURNING`.
+- La descarga de evidencia valida persona propia para socio o permiso interno para operador.
+- La bandeja interna llama `servicio.reclamar(id)` al seleccionar la transferencia, haciendo `RECIBIDO -> EN_REVISION` antes de revisar y bloqueando la eliminacion del socio.
+- `observar()` y `rechazar()` ya no saltan directo desde `RECIBIDO`: `cambiarEstado()` solo permite `EN_REVISION` u `OBSERVADO`.
+- `aprobar()` mantiene reclamo/lock atomico y aplica el cobro dentro de la transaccion.
 - El backend valida firma real del archivo adjunto para PDF/JPG/PNG/WEBP.
-
-## Riesgos
-
-- La ventana entre "operador abre revision" y "operador confirma/rechaza/observa" permite que el socio elimine el registro, justo lo que el REQ queria evitar.
 
 ## Pruebas Revisadas
 
 - [x] Revision estatica de `PortalTransferenciaService.informar()`.
+- [x] Revision estatica de `PortalTransferenciaService.reclamar()`.
 - [x] Revision estatica de `PortalTransferenciaService.eliminar()`.
 - [x] Revision estatica de `PortalTransferenciaService.aprobar()/observar()/rechazar()`.
 - [x] Revision estatica de `PortalTransferenciaBean`.
@@ -41,6 +32,6 @@
 - [x] Revision estatica de `V56__portal_pago_transferencia.sql`.
 - [x] `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
-## Pruebas Faltantes
+## Riesgo Residual
 
-- [ ] Prueba manual de concurrencia: socio intenta eliminar mientras operador toma/revisa.
+- Falta prueba manual real con dos sesiones (socio y operador) para validar la concurrencia en navegador, pero el bloqueo atomico esta implementado en backend.

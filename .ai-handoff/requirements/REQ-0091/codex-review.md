@@ -1,29 +1,22 @@
 # REQ-0091 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** APROBADO
 **Fecha:** 2026-07-14
 **Auditor:** Codex
 
 ## Decision
 
-**REQUIERE_CAMBIOS**
+**APROBADO_POR_CODEX**
 
-## Hallazgos
+## Verificacion
 
-### Bloqueantes
-
-1. El panel lateral ya muestra estado, moneda y recibo cuando existe, pero aun no cumple completamente el alcance de "referencia/numero de comprobante si existe" para pagos por transferencia. Al aplicar una transferencia, `PortalTransferenciaService.aprobar()` pasa el numero de transaccion como referencia del cobro (`dato_cobro.referencia`) mediante `cajaService.cobrar(...)`; sin embargo `PortalService.pagos()` solo consulta `documento d ON d.documento = c.recibo_documento` y arma `pago.comprobante` desde serie/numero del recibo. Si el pago por transferencia no tiene recibo_documento o si la referencia bancaria es el dato relevante para el socio, el panel no muestra esa referencia existente. Debe consultar tambien `dato_cobro.referencia`/`numero` y exponerla como referencia/comprobante visible, con preferencia clara: recibo si existe, referencia bancaria si existe, o ambos si aportan informacion distinta.
-
-### Corregido en esta ronda
-
-- El estado del pago ya se muestra en `portal/inicio.xhtml` mediante `pg.estadoLabel`.
-- `PortalService.FilaPago` ya expone moneda (`mo.simbolo`) y el panel la muestra junto al importe.
-- El layout lateral `Mis pagos` y el apilado responsive permanecen implementados.
-- El filtro principal de seguridad se mantiene por `c.persona = :p` y el servicio conserva `@AislarTenant`.
-
-## Riesgos
-
-- Para pagos por transferencia, el socio puede ver el canal "Transferencia" y el estado "Confirmado", pero no necesariamente el numero/referencia bancaria que permite reconocer su pago.
+- `PortalService.pagos()` devuelve fecha, monto, moneda, canal, estado, forma, recibo y referencia bancaria cuando existe.
+- El canal se deriva de la forma de pago `TRF` como `Transferencia`; el resto queda como `Caja`.
+- El estado se expone en el panel con etiqueta amigable (`Confirmado` para cobros `ACTIVO`).
+- La referencia de transferencia se consulta desde `dato_cobro.referencia`, cubriendo la observacion anterior.
+- `portal/inicio.xhtml` muestra el panel lateral `Mis pagos` con monto/moneda, badge de canal, fecha, forma, estado, referencia y recibo cuando existen.
+- El layout lateral y el apilado responsive permanecen en `WEB-INF/portal.xhtml`.
+- La consulta mantiene filtro por `c.persona = :p` y el servicio conserva `@AislarTenant`.
 
 ## Pruebas Revisadas
 
@@ -34,6 +27,6 @@
 - [x] Revision estatica de CSS responsive en `WEB-INF/portal.xhtml`.
 - [x] `mvn -q -f Desarrollo/pom.xml -pl sginmo-web -am clean package` EXIT 0.
 
-## Pruebas Faltantes
+## Riesgo Residual
 
-- [ ] Prueba manual de portal con CI/RUC + OTP para validar vista real desktop/mobile.
+- Falta prueba manual con CI/RUC + OTP en navegador para validar datos reales desktop/mobile, pero la implementacion cumple el alcance auditable del REQ.
