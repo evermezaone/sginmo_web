@@ -1,0 +1,1 @@
+{"ts":"2026-07-16T10:00:00.000Z","actor":"sistema","event":"REQ_CREADO","status":"NUEVO","nota":"Migracion de datos del legado Firebird (source/INMOBILIARIA.FDB) al sistema web (PostgreSQL)"}
