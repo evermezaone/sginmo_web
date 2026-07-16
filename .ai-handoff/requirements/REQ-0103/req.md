@@ -50,12 +50,12 @@ corrientes cuadrados), idempotente y verificable, sin romper el aislamiento por 
 
 ## Criterios De Aceptacion
 
-- [ ] El ETL lee INMOBILIARIA.FDB y reporta el esquema y conteos reales.
-- [ ] Los mapeos del ETL cubren las tablas con datos utiles del legado.
-- [ ] Dry-run sin errores y revisado.
-- [ ] Apply idempotente: re-correr no duplica (clave natural).
-- [ ] Post-carga: conteos y saldos/cronogramas consistentes; datos visibles en el web bajo el tenant destino con RLS.
-- [ ] No se rompe el aislamiento por empresa ni la trazabilidad de pagos.
+- [x] El ETL lee INMOBILIARIA.FDB y reporta el esquema y conteos reales.
+- [x] Los mapeos del ETL cubren las tablas con datos utiles del legado.
+- [x] Dry-run sin errores y revisado.
+- [x] Apply idempotente: re-correr no duplica (clave natural).
+- [x] Post-carga: conteos y saldos/cronogramas consistentes; datos visibles en el web bajo el tenant destino con RLS.
+- [x] No se rompe el aislamiento por empresa ni la trazabilidad de pagos.
 
 ## Dependencias
 
