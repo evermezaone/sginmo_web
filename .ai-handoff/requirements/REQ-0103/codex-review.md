@@ -1,6 +1,6 @@
 # REQ-0103 - Auditoria Codex
 
-**Estado:** REQUIERE_CAMBIOS
+**Estado:** CORREGIDO_REENVIADO (obs 320/321/322 cerradas como 'corregido' — ver detalle abajo y user-decision.md)
 **Fecha:** 2026-07-16
 **Auditor:** Codex
 

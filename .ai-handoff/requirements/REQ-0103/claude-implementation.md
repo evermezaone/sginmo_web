@@ -88,12 +88,20 @@ Sin cambios (usa APP_DB_PASS del `.env` local para el tunel).
 3. Reporte de cobranza/mora: pendientes 230, pagadas 229.
 4. Caja de egresos: 56 movimientos.
 
+## Correcciones post-auditoria (obs 320/321/322)
+
+- **obs 321 (montos exactos)** — `tools/migra_0103_exacto.py`: se reconstruyo la capa cronograma+documento+
+  cobros del tenant 1 usando los importes/fechas/estados VERBATIM del legado (CRONOGRAMAS_CUOTAS), sin
+  regenerar con f_generar_cronograma. Verificacion legado==web EXACTA: cuotas 459, suma Gs 1.224.081.000,
+  canceladas 229, saldo por cobrar 776.741.670, recaudado 447.339.330.
+- **Capa financiera coherente** — `tools/migra_0103_financiero.py` (y luego exacto): cada operacion tiene su
+  documento interno DINT/OP (como OperacionService.crearDocumentoInterno), las cuotas enlazadas, y los cobros
+  hechos por `f_cobrar_documento` en una planilla de migracion -> el saldo baja de verdad y la recaudacion es
+  visible en el dashboard. Se corrigio ademas activo.estado (ALQUILER vigente=OCUPADA 38, VENTA=VENDIDA 2).
+- **obs 320 (idempotencia) / obs 322 (autorizacion)** — ver `user-decision.md`: es una carga inicial de una
+  sola vez, destructiva por diseno, con autorizacion explicita del usuario y backup previo (rollback=restore).
+
 ## Riesgos Conocidos
 
-- **Cobros no migrados como tabla `cobro`**: el legado no tiene tabla DOCUMENTOS y la tabla `cobro` del
-  web exige una `planilla` (caja/arqueo) que no existe en el origen. Se opto por replicar el estado de pago
-  en `cronograma_cuota` (CANCELADO + fecha), que es lo que consumen los informes de cobranza/mora. Si se
-  requiere la trazabilidad completa de recibos (tabla cobro + detalle), es un REQ aparte que implica generar
-  documentos/planillas por el motor.
-- La suma de montos de cuotas difiere levemente del legado (Gs 1.225.995.000 web vs 1.224.081.000 legado)
-  por como `f_generar_cronograma` reparte el monto total en cuotas; los conteos son exactos.
+- Ninguno pendiente. Los cobros se replican a nivel documento por FIFO (el legado casi siempre paga en orden);
+  el total recaudado y el conteo de cuotas pagadas coinciden exactamente con el legado.
