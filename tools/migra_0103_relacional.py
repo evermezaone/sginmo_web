@@ -61,6 +61,9 @@ def main():
     ap.add_argument("--clean-activos", action="store_true")
     ap.add_argument("--activos", action="store_true")
     ap.add_argument("--operaciones", action="store_true")
+    ap.add_argument("--propietarios", action="store_true")
+    ap.add_argument("--marcar-cuotas", action="store_true")
+    ap.add_argument("--ingresos", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
@@ -214,6 +217,117 @@ def main():
                 ncron += 1
         if not a.dry_run: pg.commit()
         print("  operaciones:", no, " (omitidas por falta de activo/cliente:", skip, ")  cronogramas generados:", ncron)
+
+    if a.propietarios:
+        import json
+        m = json.load(open(SP + "/mig_map_activos.json"))
+        map_ent = {int(k): v for k, v in m["ent"].items()}
+        map_prop = {int(k): v for k, v in m["prop"].items()}
+        fc.execute("SELECT SOCIO_NEGOCIO_ID, NUMERO_DOCUMENTO FROM SOCIOS_NEGOCIOS")
+        doc_by_socio = {sid: str(doc).strip() for sid, doc in fc.fetchall() if doc}
+        pc.execute("SELECT numero_documento, persona FROM persona")
+        pers_by_doc = {r[0]: r[1] for r in pc.fetchall()}
+        print("== PROPIETARIOS ==")
+        fc.execute("SELECT ENTIDAD_INMOBILIARIA_ID, PROPIEDAD_ID, PROPIETARIO_ID FROM PROPIETARIOS_ENT_INMOB")
+        np = 0
+        for eid, pid, prop_sid in fc.fetchall():
+            act = map_prop.get(pid) or map_ent.get(eid)   # el enlace del legado es por entidad (PROPIEDAD_ID null)
+            per = pers_by_doc.get(doc_by_socio.get(prop_sid))
+            if not act or not per:
+                continue
+            if a.dry_run: np += 1; continue
+            pc.execute("INSERT INTO activo_propietario (activo, propietario, estado, usuario_creacion, fecha_creacion) "
+                       "SELECT %s,%s,'ACTIVO',%s,now() WHERE NOT EXISTS (SELECT 1 FROM activo_propietario WHERE activo=%s AND propietario=%s)",
+                       (act, per, USR, act, per))
+            np += pc.rowcount
+        if not a.dry_run: pg.commit()
+        print("  propietarios enlazados:", np)
+
+    if a.marcar_cuotas:
+        import json
+        m = json.load(open(SP + "/mig_map_activos.json"))
+        map_prop = {int(k): v for k, v in m["prop"].items()}
+        fc.execute("SELECT SOCIO_NEGOCIO_ID, NUMERO_DOCUMENTO FROM SOCIOS_NEGOCIOS")
+        doc_by_socio = {sid: str(doc).strip() for sid, doc in fc.fetchall() if doc}
+        pc.execute("SELECT numero_documento, persona FROM persona")
+        pers_by_doc = {r[0]: r[1] for r in pc.fetchall()}
+        print("== MARCAR CUOTAS PAGADAS (estado del legado) ==")
+        # legado: operacion -> (activo nuevo, cliente nuevo) para reidentificar la operacion nueva
+        fc.execute("SELECT OPERACION_PROPIEDAD_ID, SOCIO_NEGOCIO_ID, PROPIEDAD_ID FROM OPERACIONES_PROPIEDADES")
+        op_key = {}
+        for oid, sid, pid in fc.fetchall():
+            act = map_prop.get(pid); cli = pers_by_doc.get(doc_by_socio.get(sid))
+            if act and cli: op_key[oid] = (act, cli)
+        # cuotas del legado por operacion
+        fc.execute("SELECT OPERACION_PROPIEDAD_ID, NUMERO_CUOTA, ESTADO, FECHA_CANCELACION FROM CRONOGRAMAS_CUOTAS ORDER BY OPERACION_PROPIEDAD_ID, NUMERO_CUOTA")
+        legc = fc.fetchall()
+        marc = ops_ok = ops_amb = 0
+        newop_cache = {}
+        for oid, ncuo, est, fcanc in legc:
+            if str(est or "").strip().upper() != "CANCELADO":
+                continue
+            if oid not in op_key:
+                continue
+            if oid not in newop_cache:
+                act, cli = op_key[oid]
+                pc.execute("SELECT operacion FROM operacion WHERE tenant=1 AND activo=%s AND cliente=%s", (act, cli))
+                rr = pc.fetchall()
+                newop_cache[oid] = rr[0][0] if len(rr) == 1 else None
+                if len(rr) == 1: ops_ok += 1
+                elif len(rr) > 1: ops_amb += 1
+            nop = newop_cache[oid]
+            if not nop:
+                continue
+            if a.dry_run: marc += 1; continue
+            pc.execute("UPDATE cronograma_cuota SET estado='CANCELADO', fecha_cancelacion=COALESCE(%s, fecha_vencimiento) "
+                       "WHERE operacion=%s AND numero_cuota=%s AND estado<>'CANCELADO'", (fcanc, nop, int(ncuo)))
+            marc += pc.rowcount
+        if not a.dry_run: pg.commit()
+        print("  operaciones reidentificadas:", ops_ok, " (ambiguas omitidas:", ops_amb, ")  cuotas marcadas pagadas:", marc)
+
+    if a.ingresos:
+        import json
+        m = json.load(open(SP + "/mig_map_activos.json"))
+        map_prop = {int(k): v for k, v in m["prop"].items()}
+        map_ent = {int(k): v for k, v in m["ent"].items()}
+        fc.execute("SELECT SOCIO_NEGOCIO_ID, NUMERO_DOCUMENTO FROM SOCIOS_NEGOCIOS")
+        doc_by_socio = {sid: str(doc).strip() for sid, doc in fc.fetchall() if doc}
+        pc.execute("SELECT numero_documento, persona FROM persona")
+        pers_by_doc = {r[0]: r[1] for r in pc.fetchall()}
+        print("== INGRESOS/EGRESOS (caja de gastos) ==")
+        # 1) items del legado -> articulo (idempotente por codigo MIG-ITEM-<id>)
+        fc.execute("SELECT ITEM_INGRESO_EGRESO_ID, ITEM FROM ITEMS_INGRESOS_EGRESOS")
+        art_by_item = {}
+        for iid, nom in fc.fetchall():
+            cod = "MIG-ITEM-%d" % iid
+            if a.dry_run: art_by_item[iid] = -1; continue
+            pc.execute("SELECT articulo FROM articulo WHERE tenant=%s AND codigo=%s", (TENANT, cod))
+            r = pc.fetchone()
+            if r:
+                art_by_item[iid] = r[0]; continue
+            pc.execute("INSERT INTO articulo (codigo, descripcion, tipo, impuesto, precio_unitario, modifica_estado, estado, habilitado, version, tenant, usuario_creacion, fecha_creacion) "
+                       "VALUES (%s,%s,'SERVICIO',3,0,false,'ACTIVO',true,0,%s,%s,now()) RETURNING articulo",
+                       (cod, (str(nom or cod)[:200]), TENANT, USR))
+            art_by_item[iid] = pc.fetchone()[0]
+        art_def = next(iter(art_by_item.values()), None)
+        # 2) movimientos
+        fc.execute("SELECT INGRESO_EGRESO_ID, FECHA, MONTO, SOCIO_NEGOCIO_ID, ESTADO, ENTIDAD_INMOBILIARIA_ID, TIPO, "
+                   "PROPIEDAD_ID, ITEM_INGRESO_EGRESO_ID, SALDO, FORMA_PAGO_ID, OBSERVACION FROM INGRESOS_EGRESOS")
+        ne = 0
+        for r in fc.fetchall():
+            iid_, fec, monto, sid, est, eid, tipo, pid, item, saldo, fpago, obs = r
+            tp = "INGRESO" if str(tipo or "").strip().upper().startswith("ING") else "EGRESO"
+            estn = "CANCELADO" if str(est or "").strip().upper() in ("CANCELADO", "PAGADO") else "PENDIENTE"
+            art = art_by_item.get(item) or art_def
+            per = pers_by_doc.get(doc_by_socio.get(sid))
+            act = map_prop.get(pid) or map_ent.get(eid)
+            if a.dry_run: ne += 1; continue
+            pc.execute("INSERT INTO ingreso_egreso (fecha, tipo, monto, saldo, estado, articulo, persona, activo, observacion, tenant, usuario_creacion, fecha_creacion) "
+                       "VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now())",
+                       (fec, tp, monto or 0, saldo, estn, art, per, act, (str(obs)[:400] if obs else None), TENANT, USR))
+            ne += 1
+        if not a.dry_run: pg.commit()
+        print("  articulos (items):", len(art_by_item), " movimientos ingreso/egreso:", ne)
 
     pc.close(); pg.close(); fb.close()
 
