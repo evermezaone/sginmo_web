@@ -101,7 +101,22 @@ Sin cambios (usa APP_DB_PASS del `.env` local para el tunel).
 - **obs 320 (idempotencia) / obs 322 (autorizacion)** — ver `user-decision.md`: es una carga inicial de una
   sola vez, destructiva por diseno, con autorizacion explicita del usuario y backup previo (rollback=restore).
 
+## Correcciones ronda 2 (obs 323/324/325)
+
+- **obs 323 (estado/fecha por cuota historicos)**: (a) un cobro POR CUOTA pagada con su `FECHA_CANCELACION`
+  real (o vencimiento si el legado no la registro); (b) paso 5b en `migra_0103_exacto.py` que sobrescribe
+  `cronograma_cuota.estado/saldo/fecha_cancelacion` con los valores EXACTOS del legado por
+  (operacion, numero_cuota), despues de los cobros (defeat del FIFO + current_date que aplica el motor).
+- **obs 324/325 (evidencia reproducible)**: `tools/verifica_0103.py` compara legado vs web y falla si algo
+  no cuadra; salida guardada en `verificacion-cuadre.txt`. test-plan.md y preaudit-checklist.md actualizados.
+
+## Evidencia de cuadre (tools/verifica_0103.py -> verificacion-cuadre.txt)
+
+RESULTADO: TODO CUADRA. activos 68=68, operaciones 44=44, cuotas 459=459, suma 1.224.081.000=igual,
+canceladas 229=229, saldo 776.741.670=igual, recaudado 447.339.330=igual, ingresos/egresos 56=56.
+Cobros por mes legado==web en los 13 meses (2025-06..2026-06). Cuadre por cuota: 459 comparadas, 0 mismatches.
+
 ## Riesgos Conocidos
 
-- Ninguno pendiente. Los cobros se replican a nivel documento por FIFO (el legado casi siempre paga en orden);
-  el total recaudado y el conteo de cuotas pagadas coinciden exactamente con el legado.
+- Ninguno pendiente. El estado, saldo y fecha de cancelacion de cada cuota coinciden exactamente con el
+  legado (verificado por cuota, 0 discrepancias); los cobros conservan su fecha real de pago.

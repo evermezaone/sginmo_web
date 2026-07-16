@@ -1,0 +1,31 @@
+REQ-0103 - Evidencia de cuadre legado (Firebird) vs web (PostgreSQL tenant 1)
+Generado por: python tools/verifica_0103.py   (fecha de corrida: 2026-07-16)
+Reproducible: requiere el tunel SSH 127.0.0.1:15432 y source/INMOBILIARIA.FDB.
+
+== CUADRE LEGADO vs WEB (tenant 1) ==
+  activos                    legado=68               web=68               OK
+  operaciones                legado=44               web=44               OK
+  cuotas                     legado=459              web=459              OK
+  suma cuotas                legado=1,224,081,000    web=1,224,081,000    OK
+  cuotas canceladas          legado=229              web=229              OK
+  saldo por cobrar           legado=776,741,670      web=776,741,670      OK
+  recaudado (cobros)         legado=447,339,330      web=447,339,330      OK
+  ingresos/egresos           legado=56               web=56               OK
+== COBROS POR MES (legado vs web) ==
+  2025-06  legado=1,500,000      web=1,500,000      OK
+  2025-07  legado=1,500,000      web=1,500,000      OK
+  2025-08  legado=1,500,000      web=1,500,000      OK
+  2025-09  legado=1,500,000      web=1,500,000      OK
+  2025-10  legado=1,500,000      web=1,500,000      OK
+  2025-11  legado=4,276,000      web=4,276,000      OK
+  2025-12  legado=6,050,000      web=6,050,000      OK
+  2026-01  legado=49,605,000     web=49,605,000     OK
+  2026-02  legado=59,845,000     web=59,845,000     OK
+  2026-03  legado=54,745,000     web=54,745,000     OK
+  2026-04  legado=67,035,000     web=67,035,000     OK
+  2026-05  legado=139,688,330    web=139,688,330    OK
+  2026-06  legado=58,595,000     web=58,595,000     OK
+== CUADRE POR CUOTA (estado exacto) ==
+  cuotas comparadas: 459  mismatches de estado: 0 OK
+
+RESULTADO: TODO CUADRA

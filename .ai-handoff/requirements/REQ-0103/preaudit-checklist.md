@@ -21,19 +21,41 @@ Antes de ejecutar `npm run handoff:ready -- REQ-0103`, completar todo:
 Notas:
 
 - Migracion de datos, no toca codigo de la app. Sin credenciales hardcodeadas (usa APP_DB_PASS del .env).
-- Sin observaciones previas de Codex (primer envio del REQ).
-- Decision de alcance documentada en claude-implementation.md "Riesgos Conocidos": cobros replicados via
-  estado de cuota (el legado no tiene tabla DOCUMENTOS y `cobro` exige planilla/caja).
+- 2 rondas de auditoria de Codex; respuestas concretas por observacion abajo.
+- Cuadre reproducible: `python tools/verifica_0103.py` (requiere tunel SSH). Salida esperada: TODO CUADRA.
 
 ## Respuesta Por Observacion Cerrada
 
-Usar este bloque para cada observacion que se cierre antes de reenviar:
-
 ```text
+Ronda 1 (obs 320/321/322):
+Obs 320 (idempotencia): carga inicial destructiva de una sola vez, autorizada + backup previo
+  (rollback=restore); documentado en user-decision.md. Personas idempotente por numero_documento,
+  articulos por codigo MIG-ITEM-N.
+Obs 321 (montos no cuadran): tools/migra_0103_exacto.py reconstruye cronograma con importes/fechas
+  VERBATIM del legado (sin f_generar_cronograma). Suma cuotas web = 1.224.081.000 = legado.
+Obs 322 (autorizacion): user-decision.md completado con las autorizaciones explicitas + backup.
+
+Ronda 2 (obs 323/324/325):
+Obs 323 (estado/fecha por cuota no historicos):
+- Problema: las cuotas se cobraban por el motor (FIFO + fecha_cancelacion=current_date), sin preservar
+  el estado ni la fecha de cancelacion reales por cuota.
+- Cambio aplicado: (a) un cobro POR CUOTA pagada con su FECHA_CANCELACION real (o vencimiento si falta);
+  (b) paso 5b que sobrescribe cronograma_cuota.estado/saldo/fecha_cancelacion con los valores EXACTOS del
+  legado por (operacion, numero_cuota), despues de los cobros.
+- Archivos tocados: tools/migra_0103_exacto.py.
+- Evidencia: tools/verifica_0103.py (cuadre por cuota: mismatches de estado = 0; cobros por mes legado==web).
+- Validacion propia: cuotas canceladas 229 con saldo 0 y fecha_cancelacion historica; recaudado 447.339.330.
+Obs 324 (test-plan/checklist desactualizados): test-plan.md reescrito con el flujo exacto/documento/cobro
+  y consultas de cuadre reproducibles; este checklist documenta las respuestas por observacion.
+Obs 325 (Codex no pudo verificar la VPS por SSH): se agrego tools/verifica_0103.py (evidencia reproducible)
+  y la tabla de cuadre con los valores reales en test-plan.md y claude-implementation.md.
+```
+
+<!--
 Obs NN:
 - Problema original:
 - Cambio aplicado:
 - Archivos tocados:
 - Evidencia:
 - Validacion propia:
-```
+-->

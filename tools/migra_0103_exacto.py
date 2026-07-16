@@ -143,6 +143,20 @@ def main():
                        "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)",
                        (doc, planilla, FORMA_EFECTIVO, cli, monto, mon, fpago, "migracion"))
             n_cob += 1; tot_cob += int(monto)
+        # 5b) obs 323: persistir el estado/saldo/fecha_cancelacion EXACTOS del legado por cuota.
+        # f_actualiza_saldo_cuotas (que corre dentro de f_cobrar) resetea las cuotas por FIFO y pone
+        # fecha_cancelacion=current_date; aca se sobrescribe cada cuota con su estado real historico.
+        # El total pagado por documento no cambia (se cobro exactamente la suma de las canceladas), por lo
+        # que sum(cuota.saldo) sigue == documento.saldo (cuotas de igual monto).
+        for (ncuo, fven, monto, cest, fcanc, cmon) in cuotas:
+            fv = fven.date() if hasattr(fven, "date") else fven
+            if cest == "CANCELADO":
+                fcanc_d = (fcanc.date() if hasattr(fcanc, "date") else fcanc) if fcanc else fv
+                pc.execute("UPDATE cronograma_cuota SET estado='CANCELADO', saldo=0, fecha_cancelacion=%s, version=version+1 "
+                           "WHERE operacion=%s AND numero_cuota=%s", (fcanc_d, op, ncuo))
+            else:
+                pc.execute("UPDATE cronograma_cuota SET estado='PENDIENTE', saldo=monto, fecha_cancelacion=NULL, version=version+1 "
+                           "WHERE operacion=%s AND numero_cuota=%s", (op, ncuo))
         # 6) estado activo
         if activo:
             if tipo == "VENTA": pc.execute("UPDATE activo SET estado='VENDIDA' WHERE activo=%s", (activo,))
