@@ -5,6 +5,8 @@ import jakarta.inject.Named;
 import py.com.pysistemas.sginmo.servicio.PortalAuthService;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * REQ-0078 - Sesion del portal externo de socios. Identidad basada en persona + tenant + roles
@@ -33,17 +35,17 @@ public class PortalSesion implements Serializable {
     private String pendienteDocumento;
     private String pendienteNombre;
 
-    /** Solicitud de OTP en curso (empresa + documento) para llevar el contexto login -> OTP. */
-    private Long solicitudTenant;
+    /** Solicitud de OTP en curso (solo documento; REQ-0102 ya no expone/necesita la empresa). */
     private String solicitudDocumento;
 
-    public void iniciarSolicitud(Long tenant, String documento) {
-        this.solicitudTenant = tenant;
+    /** REQ-0102: empresas accesibles del socio en esta sesion (para el selector si son mas de una). */
+    private List<PortalAuthService.Acceso> accesos = new ArrayList<>();
+
+    public void iniciarSolicitud(String documento) {
         this.solicitudDocumento = documento;
     }
 
-    public boolean tieneSolicitud() { return solicitudTenant != null && solicitudDocumento != null; }
-    public Long getSolicitudTenant() { return solicitudTenant; }
+    public boolean tieneSolicitud() { return solicitudDocumento != null && !solicitudDocumento.isBlank(); }
     public String getSolicitudDocumento() { return solicitudDocumento; }
 
     /** Acceso pleno tras login por clave, o tras OTP+definicion de clave. */
@@ -56,6 +58,27 @@ public class PortalSesion implements Serializable {
         this.esPropietario = id.esPropietario;
         this.autenticado = true;
         limpiarPendiente();
+    }
+
+    /** REQ-0102: autentica con la lista de empresas accesibles; activa la primera. */
+    public void autenticarMulti(List<PortalAuthService.Acceso> accs) {
+        this.accesos = (accs == null) ? new ArrayList<>() : new ArrayList<>(accs);
+        if (!this.accesos.isEmpty()) autenticar(this.accesos.get(0).identidad);
+    }
+
+    /** REQ-0102: cambia la empresa activa (solo entre las accesibles ya autenticadas por clave). */
+    public void cambiarEmpresa(Long tenantDestino) {
+        if (tenantDestino == null) return;
+        for (PortalAuthService.Acceso a : accesos) {
+            if (tenantDestino.equals(a.tenant)) { autenticar(a.identidad); return; }
+        }
+    }
+
+    public List<PortalAuthService.Acceso> getAccesos() { return accesos; }
+    public boolean isMultiEmpresa() { return accesos != null && accesos.size() > 1; }
+    public String getEmpresaActual() {
+        if (accesos != null) for (PortalAuthService.Acceso a : accesos) if (a.tenant != null && a.tenant.equals(tenant)) return a.empresa;
+        return null;
     }
 
     /** Registra la identidad validada por OTP que todavia debe fijar su clave. */
@@ -75,7 +98,8 @@ public class PortalSesion implements Serializable {
     public void cerrar() {
         tenant = null; persona = null; documento = null; nombre = null;
         esCliente = false; esPropietario = false; autenticado = false;
-        solicitudTenant = null; solicitudDocumento = null;
+        solicitudDocumento = null;
+        if (accesos != null) accesos.clear();
         limpiarPendiente();
     }
 

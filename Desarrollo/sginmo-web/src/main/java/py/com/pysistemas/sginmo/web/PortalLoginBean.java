@@ -26,19 +26,16 @@ public class PortalLoginBean implements Serializable {
     @Inject
     private PortalSesion sesion;
 
-    private List<PortalAuthService.Empresa> empresas;
-    private Long tenant;
     private String documento;
     private String password;
     private String codigo;
     private String nueva;
     private String repetir;
     private String canalInfo;   // texto informativo tras enviar OTP
+    private Long empresaSel;     // REQ-0102: seleccion del combo de empresa (si el socio tiene mas de una)
 
     @PostConstruct
-    public void iniciar() {
-        try { empresas = auth.empresas(); } catch (RuntimeException e) { empresas = List.of(); }
-    }
+    public void iniciar() { /* REQ-0102: ya no se carga la lista de empresas (no se expone) */ }
 
     /** Si ya hay sesion de portal, saltar directo a la cuenta. */
     public String verificarLogin() {
@@ -66,8 +63,8 @@ public class PortalLoginBean implements Serializable {
 
     public String ingresar() {
         try {
-            PortalAuthService.Identidad id = auth.loginPassword(tenant, documento, password, ip(), ua());
-            sesion.autenticar(id);
+            List<PortalAuthService.Acceso> accesos = auth.loginPasswordMulti(documento, password, ip(), ua());
+            sesion.autenticarMulti(accesos);
             return "/portal/inicio?faces-redirect=true";
         } catch (NegocioException e) {
             aviso(e.getMessage());
@@ -75,25 +72,31 @@ public class PortalLoginBean implements Serializable {
         }
     }
 
-    /** Primer ingreso / olvide mi clave: envia OTP y navega a la pantalla de codigo. */
+    /** REQ-0102: cambia la empresa activa desde el selector del portal (socio con mas de una empresa). */
+    public void cambiarEmpresa() {
+        try {
+            sesion.cambiarEmpresa(empresaSel);
+            var ec = FacesContext.getCurrentInstance().getExternalContext();
+            ec.redirect(ec.getRequestContextPath() + "/portal/inicio.xhtml");
+        } catch (Exception ignore) { }
+    }
+
+    /** Primer ingreso / olvide mi clave: envia OTP (a la(s) empresa(s) del documento) y navega al codigo. */
     public String enviarCodigo() {
-        if (tenant == null || documento == null || documento.isBlank()) {
-            aviso("Seleccione la empresa e ingrese su documento.");
+        if (documento == null || documento.isBlank()) {
+            aviso("Ingrese su documento (CI / RUC).");
             return null;
         }
-        try {
-            auth.solicitarOtp(tenant, documento.trim(), "LOGIN", ip(), ua());
-        } catch (NegocioException e) {
-            // Aun ante error de negocio mostramos el mensaje generico y avanzamos igual (no revela).
-        }
-        sesion.iniciarSolicitud(tenant, documento.trim());
+        try { auth.solicitarOtpDoc(documento.trim(), "LOGIN", ip(), ua()); }
+        catch (RuntimeException ignore) { /* mensaje generico, no revela */ }
+        sesion.iniciarSolicitud(documento.trim());
         return "/portal/otp?faces-redirect=true";
     }
 
     public String reenviar() {
         if (!sesion.tieneSolicitud()) return "/portal/login?faces-redirect=true";
-        try { auth.solicitarOtp(sesion.getSolicitudTenant(), sesion.getSolicitudDocumento(), "LOGIN", ip(), ua()); }
-        catch (NegocioException ignore) { }
+        try { auth.solicitarOtpDoc(sesion.getSolicitudDocumento(), "LOGIN", ip(), ua()); }
+        catch (RuntimeException ignore) { }
         aviso("Si el documento corresponde a un socio, enviamos un nuevo codigo.");
         return null;
     }
@@ -101,8 +104,7 @@ public class PortalLoginBean implements Serializable {
     public String validar() {
         if (!sesion.tieneSolicitud()) return "/portal/login?faces-redirect=true";
         try {
-            PortalAuthService.Identidad id = auth.validarOtp(
-                sesion.getSolicitudTenant(), sesion.getSolicitudDocumento(), codigo, ip(), ua());
+            PortalAuthService.Identidad id = auth.validarOtpDoc(sesion.getSolicitudDocumento(), codigo, ip(), ua());
             sesion.marcarPendiente(id);
             return "/portal/clave?faces-redirect=true";
         } catch (NegocioException e) {
@@ -118,12 +120,11 @@ public class PortalLoginBean implements Serializable {
             return null;
         }
         try {
-            Long t = sesion.getPendienteTenant();
-            Long p = sesion.getPendientePersona();
-            auth.definirPassword(t, p, nueva, ip(), ua());
-            // Con la clave recien definida, autenticamos con la misma identidad ya validada por OTP.
-            PortalAuthService.Identidad id = auth.loginPassword(t, sesion.getPendienteDocumento(), nueva, ip(), ua());
-            sesion.autenticar(id);
+            String doc = sesion.getPendienteDocumento();
+            auth.definirPasswordDoc(doc, nueva, ip(), ua());   // misma clave para todas las empresas del socio
+            // Con la clave recien definida, autenticamos (multi-empresa).
+            List<PortalAuthService.Acceso> accesos = auth.loginPasswordMulti(doc, nueva, ip(), ua());
+            sesion.autenticarMulti(accesos);
             return "/portal/inicio?faces-redirect=true";
         } catch (NegocioException e) {
             aviso(e.getMessage());
@@ -156,9 +157,8 @@ public class PortalLoginBean implements Serializable {
     }
 
     // ── getters/setters ───────────────────────────────────────────────────────
-    public List<PortalAuthService.Empresa> getEmpresas() { return empresas; }
-    public Long getTenant() { return tenant; }
-    public void setTenant(Long tenant) { this.tenant = tenant; }
+    public Long getEmpresaSel() { return empresaSel != null ? empresaSel : sesion.getTenant(); }
+    public void setEmpresaSel(Long empresaSel) { this.empresaSel = empresaSel; }
     public String getDocumento() { return documento; }
     public void setDocumento(String documento) { this.documento = documento; }
     public String getDocumentoSolicitud() { return sesion.getSolicitudDocumento(); }

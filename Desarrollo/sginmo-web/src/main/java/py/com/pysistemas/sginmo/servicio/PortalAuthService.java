@@ -48,6 +48,121 @@ public class PortalAuthService {
 
     // ── API publica ──────────────────────────────────────────────────────────
 
+    // ── REQ-0102: acceso por documento SIN exponer la lista de empresas ─────────────────────────
+
+    /** Tenants donde la persona (por documento) es elegible para el portal (CLIENTE/PROPIETARIO). */
+    private List<Long> tenantsElegibles(String documento) {
+        fijarTenant(-1L);
+        @SuppressWarnings("unchecked")
+        List<Object> rows = em.createNativeQuery(
+            "SELECT DISTINCT pr.tenant FROM persona p"
+          + " JOIN persona_rol pr ON pr.persona = p.persona AND pr.estado = 'ACTIVO'"
+          + " JOIN entidad e ON e.entidad = pr.rol AND e.lista = 'ROLES_PERSONA'"
+          + "   AND e.codigo IN ('CLIENTE','PROPIETARIO') AND e.tenant IN (-1, pr.tenant)"
+          + " WHERE p.numero_documento = :doc AND p.estado = 'ACTIVO'")
+            .setParameter("doc", documento.trim()).getResultList();
+        List<Long> out = new ArrayList<>();
+        for (Object r : rows) if (r != null) out.add(((Number) r).longValue());
+        return out;
+    }
+
+    /**
+     * REQ-0102: login por documento + password, resolviendo la(s) empresa(s) automaticamente (sin
+     * exponer la lista). Devuelve un acceso por cada empresa donde el documento es elegible, tiene
+     * credencial y la clave coincide. La contrasena se comparte entre las empresas del socio.
+     */
+    public List<Acceso> loginPasswordMulti(String documento, String password, String ip, String ua) {
+        if (documento == null || documento.isBlank() || password == null || password.isBlank())
+            throw new NegocioException(GENERICO);
+        String doc = documento.trim();
+        fijarTenant(-1L);   // superadmin: ver credenciales de todas las empresas (RLS)
+        @SuppressWarnings("unchecked")
+        List<Object[]> cands = em.createNativeQuery(
+            "SELECT c.tenant, emp.nombre, c.password_hash, (c.bloqueado_hasta > now()) AS bloqueado, p.persona"
+          + " FROM persona p"
+          + " JOIN persona_portal_credencial c ON c.persona = p.persona"
+          + " JOIN persona emp ON emp.persona = c.tenant"
+          + " WHERE p.numero_documento = :doc AND p.estado = 'ACTIVO'"
+          + "   AND EXISTS (SELECT 1 FROM persona_rol pr JOIN entidad e ON e.entidad = pr.rol"
+          + "               WHERE pr.persona = p.persona AND pr.tenant = c.tenant AND pr.estado = 'ACTIVO'"
+          + "                 AND e.lista = 'ROLES_PERSONA' AND e.codigo IN ('CLIENTE','PROPIETARIO') AND e.tenant IN (-1, c.tenant))"
+          + " ORDER BY emp.nombre")
+            .setParameter("doc", doc).getResultList();
+        if (cands.isEmpty()) { auditar(null, null, "LOGIN_FALLIDO", "doc:" + doc, ip, ua); throw new NegocioException(GENERICO); }
+
+        List<Acceso> ok = new ArrayList<>();
+        boolean bloqueadoAlguno = false;
+        for (Object[] r : cands) {
+            Long tn = ((Number) r[0]).longValue();
+            String empNombre = (String) r[1];
+            String hash = (String) r[2];
+            boolean bloq = Boolean.TRUE.equals(r[3]);
+            Long personaId = ((Number) r[4]).longValue();
+            if (bloq) { bloqueadoAlguno = true; auditar(tn, personaId, "LOGIN_FALLIDO", "bloqueado", ip, ua); continue; }
+            if (hash != null && BCrypt.checkpw(password.trim(), hash)) {
+                em.createNativeQuery("UPDATE persona_portal_credencial SET intentos_fallidos = 0, bloqueado_hasta = NULL"
+                  + " WHERE tenant = :t AND persona = :p").setParameter("t", tn).setParameter("p", personaId).executeUpdate();
+                fijarTenant(tn);
+                Persona pe = buscarElegible(tn, doc);
+                fijarTenant(-1L);
+                if (pe != null) {
+                    Acceso a = new Acceso();
+                    a.tenant = tn; a.empresa = empNombre; a.identidad = identidadDe(pe, tn);
+                    ok.add(a);
+                    auditar(tn, personaId, "LOGIN", null, ip, ua);
+                }
+            } else {
+                registrarFallo(tn, personaId);
+                auditar(tn, personaId, "LOGIN_FALLIDO", "password-incorrecta", ip, ua);
+            }
+        }
+        if (ok.isEmpty()) {
+            if (bloqueadoAlguno) throw new NegocioException("Acceso bloqueado temporalmente por intentos fallidos. Reintente mas tarde.");
+            throw new NegocioException(GENERICO);
+        }
+        return ok;
+    }
+
+    /** REQ-0102: primer ingreso / recuperacion por documento: envia OTP en cada empresa elegible del socio. */
+    public void solicitarOtpDoc(String documento, String proposito, String ip, String ua) {
+        if (documento == null || documento.isBlank()) return;   // comportamiento uniforme (no revela)
+        for (Long t : tenantsElegibles(documento)) {
+            try { solicitarOtp(t, documento.trim(), proposito, ip, ua); } catch (RuntimeException ignore) { }
+        }
+    }
+
+    /** REQ-0102: valida el OTP por documento probando cada empresa elegible; la primera que valida da la identidad. */
+    public Identidad validarOtpDoc(String documento, String codigo, String ip, String ua) {
+        if (documento == null || documento.isBlank()) throw new NegocioException(OTP_GENERICO);
+        for (Long t : tenantsElegibles(documento)) {
+            try { return validarOtp(t, documento.trim(), codigo, ip, ua); } catch (NegocioException ignore) { }
+        }
+        throw new NegocioException(OTP_GENERICO);
+    }
+
+    /** REQ-0102: define la MISMA contrasena para todas las empresas elegibles del socio (identidad unica de acceso). */
+    public void definirPasswordDoc(String documento, String nueva, String ip, String ua) {
+        if (documento == null || documento.isBlank()) throw new NegocioException(GENERICO);
+        List<Long> tenants = tenantsElegibles(documento);
+        if (tenants.isEmpty()) throw new NegocioException(GENERICO);
+        fijarTenant(-1L);
+        Object personaObj;
+        try {
+            personaObj = em.createNativeQuery("SELECT persona FROM persona WHERE numero_documento = :doc AND estado='ACTIVO'")
+                .setParameter("doc", documento.trim()).getSingleResult();
+        } catch (RuntimeException e) { throw new NegocioException(GENERICO); }
+        Long persona = ((Number) personaObj).longValue();
+        for (Long t : tenants) definirPassword(t, persona, nueva, ip, ua);
+    }
+
+    /** REQ-0102: un acceso resuelto (empresa + identidad) tras login por documento. */
+    public static class Acceso implements Serializable {
+        public Long tenant; public String empresa; public Identidad identidad;
+        public Long getTenant() { return tenant; }
+        public String getEmpresa() { return empresa; }
+        public Identidad getIdentidad() { return identidad; }
+    }
+
     /** Empresas activas para el selector del login publico (no es dato sensible). */
     public List<Empresa> empresas() {
         fijarTenant(-1L);

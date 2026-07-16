@@ -14,13 +14,6 @@
         <div class="acc-msg"><p:messages showDetail="true" closable="true"/></div>
 
         <div class="campo-a">
-            <label for="frm:empresa">Empresa</label>
-            <p:selectOneMenu id="empresa" value="#{portalLoginBean.tenant}" filter="true" filterMatchMode="contains">
-                <f:selectItem itemLabel="Seleccione la empresa" itemValue="#{null}"/>
-                <f:selectItems value="#{portalLoginBean.empresas}" var="e" itemLabel="#{e.nombre}" itemValue="#{e.id}"/>
-            </p:selectOneMenu>
-        </div>
-        <div class="campo-a">
             <label for="frm:doc">Documento (CI / RUC)</label>
             <p:inputText id="doc" value="#{portalLoginBean.documento}" maxlength="20"/>
         </div>

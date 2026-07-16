@@ -20,6 +20,9 @@
         .campo-a { margin-bottom:.85rem; }
         .campo-a label { display:block; font-size:.83rem; color:#374151; margin-bottom:.25rem; }
         .campo-a input, .campo-a select, .campo-a .ui-inputfield, .campo-a .ui-selectonemenu { width:100%; box-sizing:border-box; }
+        /* REQ-0101: el p:password (con toggleMask) envuelve el input en un span inline; que ocupe todo el ancho como los demas campos. */
+        .campo-a .ui-password { display:block; width:100%; }
+        .campo-a .ui-password input { width:100%; box-sizing:border-box; }
         .acc-btn { width:100%; margin-top:.4rem; }
         .acc-alt { text-align:center; margin-top:.9rem; font-size:.85rem; }
         .acc-alt a { color:#0f766e; text-decoration:none; }

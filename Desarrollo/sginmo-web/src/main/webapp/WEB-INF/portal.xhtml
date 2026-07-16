@@ -2,7 +2,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:ui="jakarta.faces.facelets"
-      xmlns:f="jakarta.faces.core">
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="primefaces">
 <f:view contentType="text/html" encoding="UTF-8">
 <h:head>
     <meta charset="UTF-8"/>
@@ -64,6 +65,12 @@
     <div class="portal-top">
         <i class="pi pi-user"></i>
         <span class="marca">Mi cuenta</span>
+        <h:form rendered="#{portalSesion.multiEmpresa}" style="margin-right:1rem;">
+            <p:selectOneMenu value="#{portalLoginBean.empresaSel}" style="min-width:11rem;">
+                <f:selectItems value="#{portalSesion.accesos}" var="a" itemLabel="#{a.empresa}" itemValue="#{a.tenant}"/>
+                <p:ajax listener="#{portalLoginBean.cambiarEmpresa}"/>
+            </p:selectOneMenu>
+        </h:form>
         <ui:insert name="acciones"/>
     </div>
     <div class="portal-wrap">
