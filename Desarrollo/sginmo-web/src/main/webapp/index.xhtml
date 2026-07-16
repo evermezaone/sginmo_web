@@ -19,8 +19,9 @@
         .tarjeta h3 { margin: .5rem 0 .2rem; font-size: 1rem; }
         .tarjeta p { margin: 0; font-size: .8rem; color: #6c757d; }
         .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .8rem; margin-bottom: 1.4rem; }
-        .kpi { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: .9rem 1rem; }
-        .kpi .n { font-size: 1.6rem; font-weight: 700; color: #1d3557; line-height: 1.1; }
+        .kpi { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: .9rem 1rem; container-type: inline-size; }
+        /* REQ-0104: el numero se adapta al ancho del recuadro (11cqi) y no desborda con montos grandes */
+        .kpi .n { font-size: clamp(0.95rem, 11cqi, 1.6rem); font-weight: 700; color: #1d3557; line-height: 1.1; white-space: nowrap; overflow-wrap: normal; }
         .kpi .n.alerta { color: #e63946; }
         .kpi .n.ok { color: #2a9d8f; }
         .kpi .t { font-size: .75rem; color: #6c757d; text-transform: uppercase; letter-spacing: .5px; }
