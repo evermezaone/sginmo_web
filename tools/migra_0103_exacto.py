@@ -132,12 +132,17 @@ def main():
                        "VALUES (%s,%s,%s,%s,%s,%s,%s,'migracion',now())", (op, ncuo, fv, monto, monto, cmon, doc))
             n_cuo += 1
         n_op += 1; tot_cuo += int(suma)
-        if pagado and pagado > 0:
-            fpago = max((c[4] for c in cuotas if c[3] == "CANCELADO" and c[4]), default=None) or fop
+        # un cobro POR CUOTA pagada, con su fecha real de cancelacion (o el vencimiento si el legado no la
+        # registro) -> la evolucion mensual de cobros refleja cuando se pago de verdad (no amontonado).
+        for (ncuo, fven, monto, cest, fcanc, cmon) in cuotas:
+            if cest != "CANCELADO":
+                continue
+            fv = fven.date() if hasattr(fven, "date") else fven
+            fpago = (fcanc.date() if hasattr(fcanc, "date") else fcanc) if fcanc else fv
             pc.execute("SELECT f_cobrar_documento(%s::bigint,%s::bigint,%s::bigint,%s::bigint,%s::numeric,%s::bigint,%s::date,%s::varchar,"
                        "NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)",
-                       (doc, planilla, FORMA_EFECTIVO, cli, pagado, mon, fpago, "migracion"))
-            n_cob += 1; tot_cob += int(pagado)
+                       (doc, planilla, FORMA_EFECTIVO, cli, monto, mon, fpago, "migracion"))
+            n_cob += 1; tot_cob += int(monto)
         # 6) estado activo
         if activo:
             if tipo == "VENTA": pc.execute("UPDATE activo SET estado='VENDIDA' WHERE activo=%s", (activo,))
