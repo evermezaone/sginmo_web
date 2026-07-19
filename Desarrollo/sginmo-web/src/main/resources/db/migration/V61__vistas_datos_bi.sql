@@ -1,9 +1,9 @@
--- REQ-0105 - Capa analitica: vistas "sabana" para BI (Metabase / Excel / cualquier consumidor).
+-- REQ-0105 - Capa analitica: vistas de datos para BI (Metabase / Excel / cualquier consumidor).
 --
--- Principio de diseno: una sabana = UN grano, TODAS las filas, MUCHAS columnas derivadas.
--- No se pre-filtra nada (nada de "solo vencidas" o "solo libres"): el cubo filtra. Asi una sola
--- vista reemplaza los ~30 SQL escritos a mano que hoy consultan las mismas 4 tablas con distinto
--- filtro, y desaparecen las incoherencias entre un KPI y su drill-down.
+-- Principio de diseno: cada vista expone UN grano, TODAS las filas y MUCHAS columnas derivadas.
+-- No se pre-filtra nada (nada de "solo vencidas" o "solo libres"): el consumidor filtra. Asi una
+-- sola vista reemplaza los ~30 SQL escritos a mano que hoy consultan las mismas 4 tablas con
+-- distinto filtro, y desaparecen las incoherencias entre un KPI y su drill-down.
 --
 -- SEGURIDAD: son vistas SECURITY INVOKER (default), asi que la RLS (V28) sigue aplicando segun el
 -- rol que consulta. El consumidor BI debe conectarse fijando el tenant, p.ej. en la URL JDBC:
@@ -11,11 +11,11 @@
 -- Sin app.tenant la RLS es fail-closed y las vistas devuelven 0 filas (comportamiento deseado).
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 1) v_sabana_cuota - grano CUOTA. Cubre mora, aging, estado de cuenta,
+-- 1) v_datos_cuota - grano CUOTA. Cubre mora, aging, estado de cuenta,
 --    cobranza esperada y flujo proyectado (incluye cuotas futuras, que hoy
 --    ningun reporte mira).
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE VIEW v_sabana_cuota AS
+CREATE OR REPLACE VIEW v_datos_cuota AS
 SELECT
     cc.cronograma_cuota,
     cc.numero_cuota,
@@ -74,13 +74,13 @@ LEFT JOIN LATERAL (SELECT x.propietario FROM activo_propietario x
                     ORDER BY x.activo_propietario LIMIT 1) pr ON true
 LEFT JOIN v_persona pp ON pp.persona = pr.propietario;
 
-COMMENT ON VIEW v_sabana_cuota IS 'REQ-0105 Sabana grano cuota: mora, aging, cobranza esperada y flujo proyectado.';
+COMMENT ON VIEW v_datos_cuota IS 'REQ-0105 Datos a nivel cuota: mora, aging, cobranza esperada y flujo proyectado.';
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 2) v_sabana_cobro - grano COBRO. Recaudacion: reemplaza los 10 SELECT sobre
+-- 2) v_datos_cobro - grano COBRO. Recaudacion: reemplaza los 10 SELECT sobre
 --    cobro que hoy difieren solo en el filtro.
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE VIEW v_sabana_cobro AS
+CREATE OR REPLACE VIEW v_datos_cobro AS
 SELECT
     c.cobro, c.fecha, c.hora, c.monto, c.estado AS estado_cobro,
     c.concepto, c.cajero, c.recibo_documento, c.factura_documento,
@@ -116,13 +116,13 @@ LEFT JOIN activo    ac ON ac.activo    = op.activo
 LEFT JOIN entidad   ta ON ta.entidad   = ac.tipo
 LEFT JOIN ubicacion_geografica ug ON ug.ubicacion_geografica = ac.ubicacion;
 
-COMMENT ON VIEW v_sabana_cobro IS 'REQ-0105 Sabana grano cobro: recaudacion por periodo/forma/sucursal/activo.';
+COMMENT ON VIEW v_datos_cobro IS 'REQ-0105 Datos a nivel cobro: recaudacion por periodo/forma/sucursal/activo.';
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 3) v_sabana_activo - grano ACTIVO. Cartera de inmuebles, ocupacion y vacancia
+-- 3) v_datos_activo - grano ACTIVO. Cartera de inmuebles, ocupacion y vacancia
 --    con UNA sola definicion de "disponible" (hoy hay dos incompatibles).
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE VIEW v_sabana_activo AS
+CREATE OR REPLACE VIEW v_datos_activo AS
 SELECT
     a.activo, a.nombre AS activo_nombre, a.tenant,
     a.tipo, ta.descripcion AS activo_tipo_desc,
@@ -160,13 +160,13 @@ LEFT JOIN LATERAL (SELECT x.propietario FROM activo_propietario x
                     ORDER BY x.activo_propietario LIMIT 1) pr ON true
 LEFT JOIN v_persona pp ON pp.persona = pr.propietario;
 
-COMMENT ON VIEW v_sabana_activo IS 'REQ-0105 Sabana grano activo: cartera, ocupacion, vacancia y contrato vigente.';
+COMMENT ON VIEW v_datos_activo IS 'REQ-0105 Datos a nivel activo: cartera, ocupacion, vacancia y contrato vigente.';
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 4) v_sabana_movimiento - grano INGRESO/EGRESO. Rentabilidad y gastos, con el
+-- 4) v_datos_movimiento - grano INGRESO/EGRESO. Rentabilidad y gastos, con el
 --    signo neto y la marca de pasivo resueltos en un solo lugar.
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE VIEW v_sabana_movimiento AS
+CREATE OR REPLACE VIEW v_datos_movimiento AS
 SELECT
     ie.ingreso_egreso, ie.fecha, ie.tipo AS tipo_movimiento, ie.estado AS estado_movimiento,
     ie.monto, ie.saldo, ie.observacion, ie.tenant, ie.documento, ie.tipo_imputacion,
@@ -193,13 +193,13 @@ LEFT JOIN ubicacion_geografica ug ON ug.ubicacion_geografica = ac.ubicacion
 LEFT JOIN operacion  op ON op.operacion  = ie.operacion
 LEFT JOIN forma_pago fp ON fp.forma_pago = ie.forma_pago;
 
-COMMENT ON VIEW v_sabana_movimiento IS 'REQ-0105 Sabana grano movimiento: ingresos/egresos, rentabilidad por activo/aplicacion.';
+COMMENT ON VIEW v_datos_movimiento IS 'REQ-0105 Datos a nivel movimiento: ingresos/egresos, rentabilidad por activo/aplicacion.';
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- 5) v_sabana_contrato - grano OPERACION, con el avance del cronograma
+-- 5) v_datos_contrato - grano OPERACION, con el avance del cronograma
 --    resuelto. Cubre contratos por vencer, renovaciones y cartera por contrato.
 -- ─────────────────────────────────────────────────────────────────────────────
-CREATE OR REPLACE VIEW v_sabana_contrato AS
+CREATE OR REPLACE VIEW v_datos_contrato AS
 SELECT
     o.operacion, o.tipo_operacion, o.condicion_operacion, o.estado AS estado_operacion,
     o.fecha_operacion, o.fecha_inicio_contrato, o.fecha_fin_contrato, o.fecha_finalizacion,
@@ -248,4 +248,4 @@ LEFT JOIN LATERAL (
            COALESCE(sum(cc.saldo), 0)                                        AS saldo_pendiente
       FROM cronograma_cuota cc WHERE cc.operacion = o.operacion) cr ON true;
 
-COMMENT ON VIEW v_sabana_contrato IS 'REQ-0105 Sabana grano contrato: avance de cronograma, vencimientos y renovaciones.';
+COMMENT ON VIEW v_datos_contrato IS 'REQ-0105 Datos a nivel contrato: avance de cronograma, vencimientos y renovaciones.';

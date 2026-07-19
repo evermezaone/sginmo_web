@@ -1,4 +1,4 @@
-# REQ-0106 - Cubo BI Metabase en la VPS: tableros top-down sobre las vistas sabana
+# REQ-0106 - Cubo BI Metabase en la VPS: tableros top-down sobre las vistas de datos
 
 **Numero:** REQ-0106
 **Fecha de creacion:** 2026-07-18
@@ -17,17 +17,17 @@ por lo que no requiere "refrescar" nada.
 
 ## Objetivo Funcional
 
-Un cubo web con tableros por nivel de decision, construido sobre las 5 sabanas de REQ-0105, que cubra
+Un cubo web con tableros por nivel de decision, construido sobre las 5 vistas de datos de REQ-0105, que cubra
 lo que el negocio necesita sin duplicar la logica que hoy esta repartida en ~30 SQL manuales.
 
 ## Diseno Top-Down (4 niveles)
 
 ### Nivel 1 - DIRECCION: "¿como va el negocio?" (1 tablero)
 Una sola pantalla, sin detalle, para decidir si hay que preocuparse.
-- Recaudacion del mes vs mes anterior vs mismo mes del anio anterior (v_sabana_cobro).
-- Cartera total y % de mora (v_sabana_cuota).
-- Ocupacion % y unidades vacantes alquilables (v_sabana_activo).
-- Resultado neto del periodo: ingresos - egresos (v_sabana_movimiento).
+- Recaudacion del mes vs mes anterior vs mismo mes del anio anterior (v_datos_cobro).
+- Cartera total y % de mora (v_datos_cuota).
+- Ocupacion % y unidades vacantes alquilables (v_datos_activo).
+- Resultado neto del periodo: ingresos - egresos (v_datos_movimiento).
 - Evolucion 12 meses: recaudado vs egresos (linea).
 - Proyeccion de cobranza proximos 6 meses (barras) - hoy NO existe en el sistema.
 
@@ -45,7 +45,7 @@ Una sola pantalla, sin detalle, para decidir si hay que preocuparse.
 - **Contratos**: los que vencen en 30 dias (para renovar), renovados vs no renovados, altas del mes.
 
 ### Nivel 4 - DETALLE / EVIDENCIA (5 vistas)
-Las 5 sabanas crudas, filtrables y exportables a Excel/CSV desde el propio Metabase. Es el
+Las 5 vistas de datos crudas, filtrables y exportables a Excel/CSV desde el propio Metabase. Es el
 "drill-down" natural: cualquier numero de los niveles 1-3 se abre hasta la fila que lo compone.
 
 ## Criterios De Aceptacion
@@ -55,7 +55,7 @@ Las 5 sabanas crudas, filtrables y exportables a Excel/CSV desde el propio Metab
 - [ ] Los 4 niveles implementados como colecciones/tableros, con tablas dinamicas y graficos.
 - [ ] Cada KPI de nivel 1-2 permite drill-down hasta el detalle (nivel 4).
 - [ ] Exportacion a Excel/CSV disponible en cada pregunta.
-- [ ] Los numeros del cubo coinciden con los del sistema (control cruzado contra las sabanas).
+- [ ] Los numeros del cubo coinciden con los del sistema (control cruzado contra las vistas de datos).
 
 ## Estado actual de la implementacion
 
@@ -73,7 +73,7 @@ PENDIENTE (requiere accion del usuario, ver Dependencias):
 
 ## Dependencias
 
-- REQ-0105 (vistas sabana) - HECHO.
+- REQ-0105 (vistas de datos) - HECHO.
 - Acceso sudo en la VPS para abrir el puerto (lo hace el usuario).
 - Cuenta admin de Metabase creada por el usuario.
 - Rol `bi_reader` de solo lectura: pendiente, requiere CREATEROLE (el usuario `sginmo` no lo tiene).

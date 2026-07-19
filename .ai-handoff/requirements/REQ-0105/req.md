@@ -1,4 +1,4 @@
-# REQ-0105 - Capa analitica: vistas sabana (cuota, cobro, activo, movimiento, contrato) para BI
+# REQ-0105 - Capa analitica: vistas de datos (cuota, cobro, activo, movimiento, contrato) para BI
 
 **Numero:** REQ-0105
 **Fecha de creacion:** 2026-07-18
