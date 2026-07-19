@@ -35,3 +35,8 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# BI Excel (artefactos generados)
+bi/*.xlsx
+source/*.bak
+source/*.FDB.*

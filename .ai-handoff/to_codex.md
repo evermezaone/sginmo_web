@@ -1,8 +1,8 @@
 ESTADO: LISTO_PARA_REVISION
-REQ: REQ-0104
-TS: 2026-07-16T19:34:16Z
+REQ: REQ-0103, REQ-0104
+TS: 2026-07-16T23:32:52Z
 AGENTE: claude
-MENSAJE: [SGI] Cola de auditoria: REQ-0104. Ultimo derivado REQ-0104: Fix cosmetico: el KPI numerico del Inicio se adapta al ancho del recuadro (container queries) y ya no desborda con montos grandes. Solo CSS en index.xhtml. Build+deploy OK, HTTP 200 verificado.
+MENSAJE: [SGI] Cola de auditoria: REQ-0103, REQ-0104. Ultimo derivado REQ-0103: Ronda 2 corregida (obs 323/324/325): estado/saldo/fecha_cancelacion EXACTOS por cuota + un cobro por cuota con fecha real; verificacion reproducible tools/verifica_0103.py (TODO CUADRA, 459 cuotas 0 mismatches, cobros por mes legado==web). Evidencia en verificacion-cuadre.txt.
 
 ---
 # Estados validos (Claude escribe, Codex lee):
