@@ -177,7 +177,9 @@ SELECT
     to_char(ie.fecha, 'YYYY-MM')      AS periodo,
     -- concepto
     ie.articulo, ar.descripcion AS articulo_desc, ar.aplicacion,
-    (ar.aplicacion IN ('DEPOSITO_GARANTIA', 'GARANTIA'))          AS es_pasivo,
+    -- COALESCE obligatorio: si aplicacion es NULL, "IN (...)" devuelve NULL (no false) y cualquier
+    -- filtro "NOT es_pasivo" descartaria silenciosamente esas filas.
+    COALESCE(ar.aplicacion IN ('DEPOSITO_GARANTIA', 'GARANTIA'), false) AS es_pasivo,
     -- contraparte / imputacion
     ie.persona, pe.nombre AS persona_nombre,
     ie.activo, ac.nombre AS activo_nombre, ta.descripcion AS activo_tipo_desc,
