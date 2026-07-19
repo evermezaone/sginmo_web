@@ -68,8 +68,15 @@ def main():
             qt.Name = "ext_" + nombre
             qt.Refresh(False)
             used = ws.UsedRange
-            rangos[nombre] = (ws, used.Rows.Count, used.Columns.Count)
-            print("  hoja %-20s %d filas x %d cols" % (nombre, used.Rows.Count - 1, used.Columns.Count))
+            nr, nc = used.Rows.Count, used.Columns.Count
+            rangos[nombre] = (ws, nr, nc)
+            # formato de miles (sin decimales, separador segun locale = punto en es-PY) a columnas de monto
+            for c in range(1, nc + 1):
+                hdr = str(ws.Cells(1, c).Value or "").upper()
+                if any(k in hdr for k in ("MONTO", "SALDO", "PRECIO", "GARANTIA")):
+                    ws.Range(ws.Cells(2, c), ws.Cells(nr, c)).NumberFormat = "#,##0"
+            ws.Rows(1).Font.Bold = True
+            print("  hoja %-20s %d filas x %d cols" % (nombre, nr - 1, nc))
 
         def pivot(dest_ws, src_sheet, name, rows, cols, data, func=xlSum, chart=None, at="A1", chart_left=340, chart_top=8):
             ws, nr, nc = rangos[src_sheet]
@@ -149,7 +156,13 @@ def main():
                     cell.Font.Bold = True
         wsX.Range("B4:C11").NumberFormat = "#,##0"
         wsX.Columns("A:C").AutoFit()
-        wsX.Range("A13").Value = "Refrescar: Datos > Actualizar todo. Cada hoja Datos_* lee el .FDB por ODBC (DSN SGInmo_FDB)."
+        wsX.Range("A13").Value = "Refrescar: Datos > Actualizar todo. Las hojas de datos (ocultas) leen el .FDB por ODBC (DSN SGInmo_FDB)."
+
+        # ---- ocultar las hojas de datos crudas (uso interno; alimentan pivots y siguen refrescando ocultas) ----
+        xlSheetHidden = 0
+        for nombre, _ in DATOS:
+            wb.Worksheets(nombre).Visible = xlSheetHidden
+        print("  hojas Datos_* ocultas")
 
         wb.Worksheets("Comparar").Activate()
         xl.ScreenUpdating = True
