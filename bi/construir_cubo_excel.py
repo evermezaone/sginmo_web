@@ -19,7 +19,9 @@ import pythoncom
 # El SQL complejo vive en 5 VISTAS del FDB (crear_vistas_legado.py). Excel solo hace SELECT * FROM vista,
 # asi el driver ODBC 2.0.5 nunca ve expresiones complejas (las evalua Firebird nativo).
 CONN = "ODBC;DSN=SGInmo_FDB;UID=SYSDBA;PWD=masterkey;"
-OUT = r"C:\Users\everm\OneDrive\Documents\Datos\Sistemas\2R\Desarrollo\SGInmo\codigo fuente\inmobiliaria\Pysistemas\migracion\bi\SGInmo_Cubo_Legado.xlsx"
+# Carpeta LOCAL (fuera de OneDrive): el refresco programado escribe el archivo, y OneDrive bloquearia
+# el handle al sincronizar -> locks y "copias en conflicto". Local evita eso por completo.
+OUT = r"C:\Users\everm\SGInmoBI\SGInmo_Cubo_Legado.xlsx"
 
 # constantes Excel
 xlCmdSql = 2
@@ -64,7 +66,7 @@ def main():
             qt.CommandType = xlCmdSql
             qt.CommandText = " ".join(sql.split())  # una sola linea: el driver 2.0.5 falla con saltos de linea
             qt.BackgroundQuery = False
-            qt.RefreshOnFileOpen = False
+            qt.RefreshOnFileOpen = True            # al abrir el libro, re-lee el FDB por ODBC
             qt.Name = "ext_" + nombre
             qt.Refresh(False)
             used = ws.UsedRange
@@ -87,6 +89,8 @@ def main():
                 pt.PivotFields(f).Orientation = xlRowField
             for f in cols:
                 pt.PivotFields(f).Orientation = xlColumnField
+            try: pt.PivotCache().RefreshOnFileOpen = True   # el pivot tambien se refresca al abrir
+            except Exception: pass
             df = pt.AddDataField(pt.PivotFields(data), "  " + data, func)
             try: df.NumberFormat = "#,##0"
             except Exception: pass
