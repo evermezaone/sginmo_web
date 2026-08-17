@@ -33,7 +33,7 @@
         <p:dataTable id="tabla" var="t" value="#{transferenciaBandejaBean.lista}" paginator="true" rows="15"
                      emptyMessage="Sin transferencias informadas">
             <p:column headerText="Fecha" style="width:9rem;">
-                <h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+                <h:outputText value="#{t.fecha}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/></h:outputText>
             </p:column>
             <p:column headerText="Cliente"><h:outputText value="#{t.cliente}"/></p:column>
             <p:column headerText="Banco"><h:outputText value="#{t.bancoOrigen}"/></p:column>
