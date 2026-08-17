@@ -476,7 +476,12 @@ public class PortalTransferenciaService {
             return ofs.atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDateTime();
         if (o instanceof java.time.Instant i)
             return java.time.LocalDateTime.ofInstant(i, java.time.ZoneId.systemDefault());
-        return java.time.LocalDateTime.parse(o.toString());
+        // Valores fecha-sola (columna date, o timestamptz sin hora): no reventar, asumir medianoche.
+        if (o instanceof java.sql.Date d) return d.toLocalDate().atStartOfDay();
+        if (o instanceof java.time.LocalDate ld) return ld.atStartOfDay();
+        String s = o.toString().trim();
+        if (s.length() == 10) return java.time.LocalDate.parse(s).atStartOfDay();  // 'yyyy-MM-dd'
+        return java.time.LocalDateTime.parse(s.replace(' ', 'T'));
     }
 
     private Fila fila(Object[] f) {
