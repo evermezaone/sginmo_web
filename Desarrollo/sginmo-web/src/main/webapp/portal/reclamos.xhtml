@@ -1,0 +1,139 @@
+<ui:composition template="/WEB-INF/portal.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{portalReclamoBean.verificarAcceso()}"/>
+</f:metadata>
+
+<ui:define name="acciones">
+    <h:form>
+        <span style="margin-right:1rem;">#{portalReclamoBean.nombre}</span>
+        <h:link value="Volver a mi cuenta" outcome="/portal/inicio" style="color:#e6fffb;"/>
+    </h:form>
+</ui:define>
+
+<ui:define name="contenido">
+    <div style="margin-bottom:.8rem;">
+        <h:link outcome="/portal/inicio"
+                style="background:#fff; color:#0f766e; border:1px solid #0f766e; padding:.5rem .9rem; border-radius:8px; text-decoration:none; font-weight:600; display:inline-block;">
+            <i class="pi pi-arrow-left"></i> Volver a mi cuenta
+        </h:link>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Nuevo reclamo</h3>
+        <p style="color:#6b7280; font-size:.85rem; margin-top:0;">
+            Contanos qué pasa con tu unidad (comprada o alquilada) y <b>adjuntá fotos</b>. Un operador lo revisa y te responde por acá.
+        </p>
+        <h:form id="frmNuevo">
+            <p:growl id="msj" showDetail="true" life="5000"/>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem; max-width:640px;">
+                <div>
+                    <label>Tipo *</label><br/>
+                    <p:selectOneMenu value="#{portalReclamoBean.tipo}" style="width:100%;">
+                        <f:selectItem itemLabel="Mantenimiento" itemValue="MANTENIMIENTO"/>
+                        <f:selectItem itemLabel="Daño" itemValue="DANO"/>
+                        <f:selectItem itemLabel="Servicio" itemValue="SERVICIO"/>
+                        <f:selectItem itemLabel="Administrativo" itemValue="ADMINISTRATIVO"/>
+                        <f:selectItem itemLabel="Otro" itemValue="OTRO"/>
+                    </p:selectOneMenu>
+                </div>
+                <div>
+                    <label>Unidad afectada</label><br/>
+                    <p:inputText value="#{portalReclamoBean.unicaUnidad.label}" readonly="true" style="width:100%;"
+                                 rendered="#{portalReclamoBean.unaUnidad}"/>
+                    <p:selectOneMenu value="#{portalReclamoBean.operacionSel}" style="width:100%;"
+                                     rendered="#{portalReclamoBean.variasUnidades}">
+                        <f:selectItem itemLabel="Elegí tu unidad…" itemValue="#{null}"/>
+                        <f:selectItems value="#{portalReclamoBean.unidades}" var="u" itemLabel="#{u.label}" itemValue="#{u.operacion}"/>
+                    </p:selectOneMenu>
+                    <p:inputText value="#{portalReclamoBean.unidad}" style="width:100%;" placeholder="Indicá tu unidad"
+                                 rendered="#{portalReclamoBean.sinUnidades}"/>
+                </div>
+            </div>
+            <div style="margin-top:.6rem; max-width:640px;">
+                <label>Título *</label><br/>
+                <p:inputText value="#{portalReclamoBean.titulo}" style="width:100%;" maxlength="160" placeholder="Resumen del reclamo"/>
+            </div>
+            <div style="margin-top:.6rem; max-width:640px;">
+                <label>Descripción *</label><br/>
+                <p:inputTextarea value="#{portalReclamoBean.descripcion}" rows="4" style="width:100%;" maxlength="2000"
+                                 placeholder="Describí el problema con el mayor detalle posible."/>
+            </div>
+            <div style="margin-top:.7rem;">
+                <label>Fotos (JPG, PNG o WEBP) — hasta 6</label><br/>
+                <div style="margin-top:.35rem;">
+                    <p:fileUpload listener="#{portalReclamoBean.subirFoto}" mode="advanced" auto="true" multiple="true"
+                                  label="Agregar fotos" accept="image/*" update="msj lblFotos"/>
+                </div>
+                <h:panelGroup id="lblFotos" layout="block" style="margin-top:.4rem;">
+                    <h:outputText value="✓ #{portalReclamoBean.cantidadFotos} foto(s) adjunta(s)"
+                                  rendered="#{portalReclamoBean.hayFotos}"
+                                  style="color:#166534; font-size:.85rem; font-weight:600;"/>
+                </h:panelGroup>
+            </div>
+            <div style="margin-top:1.1rem;">
+                <p:commandButton value="Enviar reclamo" icon="pi pi-send"
+                                 action="#{portalReclamoBean.crear}" update="frmNuevo :frmMios"
+                                 style="background:#15803d; background-image:none; border-color:#15803d; color:#ffffff; font-weight:600;"/>
+            </div>
+        </h:form>
+    </div>
+
+    <div class="seccion-p">
+        <h3>Mis reclamos</h3>
+        <h:form id="frmMios">
+            <p:growl id="msjMios" showDetail="true" life="4000"/>
+            <ui:repeat value="#{portalReclamoBean.mios}" var="r">
+                <div style="border:1px solid #eef0f3; border-radius:10px; padding:.9rem 1rem; margin-bottom:.7rem;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:.6rem; flex-wrap:wrap;">
+                        <div style="font-weight:700;">#{r.titulo}
+                            <span class="badge b-caja" style="margin-left:.3rem;">#{r.tipoLabel}</span>
+                            <h:outputText value=" · #{r.unidad}" rendered="#{not empty r.unidad}" style="color:#6b7280; font-weight:400;"/>
+                        </div>
+                        <span class="badge #{r.estado=='RESUELTO' ? 'b-pagado' : (r.estado=='RECHAZADO' or r.estado=='CERRADO' ? 'b-caja' : 'b-proceso')}">#{r.estadoLabel}</span>
+                    </div>
+                    <div style="color:#4b5563; font-size:.9rem; margin-top:.4rem;">#{r.descripcion}</div>
+                    <div style="color:#9ca3af; font-size:.78rem; margin-top:.35rem;">
+                        <h:outputText value="#{r.creado}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/></h:outputText>
+                    </div>
+                    <h:panelGroup layout="block" style="margin-top:.5rem; display:flex; gap:.5rem; flex-wrap:wrap;" rendered="#{not empty r.fotos}">
+                        <ui:repeat value="#{r.fotos}" var="f">
+                            <p:commandButton value="#{f.nombre}" icon="pi pi-image" styleClass="ui-button-flat" style="font-size:.78rem;"
+                                             action="#{portalReclamoBean.verFoto(f)}"
+                                             update=":dlgFotoForm:dlgFotoCont" oncomplete="PF('dlgFoto').show()"/>
+                        </ui:repeat>
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" rendered="#{not empty r.respuesta}"
+                                  style="margin-top:.5rem; background:#f0fdf4; border-left:3px solid #16a34a; border-radius:8px; padding:.5rem .7rem; font-size:.88rem;">
+                        <b style="color:#166534;">Respuesta:</b> #{r.respuesta}
+                    </h:panelGroup>
+                </div>
+            </ui:repeat>
+            <p style="color:#9ca3af;" rendered="#{empty portalReclamoBean.mios}">Todavía no cargaste reclamos.</p>
+        </h:form>
+    </div>
+
+    <p:dialog widgetVar="dlgFoto" header="Foto del reclamo" modal="true" width="640"
+              fitViewport="true" responsive="true" dynamic="true" showEffect="fade">
+      <h:form id="dlgFotoForm">
+        <h:panelGroup id="dlgFotoCont" layout="block" style="text-align:center;">
+          <h:panelGroup layout="block" rendered="#{portalReclamoBean.fotoEsImagen}">
+            <img src="#{portalReclamoBean.fotoDataUri}" alt="Foto"
+                 style="max-width:100%; height:auto; border:1px solid #e5e7eb; border-radius:6px;"/>
+          </h:panelGroup>
+          <h:panelGroup layout="block" rendered="#{portalReclamoBean.fotoDisponible and not portalReclamoBean.fotoEsImagen}">
+            <iframe src="#{portalReclamoBean.fotoDataUri}" title="Foto"
+                    style="width:100%; height:520px; border:1px solid #e5e7eb; border-radius:6px;"></iframe>
+          </h:panelGroup>
+          <h:panelGroup layout="block" rendered="#{not portalReclamoBean.fotoDisponible}" style="padding:1.5rem; color:#9ca3af;">
+            No se pudo cargar la foto.
+          </h:panelGroup>
+        </h:panelGroup>
+      </h:form>
+    </p:dialog>
+</ui:define>
+</ui:composition>

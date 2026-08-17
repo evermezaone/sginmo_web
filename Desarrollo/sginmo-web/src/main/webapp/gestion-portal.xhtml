@@ -1,0 +1,50 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{gestionPortalBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Gestión del portal</ui:define>
+<ui:define name="contenido">
+<style>
+  .gp-intro{color:#6b7280;font-size:.9rem;margin:0 0 1rem;}
+  .gp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;}
+  .gp-card{display:flex;flex-direction:column;gap:.5rem;background:#fff;border:1px solid #e5e7eb;border-radius:14px;
+    padding:1.1rem 1.2rem;text-decoration:none;color:inherit;transition:.15s;box-shadow:0 1px 2px rgba(18,26,42,.05);}
+  .gp-card:hover{border-color:#0f766e;transform:translateY(-2px);box-shadow:0 10px 24px -14px rgba(18,26,42,.25);}
+  .gp-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#fff;font-size:1.3rem;}
+  .gp-ic.r{background:linear-gradient(145deg,#0f766e,#14b8a6);} .gp-ic.c{background:linear-gradient(145deg,#3b57d6,#5a72e0);} .gp-ic.t{background:linear-gradient(145deg,#d97706,#f59e0b);}
+  .gp-card h3{margin:0;font-size:1.05rem;}
+  .gp-card p{margin:0;color:#6b7280;font-size:.85rem;line-height:1.45;}
+  .gp-go{margin-top:auto;color:#0f766e;font-weight:600;font-size:.85rem;}
+</style>
+
+<p class="gp-intro">Back-office del portal: gestioná todo lo que cargan los clientes desde su portal.</p>
+
+<div class="gp-grid">
+    <h:outputLink styleClass="gp-card" value="reclamos.xhtml" rendered="#{gestionPortalBean.puedeReclamos}">
+        <div class="gp-ic r"><i class="pi pi-comment"></i></div>
+        <h3>Reclamos</h3>
+        <p>Todos los reclamos de los clientes: recibir, priorizar, asignar, calendarizar, proveedor, verificar con fotos y cerrar. Con dashboard.</p>
+        <span class="gp-go">Abrir bandeja →</span>
+    </h:outputLink>
+
+    <h:outputLink styleClass="gp-card" value="transferencias.xhtml" rendered="#{gestionPortalBean.puedeTransferencias}">
+        <div class="gp-ic t"><i class="pi pi-send"></i></div>
+        <h3>Transferencias informadas</h3>
+        <p>Bandeja de las transferencias que informan los clientes: revisar el comprobante, conciliar y aplicar el cobro.</p>
+        <span class="gp-go">Abrir bandeja →</span>
+    </h:outputLink>
+
+    <a class="gp-card" href="conciliacion.html" target="_blank">
+        <div class="gp-ic c"><i class="pi pi-sync"></i></div>
+        <h3>Conciliación bancaria <span style="font-size:.7rem;color:#8a93a4;font-weight:600;">DEMO</span></h3>
+        <p>Importar un extracto → OCR + IA extraen movimientos → cruce automático contra los registros internos con score y auditoría.</p>
+        <span class="gp-go">Abrir demo →</span>
+    </a>
+</div>
+</ui:define>
+</ui:composition>

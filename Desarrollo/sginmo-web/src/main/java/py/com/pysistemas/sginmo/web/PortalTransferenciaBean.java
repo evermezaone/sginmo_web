@@ -102,17 +102,16 @@ public class PortalTransferenciaBean implements Serializable {
         recargar();   // refresca el estado por si cambio (paso a verificacion) en el interin
     }
 
-    /** REQ-0092: descarga del comprobante propio (la evidencia adjuntada por el socio). */
+    /** REQ-0092: descarga del comprobante propio con NOMBRE y TIPO reales (baja con extension). */
     public StreamedContent descargarComprobante(PortalTransferenciaService.Fila t) {
-        final Long id = t.getId();
-        final Long persona = sesion.getPersona();
+        // fileDownload es no-ajax: la descarga se consume en este mismo request, asi que
+        // se puede leer el comprobante aca y usar su nombre/tipo reales para el builder.
+        PortalTransferenciaService.Descarga d = servicio.descargar(t.getId(), sesion.getPersona());
+        final byte[] datos = d.datos;
         return DefaultStreamedContent.builder()
-                .name("comprobante-" + id)
-                .contentType("application/octet-stream")
-                .stream(() -> {
-                    PortalTransferenciaService.Descarga d = servicio.descargar(id, persona);
-                    return new ByteArrayInputStream(d.datos);
-                })
+                .name(d.nombre == null || d.nombre.isBlank() ? ("comprobante-" + t.getId()) : d.nombre)
+                .contentType(d.contentType == null ? "application/octet-stream" : d.contentType)
+                .stream(() -> new ByteArrayInputStream(datos))
                 .build();
     }
 

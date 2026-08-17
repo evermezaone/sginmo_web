@@ -35,18 +35,18 @@
                 <p:inputNumber value="#{portalTransferenciaBean.importe}" decimalPlaces="0" thousandSeparator="." decimalSeparator="," style="width:100%;"/>
             </div>
             <div style="margin-top:.6rem;">
-                <label>Comprobante (PDF, JPG, PNG o WEBP) *</label><br/>
-                <p:fileUpload listener="#{portalTransferenciaBean.subirComprobante}" mode="advanced" auto="true"
-                              label="Adjuntar comprobante" accept=".pdf,.jpg,.jpeg,.png,.webp" update="msj lblAdj"/>
-                <h:panelGroup id="lblAdj" layout="block" style="margin-top:.3rem;">
+                <label>Comprobante (PDF, JPG, PNG o WEBP) *</label>
+                <div style="margin-top:.35rem; display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+                    <p:fileUpload listener="#{portalTransferenciaBean.subirComprobante}" mode="advanced" auto="true"
+                                  label="Adjuntar comprobante" accept=".pdf,.jpg,.jpeg,.png,.webp" update="msj lblAdj"/>
+                    <p:commandButton value="Enviar" icon="pi pi-send"
+                                     action="#{portalTransferenciaBean.informar}" update="frmInformar :frmMias"/>
+                </div>
+                <h:panelGroup id="lblAdj" layout="block" style="margin-top:.4rem;">
                     <h:outputText value="✓ Adjuntado: #{portalTransferenciaBean.comprobanteNombre}"
                                   rendered="#{portalTransferenciaBean.comprobanteCargado}"
                                   style="color:#166534; font-size:.85rem; font-weight:600;"/>
                 </h:panelGroup>
-            </div>
-            <div style="margin-top:.8rem;">
-                <p:commandButton value="Informar transferencia" icon="pi pi-send"
-                                 action="#{portalTransferenciaBean.informar}" update="frmInformar :frmMias"/>
             </div>
         </h:form>
     </div>

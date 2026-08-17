@@ -1,0 +1,209 @@
+<ui:composition template="/WEB-INF/plantilla.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{reclamoAdminBean.verificarAcceso()}"/>
+</f:metadata>
+<ui:define name="titulo">Gestión de reclamos</ui:define>
+<ui:define name="contenido">
+<style>
+  .rk-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.7rem;margin-bottom:1rem}
+  .rk-c{background:#fff;border:1px solid #e5e7eb;border-radius:11px;padding:.7rem .9rem}
+  .rk-c .l{font-size:.72rem;color:#6b7280;text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+  .rk-c .v{font-size:1.5rem;font-weight:700;margin-top:.15rem}
+  .rk-c.alta{border-left:3px solid #dc2626} .rk-c.ok{border-left:3px solid #16a34a} .rk-c.proc{border-left:3px solid #d97706}
+  .rk-sec{border:1px solid #eef0f3;border-radius:10px;padding:.8rem .9rem;margin-bottom:.7rem;background:#fbfcfe}
+  .rk-sec h4{margin:.1rem 0 .55rem;font-size:.85rem;color:#334155;text-transform:uppercase;letter-spacing:.03em}
+  .rk-row{display:flex;gap:.55rem;align-items:flex-end;flex-wrap:wrap}
+  .rk-thumb{display:inline-flex;align-items:center;gap:.35rem;border:1px solid #e5e7eb;border-radius:8px;padding:.25rem .5rem;font-size:.78rem;background:#fff;cursor:pointer;margin:.15rem .25rem 0 0}
+  .rk-time{list-style:none;margin:0;padding:0}
+  .rk-time li{border-left:2px solid #cbd5e1;padding:0 0 .55rem .7rem;margin-left:.3rem;position:relative}
+  .rk-time li::before{content:"";position:absolute;left:-5px;top:.25rem;width:8px;height:8px;border-radius:50%;background:#64748b}
+  .rk-badge{font-size:.7rem;font-weight:700;padding:.1rem .45rem;border-radius:999px}
+  .b-ab{background:#fef3c7;color:#92400e} .b-pr{background:#dbeafe;color:#1e40af} .b-re{background:#dcfce7;color:#166534}
+  .b-rx{background:#fee2e2;color:#b91c1c} .b-ce{background:#e5e7eb;color:#374151}
+  .p-alta{background:#fee2e2;color:#b91c1c} .p-media{background:#e0e7ff;color:#3730a3} .p-baja{background:#e5e7eb;color:#374151}
+</style>
+
+<h:form id="frm">
+    <p:growl id="mensajes" showDetail="true" life="4000"/>
+
+    <h:panelGroup id="dash" layout="block">
+      <div class="rk-cards">
+        <div class="rk-c"><div class="l">Total</div><div class="v">#{reclamoAdminBean.dash.total}</div></div>
+        <div class="rk-c alta"><div class="l">Alta prioridad</div><div class="v">#{reclamoAdminBean.dash.altaPrioridad}</div></div>
+        <div class="rk-c proc"><div class="l">Abiertos</div><div class="v">#{reclamoAdminBean.dash.abiertos}</div></div>
+        <div class="rk-c proc"><div class="l">En proceso</div><div class="v">#{reclamoAdminBean.dash.enProceso}</div></div>
+        <div class="rk-c ok"><div class="l">Resueltos</div><div class="v">#{reclamoAdminBean.dash.resueltos}</div></div>
+        <div class="rk-c"><div class="l">Cerrados</div><div class="v">#{reclamoAdminBean.dash.cerrados}</div></div>
+        <div class="rk-c"><div class="l">Órdenes de pago</div><div class="v">#{reclamoAdminBean.dash.ordenes}</div>
+          <div style="font-size:.72rem;color:#6b7280;">₲ <h:outputText value="#{reclamoAdminBean.dash.montoOrdenes}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></div></div>
+      </div>
+    </h:panelGroup>
+
+    <div style="display:flex; gap:.6rem; align-items:end; margin-bottom:.7rem;">
+        <div><label>Estado</label><br/>
+            <p:selectOneMenu value="#{reclamoAdminBean.filtroEstado}" style="width:12rem;">
+                <f:selectItem itemLabel="Todos" itemValue="#{null}"/>
+                <f:selectItems value="#{reclamoAdminBean.estados}"/>
+                <p:ajax listener="#{reclamoAdminBean.cargar()}" update="tabla dash"/>
+            </p:selectOneMenu>
+        </div>
+        <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{reclamoAdminBean.cargar()}" update="tabla dash"/>
+    </div>
+
+    <p:dataTable id="tabla" value="#{reclamoAdminBean.lista}" var="r" rows="15" paginator="true" size="small"
+                 emptyMessage="Sin reclamos para el filtro.">
+        <p:column headerText="#"><span class="mono">#{r.id}</span></p:column>
+        <p:column headerText="Prioridad">
+            <span class="rk-badge #{r.prioridad=='ALTA' ? 'p-alta' : (r.prioridad=='BAJA' ? 'p-baja' : 'p-media')}">#{r.prioridadLabel}</span>
+        </p:column>
+        <p:column headerText="Reclamo"><b>#{r.titulo}</b><br/><span style="color:#6b7280;font-size:.8rem;">#{r.tipoLabel}<h:outputText value=" · #{r.unidad}" rendered="#{not empty r.unidad}"/></span></p:column>
+        <p:column headerText="Cliente">#{r.cliente}</p:column>
+        <p:column headerText="Estado">
+            <span class="rk-badge #{r.estado=='ABIERTO' ? 'b-ab' : (r.estado=='EN_PROCESO' ? 'b-pr' : (r.estado=='RESUELTO' ? 'b-re' : (r.estado=='RECHAZADO' ? 'b-rx' : 'b-ce')))}">#{r.estadoLabel}</span>
+        </p:column>
+        <p:column headerText="Asignado">#{r.asignado}</p:column>
+        <p:column headerText="Proveedor">#{r.proveedorNombre}
+            <h:panelGroup rendered="#{r.tieneOrden}"><br/><span class="rk-badge b-re">orden #{r.ordenPago}</span></h:panelGroup>
+        </p:column>
+        <p:column headerText="Fecha"><h:outputText value="#{r.creado}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+        <p:column style="width:6rem">
+            <p:commandButton value="Gestionar" icon="pi pi-cog" styleClass="ui-button-sm"
+                             action="#{reclamoAdminBean.abrir(r)}" update=":dlgForm" oncomplete="PF('dlgGest').show()"/>
+        </p:column>
+    </p:dataTable>
+</h:form>
+
+<p:dialog widgetVar="dlgGest" header="Gestión del reclamo" modal="true" width="820" fitViewport="true" responsive="true" dynamic="true">
+  <h:form id="dlgForm">
+    <p:growl id="gmsj" showDetail="true" life="4000"/>
+    <h:panelGroup id="dlgCont" layout="block" rendered="#{reclamoAdminBean.haySel}">
+      <ui:param name="s" value="#{reclamoAdminBean.sel}"/>
+      <div style="display:flex;justify-content:space-between;gap:.6rem;flex-wrap:wrap;align-items:flex-start;">
+        <div>
+          <div style="font-weight:700;font-size:1.05rem;">##{s.id} · #{s.titulo}</div>
+          <div style="color:#6b7280;font-size:.85rem;">#{s.tipoLabel} · Cliente: #{s.cliente}<h:outputText value=" · Unidad: #{s.unidad}" rendered="#{not empty s.unidad}"/></div>
+        </div>
+        <span class="rk-badge #{s.estado=='ABIERTO' ? 'b-ab' : (s.estado=='EN_PROCESO' ? 'b-pr' : (s.estado=='RESUELTO' ? 'b-re' : (s.estado=='RECHAZADO' ? 'b-rx' : 'b-ce')))}">#{s.estadoLabel}</span>
+      </div>
+      <div style="margin:.5rem 0;color:#374151;">#{s.descripcion}</div>
+
+      <h:panelGroup layout="block" rendered="#{not empty s.fotosCliente}">
+        <div style="font-size:.75rem;color:#6b7280;font-weight:600;text-transform:uppercase;">Fotos del cliente</div>
+        <ui:repeat value="#{s.fotosCliente}" var="f">
+          <p:commandLink styleClass="rk-thumb" action="#{reclamoAdminBean.verFoto(f)}" update=":fotoForm:fotoCont" oncomplete="PF('dlgFotoAdmin').show()">
+            <i class="pi pi-image"></i> #{f.nombre}
+          </p:commandLink>
+        </ui:repeat>
+      </h:panelGroup>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.7rem;">
+        <div class="rk-sec">
+          <h4>Prioridad</h4>
+          <div class="rk-row">
+            <p:selectOneMenu value="#{reclamoAdminBean.prioridadInput}" style="width:8rem;">
+              <f:selectItem itemLabel="Alta" itemValue="ALTA"/><f:selectItem itemLabel="Media" itemValue="MEDIA"/><f:selectItem itemLabel="Baja" itemValue="BAJA"/>
+            </p:selectOneMenu>
+            <p:commandButton value="Aplicar" action="#{reclamoAdminBean.priorizar}" update=":dlgForm :frm:tabla :frm:dash"/>
+          </div>
+        </div>
+        <div class="rk-sec">
+          <h4>Asignar responsable</h4>
+          <div class="rk-row">
+            <p:inputText value="#{reclamoAdminBean.asignadoInput}" placeholder="Técnico / equipo" style="width:11rem;"/>
+            <p:commandButton value="Asignar" action="#{reclamoAdminBean.asignar}" update=":dlgForm :frm:tabla"/>
+          </div>
+        </div>
+        <div class="rk-sec">
+          <h4>Calendarizar</h4>
+          <div class="rk-row">
+            <p:datePicker value="#{reclamoAdminBean.fechaProgramar}" pattern="dd/MM/yyyy" showIcon="true"/>
+            <p:commandButton value="Programar" action="#{reclamoAdminBean.programar}" update=":dlgForm :frm:tabla"/>
+          </div>
+        </div>
+        <div class="rk-sec">
+          <h4>Proveedor y cotización</h4>
+          <div class="rk-row">
+            <p:inputText value="#{reclamoAdminBean.proveedorInput}" placeholder="Proveedor" style="width:9rem;"/>
+            <p:inputNumber value="#{reclamoAdminBean.cotizacionInput}" decimalPlaces="0" thousandSeparator="." symbol="₲ " style="width:8rem;"/>
+            <p:commandButton value="Guardar" action="#{reclamoAdminBean.guardarProveedor}" update=":dlgForm :frm:tabla"/>
+          </div>
+          <div class="rk-row" style="margin-top:.4rem;">
+            <p:commandButton value="Generar orden de pago" icon="pi pi-file" rendered="#{s.tieneCotizacion and not s.tieneOrden}"
+                             action="#{reclamoAdminBean.generarOrden}" update=":dlgForm :frm:tabla :frm:dash"
+                             style="background:#15803d;background-image:none;border-color:#15803d;color:#fff;"/>
+            <h:panelGroup rendered="#{s.tieneOrden}"><span class="rk-badge b-re">Orden de pago #{s.ordenPago} generada · ₲ <h:outputText value="#{s.cotizacion}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></span></h:panelGroup>
+          </div>
+        </div>
+      </div>
+
+      <div class="rk-sec">
+        <h4>Verificar solución (evidencia de fotos)</h4>
+        <div class="rk-row">
+          <p:fileUpload listener="#{reclamoAdminBean.subirEvidencia}" mode="advanced" auto="true" multiple="true"
+                        label="Agregar fotos de la solución" accept="image/*" update="gmsj lblEv"/>
+          <p:commandButton value="Guardar evidencia" action="#{reclamoAdminBean.guardarEvidencia}" update=":dlgForm :frm:tabla"/>
+        </div>
+        <h:panelGroup id="lblEv" layout="block" style="margin-top:.35rem;">
+          <h:outputText value="✓ #{reclamoAdminBean.evidenciasNombres.size()} foto(s) listas" rendered="#{reclamoAdminBean.hayEvidencia}" style="color:#166534;font-size:.82rem;font-weight:600;"/>
+        </h:panelGroup>
+        <h:panelGroup layout="block" rendered="#{not empty s.fotosSolucion}" style="margin-top:.35rem;">
+          <span style="font-size:.75rem;color:#6b7280;">Evidencia cargada: </span>
+          <ui:repeat value="#{s.fotosSolucion}" var="f">
+            <p:commandLink styleClass="rk-thumb" action="#{reclamoAdminBean.verFoto(f)}" update=":fotoForm:fotoCont" oncomplete="PF('dlgFotoAdmin').show()">
+              <i class="pi pi-check-circle" style="color:#16a34a;"></i> #{f.nombre}
+            </p:commandLink>
+          </ui:repeat>
+        </h:panelGroup>
+      </div>
+
+      <div class="rk-sec">
+        <h4>Resolver / cerrar</h4>
+        <p:inputTextarea value="#{reclamoAdminBean.respuestaInput}" rows="2" style="width:100%;" placeholder="Respuesta / detalle de la solución para el cliente"/>
+        <div class="rk-row" style="margin-top:.4rem;">
+          <p:commandButton value="Marcar resuelto" icon="pi pi-check" action="#{reclamoAdminBean.resolver}" update=":dlgForm :frm:tabla :frm:dash"
+                           style="background:#15803d;background-image:none;border-color:#15803d;color:#fff;"/>
+          <p:commandButton value="Cerrar" icon="pi pi-lock" action="#{reclamoAdminBean.cerrar}" update=":dlgForm :frm:tabla :frm:dash"/>
+          <span style="flex:1"></span>
+          <p:inputText value="#{reclamoAdminBean.motivoInput}" placeholder="Motivo de rechazo" style="width:11rem;"/>
+          <p:commandButton value="Rechazar" icon="pi pi-times" action="#{reclamoAdminBean.rechazar}" update=":dlgForm :frm:tabla :frm:dash"
+                           styleClass="ui-button-danger"/>
+        </div>
+      </div>
+
+      <div class="rk-sec">
+        <h4>Seguimiento</h4>
+        <div class="rk-row" style="margin-bottom:.5rem;">
+          <p:inputText value="#{reclamoAdminBean.notaInput}" placeholder="Agregar nota interna" style="width:20rem;"/>
+          <p:commandButton value="Agregar" action="#{reclamoAdminBean.agregarNota}" update=":dlgForm"/>
+        </div>
+        <ul class="rk-time">
+          <ui:repeat value="#{reclamoAdminBean.seguimiento}" var="g">
+            <li><b style="font-size:.8rem;">#{g.tipo}</b> — #{g.mensaje}
+              <div style="color:#9ca3af;font-size:.72rem;"><h:outputText value="#{g.creado}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/></h:outputText> · #{g.usuario}</div></li>
+          </ui:repeat>
+        </ul>
+      </div>
+    </h:panelGroup>
+  </h:form>
+</p:dialog>
+
+<p:dialog widgetVar="dlgFotoAdmin" header="Foto" modal="true" width="640" fitViewport="true" responsive="true" dynamic="true">
+  <h:form id="fotoForm">
+    <h:panelGroup id="fotoCont" layout="block" style="text-align:center;">
+      <h:panelGroup rendered="#{reclamoAdminBean.fotoEsImagen}">
+        <img src="#{reclamoAdminBean.fotoDataUri}" alt="Foto" style="max-width:100%;height:auto;border:1px solid #e5e7eb;border-radius:6px;"/>
+      </h:panelGroup>
+      <h:panelGroup rendered="#{reclamoAdminBean.fotoDisponible and not reclamoAdminBean.fotoEsImagen}">
+        <iframe src="#{reclamoAdminBean.fotoDataUri}" title="Foto" style="width:100%;height:520px;border:1px solid #e5e7eb;border-radius:6px;"></iframe>
+      </h:panelGroup>
+      <h:panelGroup rendered="#{not reclamoAdminBean.fotoDisponible}" style="padding:1.5rem;color:#9ca3af;">No se pudo cargar la foto.</h:panelGroup>
+    </h:panelGroup>
+  </h:form>
+</p:dialog>
+</ui:define>
+</ui:composition>

@@ -1,6 +1,7 @@
 package py.com.pysistemas.sginmo.web;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -46,6 +47,10 @@ public class PortalBean implements Serializable {
     private List<PortalService.FilaPago> pagos;
     // REQ-0100: transferencias informadas aun no aplicadas (en proceso de aceptacion).
     private List<py.com.pysistemas.sginmo.servicio.PortalTransferenciaService.Fila> transferenciasEnProceso = List.of();
+    // REQ-0100: comprobante seleccionado para previsualizar en el modal (bytes + tipo + nombre reales).
+    private transient byte[] comprobanteBytes;
+    private String comprobanteMime;
+    private String comprobanteNombre;
     private List<PortalService.FilaDoc> documentos;
     // Vista de propietario (obs 300).
     private List<PortalService.FilaActivo> activos = List.of();
@@ -106,6 +111,62 @@ public class PortalBean implements Serializable {
                     return new ByteArrayInputStream(dd.datos);
                 })
                 .build();
+    }
+
+    /** REQ-0100: carga el comprobante seleccionado (bytes + tipo + nombre) para mostrarlo en el modal. */
+    public void verComprobante(py.com.pysistemas.sginmo.servicio.PortalTransferenciaService.Fila t) {
+        try {
+            var d = transferencias.descargar(t.getId(), persona);
+            comprobanteBytes = d.datos;
+            comprobanteMime = d.contentType;
+            comprobanteNombre = d.nombre;
+        } catch (RuntimeException e) {
+            comprobanteBytes = null; comprobanteMime = null; comprobanteNombre = null;
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "No se pudo abrir el comprobante", e.getMessage()));
+        }
+    }
+
+    public boolean isComprobanteDisponible() { return comprobanteBytes != null && comprobanteBytes.length > 0; }
+    public boolean isComprobanteEsImagen() { return comprobanteMime != null && comprobanteMime.startsWith("image/"); }
+    public String getComprobanteNombre() { return comprobanteNombre; }
+
+    /**
+     * Comprobante embebido como data URI (base64) para mostrarlo INLINE en el modal, sin un segundo
+     * request. Evita el problema de p:graphicImage+StreamedContent en @ViewScoped (imagen en blanco).
+     */
+    public String getComprobanteDataUri() {
+        if (comprobanteBytes == null) return null;
+        String m = (comprobanteMime == null || comprobanteMime.isBlank()) ? "application/octet-stream" : comprobanteMime;
+        return "data:" + m + ";base64," + java.util.Base64.getEncoder().encodeToString(comprobanteBytes);
+    }
+
+    /** Descarga del comprobante seleccionado con su NOMBRE y TIPO reales (asi baja con extension). */
+    public StreamedContent getComprobanteDescarga() {
+        if (comprobanteBytes == null) return null;
+        final byte[] b = comprobanteBytes;
+        final String m = comprobanteMime == null ? "application/octet-stream" : comprobanteMime;
+        final String n = (comprobanteNombre == null || comprobanteNombre.isBlank()) ? "comprobante" : comprobanteNombre;
+        return DefaultStreamedContent.builder().name(n).contentType(m)
+                .stream(() -> new ByteArrayInputStream(b)).build();
+    }
+
+    /**
+     * REQ-0100: el socio elimina su transferencia informada mientras sigue PENDIENTE DE VALIDACION (RECIBIDO).
+     * Si el operador ya la tomo (En verificacion) u otro estado, el servicio la rechaza. Refresca la lista.
+     */
+    public void eliminarTransferencia(py.com.pysistemas.sginmo.servicio.PortalTransferenciaService.Fila t) {
+        try {
+            transferencias.eliminar(t.getId(), persona);
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_INFO, "Transferencia eliminada", "Se quito el registro y su comprobante."));
+        } catch (RuntimeException e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_WARN, "No se pudo eliminar", e.getMessage()));
+        }
+        // refresca por si cambio de estado en el interin (paso a verificacion)
+        transferenciasEnProceso = transferencias.mias(persona).stream()
+                .filter(x -> !"APLICADO".equals(x.getEstado())).toList();
     }
 
     public String salir() {

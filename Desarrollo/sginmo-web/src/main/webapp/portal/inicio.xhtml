@@ -12,7 +12,10 @@
     <h:form>
         <span style="margin-right:1rem;">#{portalBean.nombreUsuario}</span>
         <h:link outcome="/portal/transferencia" style="color:#e6fffb; margin-right:1rem;" rendered="#{portalBean.esCliente}">
-            <i class="pi pi-send"></i> Informar transferencia
+            <i class="pi pi-list"></i> Ver transferencias
+        </h:link>
+        <h:link outcome="/portal/reclamos" style="color:#e6fffb; margin-right:1rem;" rendered="#{portalBean.esCliente or portalBean.esPropietario}">
+            <i class="pi pi-comment"></i> Reclamos
         </h:link>
         <p:commandLink action="#{portalBean.salir()}" style="color:#e6fffb;"><i class="pi pi-sign-out"></i> Salir</p:commandLink>
     </h:form>
@@ -68,7 +71,7 @@
             <span style="flex:1 1 auto;"></span>
             <h:link outcome="/portal/transferencia" rendered="#{portalBean.esCliente}"
                     style="background:#0f766e; color:#fff; padding:.5rem .9rem; border-radius:8px; text-decoration:none; font-weight:600; white-space:nowrap;">
-                <i class="pi pi-send"></i> Informar transferencia
+                <i class="pi pi-list"></i> Ver transferencias
             </h:link>
           </div>
           <h:panelGroup id="tablaCuotas" layout="block" style="overflow-x:auto;">
@@ -138,23 +141,40 @@
      </div><!-- /portal-main -->
 
      <aside class="portal-aside">
-       <h:panelGroup layout="block" styleClass="seccion-p" rendered="#{not empty portalBean.transferenciasEnProceso}">
-         <h3>Transferencias en proceso</h3>
-         <ui:repeat value="#{portalBean.transferenciasEnProceso}" var="t">
-           <div class="pago-item">
-             <div class="pago-top">
-               <span class="pago-monto">
-                 Gs. <h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
-               </span>
-               <span class="badge b-proceso">#{t.estadoLabel}</span>
-             </div>
-             <div class="pago-sub">
-               <h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
-               <h:outputText value=" · #{t.motivoRevision}" rendered="#{not empty t.motivoRevision}"/>
-             </div>
-           </div>
-         </ui:repeat>
-       </h:panelGroup>
+       <h:form id="frmTrfProc">
+         <p:growl id="msjTrf" showDetail="true" life="5000"/>
+         <h:panelGroup id="boxTrfProc" layout="block">
+           <h:panelGroup layout="block" styleClass="seccion-p" rendered="#{not empty portalBean.transferenciasEnProceso}">
+             <h3>Transferencias en proceso</h3>
+             <ui:repeat value="#{portalBean.transferenciasEnProceso}" var="t">
+               <div class="pago-item">
+                 <div class="pago-top">
+                   <span class="pago-monto">
+                     Gs. <h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText>
+                   </span>
+                   <span class="badge b-proceso">#{t.estadoLabel}</span>
+                 </div>
+                 <div class="pago-sub">
+                   <h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+                   <h:outputText value=" · #{t.motivoRevision}" rendered="#{not empty t.motivoRevision}"/>
+                 </div>
+                 <div style="margin-top:.45rem; display:flex; gap:.4rem; flex-wrap:wrap;">
+                   <p:commandButton value="Ver" icon="pi pi-eye"
+                                    styleClass="ui-button-flat" style="font-size:.78rem;"
+                                    title="Ver el comprobante adjunto"
+                                    action="#{portalBean.verComprobante(t)}"
+                                    update=":dlgCompForm:dlgCompCont" oncomplete="PF('dlgComp').show()"/>
+                   <p:commandButton value="Eliminar" icon="pi pi-trash" rendered="#{t.puedeEliminar}"
+                                    styleClass="ui-button-flat ui-button-danger" style="font-size:.78rem;"
+                                    action="#{portalBean.eliminarTransferencia(t)}"
+                                    onclick="if(!confirm('¿Eliminar esta transferencia informada? Esta acción no se puede deshacer.')) return false;"
+                                    update="@form"/>
+                 </div>
+               </div>
+             </ui:repeat>
+           </h:panelGroup>
+         </h:panelGroup>
+       </h:form>
 
        <div class="seccion-p">
          <h3>Mis pagos</h3>
@@ -177,6 +197,32 @@
        </div>
      </aside>
     </div><!-- /portal-cols -->
+
+    <p:dialog widgetVar="dlgComp" header="Comprobante de transferencia" modal="true" width="640"
+              fitViewport="true" responsive="true" dynamic="true" showEffect="fade">
+      <h:form id="dlgCompForm">
+        <h:panelGroup id="dlgCompCont" layout="block" style="text-align:center;">
+          <h:panelGroup layout="block" rendered="#{portalBean.comprobanteEsImagen}">
+            <img src="#{portalBean.comprobanteDataUri}" alt="Comprobante"
+                 style="max-width:100%; height:auto; border:1px solid #e5e7eb; border-radius:6px;"/>
+          </h:panelGroup>
+          <h:panelGroup layout="block" rendered="#{portalBean.comprobanteDisponible and not portalBean.comprobanteEsImagen}">
+            <iframe src="#{portalBean.comprobanteDataUri}" title="Comprobante"
+                    style="width:100%; height:520px; border:1px solid #e5e7eb; border-radius:6px;"></iframe>
+          </h:panelGroup>
+          <h:panelGroup layout="block" rendered="#{not portalBean.comprobanteDisponible}"
+                        style="padding:1.5rem; color:#9ca3af;">
+            No se pudo cargar el comprobante.
+          </h:panelGroup>
+          <div style="margin-top:1rem;">
+            <p:commandButton value="Descargar" icon="pi pi-download" ajax="false"
+                             rendered="#{portalBean.comprobanteDisponible}" styleClass="ui-button-flat">
+              <p:fileDownload value="#{portalBean.comprobanteDescarga}"/>
+            </p:commandButton>
+          </div>
+        </h:panelGroup>
+      </h:form>
+    </p:dialog>
   </h:panelGroup>
 
   <h:panelGroup layout="block" rendered="#{portalBean.esPropietario}">

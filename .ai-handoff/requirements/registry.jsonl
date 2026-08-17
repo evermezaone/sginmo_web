@@ -96,3 +96,4 @@
 {"req":"REQ-0105","titulo":"Capa analitica: vistas sabana (cuota, cobro, activo, movimiento, contrato) para BI","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-18T12:33:29.314Z","ts_actualizado":"2026-07-18T12:33:29.314Z"}
 {"req":"REQ-0106","titulo":"Cubo BI Metabase en la VPS: tableros top-down sobre las vistas sabana","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-18T12:33:32.840Z","ts_actualizado":"2026-07-18T12:33:32.840Z"}
 {"req":"REQ-0107","titulo":"Cubo Excel del legado por ODBC (5 vistas Firebird + tablas dinamicas)","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-19T16:40:23.346Z","ts_actualizado":"2026-07-19T16:40:23.346Z"}
+{"req":"REQ-0108","titulo":"Portal de preguntas en Excel (menu por rol + vistas pre-armadas)","estado":"NUEVO","rama":"pendiente","ts_creado":"2026-07-19T17:19:34.905Z","ts_actualizado":"2026-07-19T17:19:34.905Z"}
