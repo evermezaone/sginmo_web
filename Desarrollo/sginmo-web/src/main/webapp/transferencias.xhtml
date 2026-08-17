@@ -24,10 +24,10 @@
                 <p:selectOneMenu value="#{transferenciaBandejaBean.filtroEstado}" style="width:12rem;">
                     <f:selectItem itemLabel="Todos" itemValue="#{null}"/>
                     <f:selectItems value="#{transferenciaBandejaBean.estados}"/>
-                    <p:ajax listener="#{transferenciaBandejaBean.cargar()}" update="tabla"/>
+                    <p:ajax listener="#{transferenciaBandejaBean.cargar()}" update="tabla panelMov"/>
                 </p:selectOneMenu>
             </div>
-            <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{transferenciaBandejaBean.cargar()}" update="tabla"/>
+            <p:commandButton value="Actualizar" icon="pi pi-refresh" action="#{transferenciaBandejaBean.cargar()}" update="tabla panelMov"/>
             <span style="flex:1"></span>
             <p:commandButton value="Movimientos bancarios" icon="pi pi-database" type="button"
                              styleClass="ui-button-outlined"
@@ -61,6 +61,25 @@
                                  action="#{transferenciaBandejaBean.seleccionar(t)}" update="frm:tabla frm:dlg" oncomplete="PF('dlgRev').show()"/>
             </p:column>
         </p:dataTable>
+
+        <!-- REQ-0085: movimientos bancarios cargados (manual/CSV) visibles en la pantalla principal con su estado -->
+        <p:panel id="panelMov" header="Movimientos bancarios cargados" style="margin-top:1rem;" toggleable="true">
+            <p style="color:#6c757d; font-size:.85rem; margin-top:0;">
+                Movimientos cargados manualmente o importados por CSV. Cuando se cruzan con una transferencia quedan CONCILIADOS.
+            </p>
+            <p:dataTable var="m" value="#{transferenciaBandejaBean.movimientos}" paginator="true" rows="10" size="small"
+                         emptyMessage="Todavía no hay movimientos bancarios cargados">
+                <p:column headerText="Fecha" style="width:7rem;"><h:outputText value="#{m.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                <p:column headerText="Banco"><h:outputText value="#{m.banco}"/></p:column>
+                <p:column headerText="Cuenta"><h:outputText value="#{m.cuenta}"/></p:column>
+                <p:column headerText="Referencia"><h:outputText value="#{m.referencia}"/></p:column>
+                <p:column headerText="Remitente"><h:outputText value="#{m.remitente}"/></p:column>
+                <p:column headerText="Importe" style="width:9rem; text-align:right;"><h:outputText value="#{m.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                <p:column headerText="Estado" style="width:9rem; text-align:center;">
+                    <p:tag value="#{m.estado}" severity="#{m.estado eq 'CONCILIADO' ? 'success' : 'info'}"/>
+                </p:column>
+            </p:dataTable>
+        </p:panel>
 
         <p:dialog id="dlg" header="Revisar transferencia" widgetVar="dlgRev" modal="true" width="560" showEffect="fade">
             <h:panelGroup rendered="#{not empty transferenciaBandejaBean.seleccionada}" layout="block">
@@ -172,7 +191,7 @@
                     <p:inputText value="#{transferenciaBandejaBean.nuevoMov.remitente}" maxlength="120" style="width:100%;"/></div>
             </div>
             <p:commandButton value="Registrar movimiento" icon="pi pi-plus" style="margin-top:.5rem;"
-                             action="#{transferenciaBandejaBean.registrarMovimiento()}" update="frmMov"/>
+                             action="#{transferenciaBandejaBean.registrarMovimiento()}" update="frmMov :frm:panelMov"/>
 
             <h4 style="margin:1rem 0 .3rem;">Importar CSV</h4>
             <p style="color:#6c757d; font-size:.8rem; margin:0 0 .4rem;">
@@ -182,19 +201,9 @@
                           label="Elegir archivo"/>
             <p:commandButton value="Importar" icon="pi pi-upload" ajax="false" style="margin-top:.4rem;"
                              action="#{transferenciaBandejaBean.importarCsv()}"/>
-
-            <h4 style="margin:1rem 0 .3rem;">Movimientos cargados</h4>
-            <p:dataTable var="m" value="#{transferenciaBandejaBean.movimientos}" paginator="true" rows="8" size="small"
-                         emptyMessage="Todavía no hay movimientos bancarios cargados">
-                <p:column headerText="Fecha" style="width:6rem;"><h:outputText value="#{m.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
-                <p:column headerText="Banco">#{m.banco}</p:column>
-                <p:column headerText="Ref.">#{m.referencia}</p:column>
-                <p:column headerText="Remitente">#{m.remitente}</p:column>
-                <p:column headerText="Importe" style="text-align:right;"><h:outputText value="#{m.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
-                <p:column headerText="Estado" style="width:8rem; text-align:center;">
-                    <p:tag value="#{m.estado}" severity="#{m.estado eq 'CONCILIADO' ? 'success' : 'info'}"/>
-                </p:column>
-            </p:dataTable>
+            <p style="color:#6c757d; font-size:.78rem; margin:.8rem 0 0;">
+                Los movimientos cargados se ven en el panel “Movimientos bancarios cargados” de la pantalla principal.
+            </p>
         </h:form>
     </p:dialog>
 
