@@ -43,12 +43,19 @@ public class ReclamoAdminBean implements Serializable {
     // entradas del detalle
     private String prioridadInput = "MEDIA";
     private String asignadoInput;
+    private Long proveedorAsignadoSel;          // proveedor (persona) elegido para asignar el trabajo
     private LocalDate fechaProgramar;
     private String proveedorInput;
+    private Long proveedorSel;                   // proveedor (persona) vinculado para el pago
+    private Long articuloSel;                    // concepto/rubro de gasto del egreso
     private BigDecimal cotizacionInput;
     private String respuestaInput;
     private String motivoInput;
     private String notaInput;
+
+    // catalogos para los selectores (cargados una vez)
+    private List<ReclamoService.Prov> proveedores = List.of();
+    private List<ReclamoService.Concepto> conceptos = List.of();
 
     // evidencia (fotos de la solucion) pendientes de guardar
     private transient List<ReclamoService.Adjunto> evidencias = new ArrayList<>();
@@ -59,7 +66,11 @@ public class ReclamoAdminBean implements Serializable {
 
     @PostConstruct
     public void iniciar() {
-        if (sesion.puede(PANTALLA, "VER")) cargar();
+        if (sesion.puede(PANTALLA, "VER")) {
+            cargar();
+            proveedores = servicio.proveedores();
+            conceptos = servicio.conceptos();
+        }
     }
 
     public String verificarAcceso() {
@@ -75,13 +86,22 @@ public class ReclamoAdminBean implements Serializable {
         sel = f;
         prioridadInput = f.getPrioridad() == null ? "MEDIA" : f.getPrioridad();
         asignadoInput = f.getAsignado();
+        proveedorAsignadoSel = null;
         fechaProgramar = f.getFechaProgramada();
         proveedorInput = f.getProveedorNombre();
+        proveedorSel = f.getProveedor();
+        articuloSel = null;
         cotizacionInput = f.getCotizacion();
         respuestaInput = f.getRespuesta();
         motivoInput = null; notaInput = null;
         evidencias = new ArrayList<>(); evidenciasNombres = new ArrayList<>();
         seguimiento = servicio.seguimientoDe(f.getId());
+    }
+
+    private String nombreProveedor(Long id) {
+        if (id == null) return null;
+        for (ReclamoService.Prov p : proveedores) if (id.equals(p.getId())) return p.getNombre();
+        return null;
     }
 
     private void refrescar() {
@@ -95,10 +115,19 @@ public class ReclamoAdminBean implements Serializable {
 
     // ── acciones del workflow ──
     public void priorizar() { run(() -> servicio.priorizar(sel.getId(), prioridadInput), "Prioridad actualizada"); }
-    public void asignar()   { run(() -> servicio.asignar(sel.getId(), asignadoInput), "Reclamo asignado"); }
+    public void asignar()   {
+        // proveedor registrado (empresa/RUC) o texto libre
+        String quien = proveedorAsignadoSel != null ? nombreProveedor(proveedorAsignadoSel) : asignadoInput;
+        run(() -> servicio.asignar(sel.getId(), quien), "Reclamo asignado");
+    }
     public void programar() { run(() -> servicio.programar(sel.getId(), fechaProgramar), "Visita programada"); }
-    public void guardarProveedor() { run(() -> servicio.asignarProveedor(sel.getId(), proveedorInput, null, cotizacionInput, null), "Proveedor y cotización guardados"); }
-    public void generarOrden() { run(() -> servicio.generarOrdenPago(sel.getId()), "Orden de pago generada"); }
+    public void guardarProveedor() {
+        // proveedor registrado (vincula persona) o texto libre
+        String nombre = proveedorSel != null ? nombreProveedor(proveedorSel) : proveedorInput;
+        run(() -> servicio.asignarProveedor(sel.getId(), nombre, proveedorSel, cotizacionInput, null), "Proveedor y cotización guardados");
+    }
+    public void generarOrden() { run(() -> servicio.generarOrdenPago(sel.getId(), articuloSel), "Orden de pago generada"); }
+    public void registrarPago() { run(() -> servicio.registrarPago(sel.getId()), "Pago registrado"); }
     public void resolver()  { run(() -> servicio.resolver(sel.getId(), respuestaInput), "Reclamo resuelto"); }
     public void cerrar()    { run(() -> servicio.cerrar(sel.getId()), "Reclamo cerrado"); }
     public void rechazar()  { run(() -> servicio.rechazar(sel.getId(), motivoInput), "Reclamo rechazado"); }
@@ -159,6 +188,14 @@ public class ReclamoAdminBean implements Serializable {
     public void setFechaProgramar(LocalDate v) { this.fechaProgramar = v; }
     public String getProveedorInput() { return proveedorInput; }
     public void setProveedorInput(String v) { this.proveedorInput = v; }
+    public Long getProveedorSel() { return proveedorSel; }
+    public void setProveedorSel(Long v) { this.proveedorSel = v; }
+    public Long getProveedorAsignadoSel() { return proveedorAsignadoSel; }
+    public void setProveedorAsignadoSel(Long v) { this.proveedorAsignadoSel = v; }
+    public Long getArticuloSel() { return articuloSel; }
+    public void setArticuloSel(Long v) { this.articuloSel = v; }
+    public List<ReclamoService.Prov> getProveedores() { return proveedores; }
+    public List<ReclamoService.Concepto> getConceptos() { return conceptos; }
     public BigDecimal getCotizacionInput() { return cotizacionInput; }
     public void setCotizacionInput(BigDecimal v) { this.cotizacionInput = v; }
     public String getRespuestaInput() { return respuestaInput; }

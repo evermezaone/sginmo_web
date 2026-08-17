@@ -124,8 +124,14 @@
         <div class="rk-sec">
           <h4>Asignar responsable</h4>
           <div class="rk-row">
-            <p:inputText value="#{reclamoAdminBean.asignadoInput}" placeholder="Técnico / equipo" style="width:11rem;"/>
+            <p:selectOneMenu value="#{reclamoAdminBean.proveedorAsignadoSel}" style="width:13rem;" filter="true">
+              <f:selectItem itemLabel="— Proveedor registrado (RUC) —" itemValue="#{null}"/>
+              <f:selectItems value="#{reclamoAdminBean.proveedores}" var="pv" itemLabel="#{pv.label}" itemValue="#{pv.id}"/>
+            </p:selectOneMenu>
             <p:commandButton value="Asignar" action="#{reclamoAdminBean.asignar}" update=":dlgForm :frm:tabla"/>
+          </div>
+          <div class="rk-row" style="margin-top:.35rem;">
+            <p:inputText value="#{reclamoAdminBean.asignadoInput}" placeholder="…o escribir libre (si no está registrado)" style="width:13rem;"/>
           </div>
         </div>
         <div class="rk-sec">
@@ -138,15 +144,35 @@
         <div class="rk-sec">
           <h4>Proveedor y cotización</h4>
           <div class="rk-row">
-            <p:inputText value="#{reclamoAdminBean.proveedorInput}" placeholder="Proveedor" style="width:9rem;"/>
+            <p:selectOneMenu value="#{reclamoAdminBean.proveedorSel}" style="width:13rem;" filter="true">
+              <f:selectItem itemLabel="— Proveedor registrado (RUC) —" itemValue="#{null}"/>
+              <f:selectItems value="#{reclamoAdminBean.proveedores}" var="pv" itemLabel="#{pv.label}" itemValue="#{pv.id}"/>
+            </p:selectOneMenu>
             <p:inputNumber value="#{reclamoAdminBean.cotizacionInput}" decimalPlaces="0" thousandSeparator="." symbol="₲ " style="width:8rem;"/>
             <p:commandButton value="Guardar" action="#{reclamoAdminBean.guardarProveedor}" update=":dlgForm :frm:tabla"/>
           </div>
-          <div class="rk-row" style="margin-top:.4rem;">
+          <div class="rk-row" style="margin-top:.35rem;">
+            <p:inputText value="#{reclamoAdminBean.proveedorInput}" placeholder="…o proveedor libre (no registrado)" style="width:13rem;"/>
+          </div>
+          <div class="rk-row" style="margin-top:.55rem; align-items:flex-end;">
+            <div>
+              <label style="font-size:.75rem;color:#6b7280;">Concepto del egreso</label><br/>
+              <p:selectOneMenu value="#{reclamoAdminBean.articuloSel}" style="width:13rem;" filter="true">
+                <f:selectItem itemLabel="Seleccione concepto…" itemValue="#{null}"/>
+                <f:selectItems value="#{reclamoAdminBean.conceptos}" var="cc" itemLabel="#{cc.descripcion}" itemValue="#{cc.id}"/>
+              </p:selectOneMenu>
+            </div>
             <p:commandButton value="Generar orden de pago" icon="pi pi-file" rendered="#{s.tieneCotizacion and not s.tieneOrden}"
                              action="#{reclamoAdminBean.generarOrden}" update=":dlgForm :frm:tabla :frm:dash"
                              style="background:#15803d;background-image:none;border-color:#15803d;color:#fff;"/>
-            <h:panelGroup rendered="#{s.tieneOrden}"><span class="rk-badge b-re">Orden de pago #{s.ordenPago} generada · ₲ <h:outputText value="#{s.cotizacion}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></span></h:panelGroup>
+          </div>
+          <div class="rk-row" style="margin-top:.45rem;">
+            <h:panelGroup rendered="#{s.tieneOrden}">
+              <span class="rk-badge #{s.ordenPagada ? 'b-ce' : 'b-re'}">Orden ##{s.ordenPago} · #{s.ordenPagada ? 'PAGADA' : 'por pagar'} · ₲ <h:outputText value="#{s.cotizacion}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></span>
+              <p:commandButton value="Registrar pago" icon="pi pi-wallet" rendered="#{s.tieneOrden and not s.ordenPagada}"
+                               action="#{reclamoAdminBean.registrarPago}" update=":dlgForm :frm:tabla :frm:dash"
+                               style="margin-left:.5rem;background:#15803d;background-image:none;border-color:#15803d;color:#fff;"/>
+            </h:panelGroup>
           </div>
         </div>
       </div>

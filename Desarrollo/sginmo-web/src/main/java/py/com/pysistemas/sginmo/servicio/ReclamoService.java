@@ -39,6 +39,8 @@ public class ReclamoService {
     private AuditoriaFuncionalService auditoria;
     @Inject
     private ParametroConfig parametros;
+    @Inject
+    private PersonaService personaService;
 
     public static final String PANTALLA = "reclamos";
 
@@ -182,8 +184,9 @@ public class ReclamoService {
         String cond = (estado != null && !estado.isBlank()) ? " AND r.estado = :e" : "";
         var q = em.createNativeQuery(
             "SELECT r.reclamo, r.tipo, r.titulo, r.descripcion, r.estado, r.prioridad, r.respuesta, r.creado_en, r.unidad, p.nombre,"
-          + " r.asignado, r.fecha_programada, r.proveedor_nombre, r.cotizacion, r.orden_pago"
-          + " FROM reclamo r LEFT JOIN persona p ON p.persona = r.persona WHERE 1=1" + cond
+          + " r.asignado, r.fecha_programada, r.proveedor_nombre, r.cotizacion, r.orden_pago, r.proveedor, rop.estado"
+          + " FROM reclamo r LEFT JOIN persona p ON p.persona = r.persona"
+          + " LEFT JOIN reclamo_orden_pago rop ON rop.reclamo_orden_pago = r.orden_pago WHERE 1=1" + cond
           + " ORDER BY CASE r.estado WHEN 'ABIERTO' THEN 1 WHEN 'EN_PROCESO' THEN 2 WHEN 'RESUELTO' THEN 3 ELSE 4 END,"
           + " CASE r.prioridad WHEN 'ALTA' THEN 1 WHEN 'MEDIA' THEN 2 ELSE 3 END, r.creado_en DESC");
         if (!cond.isEmpty()) q.setParameter("e", estado);
@@ -196,6 +199,8 @@ public class ReclamoService {
             x.proveedorNombre = (String) r[12];
             x.cotizacion = (java.math.BigDecimal) r[13];
             x.ordenPago = r[14] == null ? null : ((Number) r[14]).longValue();
+            x.proveedor = r[15] == null ? null : ((Number) r[15]).longValue();
+            x.ordenEstado = (String) r[16];
             x.fotos = fotosDe(x.id);
             out.add(x);
         }
@@ -260,8 +265,13 @@ public class ReclamoService {
         auditar(id, AuditoriaFuncionalService.EDITAR, "proveedor " + nombre);
     }
 
-    public Long generarOrdenPago(Long id) {
+    /**
+     * REQ-0113: genera la orden de pago Y crea un egreso REAL en Ingresos/Egresos (por pagar),
+     * vinculado al proveedor. El concepto (articulo) es el rubro de gasto elegido por el operador.
+     */
+    public Long generarOrdenPago(Long id, Long articuloId) {
         autorizacion.exigir(PANTALLA, "EDITAR");
+        if (articuloId == null) throw new NegocioException("Elija el concepto (rubro de gasto) para el egreso");
         Object[] r = (Object[]) em.createNativeQuery(
             "SELECT proveedor_nombre, proveedor, cotizacion, moneda, titulo, orden_pago FROM reclamo WHERE reclamo = :id")
             .setParameter("id", id).getSingleResult();
@@ -269,17 +279,89 @@ public class ReclamoService {
         if (cot == null || cot.signum() <= 0) throw new NegocioException("Cargue la cotizacion del proveedor antes de generar la orden de pago");
         if (r[5] != null) throw new NegocioException("El reclamo ya tiene una orden de pago generada");
         Long t = tenant.actual();
+        Long proveedorId = r[1] == null ? null : ((Number) r[1]).longValue();
+
+        // Egreso PENDIENTE (por pagar) en Ingresos/Egresos, vinculado al proveedor.
+        py.com.pysistemas.sginmo.dominio.operacion.IngresoEgreso ie = new py.com.pysistemas.sginmo.dominio.operacion.IngresoEgreso();
+        ie.setFecha(java.time.LocalDate.now());
+        ie.setTipo("EGRESO");
+        ie.setMonto(cot);
+        ie.setSaldo(cot);
+        ie.setEstado("PENDIENTE");
+        ie.setArticulo(articuloId);
+        ie.setPersona(proveedorId);
+        ie.setTenant(t);
+        ie.setObservacion(recorta("Reclamo #" + id + " - " + r[4], 500));
+        em.persist(ie);
+        em.flush();
+        Long egresoId = ie.getId();
+
         Object opId = em.createNativeQuery(
-            "INSERT INTO reclamo_orden_pago (tenant, reclamo, proveedor_nombre, proveedor, concepto, monto, moneda, usuario)"
-          + " VALUES (:t,:r,:pn,:p,:co,:mo,:cur,:u) RETURNING reclamo_orden_pago")
+            "INSERT INTO reclamo_orden_pago (tenant, reclamo, proveedor_nombre, proveedor, concepto, monto, moneda, usuario, egreso)"
+          + " VALUES (:t,:r,:pn,:p,:co,:mo,:cur,:u,:eg) RETURNING reclamo_orden_pago")
             .setParameter("t", t).setParameter("r", id).setParameter("pn", r[0]).setParameter("p", r[1])
             .setParameter("co", recorta("Reclamo #" + id + " - " + r[4], 200)).setParameter("mo", cot)
-            .setParameter("cur", r[3]).setParameter("u", usuarioActual()).getSingleResult();
+            .setParameter("cur", r[3]).setParameter("u", usuarioActual()).setParameter("eg", egresoId).getSingleResult();
         Long op = ((Number) opId).longValue();
         em.createNativeQuery("UPDATE reclamo SET orden_pago = :op WHERE reclamo = :id").setParameter("op", op).setParameter("id", id).executeUpdate();
-        seg(id, "ORDEN_PAGO", "Orden de pago #" + op + " por " + cot);
-        auditar(id, AuditoriaFuncionalService.EDITAR, "orden de pago " + op + " (" + cot + ")");
+        seg(id, "ORDEN_PAGO", "Orden de pago #" + op + " por " + cot + " (egreso #" + egresoId + " pendiente)");
+        auditar(id, AuditoriaFuncionalService.EDITAR, "orden de pago " + op + " egreso " + egresoId + " (" + cot + ")");
         return op;
+    }
+
+    /** REQ-0113: ejecuta el pago de la orden: cancela el egreso (saldo 0) y marca la orden PAGADA. */
+    public void registrarPago(Long reclamoId) {
+        autorizacion.exigir(PANTALLA, "EDITAR");
+        var q = em.createNativeQuery(
+            "SELECT reclamo_orden_pago, egreso, estado FROM reclamo_orden_pago"
+          + " WHERE reclamo = :id AND estado <> 'ANULADA' ORDER BY creado_en DESC")
+            .setParameter("id", reclamoId);
+        q.setMaxResults(1);
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = q.getResultList();
+        if (rows.isEmpty()) throw new NegocioException("El reclamo no tiene una orden de pago para pagar");
+        Object[] o = rows.get(0);
+        Long ordenId = ((Number) o[0]).longValue();
+        Long egresoId = o[1] == null ? null : ((Number) o[1]).longValue();
+        if ("PAGADA".equals(o[2])) throw new NegocioException("La orden de pago ya fue pagada");
+        if (egresoId != null)
+            em.createNativeQuery("UPDATE ingreso_egreso SET estado = 'CANCELADO', saldo = 0 WHERE ingreso_egreso = :e")
+                .setParameter("e", egresoId).executeUpdate();
+        em.createNativeQuery("UPDATE reclamo_orden_pago SET estado = 'PAGADA', pagado_en = now() WHERE reclamo_orden_pago = :o")
+            .setParameter("o", ordenId).executeUpdate();
+        seg(reclamoId, "PAGO", "Pago registrado de la orden #" + ordenId + (egresoId != null ? " (egreso #" + egresoId + " cancelado)" : ""));
+        auditar(reclamoId, AuditoriaFuncionalService.EDITAR, "pago orden " + ordenId);
+    }
+
+    /** Proveedores registrados (personas con rol PROVEEDOR) para el selector, con su CI/RUC. */
+    public List<Prov> proveedores() {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Prov> out = new ArrayList<>();
+        for (py.com.pysistemas.sginmo.dominio.persona.Persona p : personaService.porRol("PROVEEDOR")) {
+            Prov v = new Prov();
+            v.id = p.getId();
+            v.nombre = p.getNombre();
+            v.documento = p.getNumeroDocumento();
+            out.add(v);
+        }
+        return out;
+    }
+
+    /** Conceptos (articulos) disponibles como rubro de gasto del egreso. */
+    public List<Concepto> conceptos() {
+        autorizacion.exigir(PANTALLA, "VER");
+        List<Concepto> out = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = em.createNativeQuery(
+            "SELECT articulo, descripcion FROM articulo WHERE (tenant = :t OR tenant IS NULL) ORDER BY descripcion")
+            .setParameter("t", tenant.actual()).getResultList();
+        for (Object[] r : rows) {
+            Concepto c = new Concepto();
+            c.id = ((Number) r[0]).longValue();
+            c.descripcion = (String) r[1];
+            out.add(c);
+        }
+        return out;
     }
 
     public void agregarEvidencia(Long id, List<Adjunto> fotos) {
@@ -453,14 +535,19 @@ public class ReclamoService {
         public java.time.LocalDate fechaProgramada;
         public java.math.BigDecimal cotizacion;
         public Long ordenPago;
+        public Long proveedor;              // id de la persona-proveedor vinculada (REQ-0113)
+        public String ordenEstado;          // estado de la orden de pago: GENERADA | PAGADA | ANULADA
         public LocalDateTime creado;
         public List<Foto> fotos = new ArrayList<>();
         public String getAsignado() { return asignado; }
         public String getProveedorNombre() { return proveedorNombre; }
+        public Long getProveedor() { return proveedor; }
         public java.time.LocalDate getFechaProgramada() { return fechaProgramada; }
         public java.math.BigDecimal getCotizacion() { return cotizacion; }
         public Long getOrdenPago() { return ordenPago; }
+        public String getOrdenEstado() { return ordenEstado; }
         public boolean isTieneOrden() { return ordenPago != null; }
+        public boolean isOrdenPagada() { return "PAGADA".equals(ordenEstado); }
         public boolean isTieneProveedor() { return proveedorNombre != null && !proveedorNombre.isEmpty(); }
         public boolean isTieneCotizacion() { return cotizacion != null && cotizacion.signum() > 0; }
         public String getPrioridadLabel() { return prioridad == null ? "" : (prioridad.equals("ALTA") ? "Alta" : prioridad.equals("BAJA") ? "Baja" : "Media"); }
@@ -542,5 +629,19 @@ public class ReclamoService {
     public static class Descarga {
         public final String nombre, contentType; public final byte[] datos;
         public Descarga(String nombre, String contentType, byte[] datos) { this.nombre = nombre; this.contentType = contentType; this.datos = datos; }
+    }
+    /** Proveedor para el selector (persona con rol PROVEEDOR). */
+    public static class Prov {
+        public Long id; public String nombre, documento;
+        public Long getId() { return id; }
+        public String getNombre() { return nombre; }
+        public String getDocumento() { return documento; }
+        public String getLabel() { return nombre + (documento == null || documento.isBlank() ? "" : " — " + documento); }
+    }
+    /** Concepto/rubro de gasto (articulo) para el egreso. */
+    public static class Concepto {
+        public Long id; public String descripcion;
+        public Long getId() { return id; }
+        public String getDescripcion() { return descripcion; }
     }
 }
