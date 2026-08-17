@@ -466,11 +466,23 @@ public class PortalTransferenciaService {
         return LocalDate.parse(o.toString());
     }
 
+    /** timestamptz -> fecha y hora LOCAL del sistema (el listado debe mostrar
+     * cuando se REGISTRO la transferencia, con hora; ver pedido del usuario). */
+    private static java.time.LocalDateTime aLocalDateTime(Object o) {
+        if (o == null) return null;
+        if (o instanceof java.sql.Timestamp ts) return ts.toLocalDateTime();
+        if (o instanceof java.time.LocalDateTime l) return l;
+        if (o instanceof java.time.OffsetDateTime ofs)
+            return ofs.atZoneSameInstant(java.time.ZoneId.systemDefault()).toLocalDateTime();
+        if (o instanceof java.time.Instant i)
+            return java.time.LocalDateTime.ofInstant(i, java.time.ZoneId.systemDefault());
+        return java.time.LocalDateTime.parse(o.toString());
+    }
+
     private Fila fila(Object[] f) {
         Fila x = new Fila();
         x.id = ((Number) f[0]).longValue();
-        x.fecha = f[1] instanceof java.sql.Timestamp ts ? ts.toLocalDateTime().toLocalDate()
-                : (f[1] instanceof java.time.LocalDateTime l ? l.toLocalDate() : (f[1] instanceof java.time.OffsetDateTime o ? o.toLocalDate() : null));
+        x.fecha = aLocalDateTime(f[1]);
         x.importe = (BigDecimal) f[2];
         x.estado = (String) f[3];
         x.numeroTransaccion = (String) f[4];
@@ -551,7 +563,8 @@ public class PortalTransferenciaService {
     }
     public static class Fila {
         public Long id, cobro, persona, documento, moneda;
-        public LocalDate fecha; public BigDecimal importe;
+        // fecha y HORA de registro en el sistema (columna timestamptz `fecha`)
+        public java.time.LocalDateTime fecha; public BigDecimal importe;
         public String estado, numeroTransaccion, motivoRevision, cliente, bancoOrigen, cuentaOrigen;
         // REQ-0084: datos extraidos por OCR (insumo para la revision).
         public String textoOcr, ocrNumero, ocrBanco, ocrMotor;
@@ -570,7 +583,7 @@ public class PortalTransferenciaService {
         public Long getPersona() { return persona; }
         public Long getDocumento() { return documento; }
         public Long getMoneda() { return moneda; }
-        public LocalDate getFecha() { return fecha; }
+        public java.time.LocalDateTime getFecha() { return fecha; }
         public BigDecimal getImporte() { return importe; }
         public String getEstado() { return estado; }
         /** REQ-0092: etiqueta amigable para el socio. */

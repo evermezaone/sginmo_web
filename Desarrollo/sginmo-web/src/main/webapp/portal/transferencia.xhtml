@@ -64,7 +64,7 @@
             <tbody>
                 <ui:repeat value="#{portalTransferenciaBean.mias}" var="t">
                     <tr>
-                        <td><h:outputText value="#{t.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></td>
+                        <td><h:outputText value="#{t.fecha}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy HH:mm"/></h:outputText></td>
                         <td><h:outputText value="#{t.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></td>
                         <td>#{t.numeroTransaccion}</td>
                         <td>#{t.estadoLabel}</td>
