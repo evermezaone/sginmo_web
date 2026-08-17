@@ -28,6 +28,12 @@
   .p-alta{background:#fee2e2;color:#b91c1c} .p-media{background:#e0e7ff;color:#3730a3} .p-baja{background:#e5e7eb;color:#374151}
 </style>
 
+<div style="margin:0 0 .7rem;">
+    <h:outputLink value="gestion-portal.xhtml" styleClass="ui-button ui-button-outlined" style="text-decoration:none;padding:.4rem .8rem;border-radius:8px;font-size:.85rem;">
+        <i class="pi pi-arrow-left"></i> Volver a Gestión del portal
+    </h:outputLink>
+</div>
+
 <h:form id="frm">
     <p:growl id="mensajes" showDetail="true" life="4000"/>
 
@@ -70,7 +76,11 @@
         <p:column headerText="Proveedor">#{r.proveedorNombre}
             <h:panelGroup rendered="#{r.tieneOrden}"><br/><span class="rk-badge b-re">orden #{r.ordenPago}</span></h:panelGroup>
         </p:column>
-        <p:column headerText="Fecha"><h:outputText value="#{r.creado}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+        <p:column headerText="Programada">
+            <h:outputText value="#{r.fechaProgramada}" rendered="#{not empty r.fechaProgramada}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText>
+            <h:outputText value="—" style="color:#9ca3af;" rendered="#{empty r.fechaProgramada}"/>
+        </p:column>
+        <p:column headerText="Registrado"><h:outputText value="#{r.creado}"><f:convertDateTime type="localDateTime" pattern="dd/MM/yyyy"/></h:outputText></p:column>
         <p:column style="width:6rem">
             <p:commandButton value="Gestionar" icon="pi pi-cog" styleClass="ui-button-sm"
                              action="#{reclamoAdminBean.abrir(r)}" update=":dlgForm" oncomplete="PF('dlgGest').show()"/>

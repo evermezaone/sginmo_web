@@ -136,7 +136,7 @@ public class PortalTransferenciaService {
     public List<Fila> bandeja(String estado) {
         autorizacion.exigir(PANTALLA, "VER");
         List<Fila> out = new ArrayList<>();
-        String cond = (estado != null && !estado.isBlank()) ? " AND estado = :e" : "";
+        String cond = (estado != null && !estado.isBlank()) ? " AND t.estado = :e" : "";
         var q = em.createNativeQuery(
             "SELECT t.portal_pago_transferencia, t.fecha, t.importe, t.estado, t.numero_transaccion, t.motivo_revision,"
           + " t.cobro, p.nombre, t.banco_origen, t.persona, t.documento, t.moneda, t.cuenta_origen,"
@@ -406,8 +406,8 @@ public class PortalTransferenciaService {
             "SELECT movimiento_bancario_importado, banco, cuenta, fecha, importe, referencia, remitente,"
           + " estado_conciliacion, transferencia FROM movimiento_bancario_importado"
           + " WHERE estado_conciliacion = 'PENDIENTE' AND importe = :imp"
-          + " AND (:fec IS NULL OR fecha IS NULL OR abs(fecha - :fec) <= :tol)"
-          + " AND (:num IS NULL OR referencia IS NULL OR referencia = :num)"
+          + " AND (CAST(:fec AS date) IS NULL OR fecha IS NULL OR abs(fecha - CAST(:fec AS date)) <= :tol)"
+          + " AND (CAST(:num AS text) IS NULL OR referencia IS NULL OR referencia = CAST(:num AS text))"
           + " ORDER BY fecha DESC NULLS LAST")
             .setParameter("imp", importe).setParameter("fec", fecha == null ? null : java.sql.Date.valueOf(fecha)).setParameter("tol", tol)
             .setParameter("num", numero).getResultList();

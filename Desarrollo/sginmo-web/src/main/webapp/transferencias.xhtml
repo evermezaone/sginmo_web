@@ -9,6 +9,12 @@
 </f:metadata>
 <ui:define name="titulo">Transferencias informadas</ui:define>
 <ui:define name="contenido">
+    <div style="margin:0 0 .7rem;">
+        <h:outputLink value="gestion-portal.xhtml" styleClass="ui-button ui-button-outlined" style="text-decoration:none;padding:.4rem .8rem;border-radius:8px;font-size:.85rem;">
+            <i class="pi pi-arrow-left"></i> Volver a Gestión del portal
+        </h:outputLink>
+    </div>
+
     <h:form id="frm">
         <p:growl id="mensajes" showDetail="true" life="4000"/>
 
@@ -172,9 +178,23 @@
             <p style="color:#6c757d; font-size:.8rem; margin:0 0 .4rem;">
                 Formato por línea: <code>banco;cuenta;fecha(dd/MM/yyyy);importe;referencia;remitente</code>
             </p>
-            <p:fileUpload value="#{transferenciaBandejaBean.csvMovimientos}" mode="simple" skinSimple="true" accept=".csv,.txt"/>
+            <p:fileUpload value="#{transferenciaBandejaBean.csvMovimientos}" mode="simple" skinSimple="true" accept=".csv,.txt"
+                          label="Elegir archivo"/>
             <p:commandButton value="Importar" icon="pi pi-upload" ajax="false" style="margin-top:.4rem;"
                              action="#{transferenciaBandejaBean.importarCsv()}"/>
+
+            <h4 style="margin:1rem 0 .3rem;">Movimientos cargados</h4>
+            <p:dataTable var="m" value="#{transferenciaBandejaBean.movimientos}" paginator="true" rows="8" size="small"
+                         emptyMessage="Todavía no hay movimientos bancarios cargados">
+                <p:column headerText="Fecha" style="width:6rem;"><h:outputText value="#{m.fecha}"><f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/></h:outputText></p:column>
+                <p:column headerText="Banco">#{m.banco}</p:column>
+                <p:column headerText="Ref.">#{m.referencia}</p:column>
+                <p:column headerText="Remitente">#{m.remitente}</p:column>
+                <p:column headerText="Importe" style="text-align:right;"><h:outputText value="#{m.importe}"><f:convertNumber groupingUsed="true" maxFractionDigits="0"/></h:outputText></p:column>
+                <p:column headerText="Estado" style="width:8rem; text-align:center;">
+                    <p:tag value="#{m.estado}" severity="#{m.estado eq 'CONCILIADO' ? 'success' : 'info'}"/>
+                </p:column>
+            </p:dataTable>
         </h:form>
     </p:dialog>
 

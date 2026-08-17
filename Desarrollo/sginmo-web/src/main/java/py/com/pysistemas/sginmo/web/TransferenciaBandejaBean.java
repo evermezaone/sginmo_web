@@ -53,6 +53,7 @@ public class TransferenciaBandejaBean implements Serializable {
     private List<Object[]> pagosQr = List.of();
     // Conciliacion bancaria (REQ-0085).
     private List<PortalTransferenciaService.Mov> candidatos = List.of();
+    private List<PortalTransferenciaService.Mov> movimientos = List.of();  // todos los movimientos cargados
     private PortalTransferenciaService.Mov nuevoMov = new PortalTransferenciaService.Mov();
     private transient org.primefaces.model.file.UploadedFile csvMovimientos;
 
@@ -70,9 +71,11 @@ public class TransferenciaBandejaBean implements Serializable {
     public void cargar() {
         lista = servicio.bandeja(filtroEstado);
         pagosQr = servicio.intentosQrConciliados();   // REQ-0094
+        movimientos = servicio.movimientos(null);      // lista de movimientos bancarios cargados
     }
 
     public List<Object[]> getPagosQr() { return pagosQr; }
+    public List<PortalTransferenciaService.Mov> getMovimientos() { return movimientos; }
 
     public void seleccionar(PortalTransferenciaService.Fila f) {
         seleccionada = f;
@@ -110,6 +113,7 @@ public class TransferenciaBandejaBean implements Serializable {
             servicio.registrarMovimiento(nuevoMov);
             aviso(FacesMessage.SEVERITY_INFO, "Movimiento registrado", null);
             nuevoMov = new PortalTransferenciaService.Mov();
+            movimientos = servicio.movimientos(null);
         } catch (NegocioException e) { aviso(FacesMessage.SEVERITY_WARN, "No se pudo registrar", e.getMessage()); }
     }
 
@@ -120,6 +124,7 @@ public class TransferenciaBandejaBean implements Serializable {
             int n = servicio.importarCsv(csvMovimientos.getContent());
             aviso(FacesMessage.SEVERITY_INFO, "Importacion", n + " movimiento(s) importado(s)");
             csvMovimientos = null;
+            movimientos = servicio.movimientos(null);
         } catch (NegocioException e) { aviso(FacesMessage.SEVERITY_WARN, "No se pudo importar", e.getMessage()); }
     }
 
